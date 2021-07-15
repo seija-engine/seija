@@ -1,3 +1,3 @@
-mod der;
-mod material;
+pub mod material;
+pub mod asset;
 

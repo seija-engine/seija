@@ -1,0 +1,12 @@
+{
+  :props {
+            "Color"  :Vec4              
+            "Image"  :Texture
+         }
+   
+  :pass {
+     :name "SpritePipeline"
+     :shader-vert "sprite.vert"
+     :shader-frag "sprite.frag"
+  }
+}

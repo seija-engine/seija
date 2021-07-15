@@ -1,0 +1,6 @@
+[workspace]
+members = [
+    "app",
+    "seija-render",
+    "seija-2d",
+]
