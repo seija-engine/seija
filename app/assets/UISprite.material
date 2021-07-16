@@ -8,5 +8,8 @@
      :name "SpritePipeline"
      :shader-vert "sprite.vert"
      :shader-frag "sprite.frag"
+     :primitive {
+        :topology "TriangleStrip"
+     }
   }
 }

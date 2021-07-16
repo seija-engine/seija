@@ -1,12 +1,13 @@
-use std::{collections::HashMap, path::Path, sync::Arc};
+use std::{collections::HashMap, convert::TryInto, path::Path, sync::Arc};
 
 use bevy_asset::{AssetLoader, BoxedFuture, LoadContext, LoadedAsset};
-use bevy_render::{pipeline::PipelineDescriptor, shader::{Shader, ShaderStage, ShaderStages}};
+use bevy_render::{pipeline::{ColorTargetState, PipelineDescriptor}, shader::{Shader, ShaderStage, ShaderStages}};
+use glam::{Vec3, Vec4};
 use lite_clojure_eval::{EvalRT,Variable};
 use anyhow::Result;
 use serde_json::Value;
 
-use crate::material::material::{MaterialProp,MaterialDesc};
+use crate::material::{json_der::MValue, material::{MaterialProp,MaterialDesc}};
 
 #[derive(Default)]
 pub struct MaterialDescLoader;
@@ -42,19 +43,21 @@ impl AssetLoader for MaterialDescLoader {
 async fn load_meterial_desc<'a,'b>(var:Value, load_context: &mut LoadContext<'b>) -> anyhow::Result<MaterialDesc> {
     let attr_map = var.as_object().ok_or(anyhow::anyhow!("err MaterialDesc"))?;
     let mut props:Vec<(String,MaterialProp)> = vec![];
+    let mut pipes:Vec<PipelineDescriptor> = vec![];
     for (k,v) in attr_map {
         match k.as_str() {
             ":props" => {
                 props = load_matrial_props(v)?;
             }
             ":pass" => {
-                load_material_pass(v,load_context).await?;
+                pipes = load_material_pass(v,load_context).await?;
             }
             _ => {}
         }
     }
     Ok(MaterialDesc {
-        props
+        props,
+        pipes
     })
 }
 
@@ -69,6 +72,8 @@ fn load_matrial_props(var:&Value) -> anyhow::Result<Vec<(String,MaterialProp)>> 
             ":Float" => arr.push((k_str,MaterialProp::Float(0f32))),
             ":Texture" => arr.push((k_str,MaterialProp::Texture(None))),
             ":Bool" => arr.push((k_str,MaterialProp::Bool(false))),
+            ":Vec3" => arr.push((k_str,MaterialProp::Vector3(Vec3::ZERO))),
+            ":Vec4" => arr.push((k_str,MaterialProp::Vector4(Vec4::ZERO))),
             _ => anyhow::bail!("error props type")
         }
     }
@@ -111,9 +116,28 @@ async fn load_material_single_pass<'a,'b>(var:&'a Value,load_context: &mut LoadC
              ":name" => {
                  pipeline_desc.name = Some(v.as_str().unwrap().to_string())
              },
+             ":primitive" => {
+                 let p = MValue(v.clone()).try_into().map_err(|_| anyhow::anyhow!("err primitive"))?;
+                 pipeline_desc.primitive = p;
+             },
+             ":depth-stencil" => {
+                 let s = MValue(v.clone()).try_into().map_err(|_| anyhow::anyhow!("err depth-stencil"))?;
+                 pipeline_desc.depth_stencil = Some(s)
+             }
+             ":multisample" => {
+                 let v = MValue(v.clone()).try_into().map_err(|_| anyhow::anyhow!("err multisample"))?;
+                 pipeline_desc.multisample = v;
+             },
+             ":color-target-states" => {
+                 let arr = v.as_array().ok_or( anyhow::anyhow!("err color-target-states"))?;
+                 let mut states:Vec<ColorTargetState> = vec![];
+                 for item in arr {
+                     states.push(MValue(item.clone()).try_into().map_err(|_| anyhow::anyhow!("err color-target-states"))?);
+                 }
+                 pipeline_desc.color_target_states = states;
+             }
              _ => {}
         }
     }
-    dbg!(&pipeline_desc);
     Ok(pipeline_desc)
 }

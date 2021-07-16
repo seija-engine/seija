@@ -27,5 +27,5 @@ fn main() {
 
 fn setup(mut _commands: Commands,assets: Res<AssetServer>) {
     let mat:Handle<MaterialDesc> = assets.load("UISprite.material");
-    
+    let mat2:Handle<MaterialDesc> = assets.load("UISprite.material");
 }
