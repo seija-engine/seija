@@ -25,9 +25,7 @@ impl AssetLoader for MaterialDescLoader {
             };
             if let Some(v) = json_value {
                 let desc = load_meterial_desc(v,load_context).await?;
-               
-                let s = load_context.path().to_str().unwrap().to_string();
-                load_context.set_labeled_asset(s.as_str(), LoadedAsset::new(desc));
+                load_context.set_default_asset(LoadedAsset::new(desc));
                 Ok(())
             } else {
                 anyhow::bail!("err MaterialDesc")
@@ -57,7 +55,7 @@ async fn load_meterial_desc<'a,'b>(var:Value, load_context: &mut LoadContext<'b>
     }
     Ok(MaterialDesc {
         props,
-        pipes
+        pipes:Arc::new(pipes)
     })
 }
 

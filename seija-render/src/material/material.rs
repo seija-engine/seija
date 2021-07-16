@@ -1,9 +1,11 @@
+use std::sync::Arc;
+
 use bevy_asset::Handle;
 use bevy_render::{pipeline::PipelineDescriptor, texture::{Texture}};
 use bevy_reflect::TypeUuid;
 use glam::{Vec3, Vec4};
 
-#[derive(Debug)]
+#[derive(Debug,Clone)]
 pub enum MaterialProp {
     Int(i32),
     Float(f32),
@@ -17,5 +19,23 @@ pub enum MaterialProp {
 #[uuid = "506cff92-a6f2-4543-862d-6822c7fdfa99"]
 pub struct MaterialDesc {
     pub props:Vec<(String,MaterialProp)>,
-    pub pipes:Vec<PipelineDescriptor>
+    pub pipes:Arc<Vec<PipelineDescriptor>>
+}
+
+impl MaterialDesc {
+    pub fn create(&self) -> Material {
+        Material {
+            props:self.props.clone(),
+            pipes:self.pipes.clone(),
+        }
+    }
+}
+
+
+
+#[derive(Debug, TypeUuid)]
+#[uuid = "506cff92-a6f2-4543-862d-6822c7fdfa88"]
+pub struct Material {
+    pub props:Vec<(String,MaterialProp)>,
+    pub pipes:Arc<Vec<PipelineDescriptor>>
 }

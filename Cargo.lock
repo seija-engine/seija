@@ -57,6 +57,7 @@ dependencies = [
  "bevy_input",
  "bevy_log",
  "bevy_render",
+ "bevy_transform",
  "bevy_wgpu",
  "bevy_window",
  "bevy_winit",
