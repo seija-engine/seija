@@ -1,7 +1,7 @@
-use std::sync::Arc;
+use std::{collections::HashMap, iter::FromIterator, sync::Arc};
 
 use bevy_asset::Handle;
-use bevy_render::{pipeline::PipelineDescriptor, texture::{Texture}};
+use bevy_render::{pipeline::PipelineDescriptor, prelude::RenderPipelines, texture::{Texture}};
 use bevy_reflect::TypeUuid;
 use glam::{Vec3, Vec4};
 
@@ -19,14 +19,19 @@ pub enum MaterialProp {
 #[uuid = "506cff92-a6f2-4543-862d-6822c7fdfa99"]
 pub struct MaterialDesc {
     pub props:Vec<(String,MaterialProp)>,
-    pub pipes:Arc<Vec<PipelineDescriptor>>
+    pub pipes:Vec<Handle<PipelineDescriptor>>
 }
 
 impl MaterialDesc {
     pub fn create(&self) -> Material {
+        let pipes = RenderPipelines::from_handles(self.pipes.iter());
+        let mut map:HashMap<String,MaterialProp> = HashMap::default();
+        for (k,v) in self.props.iter() {
+            map.insert(k.clone(), v.clone());
+        }
         Material {
-            props:self.props.clone(),
-            pipes:self.pipes.clone(),
+            props:map,
+            pipes
         }
     }
 }
@@ -36,6 +41,16 @@ impl MaterialDesc {
 #[derive(Debug, TypeUuid)]
 #[uuid = "506cff92-a6f2-4543-862d-6822c7fdfa88"]
 pub struct Material {
-    pub props:Vec<(String,MaterialProp)>,
-    pub pipes:Arc<Vec<PipelineDescriptor>>
+    pub props:HashMap<String,MaterialProp>,
+    pub pipes:RenderPipelines
+}
+
+impl Material {
+    pub fn set_textute(&mut self,name:&str,tex:Handle<Texture>) -> bool {
+        if let Some(v) = self.props.get_mut(name) {
+            *v = MaterialProp::Texture(Some(tex));
+            return  true;
+        }
+        false
+    }
 }

@@ -6,3 +6,9 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+seija-render = {path = "../seija-render"}
+bevy_ecs = "0.5.0"
+bevy_render = "0.5.0"
+bevy_app = "0.5.0"
+bevy_asset = "0.5.0"
+bevy_transform = "0.5.0"

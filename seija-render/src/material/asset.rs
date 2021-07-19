@@ -1,6 +1,6 @@
 use std::{collections::HashMap, convert::TryInto, path::Path, sync::Arc};
 
-use bevy_asset::{AssetLoader, BoxedFuture, LoadContext, LoadedAsset};
+use bevy_asset::{AssetLoader, BoxedFuture, Handle, LoadContext, LoadedAsset};
 use bevy_render::{pipeline::{ColorTargetState, PipelineDescriptor}, shader::{Shader, ShaderStage, ShaderStages}};
 use glam::{Vec3, Vec4};
 use lite_clojure_eval::{EvalRT,Variable};
@@ -41,7 +41,7 @@ impl AssetLoader for MaterialDescLoader {
 async fn load_meterial_desc<'a,'b>(var:Value, load_context: &mut LoadContext<'b>) -> anyhow::Result<MaterialDesc> {
     let attr_map = var.as_object().ok_or(anyhow::anyhow!("err MaterialDesc"))?;
     let mut props:Vec<(String,MaterialProp)> = vec![];
-    let mut pipes:Vec<PipelineDescriptor> = vec![];
+    let mut pipes:Vec<Handle<PipelineDescriptor>> = vec![];
     for (k,v) in attr_map {
         match k.as_str() {
             ":props" => {
@@ -55,7 +55,7 @@ async fn load_meterial_desc<'a,'b>(var:Value, load_context: &mut LoadContext<'b>
     }
     Ok(MaterialDesc {
         props,
-        pipes:Arc::new(pipes)
+        pipes
     })
 }
 
@@ -78,17 +78,22 @@ fn load_matrial_props(var:&Value) -> anyhow::Result<Vec<(String,MaterialProp)>> 
     Ok(arr)
 }
 
-async fn load_material_pass<'a,'b>(var:&Value,load_context: &mut LoadContext<'b>) -> Result<Vec<PipelineDescriptor>> {
-    let mut pass_list:Vec<PipelineDescriptor> = vec![];
+async fn load_material_pass<'a,'b>(var:&Value,load_context: &mut LoadContext<'b>) -> Result<Vec<Handle<PipelineDescriptor>>> {
+    let mut pass_list:Vec<Handle<PipelineDescriptor>> = vec![];
     match var {
         Value::Array(lst) => {
-            for item in lst {
+            for idx in 0..lst.len() {
+                let item = &lst[idx];
                 let desc = load_material_single_pass(item,load_context).await?;
-                pass_list.push(desc);
+               
+                let pipe_handle = load_context.set_labeled_asset(idx.to_string().as_str(), LoadedAsset::new(desc));
+                pass_list.push(pipe_handle);
             }
         },
         Value::Object(_) => {
-            pass_list.push(load_material_single_pass(var,load_context).await?);
+            let desc = load_material_single_pass(var,load_context).await?;
+            let pipe_handle = load_context.set_labeled_asset("0", LoadedAsset::new(desc));
+            pass_list.push(pipe_handle);
         }
        _ => ()
     }
