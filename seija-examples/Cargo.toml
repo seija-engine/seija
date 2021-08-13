@@ -1,0 +1,8 @@
+[package]
+name = "seija-examples"
+version = "0.1.0"
+edition = "2018"
+
+[dependencies]
+seija-app = {path = "../crates/seija-app"}
+seija-core = {path = "../crates/seija-core"}
