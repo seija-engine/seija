@@ -1,0 +1,6 @@
+[workspace]
+members = [
+    "crates/seija-app",
+    "crates/seija-core",
+    "seija-examples"
+]
