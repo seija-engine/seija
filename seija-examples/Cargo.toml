@@ -6,3 +6,4 @@ edition = "2018"
 [dependencies]
 seija-app = {path = "../crates/seija-app"}
 seija-core = {path = "../crates/seija-core"}
+seija-winit = {path = "../crates/seija-winit"}

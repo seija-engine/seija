@@ -1,10 +1,10 @@
-use bevy_ecs::{component::Component, prelude::FromWorld, schedule::{Schedule, Stage, StageLabel, SystemDescriptor}, world::World};
+use bevy_ecs::{ schedule::{Schedule, Stage, StageLabel, SystemDescriptor}, world::World};
 
 use crate::IModule;
 
 pub struct App {
-    world:World,
-    schedule: Schedule,
+    pub world:World,
+    pub schedule: Schedule,
     runner: Option<Box<dyn Fn(App)>>
 }
 
@@ -21,13 +21,15 @@ impl App {
         module.init(self);
     }
 
-    pub fn add_resource<T>(&mut self) where T:Default + Send + Sync  + 'static {
+    pub fn init_resource<T>(&mut self) where T:Default + Send + Sync  + 'static {
         self.world.insert_resource(T::default());
     }
 
-    pub fn add_system_to_stage(&mut self,stage_label: impl StageLabel,system: impl Into<SystemDescriptor>) {
-        self.schedule.add_system_to_stage(stage_label, system);
+    pub fn add_resource<T>(&mut self,res:T) where T: Send + Sync  + 'static {
+        self.world.insert_resource(res);
     }
+
+   
 
     pub fn update(&mut self) {
         self.schedule.run(&mut self.world);
@@ -35,6 +37,10 @@ impl App {
 
     pub fn set_runner(&mut self, run_fn: impl Fn(App) + 'static) {
         self.runner = Some(Box::new(run_fn));
+    }
+
+    pub fn add_system(&mut self,stage_label: impl StageLabel,system:impl Into<SystemDescriptor>) {
+        self.schedule.add_system_to_stage(stage_label, system);
     }
 
     pub fn run(mut self) {

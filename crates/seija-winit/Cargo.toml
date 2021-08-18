@@ -1,0 +1,10 @@
+[package]
+name = "seija-winit"
+version = "0.1.0"
+edition = "2018"
+
+
+[dependencies]
+seija-app = {path = "../seija-app"}
+seija-core = {path = "../seija-core"}
+winit = "0.25.0"
