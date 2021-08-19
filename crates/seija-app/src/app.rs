@@ -5,7 +5,7 @@ use crate::IModule;
 pub struct App {
     pub world:World,
     pub schedule: Schedule,
-    runner: Option<Box<dyn Fn(App)>>
+    runner: Option<Box<dyn FnOnce(App)>>
 }
 
 impl App {
@@ -35,7 +35,7 @@ impl App {
         self.schedule.run(&mut self.world);
     }
 
-    pub fn set_runner(&mut self, run_fn: impl Fn(App) + 'static) {
+    pub fn set_runner(&mut self, run_fn: impl FnOnce(App) + 'static) {
         self.runner = Some(Box::new(run_fn));
     }
 
@@ -44,7 +44,7 @@ impl App {
     }
 
     pub fn run(mut self) {
-       if let Some(run_fn) = self.runner.take() {
+       if let Some(mut run_fn) = self.runner.take() {
            run_fn(self)
        } else {
            eprintln!("app runner is empty");

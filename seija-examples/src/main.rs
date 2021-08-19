@@ -7,7 +7,7 @@ use seija_winit::WinitModule;
 fn main() {
     let mut app = App::new();
     app.add_module(CoreModule);
-    app.add_module(WinitModule);
+    app.add_module(WinitModule::default());
     app.run();
 }
 

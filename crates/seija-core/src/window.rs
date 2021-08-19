@@ -1,11 +1,22 @@
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum WindowMode {
+    Windowed,
+    BorderlessFullscreen,
+    Fullscreen { use_size: bool },
+}
+
 pub trait IWindow {
     fn set_title(&mut self,str:&str);
     fn title(&self) -> &str;
 }
 
+unsafe impl Send for AppWindow {}
+unsafe impl Sync for AppWindow {}
 pub struct AppWindow {
     pub inner:Box<dyn IWindow>
 }
+
+
 
 impl AppWindow {
     pub fn new(win:impl IWindow + 'static) -> AppWindow {
@@ -23,27 +34,20 @@ impl AppWindow {
     }
 }
 
-mod test {
-    use crate::window::{AppWindow,IWindow};
-    pub struct TestWindow {
-        title:String,
-    }
+pub struct WindowConfig {
+    pub width: f32,
+    pub height: f32,
+    pub title: String,
+    pub mode: WindowMode
+}
 
-    impl IWindow for TestWindow {
-        fn set_title(&mut self,str:&str) {
-            self.title = String::from(str);
+impl Default for WindowConfig {
+    fn default() -> WindowConfig {
+        WindowConfig { 
+            width: 1024f32, 
+            height: 768f32, 
+            title: String::from("seija"), 
+            mode: WindowMode::Windowed
         }
-
-        fn title(&self) -> &str {
-            self.title.as_str()
-        }
-    }
-
-    #[test]
-    fn test_create() {
-        let winit = TestWindow { title: String::from("title") };
-        let mut app = AppWindow::new(winit);
-        app.inner_mut().set_title("fk");
-        println!("{}",app.inner().title());
     }
 }

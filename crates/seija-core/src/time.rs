@@ -42,7 +42,6 @@ impl Time {
         self.delta_seconds = self.delta.as_secs_f32();
 
         self.last_update = now;
-        println!("{:?}",self.delta);
     }
 }
 
