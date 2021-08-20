@@ -44,7 +44,7 @@ impl App {
     }
 
     pub fn run(mut self) {
-       if let Some(mut run_fn) = self.runner.take() {
+       if let Some(run_fn) = self.runner.take() {
            run_fn(self)
        } else {
            eprintln!("app runner is empty");

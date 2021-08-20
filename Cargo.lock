@@ -1106,6 +1106,10 @@ dependencies = [
 ]
 
 [[package]]
+name = "seija-render"
+version = "0.1.0"
+
+[[package]]
 name = "seija-winit"
 version = "0.1.0"
 dependencies = [

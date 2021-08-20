@@ -1,5 +1,3 @@
-use std::time::Duration;
-
 use seija_app::App;
 use seija_core::CoreModule;
 use seija_winit::WinitModule;

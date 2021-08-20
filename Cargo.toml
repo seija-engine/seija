@@ -3,5 +3,6 @@ members = [
     "crates/seija-app",
     "crates/seija-core",
     "crates/seija-winit",
+    "crates/seija-render",
     "seija-examples"
 ]

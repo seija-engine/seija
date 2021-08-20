@@ -1,3 +1,5 @@
+use std::{ops::{Deref, DerefMut}};
+
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum WindowMode {
     Windowed,
@@ -10,27 +12,28 @@ pub trait IWindow {
     fn title(&self) -> &str;
 }
 
-unsafe impl Send for AppWindow {}
-unsafe impl Sync for AppWindow {}
 pub struct AppWindow {
-    pub inner:Box<dyn IWindow>
+    pub inner:Box<dyn IWindow + Send + Sync>
 }
 
+impl Deref for AppWindow {
+    type Target = Box<dyn IWindow + Send + Sync>;
+    fn deref(&self) -> &Self::Target {
+        &self.inner
+    }
+}
 
+impl DerefMut for AppWindow {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.inner
+    }  
+}
 
 impl AppWindow {
-    pub fn new(win:impl IWindow + 'static) -> AppWindow {
+    pub fn new(win:impl IWindow + 'static + Send + Sync) -> AppWindow {
         AppWindow {
             inner:Box::new(win)
         }
-    }
-
-    pub fn inner(&self) -> &Box<dyn IWindow>  {
-        &self.inner
-    }
-
-    pub fn inner_mut(&mut self) -> &mut Box<dyn IWindow> {
-        &mut self.inner
     }
 }
 

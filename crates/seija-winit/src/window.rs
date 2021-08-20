@@ -1,4 +1,4 @@
-use seija_core::window::{AppWindow, IWindow, WindowConfig,WindowMode};
+use seija_core::window::{IWindow, WindowConfig,WindowMode};
 use winit::{dpi::LogicalSize, event_loop::EventLoop, monitor::{MonitorHandle, VideoMode}, window::{Window,Fullscreen}};
 pub struct WinitWindow {
     title:String,
