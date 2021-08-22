@@ -1,0 +1,10 @@
+[package]
+name = "wgpu-backed"
+version = "0.1.0"
+edition = "2018"
+
+
+[dependencies]
+wgpu = "0.9"
+parking_lot = "0.11.1"
+seija-render = {path = "../seija-render"}
