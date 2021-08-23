@@ -5,6 +5,7 @@ edition = "2018"
 
 
 [dependencies]
+futures-lite = "1.4.0"
 wgpu = "0.9"
 parking_lot = "0.11.1"
 seija-render = {path = "../seija-render"}

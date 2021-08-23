@@ -1550,7 +1550,9 @@ version = "0.1.0"
 dependencies = [
  "seija-app",
  "seija-core",
+ "seija-render",
  "seija-winit",
+ "wgpu-backed",
 ]
 
 [[package]]
@@ -1558,6 +1560,8 @@ name = "seija-render"
 version = "0.1.0"
 dependencies = [
  "bitflags",
+ "seija-app",
+ "seija-core",
  "uuid",
 ]
 
@@ -1980,6 +1984,7 @@ dependencies = [
 name = "wgpu-backed"
 version = "0.1.0"
 dependencies = [
+ "futures-lite",
  "parking_lot",
  "seija-render",
  "wgpu",
