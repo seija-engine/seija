@@ -1,8 +1,16 @@
+use raw_window_handle::{HasRawWindowHandle, RawWindowHandle};
 use seija_core::window::{IWindow, WindowConfig,WindowMode};
 use winit::{dpi::LogicalSize, event_loop::EventLoop, monitor::{MonitorHandle, VideoMode}, window::{Window,Fullscreen}};
 pub struct WinitWindow {
     title:String,
+    vsync:bool,
     window:Window
+}
+
+unsafe impl HasRawWindowHandle for WinitWindow {
+    fn raw_window_handle(&self) -> RawWindowHandle {
+        self.window.raw_window_handle()
+    }
 }
 
 
@@ -13,6 +21,12 @@ impl IWindow for WinitWindow {
     }
 
     fn title(&self) -> &str {  self.title.as_str() }
+
+    fn width(&self) -> u32 { self.window.inner_size().width }
+
+    fn height(&self) -> u32 { self.window.inner_size().height }
+
+    fn vsync(&self) -> bool { self.vsync }
 }
 
 impl WinitWindow {
@@ -32,7 +46,7 @@ impl WinitWindow {
              }
         };
         let window = builder.build(&event_loop).unwrap();
-        (WinitWindow {  title: config.title.clone(), window },event_loop)
+        (WinitWindow {  title: config.title.clone(), window,vsync:config.vsync },event_loop)
     }
 }
 

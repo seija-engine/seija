@@ -43,6 +43,13 @@ impl App {
         self.schedule.add_system_to_stage(stage_label, system);
     }
 
+    pub fn add_system2(&mut self,label: impl StageLabel,label2: impl StageLabel,system:impl Into<SystemDescriptor>) {
+        self.schedule.stage(label, |s: &mut Schedule| {
+            s.add_system_to_stage(label2, system)
+        });
+    }
+
+
     pub fn run(mut self) {
        if let Some(run_fn) = self.runner.take() {
            run_fn(self)

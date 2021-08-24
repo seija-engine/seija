@@ -1,5 +1,7 @@
 use std::{ops::{Deref, DerefMut}};
 
+use raw_window_handle::{HasRawWindowHandle, RawWindowHandle};
+
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum WindowMode {
     Windowed,
@@ -7,13 +9,24 @@ pub enum WindowMode {
     Fullscreen { use_size: bool },
 }
 
-pub trait IWindow {
+pub trait IWindow : HasRawWindowHandle {
     fn set_title(&mut self,str:&str);
     fn title(&self) -> &str;
+    fn width(&self) -> u32;
+    fn height(&self) -> u32;
+    fn vsync(&self) -> bool;
 }
+
+
 
 pub struct AppWindow {
     pub inner:Box<dyn IWindow + Send + Sync>
+}
+
+unsafe impl HasRawWindowHandle for AppWindow {
+    fn raw_window_handle(&self) -> RawWindowHandle {
+        self.inner.raw_window_handle()
+    }
 }
 
 impl Deref for AppWindow {
@@ -41,7 +54,8 @@ pub struct WindowConfig {
     pub width: f32,
     pub height: f32,
     pub title: String,
-    pub mode: WindowMode
+    pub mode: WindowMode,
+    pub vsync:bool,
 }
 
 impl Default for WindowConfig {
@@ -50,7 +64,8 @@ impl Default for WindowConfig {
             width: 1024f32, 
             height: 768f32, 
             title: String::from("seija"), 
-            mode: WindowMode::Windowed
+            mode: WindowMode::Windowed,
+            vsync:false,
         }
     }
 }
