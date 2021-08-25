@@ -1565,6 +1565,7 @@ dependencies = [
  "raw-window-handle",
  "seija-app",
  "seija-core",
+ "thiserror",
  "uuid",
  "wgpu",
 ]

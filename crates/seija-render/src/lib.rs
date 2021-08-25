@@ -7,6 +7,7 @@ use bevy_ecs::prelude::*;
 use seija_core::{CoreStage, StartupStage};
 use seija_core::window::AppWindow;
 
+pub mod graph;
 pub mod resource;
 mod render;
 
