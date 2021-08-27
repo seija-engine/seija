@@ -1,2 +1,2 @@
 mod resource;
-pub use  resource::{RenderResources};
+pub use  resource::{RenderResources,ResourceId};

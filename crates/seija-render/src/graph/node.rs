@@ -1,5 +1,6 @@
-use std::borrow::Cow;
+use std::{borrow::Cow};
 use super::RenderGraphError;
+use crate::resource::ResourceId;
 use uuid::Uuid;
 
 
@@ -12,7 +13,8 @@ impl NodeId {
 }
 
 pub trait INode: Send + Sync + 'static {
-
+    fn input_count(&self)  -> usize { 0 }
+    fn output_count(&self) -> usize { 0 }
 }
 
 
@@ -69,14 +71,22 @@ pub struct GraphNode {
     pub name:Option<Cow<'static,str>>,
     pub node:Box<dyn INode>,
     pub edges: Edges,
+    pub inputs:Vec<Option<ResourceId>>,
+    pub outputs:Vec<Option<ResourceId>>,
 }
 
 impl GraphNode {
     pub fn new<T>(id: NodeId, node: T) -> Self where T: INode {
+        let mut inputs:Vec<Option<ResourceId>> = Vec::new();
+        let mut outputs:Vec<Option<ResourceId>> = Vec::new();
+        inputs.resize(node.input_count(), None);
+        outputs.resize(node.output_count(), None);
         GraphNode {
             id,
             name:None,
             node:Box::new(node),
+            inputs,
+            outputs: Vec::new(),
             edges:Edges {
                 node_id:id,
                 input_edges: Vec::new(),
@@ -85,3 +95,5 @@ impl GraphNode {
         }
     }
 }
+
+

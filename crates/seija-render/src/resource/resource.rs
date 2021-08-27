@@ -1,5 +1,8 @@
 use std::{sync::Arc};
 
+#[derive(Debug,Clone,Hash,PartialEq, Eq)]
+pub struct ResourceId;
+
 pub struct RenderResources {
     pub device: Arc<wgpu::Device>,
     main_surface:Option<wgpu::Surface>,
