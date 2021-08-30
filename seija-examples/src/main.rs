@@ -1,5 +1,3 @@
-use std::borrow::Borrow;
-
 use seija_app::App;
 use seija_core::CoreModule;
 use seija_render::{RenderModule};

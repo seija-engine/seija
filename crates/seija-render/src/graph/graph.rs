@@ -1,10 +1,12 @@
+use std::collections::{HashSet, VecDeque};
 use std::{borrow::Cow, collections::HashMap, fmt::Debug};
 use super::node::{Edge, GraphNode, INode, NodeId};
 use super::RenderGraphError;
 
 pub struct RenderGraph {
     nodes: HashMap<NodeId, GraphNode>,
-    node_names: HashMap<Cow<'static, str>, NodeId>
+    node_names: HashMap<Cow<'static, str>, NodeId>,
+    iter:LinearGraphIter,
 }
 
 impl Debug for RenderGraph {
@@ -23,6 +25,7 @@ impl Default for RenderGraph {
         Self {
             nodes:Default::default(),
             node_names: Default::default(),
+            iter:LinearGraphIter::default(),
         }
     }
 }
@@ -32,6 +35,8 @@ impl RenderGraph {
     pub fn iter_nodes(&self) -> impl Iterator<Item = &GraphNode> {
         self.nodes.values()
     }
+
+   
 
     pub fn add_node<T>(&mut self,name:impl Into<Cow<'static, str>>,node:T) -> NodeId where T:INode {
         let id = NodeId::new();
@@ -43,12 +48,12 @@ impl RenderGraph {
         id
     }
 
-    pub fn get_node(&self,id:NodeId) -> Result<&GraphNode,RenderGraphError> {
-        self.nodes.get(&id).ok_or(RenderGraphError::InvalidNodeId(id))
+    pub fn get_node(&self,id:&NodeId) -> Result<&GraphNode,RenderGraphError> {
+        self.nodes.get(id).ok_or(RenderGraphError::InvalidNodeId(id.clone()))
     }
 
-    pub fn get_node_mut(&mut self,id:NodeId) -> Result<&mut GraphNode,RenderGraphError> {
-        self.nodes.get_mut(&id).ok_or(RenderGraphError::InvalidNodeId(id))
+    pub fn get_node_mut(&mut self,id:&NodeId) -> Result<&mut GraphNode,RenderGraphError> {
+        self.nodes.get_mut(id).ok_or(RenderGraphError::InvalidNodeId(id.clone()))
     }
 
     pub fn get_node_id(&self, name: &str) -> Result<NodeId, RenderGraphError> {
@@ -68,33 +73,135 @@ impl RenderGraph {
     }
 
     pub fn add_link(&mut self,from:NodeId,to:NodeId) -> Result<(),RenderGraphError> {
-        let edge = Edge::NodeEdge {
+        let edge = Edge {
             output_node: from,
             input_node: to,
         };
-        let from_node = self.get_node_mut(from)?;
+        let from_node = self.get_node_mut(&from)?;
         from_node.edges.add_output_edge(edge.clone())?;
 
-        let to_node = self.get_node_mut(to)?;
+        let to_node = self.get_node_mut(&to)?;
         to_node.edges.add_input_edge(edge)?;
         Ok(())
     }
+
+    pub fn build_iter(&mut self) {
+        let line_graph = LinearGraphIter::from_graph(self);
+        self.iter = line_graph;
+    }
+
+    pub fn prepare(&mut self,world:&mut bevy_ecs::prelude::World) {
+        for node in self.nodes.values_mut() {
+            node.node.prepare(world);
+        }
+
+       
+    }
 }
 
-mod test {
-    use crate::graph::{graph::RenderGraph, node::INode};
+#[derive(Default)]
+pub struct LinearGraphIter {
+    pub nodes:Vec<NodeId>
+}
 
+//
+// A -> B -> C -> D
+//    /     /
+//  E      F -> G
+//
+// H -> I -> J
+// 1. A E F H
+// 2. B G C
+// D
+
+// A E F H B G C D
+impl LinearGraphIter {
+    pub fn from_graph(graph:&RenderGraph) -> LinearGraphIter {
+        let only_outputs = graph.iter_nodes().filter(|n| n.edges.input_edges.is_empty());
+        let mut queue:VecDeque<NodeId> = VecDeque::new();
+        let mut ret_list:Vec<NodeId> = Vec::new();
+        let mut dic:HashSet<NodeId> = HashSet::new();
+        for node in only_outputs {
+            queue.push_back(node.id);
+            ret_list.push(node.id);
+            dic.insert(node.id);
+        }
+        while !queue.is_empty() {
+            let first = queue.pop_front().unwrap();
+            let first_node = graph.nodes.get(&first).unwrap();
+            if !dic.contains(&first) {
+                if Self::is_parent_in_dic(&dic, &first_node) {
+                    ret_list.push(first);
+                    dic.insert(first);
+                } else {
+                    queue.push_back(first);
+                }
+            }
+
+            for out_node_edge in first_node.edges.output_edges.iter() {
+                let out_node_id = &out_node_edge.input_node;
+                if dic.contains(out_node_id) { continue };
+                queue.push_back(*out_node_id);
+                let out_node = graph.get_node(out_node_id).unwrap();
+                if Self::is_parent_in_dic(&dic, out_node) {
+                    ret_list.push(*out_node_id);
+                    dic.insert(*out_node_id);
+                }
+            }
+        }
+        LinearGraphIter {
+            nodes:ret_list
+        }
+    }
+
+    fn is_parent_in_dic(dic:&HashSet<NodeId>,node:&GraphNode) -> bool {
+        for input_edge in node.edges.input_edges.iter() {
+            if !dic.contains(&input_edge.output_node) {
+                return false;
+            }
+        }
+        true
+    }
+}
+
+
+mod test {
+    use crate::graph::{ node::INode};
+    use bevy_ecs::prelude::*;
+    use crate::resource::ResourceId;
+
+   
     struct  TestNode;
-    impl INode for TestNode {}
+    impl INode for TestNode {
+        fn update(&mut self,_world: &World,_inputs:&Vec<Option<ResourceId>>,_outputs:&mut Vec<Option<ResourceId>>) {}
+    }
 
     #[test]
     fn test_graph() {
+        use super::LinearGraphIter;
+        use crate::graph::{RenderGraph};
         let mut graph = RenderGraph::default();
         let a_id = graph.add_node("node_a", TestNode);
         let b_id = graph.add_node("node_b", TestNode);
-        graph.add_link(a_id, b_id).unwrap();
+        let c_id = graph.add_node("node_c", TestNode);
 
-        dbg!(graph);
+        let d_id = graph.add_node("node_d", TestNode);
+        let e_id = graph.add_node("node_e", TestNode);
+        let f_id = graph.add_node("node_f", TestNode);
+
+        graph.add_link(a_id, b_id).unwrap();
+        graph.add_link(b_id, c_id).unwrap();
+        
+        graph.add_link(d_id, a_id).unwrap();
+        graph.add_link(d_id, e_id).unwrap();
+        graph.add_link(e_id, b_id).unwrap();
+        graph.add_link(f_id, c_id).unwrap();
+        
+        let line_graph = LinearGraphIter::from_graph(&graph);
+        for node_id in line_graph.nodes {
+            let node = graph.get_node(&node_id).unwrap();
+            print!("{:?} -> ",node.name.as_ref().unwrap());
+        }
     }
 
 }

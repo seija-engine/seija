@@ -1,12 +1,26 @@
 use std::{borrow::Cow, sync::Arc};
+use bevy_ecs::prelude::{Mut, World};
 
+use crate::graph::{LinearGraphIter, RenderGraph};
 use crate::resource::RenderResources;
+
+#[derive(Default)]
+pub struct RenderGraphContext {
+    pub graph:RenderGraph,
+    pub graph_iter:Arc<LinearGraphIter>,
+}
+
+impl RenderGraphContext {
+    pub fn build_iter(&mut self) {
+        self.graph_iter = Arc::new(LinearGraphIter::from_graph(&self.graph));
+    }
+}
+
 
 pub struct AppRender {
     pub instance: wgpu::Instance,
     pub device: Arc<wgpu::Device>,
     pub queue: wgpu::Queue,
-
     pub resources:RenderResources
 }
 
@@ -50,14 +64,21 @@ impl AppRender {
             instance,
             device:arc_device.clone(),
             queue,
-            resources:RenderResources::new(arc_device)
+            resources:RenderResources::new(arc_device),
         }
     }
 
-    pub fn update(&mut self) {
+    pub fn update(&mut self,world:&mut World) {
         self.resources.next_swap_chain_texture();
-
-
+        world.resource_scope(|world, mut render_ctx: Mut<RenderGraphContext>| {
+            render_ctx.graph.prepare(world);
+            for node_id in render_ctx.graph_iter.clone().nodes.iter() {
+                if let Ok(node) = render_ctx.graph.get_node_mut(node_id) {
+                    node.node.update(world, &node.inputs, &mut node.outputs);
+                }
+            }
+        });
+      
         self.resources.clear_swap_chain_texture();
     }
 }

@@ -1,6 +1,7 @@
 use std::{borrow::Cow};
 use super::RenderGraphError;
 use crate::resource::ResourceId;
+use bevy_ecs::prelude::*;
 use uuid::Uuid;
 
 
@@ -15,22 +16,18 @@ impl NodeId {
 pub trait INode: Send + Sync + 'static {
     fn input_count(&self)  -> usize { 0 }
     fn output_count(&self) -> usize { 0 }
+
+    fn prepare(&mut self, _world: &mut World) {}
+
+    fn update(&mut self,world: &World,inputs:&Vec<Option<ResourceId>>,outputs:&mut Vec<Option<ResourceId>>);
 }
 
 
 
 #[derive(Clone, Debug, Eq, PartialEq)]
-pub enum Edge {
-    SlotEdge {
-        input_node: NodeId,
-        input_index: usize,
-        output_node: NodeId,
-        output_index: usize,
-    },
-    NodeEdge {
-        input_node: NodeId,
-        output_node: NodeId,
-    },
+pub struct  Edge {
+    pub input_node: NodeId,
+    pub output_node: NodeId,
 }
 
 #[derive(Debug)]
