@@ -1,7 +1,7 @@
 use std::{borrow::Cow, sync::Arc};
 use bevy_ecs::prelude::{Mut, World};
 
-use crate::graph::{LinearGraphIter, RenderGraph};
+use crate::graph::{self, LinearGraphIter, RenderGraph};
 use crate::resource::RenderResources;
 
 #[derive(Default)]
@@ -73,8 +73,19 @@ impl AppRender {
         world.resource_scope(|world, mut render_ctx: Mut<RenderGraphContext>| {
             render_ctx.graph.prepare(world);
             for node_id in render_ctx.graph_iter.clone().nodes.iter() {
+                let cur_node = render_ctx.graph.get_node(node_id).unwrap();
+                let mut new_inputs = cur_node.inputs.clone();
+                for parent_edge in cur_node.edges.input_edges.iter() {
+                    let parent_node = render_ctx.graph.get_node(&parent_edge.output_node).unwrap();
+                    for i in 0..parent_edge.output_idxs.len() {
+                        let out_value = &parent_node.outputs[i];
+                        new_inputs[parent_edge.input_idxs[i]] = out_value.clone();
+                    }
+                }
+                 
                 if let Ok(node) = render_ctx.graph.get_node_mut(node_id) {
-                    node.node.update(world, &node.inputs, &mut node.outputs);
+                    
+                    node.node.update(world, &new_inputs, &mut node.outputs);
                 }
             }
         });

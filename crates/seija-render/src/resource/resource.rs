@@ -1,7 +1,7 @@
 use std::{sync::Arc};
 
 #[derive(Debug,Clone,Hash,PartialEq, Eq)]
-pub struct ResourceId;
+pub struct ResourceId(pub i32);
 
 pub struct RenderResources {
     pub device: Arc<wgpu::Device>,

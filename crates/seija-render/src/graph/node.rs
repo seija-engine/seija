@@ -1,4 +1,4 @@
-use std::{borrow::Cow};
+use std::{borrow::Cow, sync::RwLock};
 use super::RenderGraphError;
 use crate::resource::ResourceId;
 use bevy_ecs::prelude::*;
@@ -28,6 +28,8 @@ pub trait INode: Send + Sync + 'static {
 pub struct  Edge {
     pub input_node: NodeId,
     pub output_node: NodeId,
+    pub input_idxs:Vec<usize>,
+    pub output_idxs:Vec<usize>,
 }
 
 #[derive(Debug)]
@@ -83,7 +85,7 @@ impl GraphNode {
             name:None,
             node:Box::new(node),
             inputs,
-            outputs: Vec::new(),
+            outputs,
             edges:Edges {
                 node_id:id,
                 input_edges: Vec::new(),

@@ -48,13 +48,14 @@ fn get_render_system(world:&mut World) -> impl FnMut(&mut World) {
 fn add_base_nodes(graph_ctx:&mut RenderGraphContext) {
     use crate::graph::nodes::LogNode;
   
-    let node_a = graph_ctx.graph.add_node("node_a",  LogNode("a".into()));
-    let node_b = graph_ctx.graph.add_node("node_b", LogNode("b".into()));
-    let node_c = graph_ctx.graph.add_node("node_c", LogNode("c".into()));
-    let node_d = graph_ctx.graph.add_node("node_d", LogNode("d".into()));
-    graph_ctx.graph.add_link(node_a, node_b).unwrap();
-    graph_ctx.graph.add_link(node_b, node_c).unwrap();
-    graph_ctx.graph.add_link(node_d, node_b).unwrap();
+    let node_a = graph_ctx.graph.add_node("node_a",  LogNode("a".into(),0,1));
+    let node_b = graph_ctx.graph.add_node("node_b", LogNode("b".into(),0,1));
+    let node_c = graph_ctx.graph.add_node("node_c", LogNode("c".into(),2,1));
+    let node_d = graph_ctx.graph.add_node("node_d", LogNode("d".into(),1,1));
+
+    graph_ctx.graph.add_link(node_a, node_c,vec![0],vec![0]).unwrap();
+    graph_ctx.graph.add_link(node_b, node_c,vec![0],vec![1]).unwrap();
+    graph_ctx.graph.add_link(node_c, node_d,vec![0],vec![0]).unwrap();
 
     graph_ctx.build_iter();
 }

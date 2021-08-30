@@ -72,10 +72,12 @@ impl RenderGraph {
         }
     }
 
-    pub fn add_link(&mut self,from:NodeId,to:NodeId) -> Result<(),RenderGraphError> {
+    pub fn add_link(&mut self,from:NodeId,to:NodeId,from_idxs:Vec<usize>,to_idxs:Vec<usize>) -> Result<(),RenderGraphError> {
         let edge = Edge {
             output_node: from,
             input_node: to,
+            input_idxs: to_idxs,
+            output_idxs:from_idxs,
         };
         let from_node = self.get_node_mut(&from)?;
         from_node.edges.add_output_edge(edge.clone())?;
@@ -189,13 +191,13 @@ mod test {
         let e_id = graph.add_node("node_e", TestNode);
         let f_id = graph.add_node("node_f", TestNode);
 
-        graph.add_link(a_id, b_id).unwrap();
-        graph.add_link(b_id, c_id).unwrap();
+        graph.add_link(a_id, b_id,vec![],vec![]).unwrap();
+        graph.add_link(b_id, c_id,vec![],vec![]).unwrap();
         
-        graph.add_link(d_id, a_id).unwrap();
-        graph.add_link(d_id, e_id).unwrap();
-        graph.add_link(e_id, b_id).unwrap();
-        graph.add_link(f_id, c_id).unwrap();
+        graph.add_link(d_id, a_id,vec![],vec![]).unwrap();
+        graph.add_link(d_id, e_id,vec![],vec![]).unwrap();
+        graph.add_link(e_id, b_id,vec![],vec![]).unwrap();
+        graph.add_link(f_id, c_id,vec![],vec![]).unwrap();
         
         let line_graph = LinearGraphIter::from_graph(&graph);
         for node_id in line_graph.nodes {
