@@ -1571,6 +1571,7 @@ dependencies = [
  "bevy_ecs",
  "bitflags",
  "futures-lite",
+ "glam",
  "raw-window-handle",
  "seija-app",
  "seija-core",

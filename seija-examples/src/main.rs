@@ -4,7 +4,7 @@ use bevy_ecs::prelude::{Commands, Entity, IntoSystem, Query};
 use glam::Vec3;
 use seija_app::App;
 use seija_core::{CoreModule, CoreStage, StartupStage};
-use seija_render::{RenderModule};
+use seija_render::{RenderModule, camera::{self, camera::{Orthographic, Projection}}};
 use seija_winit::WinitModule;
 use seija_transform::{Transform, TransformModule, hierarchy::{Children,Parent}};
 
@@ -29,7 +29,8 @@ fn on_start_up(mut cmds:Commands) {
    let mut ct = Transform::default();
    ct.local.position = Vec3::new(2f32, 2f32, 2f32);
    a.insert(ct);
-   a.insert(Parent(root));
+   let proj = Projection::Ortho(Orthographic::default());
+   a.insert(camera::camera::Camera {projection :proj});
 }
 
 
