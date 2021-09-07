@@ -7,7 +7,7 @@ use seija_core::{CoreStage, StartupStage};
 use seija_core::window::AppWindow;
 
 
-
+pub mod camera;
 pub mod graph;
 pub mod resource;
 mod render;
@@ -40,7 +40,7 @@ fn on_start_up(mut render:ResMut<AppRender>,window:Res<AppWindow>) {
 fn get_render_system(world:&mut World) -> impl FnMut(&mut World) {
     let mut app_render = AppRender::new_sync(Config::default());
     let mut graph_ctx = RenderGraphContext::default();
-    add_base_nodes(&mut graph_ctx);
+    //add_base_nodes(&mut graph_ctx);
     world.insert_resource(graph_ctx);
     move |world| { app_render.update(world); }
 }

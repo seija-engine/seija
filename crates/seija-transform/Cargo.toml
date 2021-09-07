@@ -1,0 +1,11 @@
+[package]
+name = "seija-transform"
+version = "0.1.0"
+edition = "2018"
+
+[dependencies]
+seija-app = {path = "../seija-app"}
+seija-core = {path = "../seija-core"}
+smallvec = "1.6.1"
+bevy_ecs = "0.5.0"
+glam = "0.17.1"

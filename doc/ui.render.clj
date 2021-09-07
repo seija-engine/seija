@@ -6,7 +6,20 @@
 ;基础概念:
 ;   Mesh,贴图, Buffer, Pipeline, Shader
 
+
 ;目标：实现渲染系统配置化
 ;    1. 加入RenderObject被渲染物体概念
-;    2. RenderObject下加入Mesh和Material概念
-
+;      1.1 RenderObject下加入
+;          a. Mesh概念存储Mesh
+;          b. MaterialDB: (存储贴图，存储Buffer类配置)
+;          c. RenderScript: 完全动态？？？
+;
+;
+;    2. 使用渲染图RenderGraph
+;         2.1 通过配置构建graph.render
+;         2.2  Node功能???
+;
+;
+;  ========> 应该先实现一份基于render graph管线固定的材质系统，然后在考虑如何实现开发渲染管线的DSL。
+;  
+; 

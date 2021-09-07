@@ -851,6 +851,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "glam"
+version = "0.17.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e01732b97afd8508eee3333a541b9f7610f454bb818669e66e90f5f57c93a776"
+
+[[package]]
 name = "glow"
 version = "0.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1549,9 +1555,12 @@ dependencies = [
 name = "seija-examples"
 version = "0.1.0"
 dependencies = [
+ "bevy_ecs",
+ "glam",
  "seija-app",
  "seija-core",
  "seija-render",
+ "seija-transform",
  "seija-winit",
 ]
 
@@ -1568,6 +1577,17 @@ dependencies = [
  "thiserror",
  "uuid",
  "wgpu",
+]
+
+[[package]]
+name = "seija-transform"
+version = "0.1.0"
+dependencies = [
+ "bevy_ecs",
+ "glam",
+ "seija-app",
+ "seija-core",
+ "smallvec",
 ]
 
 [[package]]

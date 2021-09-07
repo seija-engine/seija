@@ -4,5 +4,6 @@ members = [
     "crates/seija-core",
     "crates/seija-winit",
     "crates/seija-render",
+    "crates/seija-transform",
     "seija-examples"
 ]

@@ -9,3 +9,6 @@ seija-app = {path = "../crates/seija-app"}
 seija-core = {path = "../crates/seija-core"}
 seija-winit = {path = "../crates/seija-winit"}
 seija-render = {path = "../crates/seija-render"}
+seija-transform = {path = "../crates/seija-transform"}
+bevy_ecs = "0.5.0"
+glam = "0.17.1"
