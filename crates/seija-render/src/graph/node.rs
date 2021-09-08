@@ -19,7 +19,7 @@ pub trait INode: Send + Sync + 'static {
 
     fn prepare(&mut self, _world: &mut World) {}
 
-    fn update(&mut self,world: &World,inputs:&Vec<Option<ResourceId>>,outputs:&mut Vec<Option<ResourceId>>);
+    fn update(&mut self,world: &mut World,inputs:&Vec<Option<ResourceId>>,outputs:&mut Vec<Option<ResourceId>>);
 }
 
 

@@ -7,7 +7,7 @@ impl INode for LogNode {
     fn input_count(&self)  -> usize { self.1 }
     fn output_count(&self) -> usize { self.2 }
 
-    fn update(&mut self,_world: &World,_inputs:&Vec<Option<ResourceId>>,_outputs:&mut Vec<Option<ResourceId>>) {
+    fn update(&mut self,_world: &mut World,_inputs:&Vec<Option<ResourceId>>,_outputs:&mut Vec<Option<ResourceId>>) {
         match  self.0.as_str()  {
             "a" => {
                 _outputs[0] = Some(ResourceId(1))

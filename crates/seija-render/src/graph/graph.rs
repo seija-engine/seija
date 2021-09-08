@@ -31,12 +31,9 @@ impl Default for RenderGraph {
 }
 
 impl RenderGraph {
-
     pub fn iter_nodes(&self) -> impl Iterator<Item = &GraphNode> {
         self.nodes.values()
     }
-
-   
 
     pub fn add_node<T>(&mut self,name:impl Into<Cow<'static, str>>,node:T) -> NodeId where T:INode {
         let id = NodeId::new();
@@ -175,7 +172,7 @@ mod test {
    
     struct  TestNode;
     impl INode for TestNode {
-        fn update(&mut self,_world: &World,_inputs:&Vec<Option<ResourceId>>,_outputs:&mut Vec<Option<ResourceId>>) {}
+        fn update(&mut self,_world: &mut World,_inputs:&Vec<Option<ResourceId>>,_outputs:&mut Vec<Option<ResourceId>>) {}
     }
 
     #[test]

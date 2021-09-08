@@ -1,5 +1,7 @@
 use glam::Mat4;
 
+use super::view_list::ViewList;
+
 pub enum Projection {
     Ortho(Orthographic)
 }
@@ -42,11 +44,12 @@ impl Orthographic {
 
 
 pub struct Camera {
-   pub projection:Projection
+   pub projection:Projection,
+   pub view_list:ViewList,
 }
 
 impl Camera {
     pub fn from_2d(ortho:Orthographic) -> Camera {
-        Camera { projection:Projection::Ortho(ortho) }
+        Camera { projection:Projection::Ortho(ortho),view_list:ViewList::default() }
     }
 }
