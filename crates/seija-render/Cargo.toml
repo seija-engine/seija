@@ -6,6 +6,7 @@ edition = "2018"
 [dependencies]
 seija-app = {path = "../seija-app"}
 seija-core = {path = "../seija-core"}
+seija-winit = {path = "../seija-winit"}
 seija-transform = {path = "../seija-transform"}
 uuid = "0.8.2"
 bitflags = "1.2.1"

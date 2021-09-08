@@ -1,6 +1,6 @@
 use std::{borrow::Cow, sync::RwLock};
 use super::RenderGraphError;
-use crate::resource::ResourceId;
+use crate::{render::{RenderContext}, resource::ResourceId};
 use bevy_ecs::prelude::*;
 use uuid::Uuid;
 
@@ -19,7 +19,7 @@ pub trait INode: Send + Sync + 'static {
 
     fn prepare(&mut self, _world: &mut World) {}
 
-    fn update(&mut self,world: &mut World,inputs:&Vec<Option<ResourceId>>,outputs:&mut Vec<Option<ResourceId>>);
+    fn update(&mut self,world: &mut World,render_ctx:&mut RenderContext,inputs:&Vec<Option<ResourceId>>,outputs:&mut Vec<Option<ResourceId>>);
 }
 
 

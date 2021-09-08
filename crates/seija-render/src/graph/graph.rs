@@ -165,14 +165,14 @@ impl LinearGraphIter {
 
 
 mod test {
-    use crate::graph::{ node::INode};
+    use crate::{graph::{ node::INode}, render::{RenderContext, RenderGraphContext}};
     use bevy_ecs::prelude::*;
     use crate::resource::ResourceId;
 
    
     struct  TestNode;
     impl INode for TestNode {
-        fn update(&mut self,_world: &mut World,_inputs:&Vec<Option<ResourceId>>,_outputs:&mut Vec<Option<ResourceId>>) {}
+        fn update(&mut self,_world: &mut World,render_ctx:&mut RenderContext,_inputs:&Vec<Option<ResourceId>>,_outputs:&mut Vec<Option<ResourceId>>) {}
     }
 
     #[test]

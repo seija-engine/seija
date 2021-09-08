@@ -1577,6 +1577,7 @@ dependencies = [
  "seija-app",
  "seija-core",
  "seija-transform",
+ "seija-winit",
  "thiserror",
  "uuid",
  "wgpu",

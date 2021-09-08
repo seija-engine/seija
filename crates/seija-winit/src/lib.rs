@@ -1,6 +1,8 @@
 mod window;
+pub mod event;
+use event::{WindowCreated, WindowResized};
 use seija_app::{IModule,App};
-use seija_core::window::{AppWindow, WindowConfig};
+use seija_core::{event::{Events, add_event}, window::{AppWindow, WindowConfig}};
 use window::WinitWindow;
 use winit::{event::{Event,WindowEvent}, event_loop::{ControlFlow, EventLoop, EventLoopWindowTarget}};
 
@@ -11,9 +13,12 @@ impl IModule for WinitModule {
     fn init(&mut self,app:&mut App) {
         let (winit_window,event_loop) = WinitWindow::from_config(&self.0);
         let app_window = AppWindow::new(winit_window);
-       
-        app.add_resource(app_window);
+        add_event::<WindowCreated>(app);
+        add_event::<WindowResized>(app);
+        let mut window_created_events = app.world.get_resource_mut::<Events<WindowCreated>>().unwrap();
+        window_created_events.send(WindowCreated);
 
+        app.add_resource(app_window);
         app.set_runner(|app| { winit_runner(event_loop,app); });
     }
 }
@@ -29,7 +34,12 @@ fn winit_runner(event_loop:EventLoop<()>,mut app:App) {
                         *control_flow = ControlFlow::Exit
                     },
                     WindowEvent::Resized(new_size) => {
-                        dbg!(new_size);
+                        
+                        let mut resize_events = app.world.get_resource_mut::<Events<WindowResized>>().unwrap();
+                        resize_events.send(WindowResized {
+                            width: new_size.width as f32,
+                            height: new_size.height as f32,
+                        });
                     }
                     _ => {}
                 }

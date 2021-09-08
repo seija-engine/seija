@@ -1,9 +1,13 @@
+use bevy_ecs::component::Component;
 use bevy_ecs::{prelude::*, schedule::RunOnce};
 use bevy_ecs::schedule::{StageLabel};
+use event::Events;
 use seija_app::{IModule,App};
 use time::{Time};
 pub mod time;
 pub mod window;
+pub mod event;
+
 
 #[derive(Debug, Hash, PartialEq, Eq, Clone,StageLabel )]
 pub enum CoreStage {
@@ -49,3 +53,6 @@ impl CoreModule {
         app.schedule.add_stage(CoreStage::PostUpdate, SystemStage::parallel());
     }
 }
+
+
+
