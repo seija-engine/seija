@@ -8,21 +8,6 @@ impl INode for LogNode {
     fn output_count(&self) -> usize { self.2 }
 
     fn update(&mut self,_world: &mut World,render_ctx:&mut RenderContext,_inputs:&Vec<Option<ResourceId>>,_outputs:&mut Vec<Option<ResourceId>>) {
-        match  self.0.as_str()  {
-            "a" => {
-                _outputs[0] = Some(ResourceId(1))
-            },
-            "b" => {
-                _outputs[0] = Some(ResourceId(2))
-            },
-            "c" => {
-                dbg!(_inputs);
-                _outputs[0] = Some(ResourceId(3))
-            },
-            "d" => {
-                _outputs[0] = _inputs[0].clone();
-            },
-            _ => {}
-        }
+       
     }
 }

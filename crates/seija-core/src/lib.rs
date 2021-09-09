@@ -4,6 +4,8 @@ use bevy_ecs::schedule::{StageLabel};
 use event::Events;
 use seija_app::{IModule,App};
 use time::{Time};
+
+pub mod bytes;
 pub mod time;
 pub mod window;
 pub mod event;
@@ -36,6 +38,7 @@ impl IModule for CoreModule {
         app.init_resource::<Time>();
         app.init_resource::<TestInt>();
         app.add_system(CoreStage::First, time::time_system.exclusive_system());
+        app.add_system(CoreStage::Last, World::clear_trackers.exclusive_system());
     }
 }
 
@@ -51,6 +54,7 @@ impl CoreModule {
         app.schedule.add_stage(CoreStage::PreUpdate, SystemStage::parallel());
         app.schedule.add_stage(CoreStage::Update, SystemStage::parallel());
         app.schedule.add_stage(CoreStage::PostUpdate, SystemStage::parallel());
+        app.schedule.add_stage(CoreStage::Last, SystemStage::parallel());
     }
 }
 

@@ -3,8 +3,8 @@ use seija_core::event::{Events, ManualEventReader};
 use seija_core::window::AppWindow;
 use seija_winit::event::{WindowCreated, WindowResized};
 use std::{borrow::Cow, sync::Arc};
-use wgpu::CommandEncoder;
-
+use wgpu::{CommandEncoder, CommandEncoderDescriptor};
+use crate::camera::camera::update_camera;
 use crate::graph::{LinearGraphIter, RenderGraph};
 use crate::resource::RenderResources;
 
@@ -25,7 +25,7 @@ unsafe impl Send for RenderContext {}
 unsafe impl Sync for RenderContext {}
 pub struct RenderContext {
     pub resources:RenderResources,
-    pub command_buffer:CommandEncoder,
+    pub command_encoder:Option<CommandEncoder>,
 }
 
 pub struct AppRender {
@@ -94,7 +94,10 @@ impl AppRender {
     }
 
     pub fn update(&mut self, world: &mut World, graph_ctx: &mut RenderGraphContext,render_ctx:&mut RenderContext) {
+        render_ctx.command_encoder = Some(self.device.create_command_encoder(&CommandEncoderDescriptor::default()));
+        
         self.update_winodw_surface(world,&mut render_ctx.resources);
+        update_camera(world,render_ctx);
         render_ctx.resources.next_swap_chain_texture();
         graph_ctx.graph.prepare(world);
         for node_id in graph_ctx.graph_iter.clone().nodes.iter() {
@@ -112,6 +115,10 @@ impl AppRender {
                 node.node.update(world,render_ctx, &new_inputs, &mut node.outputs);
             }
         }
+        
+        let buffer = render_ctx.command_encoder.take().unwrap().finish();
+        self.queue.submit(Some(buffer));
+
         render_ctx.resources.clear_swap_chain_texture();
     }
 
@@ -139,7 +146,6 @@ impl AppRender {
         };
         if let Some(_) = resize {
             let app_window = world.get_resource::<AppWindow>().unwrap();   
-            println!("{}",app_window.width());
             render_res.create_swap_chain(app_window.width(), app_window.height(), app_window.vsync());
         }
         

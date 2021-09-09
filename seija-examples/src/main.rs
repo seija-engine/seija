@@ -1,3 +1,5 @@
+use std::process::Command;
+
 use bevy_ecs::prelude::{Commands, Entity, IntoSystem, Query};
 use glam::Vec3;
 use seija_app::App;
@@ -24,6 +26,9 @@ fn on_start_up(mut commands:Commands) {
         root.insert(t);
         let camera = Camera::from_2d(Orthographic::default());
         root.insert(camera);
+
+        let test = TestComponent {number: 0};
+        root.insert(test);
         root.id()
     };
 
@@ -33,6 +38,9 @@ fn on_start_up(mut commands:Commands) {
 
 }
 
+pub struct  TestComponent {
+    number:u32
+}
 
 fn create_elem(commands:&mut Commands,pos:Vec3,parent:Entity) -> Entity {
     let mut elem = commands.spawn();
@@ -45,8 +53,12 @@ fn create_elem(commands:&mut Commands,pos:Vec3,parent:Entity) -> Entity {
     elem.id()
 }
 
-fn on_update(childrens:Query<(Entity,&Transform)>) {
-   for (e,t) in childrens.iter() {
-      //println!("e:{:?}  local:{:?} global:{:?}",e.id(),&t.local.position,&t.global().position);
+fn on_update(mut commands:Commands,mut childrens:Query<(Entity,&mut TestComponent,&Camera)>) {
+   for (e,mut t,c) in childrens.iter_mut() {
+       t.number += 1;
+       if t.number > 100 {
+          let mut e_cmd = commands.entity(e);
+          e_cmd.remove::<Camera>();
+       }
    }
 }

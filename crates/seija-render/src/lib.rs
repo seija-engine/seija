@@ -1,5 +1,5 @@
 use std::borrow::{Borrow, BorrowMut};
-use camera::view_list::view_list_system;
+use camera::{view_list::view_list_system,camera::CamerasBuffer};
 use render::{AppRender, Config,RenderContext, RenderGraphContext};
 use resource::RenderResources;
 use seija_app::IModule;
@@ -17,23 +17,25 @@ pub mod graph;
 pub mod resource;
 mod render;
 
+const MATRIX_SIZE: u64 = std::mem::size_of::<[[f32; 4]; 4]>() as u64;
 
 pub struct RenderModule;
 
 impl IModule for RenderModule {
     fn init(&mut self,app:&mut App) {
+        app.add_resource(CamerasBuffer::default());
         let render_system = get_render_system();
-        app.add_system(CoreStage::Update, render_system.exclusive_system());
+        app.add_system(CoreStage::PostUpdate, render_system.exclusive_system().at_end());
         app.add_system(CoreStage::PostUpdate, view_list_system.system());
     }
 }
 
 fn get_render_system() -> impl FnMut(&mut World) {
     let mut app_render = AppRender::new_sync(Config::default());
-    let command_buffer = app_render.device.create_command_encoder(&CommandEncoderDescriptor::default());
+    let command_encoder = app_render.device.create_command_encoder(&CommandEncoderDescriptor::default());
     let mut graph_ctx = RenderGraphContext::default();
     let mut render_ctx = RenderContext {
-        command_buffer,
+        command_encoder:Some(command_encoder),
         resources:RenderResources::new(app_render.device.clone())
     };
     add_base_nodes(&mut graph_ctx);
