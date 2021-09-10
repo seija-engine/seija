@@ -1,14 +1,11 @@
-use std::borrow::{Borrow, BorrowMut};
 use camera::{view_list::view_list_system,camera::CamerasBuffer};
 use render::{AppRender, Config,RenderContext, RenderGraphContext};
 use resource::RenderResources;
 use seija_app::IModule;
 use seija_app::{App};
 use bevy_ecs::prelude::*;
-use seija_core::{CoreStage, StartupStage};
-use seija_core::window::AppWindow;
+use seija_core::{CoreStage};
 use wgpu::CommandEncoderDescriptor;
-
 use crate::graph::nodes::PassNode;
 
 pub mod material;

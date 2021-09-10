@@ -1,10 +1,9 @@
-use std::process::Command;
-
+use lite_clojure_eval::EvalRT;
 use bevy_ecs::prelude::{Commands, Entity, IntoSystem, Query};
 use glam::Vec3;
 use seija_app::App;
 use seija_core::{CoreModule, CoreStage, StartupStage};
-use seija_render::{RenderModule, camera::{self, camera::{Camera, Orthographic, Projection}}, material::{Material, RenderOrder}};
+use seija_render::{RenderModule, camera::{camera::{Camera, Orthographic}}, material::{Material, RenderOrder, read_material_def}};
 use seija_winit::WinitModule;
 use seija_transform::{Transform, TransformModule, hierarchy::Parent};
 
@@ -35,7 +34,11 @@ fn on_start_up(mut commands:Commands) {
     
     create_elem(&mut commands, Vec3::new(2f32, 2f32, 2f32), root);
     create_elem(&mut  commands, Vec3::new(1f32, 1f32, 1f32), root);
-
+    
+    let test_md_string = std::fs::read_to_string("res/material/ui.md.clj").unwrap();
+    let mut vm = EvalRT::new();
+    read_material_def(&mut vm, &test_md_string).unwrap();
+    
 }
 
 pub struct  TestComponent {
@@ -54,7 +57,7 @@ fn create_elem(commands:&mut Commands,pos:Vec3,parent:Entity) -> Entity {
 }
 
 fn on_update(mut commands:Commands,mut childrens:Query<(Entity,&mut TestComponent,&Camera)>) {
-   for (e,mut t,c) in childrens.iter_mut() {
+   for (e,mut t,_c) in childrens.iter_mut() {
        t.number += 1;
        if t.number > 100 {
           let mut e_cmd = commands.entity(e);

@@ -172,7 +172,7 @@ mod test {
    
     struct  TestNode;
     impl INode for TestNode {
-        fn update(&mut self,_world: &mut World,render_ctx:&mut RenderContext,_inputs:&Vec<Option<ResourceId>>,_outputs:&mut Vec<Option<ResourceId>>) {}
+        fn update(&mut self,_world: &mut World,_render_ctx:&mut RenderContext,_inputs:&Vec<Option<ResourceId>>,_outputs:&mut Vec<Option<ResourceId>>) {}
     }
 
     #[test]

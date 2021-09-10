@@ -1,4 +1,4 @@
-use std::{borrow::Cow, sync::RwLock};
+use std::{borrow::Cow};
 use super::RenderGraphError;
 use crate::{render::{RenderContext}, resource::ResourceId};
 use bevy_ecs::prelude::*;
