@@ -21,5 +21,17 @@
 ;
 ;
 ;  ========> 应该先实现一份基于render graph管线固定的材质系统，然后在考虑如何实现开发渲染管线的DSL。
-;  
+; filament使用PipelineKey作为一个Pipeline的key，会动态的根据这个Key创建或者获取已有的Pipeline
+; struct PipelineKey {
+;    VkShaderModule shaders[SHADER_MODULE_COUNT]; // 16 bytes
+;    RasterState rasterState;                     // 124 bytes
+;    VkPrimitiveTopology topology;                // 4 bytes
+;    VkRenderPass renderPass;                     // 8 bytes
+;    uint16_t subpassIndex;                       // 2 bytes
+;    uint16_t padding0;                           // 2 bytes
+;    VkVertexInputAttributeDescription vertexAttributes[VERTEX_ATTRIBUTE_COUNT]; // 256 bytes
+;    VkVertexInputBindingDescription vertexBuffers[VERTEX_ATTRIBUTE_COUNT];      // 192 bytes
+;    uint32_t padding1;                                                          // 4 bytes
+;};  
 ; 
+;
