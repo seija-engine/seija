@@ -24,6 +24,8 @@ impl IModule for RenderModule {
         let render_system = get_render_system();
         app.add_system(CoreStage::PostUpdate, render_system.exclusive_system().at_end());
         app.add_system(CoreStage::PostUpdate, view_list_system.system());
+        
+        material::init_material(app);
     }
 }
 

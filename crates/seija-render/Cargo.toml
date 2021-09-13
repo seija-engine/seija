@@ -4,6 +4,7 @@ version = "0.1.0"
 edition = "2018"
 
 [dependencies]
+seija-asset = {path = "../seija-asset"}
 seija-app = {path = "../seija-app"}
 seija-core = {path = "../seija-core"}
 seija-winit = {path = "../seija-winit"}

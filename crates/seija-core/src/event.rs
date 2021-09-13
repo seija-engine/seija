@@ -61,6 +61,18 @@ pub struct EventReader<'a, T: Component> {
     events: Res<'a, Events<T>>,
 }
 
+impl<'a, T: Component> EventReader<'a, T> {   
+    pub fn iter(&mut self) -> impl DoubleEndedIterator<Item = &T> {
+        self.iter_with_id().map(|(event, _id)| event)
+    }
+
+    pub fn iter_with_id(&mut self) -> impl DoubleEndedIterator<Item = (&T, EventId<T>)> {
+        internal_event_reader(&mut self.last_event_count.0, &self.events).map(|(event, id)| {
+            (event, id)
+        })
+    }
+}
+
 /// Sends events of type `T`.
 #[derive(SystemParam)]
 pub struct EventWriter<'a, T: Component> {
@@ -138,6 +150,14 @@ impl<T: Component> Events<T> {
             }
         }
     }
+
+    pub fn drain(&mut self) -> impl Iterator<Item = T> + '_ {
+        let map = |i: EventInstance<T>| i.event;
+        match self.state {
+            State::A => self.events_b.drain(..).map(map).chain(self.events_a.drain(..).map(map)),
+            State::B => self.events_a.drain(..).map(map).chain(self.events_b.drain(..).map(map)),
+        }
+    }
 }
 
 
@@ -173,7 +193,3 @@ fn internal_event_reader<'a, T>(last_event_count: &mut usize,events: &'a Events<
 
 
 
-pub fn add_event<T>(app:&mut App) where T:Component {
-    app.add_resource(Events::<T>::default());
-    app.add_system(CoreStage::First, Events::<T>::update_system.system());
-}

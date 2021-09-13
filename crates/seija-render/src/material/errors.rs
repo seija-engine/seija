@@ -13,4 +13,6 @@ pub enum MaterialDefReadError {
     InvalidPass,
     #[error("MaterialDef order error")]
     InvalidOrder(String),
+    #[error("MaterialDef props error")]
+    InvalidProp,
 }

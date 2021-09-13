@@ -9,6 +9,8 @@ pub mod bytes;
 pub mod time;
 pub mod window;
 pub mod event;
+pub mod type_uuid;
+pub use type_uuid::{TypeUuid,TypeUuidDynamic};
 
 
 #[derive(Debug, Hash, PartialEq, Eq, Clone,StageLabel )]
@@ -60,3 +62,13 @@ impl CoreModule {
 
 
 
+pub trait AddCore {
+    fn add_event<T:Component>(&mut self);
+}
+
+impl AddCore for App {
+    fn add_event<T:Component>(&mut self) {
+        self.add_resource(Events::<T>::default());
+        self.add_system(CoreStage::First, Events::<T>::update_system.system());
+    }
+}

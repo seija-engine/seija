@@ -4,6 +4,8 @@ version = "0.1.0"
 edition = "2018"
 
 [dependencies]
+uuid = "0.8.2"
+core-derive = { path = "./core-derive" }
 raw-window-handle = "0.3.3"
 bevy_ecs = "0.5.0"
 seija-app = {path = "../seija-app"}

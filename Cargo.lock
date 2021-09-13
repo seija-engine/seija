@@ -318,6 +318,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a2df960f5d869b2dd8532793fde43eb5427cceb126c929747a26823ab0eeb536"
 
 [[package]]
+name = "core-derive"
+version = "0.1.0"
+dependencies = [
+ "quote",
+ "syn",
+ "uuid",
+]
+
+[[package]]
 name = "core-foundation"
 version = "0.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1591,12 +1600,25 @@ dependencies = [
 ]
 
 [[package]]
+name = "seija-asset"
+version = "0.1.0"
+dependencies = [
+ "bevy_ecs",
+ "rand",
+ "seija-app",
+ "seija-core",
+ "uuid",
+]
+
+[[package]]
 name = "seija-core"
 version = "0.1.0"
 dependencies = [
  "bevy_ecs",
+ "core-derive",
  "raw-window-handle",
  "seija-app",
+ "uuid",
 ]
 
 [[package]]
@@ -1607,6 +1629,7 @@ dependencies = [
  "glam",
  "lite-clojure-eval",
  "seija-app",
+ "seija-asset",
  "seija-core",
  "seija-render",
  "seija-transform",
@@ -1625,6 +1648,7 @@ dependencies = [
  "num_enum",
  "raw-window-handle",
  "seija-app",
+ "seija-asset",
  "seija-core",
  "seija-transform",
  "seija-winit",

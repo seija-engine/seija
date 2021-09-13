@@ -2,7 +2,7 @@ mod window;
 pub mod event;
 use event::{WindowCreated, WindowResized};
 use seija_app::{IModule,App};
-use seija_core::{event::{Events, add_event}, window::{AppWindow, WindowConfig}};
+use seija_core::{event::{Events}, window::{AppWindow, WindowConfig},AddCore};
 use window::WinitWindow;
 use winit::{event::{Event,WindowEvent}, event_loop::{ControlFlow, EventLoop, EventLoopWindowTarget}};
 
@@ -13,8 +13,8 @@ impl IModule for WinitModule {
     fn init(&mut self,app:&mut App) {
         let (winit_window,event_loop) = WinitWindow::from_config(&self.0);
         let app_window = AppWindow::new(winit_window);
-        add_event::<WindowCreated>(app);
-        add_event::<WindowResized>(app);
+        app.add_event::<WindowCreated>();
+        app.add_event::<WindowResized>();
         let mut window_created_events = app.world.get_resource_mut::<Events<WindowCreated>>().unwrap();
         window_created_events.send(WindowCreated);
 

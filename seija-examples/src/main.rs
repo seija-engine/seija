@@ -1,9 +1,10 @@
 use lite_clojure_eval::EvalRT;
-use bevy_ecs::prelude::{Commands, Entity, IntoSystem, Query};
+use bevy_ecs::prelude::{Commands, Entity, IntoSystem, Query, Res, ResMut};
 use glam::Vec3;
 use seija_app::App;
-use seija_core::{CoreModule, CoreStage, StartupStage};
-use seija_render::{RenderModule, camera::{camera::{Camera, Orthographic}}, material::{Material, RenderOrder, read_material_def}};
+use seija_asset::{AddAsset, AssetEvent, AssetModule, Assets, HandleId};
+use seija_core::{CoreModule, CoreStage, StartupStage, event::EventReader};
+use seija_render::{RenderModule, camera::{camera::{Camera, Orthographic}}, material::{Material, MaterialDef, RenderOrder, read_material_def}};
 use seija_winit::WinitModule;
 use seija_transform::{Transform, TransformModule, hierarchy::Parent};
 
@@ -12,13 +13,14 @@ fn main() {
     app.add_module(CoreModule);
     app.add_module(WinitModule::default());
     app.add_module(TransformModule);
+    app.add_module(AssetModule);
     app.add_module(RenderModule);
     app.add_system2(CoreStage::Startup,StartupStage::Startup, on_start_up.system());
     app.add_system(CoreStage::Update, on_update.system());
     app.run();
 }
 
-fn on_start_up(mut commands:Commands) {
+fn on_start_up(mut commands:Commands,mut mat_defs:ResMut<Assets<MaterialDef>>) {
     let root = {
         let mut root = commands.spawn();
         let t = Transform::default();
@@ -37,8 +39,11 @@ fn on_start_up(mut commands:Commands) {
     
     let test_md_string = std::fs::read_to_string("res/material/ui.md.clj").unwrap();
     let mut vm = EvalRT::new();
-    read_material_def(&mut vm, &test_md_string).unwrap();
-    
+    let material_def = read_material_def(&mut vm, &test_md_string).unwrap();
+    dbg!(&material_def);
+
+    let id = HandleId::random::<MaterialDef>();
+    mat_defs.set_untracked(id, material_def);
 }
 
 pub struct  TestComponent {
@@ -56,12 +61,15 @@ fn create_elem(commands:&mut Commands,pos:Vec3,parent:Entity) -> Entity {
     elem.id()
 }
 
-fn on_update(mut commands:Commands,mut childrens:Query<(Entity,&mut TestComponent,&Camera)>) {
+fn on_update(mut commands:Commands,mut childrens:Query<(Entity,&mut TestComponent,&Camera)>,mut mat_def_events:EventReader<AssetEvent<MaterialDef>>) {
    for (e,mut t,_c) in childrens.iter_mut() {
        t.number += 1;
        if t.number > 100 {
           let mut e_cmd = commands.entity(e);
           e_cmd.remove::<Camera>();
        }
+   }
+   for ev in mat_def_events.iter() {
+       dbg!(ev);
    }
 }

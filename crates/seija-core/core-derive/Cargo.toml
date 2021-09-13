@@ -1,0 +1,12 @@
+[package]
+name = "core-derive"
+version = "0.1.0"
+edition = "2018"
+
+[lib]
+proc-macro = true
+
+[dependencies]
+syn = "1.0.73"
+uuid = "0.8.2"
+quote = "1.0"
