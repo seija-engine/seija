@@ -21,6 +21,7 @@ impl HandleId {
     }
 }
 
+#[derive(Debug)]
 pub struct Handle<T> where T:Asset {
     pub id:HandleId,
     marker: PhantomData<T>

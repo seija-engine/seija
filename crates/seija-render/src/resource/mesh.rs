@@ -5,7 +5,7 @@ use seija_core::TypeUuid;
 use uuid::Uuid;
 
 #[derive(Debug,TypeUuid)]
-#[uuid = "58ee0320-a01e-4a1b-9d07-ade19767853b"]
+#[uuid = "ea48c171-e7b4-4e54-8895-dda5a2d0fa90"]
 pub struct Mesh {
     typ:PrimitiveTopology,
     values:Vec<VertexAttributeValues>,
@@ -232,9 +232,17 @@ impl Mesh {
 pub(crate) fn update_mesh_system(mut mesh_events:EventReader<AssetEvent<Mesh>>) {
     for event in mesh_events.iter() {
         match event {
-            AssetEvent::Created { ref handle } =>  { }
+            AssetEvent::Created { ref handle } =>  { 
+               println!("add mesh");
+            }
             AssetEvent::Modified { ref handle } => { }
             AssetEvent::Removed { ref handle } =>  { }
         }
     }
+}
+
+#[test]
+fn test_uuid() {
+    let uuid = Uuid::new_v4();
+    dbg!(uuid);
 }

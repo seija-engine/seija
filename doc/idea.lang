@@ -72,8 +72,9 @@ impl Functor a for Unit {
 
 impl Unit a {
   info::String
-  static info = "static function"
-  damage::Int -> ()
+  info = "static function"
+
+  damage::Self -> Int -> ()
   damage(num) = {
       this.hp -= num;
   }
@@ -89,7 +90,7 @@ data Hero a extends Unit {
 
 impl Hero a {
     logName = log(this.name)
-    damage::Int -> ()
+    damage::Self -> Int -> ()
     damage(num) = {
         if (this.hp < 100) {
             this.hp -= num * 0.5;

@@ -20,7 +20,7 @@ fn main() {
     app.run();
 }
 
-fn on_start_up(mut commands:Commands,mut mat_defs:ResMut<Assets<MaterialDef>>) {
+fn on_start_up(mut commands:Commands,mut mat_defs:ResMut<Assets<MaterialDef>>,mut meshs:ResMut<Assets<Mesh>>) {
     let root = {
         let mut root = commands.spawn();
         let t = Transform::default();
@@ -34,7 +34,7 @@ fn on_start_up(mut commands:Commands,mut mat_defs:ResMut<Assets<MaterialDef>>) {
     };
 
     
-    create_elem(&mut commands, Vec3::new(2f32, 2f32, 2f32), root);
+    create_elem(&mut commands, Vec3::new(2f32, 2f32, 2f32), root,&mut meshs);
     //create_elem(&mut  commands, Vec3::new(1f32, 1f32, 1f32), root);
     
     let test_md_string = std::fs::read_to_string("res/material/ui.md.clj").unwrap();
@@ -50,7 +50,7 @@ pub struct  TestComponent {
     number:u32
 }
 
-fn create_elem(commands:&mut Commands,pos:Vec3,parent:Entity) -> Entity {
+fn create_elem(commands:&mut Commands,pos:Vec3,parent:Entity,meshs:&mut Assets<Mesh>) -> Entity {
     let mut elem = commands.spawn();
     let mut t = Transform::default();
     t.local.position = pos;
@@ -61,9 +61,11 @@ fn create_elem(commands:&mut Commands,pos:Vec3,parent:Entity) -> Entity {
 
     let cube = Cube::new(2f32);
     let cube_mesh:Mesh = cube.into();
-    let bytes = cube_mesh.get_vertex_buffer_data();
-    dbg!(bytes);
-    elem.insert(cube_mesh);
+
+    let id = HandleId::random::<Mesh>();
+    meshs.set_untracked(id, cube_mesh);
+   
+    elem.insert(id);
     elem.id()
 }
 
