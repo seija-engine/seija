@@ -2,9 +2,9 @@ use lite_clojure_eval::EvalRT;
 use bevy_ecs::prelude::{Commands, Entity, IntoSystem, Query, Res, ResMut};
 use glam::Vec3;
 use seija_app::App;
-use seija_asset::{AddAsset, AssetEvent, AssetModule, Assets, HandleId};
+use seija_asset::{AssetEvent, AssetModule, Assets, HandleId};
 use seija_core::{CoreModule, CoreStage, StartupStage, event::EventReader};
-use seija_render::{RenderModule, camera::{camera::{Camera, Orthographic}}, material::{Material, MaterialDef, RenderOrder, read_material_def}};
+use seija_render::{RenderModule,resource::{shape::Cube,Mesh} ,camera::{camera::{Camera, Orthographic}}, material::{Material, MaterialDef, RenderOrder, read_material_def}};
 use seija_winit::WinitModule;
 use seija_transform::{Transform, TransformModule, hierarchy::Parent};
 
@@ -35,7 +35,7 @@ fn on_start_up(mut commands:Commands,mut mat_defs:ResMut<Assets<MaterialDef>>) {
 
     
     create_elem(&mut commands, Vec3::new(2f32, 2f32, 2f32), root);
-    create_elem(&mut  commands, Vec3::new(1f32, 1f32, 1f32), root);
+    //create_elem(&mut  commands, Vec3::new(1f32, 1f32, 1f32), root);
     
     let test_md_string = std::fs::read_to_string("res/material/ui.md.clj").unwrap();
     let mut vm = EvalRT::new();
@@ -58,6 +58,12 @@ fn create_elem(commands:&mut Commands,pos:Vec3,parent:Entity) -> Entity {
     let mat = Material {order : RenderOrder::Transparent};
     elem.insert(mat);
     elem.insert(Parent(parent));
+
+    let cube = Cube::new(2f32);
+    let cube_mesh:Mesh = cube.into();
+    let bytes = cube_mesh.get_vertex_buffer_data();
+    dbg!(bytes);
+    elem.insert(cube_mesh);
     elem.id()
 }
 

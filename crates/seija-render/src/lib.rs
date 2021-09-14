@@ -1,12 +1,13 @@
 use camera::{view_list::view_list_system,camera::CamerasBuffer};
 use render::{AppRender, Config,RenderContext, RenderGraphContext};
-use resource::RenderResources;
+use resource::{Mesh, RenderResources};
 use seija_app::IModule;
 use seija_app::{App};
 use bevy_ecs::prelude::*;
 use seija_core::{CoreStage};
 use wgpu::CommandEncoderDescriptor;
 use crate::graph::nodes::PassNode;
+use seija_asset::{AddAsset};
 
 pub mod material;
 pub mod camera;
@@ -26,6 +27,7 @@ impl IModule for RenderModule {
         app.add_system(CoreStage::PostUpdate, view_list_system.system());
         
         material::init_material(app);
+        resource::init_resource(app);
     }
 }
 
