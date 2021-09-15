@@ -1,8 +1,12 @@
-use seija_asset::AssetEvent;
-use seija_core::{bytes::AsBytes, event::EventReader};
-use wgpu::{PrimitiveTopology, VertexFormat};
+use std::collections::HashSet;
+use bevy_ecs::prelude::*;
+use seija_asset::{AssetEvent, Assets, Handle};
+use seija_core::{bytes::AsBytes, event::{EventReader, Events, ManualEventReader}};
+use wgpu::{BufferUsage, PrimitiveTopology, VertexFormat};
 use seija_core::TypeUuid;
 use uuid::Uuid;
+
+use crate::render::RenderContext;
 
 #[derive(Debug,TypeUuid)]
 #[uuid = "ea48c171-e7b4-4e54-8895-dda5a2d0fa90"]
@@ -229,20 +233,33 @@ impl Mesh {
 
 
 
-pub(crate) fn update_mesh_system(mut mesh_events:EventReader<AssetEvent<Mesh>>) {
-    for event in mesh_events.iter() {
-        match event {
-            AssetEvent::Created { ref handle } =>  { 
-               println!("add mesh");
+pub fn update_mesh_system(world:&mut World,mesh_reader:&mut ManualEventReader<AssetEvent<Mesh>>,ctx:&mut RenderContext) {
+    let mut changed_meshes:HashSet<Handle<Mesh>> = HashSet::default();
+    {
+        if let Some(mesh_events) = world.get_resource::<Events<AssetEvent<Mesh>>>() {
+            for event in mesh_reader.iter(mesh_events) {
+                match event {
+                    AssetEvent::Created { ref handle } =>  { 
+                        changed_meshes.insert(handle.clone_weak());
+                    }
+                    AssetEvent::Modified { ref handle } => { }
+                    AssetEvent::Removed { ref handle } =>  { }
+                }
             }
-            AssetEvent::Modified { ref handle } => { }
-            AssetEvent::Removed { ref handle } =>  { }
+        }
+        
+    };
+    let meshs = world.get_resource::<Assets<Mesh>>().unwrap();
+    for mesh_handle in changed_meshes.iter() {
+        if let Some(mesh) = meshs.get(&mesh_handle.id) {
+            if let Some(idx_bytes) = mesh.get_index_buffer_bytes() {
+               let index_buffer = ctx.resources.create_buffer_with_data(BufferUsage::INDEX, &idx_bytes);
+            }
+
+            let vert_bytes = mesh.get_vertex_buffer_data();
+            let vert_buffer = ctx.resources.create_buffer_with_data(BufferUsage::VERTEX, &vert_bytes);
+            println!("vert_buffer:{:?}",vert_buffer);
         }
     }
-}
-
-#[test]
-fn test_uuid() {
-    let uuid = Uuid::new_v4();
-    dbg!(uuid);
+   
 }

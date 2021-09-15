@@ -22,12 +22,13 @@ pub struct RenderModule;
 impl IModule for RenderModule {
     fn init(&mut self,app:&mut App) {
         app.add_resource(CamerasBuffer::default());
+        material::init_material(app);
+        resource::init_resource(app);
         let render_system = get_render_system();
         app.add_system(CoreStage::PostUpdate, render_system.exclusive_system().at_end());
         app.add_system(CoreStage::PostUpdate, view_list_system.system());
         
-        material::init_material(app);
-        resource::init_resource(app);
+        
     }
 }
 

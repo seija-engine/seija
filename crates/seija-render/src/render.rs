@@ -1,12 +1,13 @@
-use bevy_ecs::prelude::{ World};
-use seija_core::event::{Events, ManualEventReader};
+use bevy_ecs::prelude::{World,Res};
+use seija_asset::{AssetEvent, Assets};
+use seija_core::event::{EventReader, Events, ManualEventReader};
 use seija_core::window::AppWindow;
 use seija_winit::event::{WindowCreated, WindowResized};
 use std::{borrow::Cow, sync::Arc};
 use wgpu::{CommandEncoder, CommandEncoderDescriptor};
 use crate::camera::camera::update_camera;
 use crate::graph::{LinearGraphIter, RenderGraph};
-use crate::resource::RenderResources;
+use crate::resource::{self, Mesh, RenderResources};
 
 #[derive(Default)]
 pub struct RenderGraphContext {
@@ -35,6 +36,7 @@ pub struct AppRender {
 
     pub window_resized_event_reader: ManualEventReader<WindowResized>,
     pub window_created_event_reader: ManualEventReader<WindowCreated>,
+    mesh_event_reader:ManualEventReader<AssetEvent<Mesh>>
 }
 
 pub struct Config {
@@ -89,13 +91,13 @@ impl AppRender {
             device: arc_device.clone(),
             queue,
             window_created_event_reader:Default::default(),
-            window_resized_event_reader:Default::default()
+            window_resized_event_reader:Default::default(),
+            mesh_event_reader:Default::default()
         }
     }
 
     pub fn update(&mut self, world: &mut World, graph_ctx: &mut RenderGraphContext,render_ctx:&mut RenderContext) {
         render_ctx.command_encoder = Some(self.device.create_command_encoder(&CommandEncoderDescriptor::default()));
-        
         self.update_winodw_surface(world,&mut render_ctx.resources);
         update_camera(world,render_ctx);
         render_ctx.resources.next_swap_chain_texture();
@@ -118,9 +120,12 @@ impl AppRender {
         
         let buffer = render_ctx.command_encoder.take().unwrap().finish();
         self.queue.submit(Some(buffer));
-
         render_ctx.resources.clear_swap_chain_texture();
+        
+        resource::update_mesh_system(world,&mut self.mesh_event_reader,render_ctx);
     }
+
+    
 
     fn update_winodw_surface(&mut self, world: &mut World,render_res:&mut RenderResources) {
         let mut is_create_window = false;

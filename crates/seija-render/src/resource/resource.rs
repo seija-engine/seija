@@ -1,5 +1,6 @@
 use std::{collections::HashMap, ops::Range, sync::Arc};
 use uuid::Uuid;
+use wgpu::{BufferUsage, util::DeviceExt};
 
 #[derive(Debug,Clone,Hash,PartialEq, Eq)]
 pub struct ResourceId(pub Uuid);
@@ -46,6 +47,17 @@ impl RenderResources {
 
     pub fn remove_buffer(&mut self,id:BufferId) {
         self.buffers.remove(&id);
+    }
+
+    pub fn create_buffer_with_data(&mut self,usage:BufferUsage,data:&[u8]) -> BufferId {
+        let buffer = self.device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
+            contents:data,
+            label:None,
+            usage
+        });
+        let id = BufferId::new();
+        self.buffers.insert(id, Arc::new(buffer));
+        id
     }
 
     pub fn map_buffer(&mut self,id:BufferId,mode:wgpu::MapMode) {

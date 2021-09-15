@@ -40,7 +40,7 @@ fn on_start_up(mut commands:Commands,mut mat_defs:ResMut<Assets<MaterialDef>>,mu
     let test_md_string = std::fs::read_to_string("res/material/ui.md.clj").unwrap();
     let mut vm = EvalRT::new();
     let material_def = read_material_def(&mut vm, &test_md_string).unwrap();
-    dbg!(&material_def);
+   
 
     let id = HandleId::random::<MaterialDef>();
     mat_defs.set_untracked(id, material_def);
@@ -78,6 +78,6 @@ fn on_update(mut commands:Commands,mut childrens:Query<(Entity,&mut TestComponen
        }
    }
    for ev in mat_def_events.iter() {
-       dbg!(ev);
+     
    }
 }

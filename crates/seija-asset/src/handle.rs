@@ -1,4 +1,4 @@
-use std::marker::PhantomData;
+use std::{hash::{Hash, Hasher}, marker::PhantomData};
 
 use uuid::Uuid;
 
@@ -26,6 +26,21 @@ pub struct Handle<T> where T:Asset {
     pub id:HandleId,
     marker: PhantomData<T>
 }
+
+impl<T: Asset> Hash for Handle<T> {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        Hash::hash(&self.id, state);
+    }
+}
+
+impl<T: Asset> PartialEq for Handle<T> {
+    fn eq(&self, other: &Self) -> bool {
+        self.id == other.id
+    }
+}
+
+impl<T: Asset> Eq for Handle<T> {}
+
 
 impl<T: Asset> Handle<T> {
     pub fn weak(id: HandleId) -> Handle<T> {
