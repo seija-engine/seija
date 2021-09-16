@@ -4,7 +4,7 @@ use glam::Vec3;
 use seija_app::App;
 use seija_asset::{AssetEvent, AssetModule, Assets, Handle, HandleId};
 use seija_core::{CoreModule, CoreStage, StartupStage, event::EventReader};
-use seija_render::{RenderModule,resource::{shape::Cube,Mesh} ,camera::{camera::{Camera, Orthographic}}, material::{Material, MaterialDef, RenderOrder, read_material_def}};
+use seija_render::{RenderModule, camera::{camera::{Camera, Orthographic}}, material::{Material, MaterialDef, MaterialDefCenter, RenderOrder, read_material_def}, resource::{shape::Cube,Mesh}};
 use seija_winit::WinitModule;
 use seija_transform::{Transform, TransformModule, hierarchy::Parent};
 
@@ -24,7 +24,7 @@ pub struct  RootComponent {
     number:i32
 }
 
-fn on_start_up(mut commands:Commands,mut mat_defs:ResMut<Assets<MaterialDef>>,mut meshs:ResMut<Assets<Mesh>>) {
+fn on_start_up(mut commands:Commands,mat_def_center:Res<MaterialDefCenter>,mut meshs:ResMut<Assets<Mesh>>) {
     let root = {
         let mut root = commands.spawn();
         let t = Transform::default();
@@ -37,19 +37,14 @@ fn on_start_up(mut commands:Commands,mut mat_defs:ResMut<Assets<MaterialDef>>,mu
         root.insert(test);
         root.id()
     };
-
-    
-    
-   
     
     let test_md_string = std::fs::read_to_string("res/material/ui.md.clj").unwrap();
     let mut vm = EvalRT::new();
     let material_def = read_material_def(&mut vm, &test_md_string).unwrap();
     let order = material_def.order;
-    let mat_def_handle:Handle<MaterialDef> = Handle::weak(HandleId::random::<MaterialDef>());
-    mat_defs.set_untracked(mat_def_handle.id, material_def);
-
-    create_elem(&mut commands, Vec3::new(2f32, 2f32, 2f32), root,&mut meshs,mat_def_handle,order);
+    let mat_def_handle:Handle<MaterialDef> = mat_def_center.add(material_def);
+  
+    create_elem(&mut commands, Vec3::new(2f32, 2f32, 2f32), root,&mut meshs,mat_def_center,order);
 }
 
 
@@ -59,7 +54,7 @@ struct RenderComponent  {
 }
 
 
-fn create_elem(commands:&mut Commands,pos:Vec3,parent:Entity,meshs:&mut Assets<Mesh>,mat_def:Handle<MaterialDef>,order: RenderOrder) -> Entity {
+fn create_elem(commands:&mut Commands,pos:Vec3,parent:Entity,meshs:&mut Assets<Mesh>,mat_def_center:Res<MaterialDefCenter>,order: RenderOrder) -> Entity {
     let mut elem = commands.spawn();
     let mut t = Transform::default();
     t.local.position = pos;
@@ -69,10 +64,11 @@ fn create_elem(commands:&mut Commands,pos:Vec3,parent:Entity,meshs:&mut Assets<M
     let cube = Cube::new(2f32);
     let cube_mesh:Mesh = cube.into();   
     let cube_mesh_handle = meshs.add( cube_mesh);
-
+    
+    let material = mat_def_center.create_material("ui-color");
     let render_comp = RenderComponent {
         mesh:cube_mesh_handle,
-        material: Material { order }
+        material
     };
     elem.insert(render_comp);
 

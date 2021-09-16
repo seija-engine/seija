@@ -26,13 +26,13 @@ impl<T: Asset> Debug for AssetEvent<T> {
 #[derive(Debug)]
 pub struct Assets<T: Asset> {
     assets: HashMap<HandleId, T>,
-    events:Events<AssetEvent<T>>,
+    pub events:Events<AssetEvent<T>>,
     ref_sender:Sender<RefEvent>
 }
 
 
 impl<T: Asset> Assets<T> {
-    pub(crate) fn new(ref_sender:Sender<RefEvent>) -> Assets<T> {
+    pub fn new(ref_sender:Sender<RefEvent>) -> Assets<T> {
         Assets {
             assets:Default::default(),
             events:Default::default(),

@@ -12,7 +12,7 @@ mod assets;
 pub use asset::{Asset};
 pub use handle::{HandleId,HandleUntyped,Handle};
 pub use assets::{Assets,AssetEvent};
-use server::{AssetServer, free_unused_assets_system};
+pub use server::{AssetServer, RefEvent};
 
 #[derive(Debug, Hash, PartialEq, Eq, Clone,StageLabel)]
 pub enum AssetStage {
@@ -27,7 +27,7 @@ impl IModule for AssetModule {
         app.add_resource(AssetServer::new());
         app.schedule.add_stage_before(CoreStage::PreUpdate, AssetStage::LoadAssets, SystemStage::parallel());
         app.schedule.add_stage_after(CoreStage::PostUpdate, AssetStage::AssetEvents, SystemStage::parallel());
-        app.add_system(CoreStage::PreUpdate, free_unused_assets_system.system());
+        app.add_system(CoreStage::PreUpdate, server::free_unused_assets_system.system());
     }
 }
 

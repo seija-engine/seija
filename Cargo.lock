@@ -1644,10 +1644,12 @@ version = "0.1.0"
 dependencies = [
  "bevy_ecs",
  "bitflags",
+ "crossbeam-channel",
  "futures-lite",
  "glam",
  "lite-clojure-eval",
  "num_enum",
+ "parking_lot",
  "raw-window-handle",
  "seija-app",
  "seija-asset",

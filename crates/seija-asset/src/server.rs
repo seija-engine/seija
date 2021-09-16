@@ -6,7 +6,7 @@ use uuid::Uuid;
 use crate::{Asset, Assets, HandleId};
 
 pub struct AssetServer {
-    ref_counter:AssetRefCounter,
+    pub ref_counter:AssetRefCounter,
     pub(crate) lifecycle_events:RwLock<HashMap<Uuid,LifecycleEventChannel>>
 }
 
@@ -69,13 +69,13 @@ pub enum RefEvent {
 }
 
 
-struct AssetRefCounter {
+pub struct AssetRefCounter {
     pub channel:Arc<RefEventChannel>,
     ref_counts:RwLock<HashMap<HandleId,usize>>
 }
 
-struct RefEventChannel {
-    sender:Sender<RefEvent>,
+pub struct RefEventChannel {
+    pub sender:Sender<RefEvent>,
     receiver:Receiver<RefEvent>,
 }
 
