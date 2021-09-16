@@ -1,9 +1,12 @@
 use std::{collections::HashMap, ops::Range, sync::Arc};
+use seija_asset::HandleUntyped;
 use uuid::Uuid;
 use wgpu::{BufferUsage, util::DeviceExt};
 
 #[derive(Debug,Clone,Hash,PartialEq, Eq)]
-pub struct ResourceId(pub Uuid);
+pub enum RenderResourceId {
+    Buffer(BufferId)
+}
 
 #[derive(Copy, Clone, Hash, Eq, PartialEq, Debug)]
 pub struct BufferId(pub Uuid);
@@ -20,6 +23,8 @@ pub struct RenderResources {
     main_swap_chain_frame:Option<wgpu::SwapChainFrame>,
 
     pub buffers: HashMap<BufferId, Arc<wgpu::Buffer>>,
+
+    resources:HashMap<(HandleUntyped,u8),RenderResourceId>
 }
 
 impl RenderResources {
@@ -30,6 +35,7 @@ impl RenderResources {
             main_swap_chain:None,
             main_swap_chain_frame:None,
             buffers:HashMap::default(),
+            resources:HashMap::default()
         }
     }
 
@@ -43,6 +49,18 @@ impl RenderResources {
         let id = BufferId::new();
         self.buffers.insert(id, Arc::new(buffer));
         id
+    }
+
+    pub fn set_render_resource(&mut self,handle:HandleUntyped,res_id:RenderResourceId,idx:u8) {
+        self.resources.insert((handle,idx), res_id);
+    }
+
+    pub fn get_render_resource(&self,handle:HandleUntyped,idx:u8) -> Option<RenderResourceId> {
+        self.resources.get(&(handle,idx)).cloned()
+    }
+
+    pub fn remove_render_resource(&mut self,handle:HandleUntyped,idx:u8) {
+        self.resources.remove(&(handle, idx));
     }
 
     pub fn remove_buffer(&mut self,id:BufferId) {

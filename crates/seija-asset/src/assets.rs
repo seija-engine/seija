@@ -1,8 +1,9 @@
 use std::{collections::HashMap, fmt::Debug};
 
-use bevy_ecs::prelude::ResMut;
+use bevy_ecs::prelude::{Res, ResMut};
+use crossbeam_channel::{Sender, TryRecvError};
 use seija_core::event::{EventWriter, Events};
-use crate::{asset::Asset, handle::{Handle, HandleId}};
+use crate::{asset::Asset, handle::{Handle, HandleId}, server::{AssetServer, LifecycleEvent, RefEvent}};
 
 pub enum AssetEvent<T: Asset> {
     Created { handle: Handle<T> },
@@ -25,21 +26,38 @@ impl<T: Asset> Debug for AssetEvent<T> {
 #[derive(Debug)]
 pub struct Assets<T: Asset> {
     assets: HashMap<HandleId, T>,
-    events:Events<AssetEvent<T>>
+    events:Events<AssetEvent<T>>,
+    ref_sender:Sender<RefEvent>
 }
 
 
 impl<T: Asset> Assets<T> {
-    pub fn new() -> Assets<T> {
+    pub(crate) fn new(ref_sender:Sender<RefEvent>) -> Assets<T> {
         Assets {
             assets:Default::default(),
             events:Default::default(),
+            ref_sender
         }
+    }
+
+    pub fn add(&mut self,asset:T) -> Handle<T> {
+        let id = HandleId::random::<T>();
+        self.assets.insert(id, asset);
+        self.events.send(AssetEvent::Created {
+            handle: Handle::weak(id),
+        });
+        self.create_handle(id)
     }
 
     pub fn get(&self, handle_id: &HandleId) -> Option<&T> {
         self.assets.get(handle_id)
     }
+
+
+    fn create_handle(&self, id: HandleId) -> Handle<T> {
+        Handle::strong(id, self.ref_sender.clone())
+    }
+
 
     pub fn contains(&self, handle: HandleId) -> bool {
         self.assets.contains_key(&handle)
@@ -81,5 +99,22 @@ impl<T: Asset> Assets<T> {
 
     pub fn asset_event_system( mut events: EventWriter<AssetEvent<T>>,mut assets: ResMut<Assets<T>>) {
         events.send_batch(assets.events.drain())
+    }
+
+    pub fn update_assets_system(server:Res<AssetServer>,mut assets:ResMut<Assets<T>>) {
+        let life_events = server.lifecycle_events.read();
+        let life_event = life_events.get(&T::TYPE_UUID).unwrap();
+        loop {
+            match life_event.receiver.try_recv() {
+                Ok(LifecycleEvent::Create(_id)) => { },
+                Ok(LifecycleEvent::Free(id)) => {
+                    assets.remove(id);
+                },
+                Err(TryRecvError::Empty) => {
+                    break;
+                }
+                Err(TryRecvError::Disconnected) => panic!("AssetChannel disconnected."),
+            }
+        }
     }
 }

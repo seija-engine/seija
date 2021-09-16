@@ -1,6 +1,6 @@
 use std::{borrow::Cow};
 use super::RenderGraphError;
-use crate::{render::{RenderContext}, resource::ResourceId};
+use crate::{render::{RenderContext}, resource::RenderResourceId};
 use bevy_ecs::prelude::*;
 use uuid::Uuid;
 
@@ -19,7 +19,7 @@ pub trait INode: Send + Sync + 'static {
 
     fn prepare(&mut self, _world: &mut World) {}
 
-    fn update(&mut self,world: &mut World,render_ctx:&mut RenderContext,inputs:&Vec<Option<ResourceId>>,outputs:&mut Vec<Option<ResourceId>>);
+    fn update(&mut self,world: &mut World,render_ctx:&mut RenderContext,inputs:&Vec<Option<RenderResourceId>>,outputs:&mut Vec<Option<RenderResourceId>>);
 }
 
 
@@ -70,14 +70,14 @@ pub struct GraphNode {
     pub name:Option<Cow<'static,str>>,
     pub node:Box<dyn INode>,
     pub edges: Edges,
-    pub inputs:Vec<Option<ResourceId>>,
-    pub outputs:Vec<Option<ResourceId>>,
+    pub inputs:Vec<Option<RenderResourceId>>,
+    pub outputs:Vec<Option<RenderResourceId>>,
 }
 
 impl GraphNode {
     pub fn new<T>(id: NodeId, node: T) -> Self where T: INode {
-        let mut inputs:Vec<Option<ResourceId>> = Vec::new();
-        let mut outputs:Vec<Option<ResourceId>> = Vec::new();
+        let mut inputs:Vec<Option<RenderResourceId>> = Vec::new();
+        let mut outputs:Vec<Option<RenderResourceId>> = Vec::new();
         inputs.resize(node.input_count(), None);
         outputs.resize(node.output_count(), None);
         GraphNode {

@@ -1604,6 +1604,8 @@ name = "seija-asset"
 version = "0.1.0"
 dependencies = [
  "bevy_ecs",
+ "crossbeam-channel",
+ "parking_lot",
  "rand",
  "seija-app",
  "seija-core",

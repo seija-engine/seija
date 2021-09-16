@@ -2,7 +2,7 @@ use lite_clojure_eval::EvalRT;
 use bevy_ecs::prelude::{Commands, Entity, IntoSystem, Query, Res, ResMut};
 use glam::Vec3;
 use seija_app::App;
-use seija_asset::{AssetEvent, AssetModule, Assets, HandleId};
+use seija_asset::{AssetEvent, AssetModule, Assets, Handle, HandleId};
 use seija_core::{CoreModule, CoreStage, StartupStage, event::EventReader};
 use seija_render::{RenderModule,resource::{shape::Cube,Mesh} ,camera::{camera::{Camera, Orthographic}}, material::{Material, MaterialDef, RenderOrder, read_material_def}};
 use seija_winit::WinitModule;
@@ -28,7 +28,10 @@ fn on_start_up(mut commands:Commands,mut mat_defs:ResMut<Assets<MaterialDef>>,mu
         let camera = Camera::from_2d(Orthographic::default());
         root.insert(camera);
 
-        let test = TestComponent {number: 0};
+        let cube = Cube::new(2f32);
+        let cube_mesh:Mesh = cube.into();   
+        let cube_mesh_handle = meshs.add( cube_mesh);
+        let test = TestComponent {number: 0,mesh:cube_mesh_handle};
         root.insert(test);
         root.id()
     };
@@ -47,7 +50,8 @@ fn on_start_up(mut commands:Commands,mut mat_defs:ResMut<Assets<MaterialDef>>,mu
 }
 
 pub struct  TestComponent {
-    number:u32
+    number:i32,
+    mesh:Handle<Mesh>
 }
 
 fn create_elem(commands:&mut Commands,pos:Vec3,parent:Entity,meshs:&mut Assets<Mesh>) -> Entity {
@@ -59,13 +63,6 @@ fn create_elem(commands:&mut Commands,pos:Vec3,parent:Entity,meshs:&mut Assets<M
     elem.insert(mat);
     elem.insert(Parent(parent));
 
-    let cube = Cube::new(2f32);
-    let cube_mesh:Mesh = cube.into();
-
-    let id = HandleId::random::<Mesh>();
-    meshs.set_untracked(id, cube_mesh);
-   
-    elem.insert(id);
     elem.id()
 }
 
@@ -75,6 +72,7 @@ fn on_update(mut commands:Commands,mut childrens:Query<(Entity,&mut TestComponen
        if t.number > 100 {
           let mut e_cmd = commands.entity(e);
           e_cmd.remove::<Camera>();
+          e_cmd.remove::<TestComponent>();
        }
    }
    for ev in mat_def_events.iter() {

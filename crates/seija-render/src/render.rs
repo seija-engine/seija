@@ -130,7 +130,7 @@ impl AppRender {
     fn update_winodw_surface(&mut self, world: &mut World,render_res:&mut RenderResources) {
         let mut is_create_window = false;
         {
-            let created_events = world.get_resource_mut::<Events<WindowCreated>>().unwrap();
+            let created_events = world.get_resource::<Events<WindowCreated>>().unwrap();
             for _ in self.window_created_event_reader.iter(&created_events) {
                 is_create_window = true;
             }
