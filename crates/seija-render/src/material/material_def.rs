@@ -1,5 +1,5 @@
 use std::convert::{TryFrom};
-use seija_core::{TypeUuid};
+use seija_core::{TypeUuid, bytes::{Byteable, Bytes}};
 use super::{RenderOrder, errors::MaterialDefReadError, types::{Cull, ZTest}};
 use lite_clojure_eval::EvalRT;
 use serde_json::{Value};
@@ -15,14 +15,43 @@ pub struct MaterialDef {
 }
 #[derive(Debug)]
 pub struct  PropDef {
-    name:String,
-    value:PropValueDef
+    pub name:String,
+    pub value:PropValueDef
 }
 
 #[derive(Debug)]
 pub enum PropValueDef {
     Int(i32),
-    Float(f32)
+    Float(f32),
+    U8(u8)
+}
+
+
+
+impl Bytes for PropValueDef {
+    fn write_bytes(&self, buffer: &mut [u8]) {
+        match self {
+            PropValueDef::Int(v) => {
+                let bytes = i32::to_be_bytes(*v);
+                buffer[0..4].copy_from_slice(&bytes);
+            },
+            PropValueDef::Float(v) => {
+                let bytes = f32::to_be_bytes(*v);
+                buffer[0..4].copy_from_slice(&bytes);
+            },
+            PropValueDef::U8(v) => {
+                buffer[0] = *v;
+            }
+        }
+    }
+
+    fn byte_len(&self) -> usize {
+        match self {
+            PropValueDef::Int(_) => std::mem::size_of::<i32>(),
+            PropValueDef::Float(_) =>  std::mem::size_of::<f32>(),
+            PropValueDef::U8(_) => std::mem::size_of::<u8>()
+        }
+    }
 }
 
 #[derive(Debug)]
@@ -113,6 +142,14 @@ fn read_prop(json_value:&Value) -> Result<PropDef,MaterialDefReadError> {
             let default = map.get(":default").and_then(|v| v.as_f64()).unwrap_or(0f64) as f32;
             PropValueDef::Float(default)
          },
+         "U8" => {
+            let default = map.get(":default").and_then(|v| v.as_u64()).unwrap_or(0u64) as u8;
+            PropValueDef::U8(default)
+         }
+         "Bool" => {
+            let default = map.get(":default").and_then(|v| v.as_bool()).unwrap_or(false);
+            PropValueDef::U8(if default {1} else {0})
+         }
          _ => return Err(MaterialDefReadError::InvalidProp)
     };
     Ok(PropDef{name,value})

@@ -2,6 +2,12 @@ pub trait AsBytes {
     fn as_bytes(&self) -> &[u8];
 }
 
+pub trait Bytes {
+    fn write_bytes(&self, buffer: &mut [u8]);
+
+    fn byte_len(&self) -> usize;
+}
+
 pub unsafe trait Byteable where Self: Sized { }
 
 impl<T> AsBytes for T where T: Byteable {
