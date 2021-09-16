@@ -20,6 +20,10 @@ fn main() {
     app.run();
 }
 
+pub struct  RootComponent {
+    number:i32
+}
+
 fn on_start_up(mut commands:Commands,mut mat_defs:ResMut<Assets<MaterialDef>>,mut meshs:ResMut<Assets<Mesh>>) {
     let root = {
         let mut root = commands.spawn();
@@ -28,51 +32,60 @@ fn on_start_up(mut commands:Commands,mut mat_defs:ResMut<Assets<MaterialDef>>,mu
         let camera = Camera::from_2d(Orthographic::default());
         root.insert(camera);
 
-        let cube = Cube::new(2f32);
-        let cube_mesh:Mesh = cube.into();   
-        let cube_mesh_handle = meshs.add( cube_mesh);
-        let test = TestComponent {number: 0,mesh:cube_mesh_handle};
+        
+        let test = RootComponent {number: 0};
         root.insert(test);
         root.id()
     };
 
     
-    create_elem(&mut commands, Vec3::new(2f32, 2f32, 2f32), root,&mut meshs);
-    //create_elem(&mut  commands, Vec3::new(1f32, 1f32, 1f32), root);
+    
+   
     
     let test_md_string = std::fs::read_to_string("res/material/ui.md.clj").unwrap();
     let mut vm = EvalRT::new();
     let material_def = read_material_def(&mut vm, &test_md_string).unwrap();
-   
+    let order = material_def.order;
+    let mat_def_handle:Handle<MaterialDef> = Handle::weak(HandleId::random::<MaterialDef>());
+    mat_defs.set_untracked(mat_def_handle.id, material_def);
 
-    let id = HandleId::random::<MaterialDef>();
-    mat_defs.set_untracked(id, material_def);
+    create_elem(&mut commands, Vec3::new(2f32, 2f32, 2f32), root,&mut meshs,mat_def_handle,order);
 }
 
-pub struct  TestComponent {
-    number:i32,
-    mesh:Handle<Mesh>
+
+struct RenderComponent  {
+    mesh:Handle<Mesh>,
+    material:Material
 }
 
-fn create_elem(commands:&mut Commands,pos:Vec3,parent:Entity,meshs:&mut Assets<Mesh>) -> Entity {
+
+fn create_elem(commands:&mut Commands,pos:Vec3,parent:Entity,meshs:&mut Assets<Mesh>,mat_def:Handle<MaterialDef>,order: RenderOrder) -> Entity {
     let mut elem = commands.spawn();
     let mut t = Transform::default();
     t.local.position = pos;
     elem.insert(t);
-    let mat = Material {order : RenderOrder::Transparent};
-    elem.insert(mat);
     elem.insert(Parent(parent));
+
+    let cube = Cube::new(2f32);
+    let cube_mesh:Mesh = cube.into();   
+    let cube_mesh_handle = meshs.add( cube_mesh);
+
+    let render_comp = RenderComponent {
+        mesh:cube_mesh_handle,
+        material: Material { order }
+    };
+    elem.insert(render_comp);
 
     elem.id()
 }
 
-fn on_update(mut commands:Commands,mut childrens:Query<(Entity,&mut TestComponent,&Camera)>,mut mat_def_events:EventReader<AssetEvent<MaterialDef>>) {
+fn on_update(mut commands:Commands,mut childrens:Query<(Entity,&mut RootComponent,&Camera)>,mut mat_def_events:EventReader<AssetEvent<MaterialDef>>) {
    for (e,mut t,_c) in childrens.iter_mut() {
        t.number += 1;
        if t.number > 100 {
           let mut e_cmd = commands.entity(e);
           e_cmd.remove::<Camera>();
-          e_cmd.remove::<TestComponent>();
+          e_cmd.remove::<RootComponent>();
        }
    }
    for ev in mat_def_events.iter() {
