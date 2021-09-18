@@ -2,8 +2,9 @@
     :name "ui-color"
     :order "Transparent"
     :props [
-        {:name "scale" :type "Float" :default 3.14141},
-        {:name "width" :type "Int"},
+        {:name "scale" :type "float" :default 3.14141},
+        {:name "width" :type "int"},
+        {:name  "position" :type "float3" :default [0,0,0]}
     ]
     :pass {
         :z-write true

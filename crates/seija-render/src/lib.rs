@@ -14,6 +14,7 @@ pub mod camera;
 pub mod graph;
 pub mod resource;
 mod render;
+mod memory;
 
 const MATRIX_SIZE: u64 = std::mem::size_of::<[[f32; 4]; 4]>() as u64;
 
