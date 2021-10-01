@@ -1,35 +1,28 @@
-use std::convert::TryFrom;
+use std::{convert::TryFrom};
+use glam::{Mat3, Mat4};
+use serde_json::{Map, Value};
 
-use serde_json::Value;
-use wgpu::MapMode;
-
+#[derive(Debug)]
 pub enum UniformType {
-    BOOL(usize,Vec<bool>),
-    BOOL2(usize,Vec<bool>),
-    BOOL3(usize,Vec<bool>),
-    BOOL4(usize,Vec<bool>),
-    FLOAT(usize,Vec<f32>),
-    FLOAT2(usize,Vec<f32>),
-    FLOAT3(usize,Vec<f32>),
-    FLOAT4(usize,Vec<f32>),
-    INT(usize,Vec<i32>),
-    INT2(usize,Vec<i32>),
-    INT3(usize,Vec<i32>),
-    INT4(usize,Vec<i32>),
-    UINT(usize,Vec<u32>),
-    UINT2(usize,Vec<u32>),
-    UINT3(usize,Vec<u32>),
-    UINT4(usize,Vec<u32>),
-    MAT3(usize,Vec<f32>),
-    MAT4(usize,Vec<f32>)
+    BOOL(Vec<bool>),
+   
+    FLOAT(Vec<f32>),
+    
+    INT(Vec<i32>),
+    
+    UINT(Vec<u32>),
+    
+    MAT3(Mat3),
+    MAT4(Mat4)
 } 
 
+#[derive(Debug)]
 struct PropInfo {
     name:String,
     typ:UniformType,
-    array_size:u32
+    array_size:usize
 }
-
+#[derive(Debug)]
 pub struct UniformBufferDef {
     props:Vec<PropInfo>
 }
@@ -37,33 +30,75 @@ pub struct UniformBufferDef {
 impl TryFrom<&Value> for UniformBufferDef {
     type Error = ();
     fn try_from(value: &Value) -> Result<UniformBufferDef, ()> {
+        let mut props:Vec<PropInfo> = Vec::new();
         let arr = value.as_array().ok_or(())?;
         for item in arr {
             if let Some(map) = item.as_object() {
-                let prop_type = map.get(":type").and_then(|v| v.as_str()).ok_or(())?;
-                let (type_name,arr_size) = split_type_size_str(prop_type);
-                let default = map.get(":default");
-                match type_name {
-                    "bool" | "bool2" | "bool3" | "bool4" => {
-                        |s:&Value| { s.as_bool().unwrap_or(false) };
-                    },
-                    "float" | "float2" | "float3" | "float4" => {
-                      //|v:&Value| { v.as_f64().unwrap_or(0) as f32 }
-                      todo!()
-                    },
-                    _ => return Err(())
-                };
+                let prop_name = map.get(":name").and_then(|v| v.as_str()).ok_or(())?;
+                let prop = read_prop(prop_name,map)?;
+                props.push(prop);
             }   
         }
-        todo!()
+        Ok(UniformBufferDef {
+            props
+        })
     }
 }
 
-fn read_prop_default<T>(type_name:&str,arr_size:usize,value:Option<&Value>,read_fn:fn(&Value) -> T) -> Vec<T>  {
-    let c = value.unwrap();
-    let b = c == 2;
-    
-    todo!()
+fn read_prop(name:&str,map:&Map<String,Value>) -> Result<PropInfo,()>   {
+    let prop_type = map.get(":type").and_then(|v| v.as_str()).ok_or(())?;
+    let (type_name,array_size) = split_type_size_str(prop_type);
+    let default = map.get(":default");
+    match type_name {
+        "bool" => {
+            let f = |v:&Value| { v.as_bool().unwrap_or(false)};
+            let arr = read_default(default,array_size,f,false)?;
+            return Ok(PropInfo { name:name.to_string(), array_size, typ:UniformType::BOOL(arr) })
+         },
+         "float" => {
+             let f = |v:&Value| { v.as_f64().unwrap_or(0f64) as f32  };
+             let arr = read_default(default,array_size,f,0f32)?;
+             return Ok(PropInfo { name:name.to_string(), array_size, typ:UniformType::FLOAT(arr) })
+         },
+         "int" => {
+            let f = |v:&Value| { v.as_i64().unwrap_or(0i64) as i32  };
+            let arr = read_default(default,array_size,f,0i32)?;
+            return Ok(PropInfo { name:name.to_string(), array_size, typ:UniformType::INT(arr) })
+         },
+         "uint" => {
+            let f = |v:&Value| { v.as_i64().unwrap_or(0i64) as u32  };
+            let arr = read_default(default,array_size,f,0u32)?;
+            return Ok(PropInfo { name:name.to_string(), array_size, typ:UniformType::UINT(arr) })
+         },
+         "mat3" => {
+             let def = Mat3::default();
+             return Ok(PropInfo { name:name.to_string(), array_size, typ:UniformType::MAT3(def) })
+         },
+         "mat4" => {
+            return Ok(PropInfo { name:name.to_string(), array_size, typ:UniformType::MAT4(Mat4::default()) })
+         },
+         _ => {}
+    }
+    Err(())
+}
+
+fn read_default<T:Copy>(default:Option<&Value>,arr_size:usize,f:fn(&Value) -> T,def:T) -> Result<Vec<T>,()>  {
+    if arr_size == 0 {
+        let def_val = match default {
+            Some(v) => f(v),
+            None => def
+        };
+        Ok(vec![def_val])
+    } else {
+        let arr:Vec<T> = match default {
+            Some(v) => {
+                let arr = v.as_array().ok_or(())?;
+                arr.iter().map(|v| f(v)).collect()
+            },
+            None => { (0..arr_size).map(|_| def).collect() }
+        };
+        Ok(arr)
+    }
 }
 
 
@@ -80,8 +115,14 @@ fn split_type_size_str(type_name:&str) -> (&str,usize) {
 
 #[test]
 fn ttt() {
-    let type_name = "float[8]";
-    let (t,s) = split_type_size_str(type_name);
-    println!("{} {}",t,s);
-    
+    let json_string = r#"
+      [
+          {":name": "name1", ":type": "bool[3]", ":default": [true,false,true] },
+          {":name": "f3", ":type": "float[3]", ":default": [7,5,9] },
+          {":name": "mat", ":type": "mat4" }
+      ]
+    "#;
+    let v:Value = serde_json::from_str(&json_string).unwrap();
+    let ud = UniformBufferDef::try_from(&v).unwrap();
+    dbg!(ud);
 }
