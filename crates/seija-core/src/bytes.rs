@@ -2,6 +2,16 @@ pub trait AsBytes {
     fn as_bytes(&self) -> &[u8];
 }
 
+pub trait FromBytes {
+    fn from_bytes(bytes: &[u8]) -> Self;
+}
+
+impl<T> FromBytes for T {
+    fn from_bytes(bytes: &[u8]) -> Self {
+        unsafe { bytes.as_ptr().cast::<T>().read_unaligned() }
+    }
+}
+
 pub trait Bytes {
     fn write_bytes(&self, buffer: &mut [u8]);
 
