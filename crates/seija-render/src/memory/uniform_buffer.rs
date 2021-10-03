@@ -1,6 +1,6 @@
 use std::{alloc, convert::TryFrom, sync::Arc};
 use seija_core::bytes::AsBytes;
-use glam::{Mat3, Mat4};
+use glam::{Mat3, Mat4, Vec3};
 use serde_json::Value;
 
 use super::uniform_buffer_def::{UniformBufferDef, UniformType};
@@ -76,6 +76,12 @@ impl TypedUniformBuffer {
                         let u:u32 = if v {1u32 } else {0u32 };
                         self.buffer.write_bytes(info.get_buffer_offset(idx), u);
                     }
+                },
+                UniformType::FLOAT3(arr) => {
+                    for idx in 0..info.size {
+                        let v = arr.get(idx).map(|v|v.clone()).unwrap_or([0f32,0f32,0f32]);  
+                        self.buffer.write_bytes(info.get_buffer_offset(idx), v);
+                    }
                 }
                 _ => {}
             }
@@ -119,6 +125,19 @@ impl TypedUniformBuffer {
             return self.buffer.read_bytes(offset,4);
         }
         0u32
+    }
+
+    pub fn set_float3(&mut self,name:&str,v3:Vec3,idx:usize) {
+        if let Some(offset) = self.def.get_offset(name, idx) {
+            self.buffer.write_bytes(offset, v3.to_array());
+        }
+    }
+
+    pub fn get_float3(&self,name:&str,idx:usize) -> [f32;3] {
+        if let Some(offset) = self.def.get_offset(name, idx) {
+            return self.buffer.read_bytes(offset,12);
+        }
+        [0f32,0f32,0f32]
     }
 
     pub fn set_bool(&mut self,name:&str,v:bool,idx:usize) {
@@ -176,7 +195,10 @@ fn test() {
           {":name": "bValue", ":type": "bool", ":default": true },
 
           {":name": "matValue", ":type": "mat4" },
-          {":name": "mat3Value", ":type": "mat3" }
+          {":name": "mat3Value", ":type": "mat3" },
+
+          {":name": "pos", ":type": "float3",":default":[100.1,2,44.44] },
+          {":name": "pos2", ":type": "float3[2]",":default":[[500.1,12,144.44],[6,5,3]] }
       ]
     "#;
     let v:Value = serde_json::from_str(&json_string).unwrap();
@@ -209,6 +231,14 @@ fn test() {
     //typed_buffer.set_mat3("mat3Value", &Mat3::IDENTITY,0);
     let v5 = typed_buffer.get_mat3("mat3Value",0);
     println!("mat3Value:{:?}",v5);
+
+    let v6 = typed_buffer.get_float3("pos", 0);
+    println!("pos:{:?}",v6);
+
+    let v6_0 = typed_buffer.get_float3("pos2", 0);
+    typed_buffer.set_float3("pos2", Vec3::new(33.3f32,33.3f32, 33.31f32), 1);
+    let v6_1 = typed_buffer.get_float3("pos2", 1);
+    println!("pos2:{:?} {:?}",v6_0,v6_1);
 
     println!("bytes:{:?}",&typed_buffer.buffer.bytes);
 }
