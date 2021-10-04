@@ -1,9 +1,10 @@
-use std::convert::{TryFrom};
-use seija_core::{TypeUuid, bytes::{Byteable, Bytes}};
+use std::{convert::{TryFrom}, sync::Arc};
+use seija_core::{TypeUuid};
 use super::{RenderOrder, errors::MaterialDefReadError, types::{Cull, ZTest}};
 use lite_clojure_eval::EvalRT;
 use serde_json::{Value};
 use uuid::Uuid;
+use crate::memory::UniformBufferDef;
 
 #[derive(Debug,TypeUuid)]
 #[uuid = "58ee0320-a01e-4a1b-9d07-ade19767853b"]
@@ -11,48 +12,9 @@ pub struct MaterialDef {
     pub name:String,
     pub order:RenderOrder,
     pub pass_list:Vec<PassDef>,
-    pub prop_defs:Vec<PropDef>
-}
-#[derive(Debug)]
-pub struct  PropDef {
-    pub name:String,
-    pub value:PropValueDef
+    pub prop_def:Arc<UniformBufferDef>
 }
 
-#[derive(Debug)]
-pub enum PropValueDef {
-    Int(i32),
-    Float(f32),
-    U8(u8)
-}
-
-
-
-impl Bytes for PropValueDef {
-    fn write_bytes(&self, buffer: &mut [u8]) {
-        match self {
-            PropValueDef::Int(v) => {
-                let bytes = i32::to_be_bytes(*v);
-                buffer[0..4].copy_from_slice(&bytes);
-            },
-            PropValueDef::Float(v) => {
-                let bytes = f32::to_be_bytes(*v);
-                buffer[0..4].copy_from_slice(&bytes);
-            },
-            PropValueDef::U8(v) => {
-                buffer[0] = *v;
-            }
-        }
-    }
-
-    fn byte_len(&self) -> usize {
-        match self {
-            PropValueDef::Int(_) => std::mem::size_of::<i32>(),
-            PropValueDef::Float(_) =>  std::mem::size_of::<f32>(),
-            PropValueDef::U8(_) => std::mem::size_of::<u8>()
-        }
-    }
-}
 
 #[derive(Debug)]
 pub struct PassDef {
@@ -97,18 +59,14 @@ pub fn read_material_def(vm:&mut EvalRT,file_string:&str) -> Result<MaterialDef,
         _ => return Err(MaterialDefReadError::InvalidPass)
     }
 
-    let mut prop_defs:Vec<PropDef> = vec![];
-    if let Some(prop_arr) = value_object.get(":props").and_then(|v|v.as_array()) {
-        for json_prop in prop_arr {
-            prop_defs.push(read_prop(json_prop)?);
-        }
-    }
+    let prop_value = value.get(":props").ok_or(MaterialDefReadError::InvalidProp)?;
+    let buffer_def = UniformBufferDef::try_from(prop_value).map_err(|_| MaterialDefReadError::InvalidProp)?;
 
     Ok(MaterialDef {
         name:def_name.to_string(),
         order,
         pass_list,
-        prop_defs
+        prop_def:Arc::new(buffer_def)
     })
 }
 
@@ -129,28 +87,3 @@ fn read_pass(json_value:&Value) -> Result<PassDef,MaterialDefReadError> {
     Ok(pass_def)
 }
 
-fn read_prop(json_value:&Value) -> Result<PropDef,MaterialDefReadError> {
-    let map = json_value.as_object().ok_or(MaterialDefReadError::InvalidProp)?;
-    let name = map.get(":name").and_then(|v|v.as_str()).ok_or( MaterialDefReadError::InvalidProp)?.to_string();
-    let typ = map.get(":type").and_then(|v|v.as_str()).ok_or( MaterialDefReadError::InvalidProp)?;
-    let value = match typ {
-        "Int" => {
-            let default = map.get(":default").and_then(|v| v.as_i64()).unwrap_or(0) as i32;
-            PropValueDef::Int(default)
-         },
-         "Float" => {
-            let default = map.get(":default").and_then(|v| v.as_f64()).unwrap_or(0f64) as f32;
-            PropValueDef::Float(default)
-         },
-         "U8" => {
-            let default = map.get(":default").and_then(|v| v.as_u64()).unwrap_or(0u64) as u8;
-            PropValueDef::U8(default)
-         }
-         "Bool" => {
-            let default = map.get(":default").and_then(|v| v.as_bool()).unwrap_or(false);
-            PropValueDef::U8(if default {1} else {0})
-         }
-         _ => return Err(MaterialDefReadError::InvalidProp)
-    };
-    Ok(PropDef{name,value})
-}

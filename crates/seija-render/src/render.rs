@@ -7,6 +7,7 @@ use std::{borrow::Cow, sync::Arc};
 use wgpu::{CommandEncoder, CommandEncoderDescriptor};
 use crate::camera::camera::update_camera;
 use crate::graph::{LinearGraphIter, RenderGraph};
+use crate::material::update_material;
 use crate::resource::{self, Mesh, RenderResources};
 
 #[derive(Default)]
@@ -101,6 +102,7 @@ impl AppRender {
         self.update_winodw_surface(world,&mut render_ctx.resources);
         update_camera(world,render_ctx);
         render_ctx.resources.next_swap_chain_texture();
+        update_material(world,self, render_ctx);
         graph_ctx.graph.prepare(world);
         for node_id in graph_ctx.graph_iter.clone().nodes.iter() {
             let cur_node = graph_ctx.graph.get_node(node_id).unwrap();

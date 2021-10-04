@@ -5,7 +5,9 @@ use serde_json::Value;
 
 use super::uniform_buffer_def::{UniformBufferDef, UniformType};
 
+#[derive(Debug)]
 pub struct UniformBuffer {
+    dirty:bool,
     bytes:Vec<u8>
 }
 
@@ -13,17 +15,27 @@ impl UniformBuffer {
     pub fn new(size:usize) -> UniformBuffer {
         let bytes = vec![0u8;size];
         UniformBuffer {
+            dirty:true,
             bytes
         }
     }
 
+    pub fn is_dirty(&self) -> bool {
+        self.dirty
+    }
+
+    pub fn clear_dirty(&mut self) {
+        self.dirty = false;
+    }
+
     pub fn write_bytes<T:AsBytes>(&mut self,offset:usize,v:T) {
+        self.dirty = true;
         let bytes = v.as_bytes();
-       
         self.bytes[offset..(offset + bytes.len())].copy_from_slice(bytes);
     }
 
     pub fn write_bytes_(&mut self,offset:usize,bytes:&[u8]) {
+        self.dirty = true;
         self.bytes[offset..(offset + bytes.len())].copy_from_slice(bytes);
     }
     
@@ -33,7 +45,7 @@ impl UniformBuffer {
         unsafe { slice.as_ptr().cast::<T>().read_unaligned() }
     }
 }
-
+#[derive(Debug)]
 pub struct TypedUniformBuffer {
     def:Arc<UniformBufferDef>,
     buffer:UniformBuffer
@@ -47,6 +59,10 @@ impl TypedUniformBuffer {
        };
        ret.set_default();
        ret
+    }
+
+    pub fn get_buffer(&self) -> &[u8] {
+        &self.buffer.bytes
     }
 
     pub fn set_default(&mut self) {
@@ -181,6 +197,14 @@ impl TypedUniformBuffer {
             return Mat3::from_cols_array(&bytes)
         }
         Mat3::IDENTITY
+    }
+
+    pub fn is_dirty(&self) -> bool {
+        self.buffer.dirty
+    }
+
+    pub fn clear_dirty(&mut self) {
+        self.buffer.dirty = false;
     }
 
 }

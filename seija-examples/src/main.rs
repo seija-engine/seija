@@ -42,16 +42,13 @@ fn on_start_up(mut commands:Commands,mat_def_center:Res<MaterialDefCenter>,mut m
     let mut vm = EvalRT::new();
     let material_def = read_material_def(&mut vm, &test_md_string).unwrap();
     let order = material_def.order;
-    let mat_def_handle:Handle<MaterialDef> = mat_def_center.add(material_def);
+    mat_def_center.add(material_def);
   
     create_elem(&mut commands, Vec3::new(2f32, 2f32, 2f32), root,&mut meshs,mat_def_center,order);
 }
 
 
-struct RenderComponent  {
-    mesh:Handle<Mesh>,
-    material:Material
-}
+
 
 
 fn create_elem(commands:&mut Commands,pos:Vec3,parent:Entity,meshs:&mut Assets<Mesh>,mat_def_center:Res<MaterialDefCenter>,order: RenderOrder) -> Entity {
@@ -65,13 +62,10 @@ fn create_elem(commands:&mut Commands,pos:Vec3,parent:Entity,meshs:&mut Assets<M
     let cube_mesh:Mesh = cube.into();   
     let cube_mesh_handle = meshs.add( cube_mesh);
     
-    let material = mat_def_center.create_material("ui-color");
-    let render_comp = RenderComponent {
-        mesh:cube_mesh_handle,
-        material
-    };
-    elem.insert(render_comp);
-
+    let material = mat_def_center.create_material("ui-color").unwrap();
+   
+    elem.insert(cube_mesh_handle);
+    elem.insert(material);
     elem.id()
 }
 

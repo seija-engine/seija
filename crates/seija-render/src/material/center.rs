@@ -42,9 +42,14 @@ impl MaterialDefCenter {
         handle
     }
 
-    pub fn create_material(&self,name:&str) -> Material {
-        
-        todo!()
+    pub fn create_material(&self,name:&str) -> Option<Material> {
+        let name_map = self.name_map.read();
+        let assets = self.assets.read();
+        if let Some(def_h) = name_map.get(name) {
+           let mat_def = assets.get(&def_h.id).unwrap();
+           return Some(Material::from_def(mat_def));
+        }
+        None
     }
 }
 
