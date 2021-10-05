@@ -7,7 +7,7 @@ use std::{borrow::Cow, sync::Arc};
 use wgpu::{CommandEncoder, CommandEncoderDescriptor};
 use crate::camera::camera::update_camera;
 use crate::graph::{LinearGraphIter, RenderGraph};
-use crate::material::update_material;
+use crate::material::{MaterialSystem};
 use crate::resource::{self, Mesh, RenderResources};
 
 #[derive(Default)]
@@ -37,7 +37,8 @@ pub struct AppRender {
 
     pub window_resized_event_reader: ManualEventReader<WindowResized>,
     pub window_created_event_reader: ManualEventReader<WindowCreated>,
-    mesh_event_reader:ManualEventReader<AssetEvent<Mesh>>
+    mesh_event_reader:ManualEventReader<AssetEvent<Mesh>>,
+    material_sys:MaterialSystem
 }
 
 pub struct Config {
@@ -93,7 +94,8 @@ impl AppRender {
             queue,
             window_created_event_reader:Default::default(),
             window_resized_event_reader:Default::default(),
-            mesh_event_reader:Default::default()
+            mesh_event_reader:Default::default(),
+            material_sys:MaterialSystem::default()
         }
     }
 
@@ -102,7 +104,8 @@ impl AppRender {
         self.update_winodw_surface(world,&mut render_ctx.resources);
         update_camera(world,render_ctx);
         render_ctx.resources.next_swap_chain_texture();
-        update_material(world,self, render_ctx);
+        self.material_sys.update(world,&self.device);
+        //update_material(world,self, render_ctx);
         graph_ctx.graph.prepare(world);
         for node_id in graph_ctx.graph_iter.clone().nodes.iter() {
             let cur_node = graph_ctx.graph.get_node(node_id).unwrap();

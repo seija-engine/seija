@@ -9,14 +9,14 @@ use crate::material::Material;
 
 use super::MaterialDef;
 
-pub struct MaterialDefCenter {
+pub struct MaterialStorage {
     pub(crate) assets:RwLock<Assets<MaterialDef>>,
     name_map:RwLock<HashMap<String,Handle<MaterialDef>>> 
 }
 
-impl MaterialDefCenter {
-    pub fn new(ref_sender:Sender<RefEvent>) -> MaterialDefCenter {
-        MaterialDefCenter {
+impl MaterialStorage {
+    pub fn new(ref_sender:Sender<RefEvent>) -> MaterialStorage {
+        MaterialStorage {
             assets:RwLock::new(Assets::new(ref_sender)),
             name_map:RwLock::new(HashMap::default())
         }
@@ -25,8 +25,8 @@ impl MaterialDefCenter {
 
 
 
-impl MaterialDefCenter {
-    pub fn add(&self,mat_def:MaterialDef) -> Handle<MaterialDef> {
+impl MaterialStorage {
+    pub fn add_def(&self,mat_def:MaterialDef) -> Handle<MaterialDef> {
         {
             let read_map = self.name_map.read();
             if let Some(id) = read_map.get(&mat_def.name) {
@@ -53,7 +53,7 @@ impl MaterialDefCenter {
     }
 }
 
-pub fn material_center_event(center:Res<MaterialDefCenter>,mut events: EventWriter<AssetEvent<MaterialDef>>,) {
+pub fn material_storage_event(center:Res<MaterialStorage>,mut events: EventWriter<AssetEvent<MaterialDef>>,) {
     let mut read_asset = center.assets.write();
     events.send_batch(read_asset.events.drain())
 }

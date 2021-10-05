@@ -2,7 +2,7 @@ use std::collections::HashMap;
 use super::{MaterialDef, RenderOrder};
 use lite_clojure_eval::EvalRT;
 use seija_core::{TypeUuid, bytes::Bytes};
-use wgpu::BufferUsage;
+use wgpu::{BufferUsage, Device};
 use wgpu::{util::DeviceExt};
 use crate::{material::read_material_def, memory::{TypedUniformBuffer, UniformBuffer}, render::AppRender};
 use uuid::Uuid;
@@ -25,34 +25,18 @@ impl Material {
         }
     }
 
-    pub fn update(&mut self,app:&mut AppRender) {
-        //todo ? 需要先过一下stage buffer
+    pub fn check_create(&mut self,device:&Device) {
+     
         if self.buffer.is_none() {
-            let buffer = app.device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
+            let buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
                 contents:self.props.get_buffer(),
                 label:None,
-                usage:BufferUsage::COPY_DST | BufferUsage::MAP_WRITE,
+                usage:BufferUsage::COPY_DST | BufferUsage::UNIFORM,
             });
             self.buffer = Some(buffer);
-            //self.props.clear_dirty();
-        }
-        if self.props.is_dirty() {
-            let buffer_mut = self.buffer.as_mut().unwrap();
-            {
-                let buffer_slice = buffer_mut.slice(..);
-                let data = buffer_slice.map_async(wgpu::MapMode::Write);
-                app.device.poll(wgpu::Maintain::Wait);
-                if futures_lite::future::block_on(data).is_err() {
-                    panic!("Failed to map buffer to host.");
-                }
-                let mut data = buffer_slice.get_mapped_range_mut();
-                let prop_buffer = self.props.get_buffer();
-                println!("write:{:?}",prop_buffer);
-                data[0..prop_buffer.len()].copy_from_slice(prop_buffer);
-            };
-            buffer_mut.unmap();
             self.props.clear_dirty();
         }
+        
     }
 
 }

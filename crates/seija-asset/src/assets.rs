@@ -46,7 +46,7 @@ impl<T: Asset> Assets<T> {
         self.events.send(AssetEvent::Created {
             handle: Handle::weak(id),
         });
-        self.create_handle(id)
+        self.make_handle(id)
     }
 
     pub fn get(&self, handle_id: &HandleId) -> Option<&T> {
@@ -54,7 +54,7 @@ impl<T: Asset> Assets<T> {
     }
 
 
-    fn create_handle(&self, id: HandleId) -> Handle<T> {
+    fn make_handle(&self, id: HandleId) -> Handle<T> {
         Handle::strong(id, self.ref_sender.clone())
     }
 

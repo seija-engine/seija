@@ -4,7 +4,7 @@ use glam::Vec3;
 use seija_app::App;
 use seija_asset::{AssetEvent, AssetModule, Assets, Handle, HandleId};
 use seija_core::{CoreModule, CoreStage, StartupStage, event::EventReader};
-use seija_render::{RenderModule, camera::{camera::{Camera, Orthographic}}, material::{Material, MaterialDef, MaterialDefCenter, RenderOrder, read_material_def}, resource::{shape::Cube,Mesh}};
+use seija_render::{RenderModule, camera::{camera::{Camera, Orthographic}}, material::{Material, MaterialDef, MaterialStorage, RenderOrder, read_material_def}, resource::{shape::Cube,Mesh}};
 use seija_winit::WinitModule;
 use seija_transform::{Transform, TransformModule, hierarchy::Parent};
 
@@ -24,7 +24,7 @@ pub struct  RootComponent {
     number:i32
 }
 
-fn on_start_up(mut commands:Commands,mat_def_center:Res<MaterialDefCenter>,mut meshs:ResMut<Assets<Mesh>>) {
+fn on_start_up(mut commands:Commands,mat_def_center:Res<MaterialStorage>,mut meshs:ResMut<Assets<Mesh>>) {
     let root = {
         let mut root = commands.spawn();
         let t = Transform::default();
@@ -42,7 +42,7 @@ fn on_start_up(mut commands:Commands,mat_def_center:Res<MaterialDefCenter>,mut m
     let mut vm = EvalRT::new();
     let material_def = read_material_def(&mut vm, &test_md_string).unwrap();
     let order = material_def.order;
-    mat_def_center.add(material_def);
+    mat_def_center.add_def(material_def);
   
     create_elem(&mut commands, Vec3::new(2f32, 2f32, 2f32), root,&mut meshs,mat_def_center,order);
 }
@@ -51,7 +51,7 @@ fn on_start_up(mut commands:Commands,mat_def_center:Res<MaterialDefCenter>,mut m
 
 
 
-fn create_elem(commands:&mut Commands,pos:Vec3,parent:Entity,meshs:&mut Assets<Mesh>,mat_def_center:Res<MaterialDefCenter>,order: RenderOrder) -> Entity {
+fn create_elem(commands:&mut Commands,pos:Vec3,parent:Entity,meshs:&mut Assets<Mesh>,mat_def_center:Res<MaterialStorage>,order: RenderOrder) -> Entity {
     let mut elem = commands.spawn();
     let mut t = Transform::default();
     t.local.position = pos;
