@@ -12,7 +12,7 @@ mod assets;
 pub use asset::{Asset};
 pub use handle::{HandleId,HandleUntyped,Handle};
 pub use assets::{Assets,AssetEvent};
-pub use server::{AssetServer, RefEvent};
+pub use server::{AssetServer, RefEvent,LifecycleEvent};
 
 #[derive(Debug, Hash, PartialEq, Eq, Clone,StageLabel)]
 pub enum AssetStage {

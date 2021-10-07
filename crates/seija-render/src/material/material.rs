@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::sync::Arc;
 use super::{MaterialDef, RenderOrder};
 use lite_clojure_eval::EvalRT;
 use seija_core::{TypeUuid, bytes::Bytes};
@@ -10,16 +11,18 @@ use uuid::Uuid;
 #[derive(Debug,TypeUuid)]
 #[uuid = "9fb83fbe-b850-42e0-a58c-53da87bace04"]
 pub struct Material {
+    pub def:Arc<MaterialDef>,
     pub order:RenderOrder,
     pub props:TypedUniformBuffer,
     pub buffer:Option<wgpu::Buffer>
 }
 
 impl Material {
-    pub fn from_def(def:&MaterialDef) -> Material {
+    pub fn from_def(def:Arc<MaterialDef>) -> Material {
         let props = TypedUniformBuffer::from_def(def.prop_def.clone());
         Material {
             order:def.order,
+            def,
             props,
             buffer:None
         }
@@ -66,7 +69,7 @@ fn test_material() {
     let mut vm = EvalRT::new();
     let material_def = read_material_def(&mut vm, &test_md_string).unwrap();
     
-    let mut mat = Material::from_def(&material_def);
+    let mut mat = Material::from_def(Arc::new(material_def));
     let s = mat.props.get_f32("scale", 0);
     println!(" {}",s);
 }

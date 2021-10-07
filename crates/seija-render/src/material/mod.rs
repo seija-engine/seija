@@ -19,10 +19,10 @@ pub use system::{MaterialSystem};
 
 pub(crate) fn init_material(app:&mut App) {
     let server = app.world.get_resource::<AssetServer>().unwrap();
-    let material_def_center = MaterialStorage::new(server.ref_counter.channel.sender.clone());
-    app.add_resource(material_def_center);
+    server.register_type::<Material>();
+    
+    let storage = MaterialStorage::new(server.ref_counter.channel.sender.clone());
+    app.add_resource(storage);
    
     app.add_system(AssetStage::AssetEvents, material_storage_event.system());
-    app.add_event::<AssetEvent<MaterialDef>>();
-    
 }

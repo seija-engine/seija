@@ -7,7 +7,7 @@ use crate::{Asset, Assets, HandleId};
 
 pub struct AssetServer {
     pub ref_counter:AssetRefCounter,
-    pub(crate) lifecycle_events:RwLock<HashMap<Uuid,LifecycleEventChannel>>
+    pub lifecycle_events:RwLock<HashMap<Uuid,LifecycleEventChannel>>
 }
 
 impl AssetServer {
