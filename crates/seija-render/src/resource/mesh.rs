@@ -1,5 +1,6 @@
-use std::collections::HashSet;
+use std::{collections::HashSet, hash::{Hash, Hasher}};
 use bevy_ecs::prelude::*;
+use fnv::FnvHasher;
 use seija_asset::{AssetEvent, Assets, Handle, HandleUntyped};
 use seija_core::{bytes::AsBytes, event::{EventReader, Events, ManualEventReader}};
 use wgpu::{BufferUsage, PrimitiveTopology, VertexFormat};
@@ -8,12 +9,35 @@ use uuid::Uuid;
 
 use crate::{render::RenderContext, resource::RenderResourceId};
 
+use super::shape;
+
 #[derive(Debug,TypeUuid)]
 #[uuid = "ea48c171-e7b4-4e54-8895-dda5a2d0fa90"]
 pub struct Mesh {
     typ:PrimitiveTopology,
     values:Vec<VertexAttributeValues>,
     indices:Option<Indices>
+}
+
+impl Mesh {
+    fn fnv_hash_u64(&self) -> u64 {
+        let mut fnv_hasher = FnvHasher::default();
+        self.hash(&mut fnv_hasher);
+        fnv_hasher.finish()
+    }
+}
+
+impl Hash for Mesh {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        self.typ.hash(state);
+        core::mem::discriminant(&self.values).hash(state);
+        if let Some(idxs) = self.indices.as_ref() {
+            1.hash(state);
+            core::mem::discriminant(idxs).hash(state);
+        } else {
+            0.hash(state);
+        }
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -38,6 +62,7 @@ pub enum VertexAttributeValues {
     UInt4(Vec<[u32;4]>),
     U84(Vec<[u8; 4]>),
 }
+
 
 impl VertexAttributeValues {
     pub fn get_bytes(&self) -> &[u8] {

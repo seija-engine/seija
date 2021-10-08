@@ -13,6 +13,7 @@ pub mod material;
 pub mod camera;
 pub mod graph;
 pub mod resource;
+pub mod pipeline;
 mod render;
 mod memory;
 
