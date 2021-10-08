@@ -38,7 +38,7 @@ pub struct AppRender {
     pub window_resized_event_reader: ManualEventReader<WindowResized>,
     pub window_created_event_reader: ManualEventReader<WindowCreated>,
     mesh_event_reader:ManualEventReader<AssetEvent<Mesh>>,
-    material_sys:MaterialSystem
+    material_sys:MaterialSystem,
 }
 
 pub struct Config {
@@ -95,7 +95,7 @@ impl AppRender {
             window_created_event_reader:Default::default(),
             window_resized_event_reader:Default::default(),
             mesh_event_reader:Default::default(),
-            material_sys:MaterialSystem::default()
+            material_sys:MaterialSystem::default(),
         }
     }
 
@@ -104,8 +104,7 @@ impl AppRender {
         self.update_winodw_surface(world,&mut render_ctx.resources);
         update_camera(world,render_ctx);
         render_ctx.resources.next_swap_chain_texture();
-        self.material_sys.update(world,&self.device);
-        //update_material(world,self, render_ctx);
+        self.material_sys.update(world,&self.device,render_ctx.command_encoder.as_mut().unwrap());
         graph_ctx.graph.prepare(world);
         for node_id in graph_ctx.graph_iter.clone().nodes.iter() {
             let cur_node = graph_ctx.graph.get_node(node_id).unwrap();
@@ -123,8 +122,9 @@ impl AppRender {
             }
         }
         
-        let buffer = render_ctx.command_encoder.take().unwrap().finish();
-        self.queue.submit(Some(buffer));
+        let command_buffer = render_ctx.command_encoder.take().unwrap().finish();
+       
+        self.queue.submit(Some(command_buffer));
         render_ctx.resources.clear_swap_chain_texture();
         
         resource::update_mesh_system(world,&mut self.mesh_event_reader,render_ctx);

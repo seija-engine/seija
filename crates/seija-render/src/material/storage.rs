@@ -10,7 +10,7 @@ use super::MaterialDef;
 
 pub struct MaterialDefInfo {
    pub def:Arc<MaterialDef>,
-   pub mat_count:u32
+   pub mat_count:usize
 }
 
 pub struct MaterialStorage {

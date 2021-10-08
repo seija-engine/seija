@@ -1645,6 +1645,7 @@ dependencies = [
  "bevy_ecs",
  "bitflags",
  "crossbeam-channel",
+ "fnv",
  "futures-lite",
  "glam",
  "lite-clojure-eval",

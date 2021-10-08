@@ -6,7 +6,7 @@ use glam::Vec3;
 use seija_app::App;
 use seija_asset::{AssetEvent, AssetModule, Assets, Handle, HandleId};
 use seija_core::{CoreModule, CoreStage, StartupStage, event::EventReader};
-use seija_render::{RenderModule, camera::{camera::{Camera, Orthographic}}, material::{ MaterialStorage, RenderOrder, read_material_def}, resource::{shape::Cube,Mesh}};
+use seija_render::{RenderModule, camera::{camera::{Camera, Orthographic}}, material::{Material, MaterialStorage, RenderOrder, read_material_def}, resource::{shape::Cube,Mesh}};
 use seija_winit::WinitModule;
 use seija_transform::{Transform, TransformModule, hierarchy::Parent};
 
@@ -72,13 +72,22 @@ fn create_elem(commands:&mut Commands,pos:Vec3,parent:Entity,meshs:&mut Assets<M
     elem.id()
 }
 
-fn on_update(mut commands:Commands,mut childrens:Query<(Entity,&mut RootComponent,&Camera)>) {
+fn on_update(mut commands:Commands,mut childrens:Query<(Entity,&mut RootComponent,&Camera)>,mats:Query<(Entity,&Handle<Material>)>) {
+   let mut is_rm:bool = false;
    for (e,mut t,_c) in childrens.iter_mut() {
        t.number += 1;
        if t.number > 100 {
           let mut e_cmd = commands.entity(e);
-          e_cmd.remove::<Camera>();
           e_cmd.remove::<RootComponent>();
+          is_rm = true;
        }
+   }
+   if is_rm {
+      let (fst_e,_) = mats.iter().next().unwrap();
+      let mut a = commands.entity(fst_e);
+      a.despawn();
+      println!("despawn");
+
+      
    }
 }

@@ -53,6 +53,10 @@ impl<T: Asset> Assets<T> {
         self.assets.get(handle_id)
     }
 
+    pub fn get_mut(&mut self, handle_id: &HandleId) -> Option<&mut T> {
+        self.assets.get_mut(handle_id)
+    }
+
 
     fn make_handle(&self, id: HandleId) -> Handle<T> {
         Handle::strong(id, self.ref_sender.clone())
