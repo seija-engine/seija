@@ -1,4 +1,4 @@
-use std::{borrow::BorrowMut, collections::HashMap, sync::Arc};
+use std::{borrow::{Borrow, BorrowMut}, collections::HashMap, sync::Arc};
 use bevy_ecs::prelude::{Res, ResMut};
 use crossbeam_channel::{Sender, TryRecvError};
 use parking_lot::RwLock;

@@ -1,4 +1,5 @@
 use camera::{view_list::view_list_system,camera::CamerasBuffer};
+use pipeline::{PipelineCache, update_pipeline_cache};
 use render::{AppRender, Config,RenderContext, RenderGraphContext};
 use resource::{Mesh, RenderResources};
 use seija_app::IModule;
@@ -19,32 +20,48 @@ mod memory;
 
 const MATRIX_SIZE: u64 = std::mem::size_of::<[[f32; 4]; 4]>() as u64;
 
+#[derive(Debug, Hash, PartialEq, Eq, Clone,StageLabel )]
+pub enum RenderStage {
+    AfterRender,
+    Render,
+    PostRender,
+}
+
 pub struct RenderModule;
 
 impl IModule for RenderModule {
     fn init(&mut self,app:&mut App) {
+        let render_system = get_render_system(&mut app.world);
+
+        app.schedule.add_stage_after(CoreStage::PostUpdate, RenderStage::AfterRender, SystemStage::parallel());
+        app.schedule.add_stage_before(RenderStage::AfterRender, RenderStage::Render, SystemStage::single(render_system.exclusive_system()));
+        app.schedule.add_stage_before(RenderStage::Render, RenderStage::PostRender, SystemStage::parallel());
+
         app.add_resource(CamerasBuffer::default());
         material::init_material(app);
         resource::init_resource(app);
-        let render_system = get_render_system();
-        app.add_system(CoreStage::PostUpdate, render_system.exclusive_system().at_end());
+        app.add_system(RenderStage::AfterRender, update_pipeline_cache.system());
         app.add_system(CoreStage::PostUpdate, view_list_system.system());
-        
-        
     }
 }
 
-fn get_render_system() -> impl FnMut(&mut World) {
+fn get_render_system(w:&mut World) -> impl FnMut(&mut World) {
     let mut app_render = AppRender::new_sync(Config::default());
-    let command_encoder = app_render.device.create_command_encoder(&CommandEncoderDescriptor::default());
     let mut graph_ctx = RenderGraphContext::default();
-    let mut render_ctx = RenderContext {
-        command_encoder:Some(command_encoder),
-        resources:RenderResources::new(app_render.device.clone())
+    let render_ctx = RenderContext {
+        device:app_render.device.clone(),
+        command_encoder:None,
+        resources:RenderResources::new(app_render.device.clone()),
     };
+    w.insert_resource(PipelineCache::default());
+    w.insert_resource(render_ctx);
     add_base_nodes(&mut graph_ctx);
 
-    move |world| { app_render.update(world,&mut graph_ctx,&mut render_ctx); }
+    move |_w| {
+        _w.resource_scope(|world:&mut World,mut ctx:Mut<RenderContext>| {
+            app_render.update(world,&mut graph_ctx,&mut ctx); 
+        }); 
+    }
 }
 
 fn add_base_nodes(graph_ctx:&mut RenderGraphContext) {

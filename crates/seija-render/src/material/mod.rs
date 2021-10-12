@@ -6,7 +6,7 @@ mod system;
 pub mod errors;
 pub use material::{Material};
 pub use storage::MaterialStorage;
-pub use material_def::{MaterialDef,read_material_def};
+pub use material_def::{MaterialDef,read_material_def,PassDef};
 use seija_app::App;
 use seija_core::{AddCore};
 use bevy_ecs::prelude::{IntoSystem};

@@ -4,10 +4,11 @@ use seija_core::event::{EventReader, Events, ManualEventReader};
 use seija_core::window::AppWindow;
 use seija_winit::event::{WindowCreated, WindowResized};
 use std::{borrow::Cow, sync::Arc};
-use wgpu::{CommandEncoder, CommandEncoderDescriptor};
+use wgpu::{CommandEncoder, CommandEncoderDescriptor, Device};
 use crate::camera::camera::update_camera;
 use crate::graph::{LinearGraphIter, RenderGraph};
 use crate::material::{MaterialSystem};
+use crate::pipeline::{PipelineCache, update_pipeline_cache};
 use crate::resource::{self, Mesh, RenderResources};
 
 #[derive(Default)]
@@ -26,8 +27,9 @@ impl RenderGraphContext {
 unsafe impl Send for RenderContext {}
 unsafe impl Sync for RenderContext {}
 pub struct RenderContext {
+    pub device:Arc<Device>,
     pub resources:RenderResources,
-    pub command_encoder:Option<CommandEncoder>,
+    pub command_encoder:Option<CommandEncoder>
 }
 
 pub struct AppRender {
@@ -106,7 +108,7 @@ impl AppRender {
         render_ctx.resources.next_swap_chain_texture();
         self.material_sys.update(world,&self.device,render_ctx.command_encoder.as_mut().unwrap());
         graph_ctx.graph.prepare(world);
-        for node_id in graph_ctx.graph_iter.clone().nodes.iter() {
+        for node_id in graph_ctx.graph_iter.nodes.iter() {
             let cur_node = graph_ctx.graph.get_node(node_id).unwrap();
             let mut new_inputs = cur_node.inputs.clone();
             for parent_edge in cur_node.edges.input_edges.iter() {

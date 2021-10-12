@@ -3,7 +3,7 @@ use bevy_ecs::prelude::*;
 use fnv::FnvHasher;
 use seija_asset::{AssetEvent, Assets, Handle, HandleUntyped};
 use seija_core::{bytes::AsBytes, event::{EventReader, Events, ManualEventReader}};
-use wgpu::{BufferUsage, PrimitiveTopology, VertexFormat};
+use wgpu::{BufferUsage, IndexFormat, PrimitiveState, PrimitiveTopology, VertexFormat};
 use seija_core::TypeUuid;
 use uuid::Uuid;
 
@@ -20,10 +20,29 @@ pub struct Mesh {
 }
 
 impl Mesh {
-    fn fnv_hash_u64(&self) -> u64 {
+    pub fn layout_hash_u64(&self) -> u64 {
         let mut fnv_hasher = FnvHasher::default();
         self.hash(&mut fnv_hasher);
         fnv_hasher.finish()
+    }
+
+    pub fn primitive_state(&self) -> PrimitiveState {
+        PrimitiveState {
+            topology:self.typ,
+            front_face:wgpu::FrontFace::Cw,
+            cull_mode:None,
+            clamp_depth:false,
+            polygon_mode:wgpu::PolygonMode::Fill,
+            strip_index_format:self.index_format(),
+            conservative:false
+        }
+    }
+
+    fn index_format(&self) -> Option<IndexFormat> {
+        self.indices.as_ref().map(|v| match v {
+            Indices::U16(_) => IndexFormat::Uint16,
+            Indices::U32(_) => IndexFormat::Uint32,
+        })
     }
 }
 
