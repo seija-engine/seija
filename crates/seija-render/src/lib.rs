@@ -6,7 +6,6 @@ use seija_app::IModule;
 use seija_app::{App};
 use bevy_ecs::prelude::*;
 use seija_core::{CoreStage};
-use wgpu::CommandEncoderDescriptor;
 use crate::graph::nodes::PassNode;
 use seija_asset::{AddAsset};
 

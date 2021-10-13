@@ -7,8 +7,10 @@
         {:name "position" :type "float3" :default [0,0,0]}
     ]
     :pass {
+        :front-face "Ccw"
         :z-write true
         :z-test "<"
+        :clamp-depth true
         :cull "Back"
         :vs "ui.vert"
         :fs "ui.frag"

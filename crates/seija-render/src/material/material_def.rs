@@ -1,6 +1,7 @@
 use std::{convert::{TryFrom}, sync::Arc};
 use seija_core::{TypeUuid};
-use super::{RenderOrder, errors::MaterialDefReadError, types::{Cull, ZTest}};
+use wgpu::FrontFace;
+use super::{RenderOrder, errors::MaterialDefReadError, types::{Cull, SFrontFace, ZTest}};
 use lite_clojure_eval::EvalRT;
 use serde_json::{Value};
 use uuid::Uuid;
@@ -12,24 +13,28 @@ pub struct MaterialDef {
     pub name:String,
     pub order:RenderOrder,
     pub pass_list:Vec<PassDef>,
-    pub prop_def:Arc<UniformBufferDef>
+    pub prop_def:Arc<UniformBufferDef>,
 }
 
 
 #[derive(Debug)]
 pub struct PassDef {
-    z_write:bool,
-    z_test:ZTest,
-    cull:Cull,
-    vs_path:String,
-    fs_path:String
+    pub front_face:SFrontFace,
+    pub z_write:bool,
+    pub z_test:ZTest,
+    pub cull:Cull,
+    pub clamp_depth:bool,
+    pub vs_path:String,
+    pub fs_path:String
 }
 
 impl Default for PassDef {
     fn default() -> Self {
-        Self { 
+        Self {
+            front_face:SFrontFace(FrontFace::Ccw),
             z_write:true,
             z_test:ZTest::Less,
+            clamp_depth:false,
             cull: Cull::Back,
             vs_path:String::default(),
             fs_path:String::default() 
@@ -75,6 +80,12 @@ fn read_pass(json_value:&Value) -> Result<PassDef,MaterialDefReadError> {
     let mut pass_def = PassDef::default();
     if let Some(z_write) = map.get(":z-write").and_then(|v| v.as_bool()) {
         pass_def.z_write = z_write;
+    }
+    if let Some(s) = map.get(":front-face").and_then(|v| v.as_str()) {
+        pass_def.front_face = SFrontFace::try_from(s).map_err(|_| MaterialDefReadError::InvalidPass )?
+    }
+    if let Some(b) = map.get(":clamp-depth").and_then(|v| v.as_bool()) {
+        pass_def.clamp_depth = b;
     }
     if let Some(z_test) = map.get(":z-test").and_then(|v| v.as_str()) {
         pass_def.z_test = ZTest::try_from(z_test).map_err(|_| MaterialDefReadError::InvalidPass)?;

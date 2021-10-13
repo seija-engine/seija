@@ -1,5 +1,5 @@
 use std::convert::{TryFrom, TryInto};
-
+use wgpu::{Face, FrontFace, PolygonMode};
 use num_enum::{IntoPrimitive,TryFromPrimitive};
 
 #[derive(IntoPrimitive,Debug,Clone, Copy,Eq,PartialEq,TryFromPrimitive)]
@@ -72,6 +72,16 @@ pub enum Cull {
     Off
 }
 
+impl Into<Option<Face>> for &Cull {
+    fn into(self) -> Option<Face> {
+        match self {
+            Cull::Off => None,
+            Cull::Back => Some(Face::Back),
+            Cull::Front => Some(Face::Front),
+        }
+    }
+}
+
 impl TryFrom<&str> for Cull {
     type Error = String;
     fn try_from(value: &str) -> Result<Self, String> {
@@ -81,6 +91,28 @@ impl TryFrom<&str> for Cull {
             "Off" => Ok(Cull::Off),
             _ => Err(value.to_string())
         }
+    }
+}
+
+#[derive(Debug)]
+pub struct SFrontFace(pub FrontFace);
+
+impl TryFrom<&str> for SFrontFace {
+    type Error = String;
+    fn try_from(value: &str) -> Result<Self, String> {
+        match value {
+            "Ccw" => Ok(SFrontFace(FrontFace::Ccw)),
+            "Cw" =>  Ok(SFrontFace(FrontFace::Cw)),
+            _ => Err(value.to_string())
+        }
+    }
+}
+
+pub struct SPolygonMode(pub PolygonMode);
+impl TryFrom<&str> for SPolygonMode {
+    type Error = String;
+    fn try_from(value: &str) -> Result<Self, Self::Error> {
+        todo!()
     }
 }
 
