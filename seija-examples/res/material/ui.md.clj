@@ -12,7 +12,7 @@
         :z-test "<"
         :clamp-depth true
         :cull "Back"
-        :vs "ui.vert"
-        :fs "ui.frag"
+        :vs "res/material/ui.vert"
+        :fs "res/material/ui.frag"
     }
 }

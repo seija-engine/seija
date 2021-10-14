@@ -1,5 +1,5 @@
 use std::convert::{TryFrom, TryInto};
-use wgpu::{Face, FrontFace, PolygonMode};
+use wgpu::{CompareFunction, Face, FrontFace, PolygonMode};
 use num_enum::{IntoPrimitive,TryFromPrimitive};
 
 #[derive(IntoPrimitive,Debug,Clone, Copy,Eq,PartialEq,TryFromPrimitive)]
@@ -45,6 +45,19 @@ pub enum ZTest {
     GEqual,
     Greater,
     Always
+}
+
+impl Into<CompareFunction> for &ZTest {
+    fn into(self) -> CompareFunction {
+        match self {
+            ZTest::Less => CompareFunction::Less,
+            ZTest::LEqual => CompareFunction::LessEqual,
+            ZTest::Equal => CompareFunction::Equal,
+            ZTest::GEqual => CompareFunction::GreaterEqual,
+            ZTest::Greater => CompareFunction::Greater,
+            ZTest::Always => CompareFunction::Always
+        }
+    }
 }
 
 impl TryFrom<&str> for ZTest {
@@ -108,11 +121,18 @@ impl TryFrom<&str> for SFrontFace {
     }
 }
 
+#[derive(Debug)]
 pub struct SPolygonMode(pub PolygonMode);
+
 impl TryFrom<&str> for SPolygonMode {
     type Error = String;
     fn try_from(value: &str) -> Result<Self, Self::Error> {
-        todo!()
+        match value {
+            "Fill" => Ok(SPolygonMode(PolygonMode::Fill)),
+            "Line" => Ok(SPolygonMode(PolygonMode::Line)),
+            "Point" => Ok(SPolygonMode(PolygonMode::Point)),
+            _ => Err(value.to_string())
+        }
     }
 }
 

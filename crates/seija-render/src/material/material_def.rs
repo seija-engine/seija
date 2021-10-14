@@ -1,7 +1,7 @@
 use std::{convert::{TryFrom}, sync::Arc};
 use seija_core::{TypeUuid};
-use wgpu::FrontFace;
-use super::{RenderOrder, errors::MaterialDefReadError, types::{Cull, SFrontFace, ZTest}};
+use wgpu::{FrontFace, PolygonMode};
+use super::{RenderOrder, errors::MaterialDefReadError, types::{Cull, SFrontFace, SPolygonMode, ZTest}};
 use lite_clojure_eval::EvalRT;
 use serde_json::{Value};
 use uuid::Uuid;
@@ -19,6 +19,8 @@ pub struct MaterialDef {
 
 #[derive(Debug)]
 pub struct PassDef {
+    pub conservative:bool,
+    pub polygon_mode:SPolygonMode,
     pub front_face:SFrontFace,
     pub z_write:bool,
     pub z_test:ZTest,
@@ -31,6 +33,8 @@ pub struct PassDef {
 impl Default for PassDef {
     fn default() -> Self {
         Self {
+            conservative:false,
+            polygon_mode:SPolygonMode(PolygonMode::Fill),
             front_face:SFrontFace(FrontFace::Ccw),
             z_write:true,
             z_test:ZTest::Less,
@@ -93,6 +97,13 @@ fn read_pass(json_value:&Value) -> Result<PassDef,MaterialDefReadError> {
     if let Some(cull) = map.get(":cull").and_then(|v| v.as_str()) {
         pass_def.cull = Cull::try_from(cull).map_err(|_| MaterialDefReadError::InvalidPass)?;
     }
+    if let Some(poly) = map.get(":polygon-mode").and_then(|v| v.as_str()) {
+        pass_def.polygon_mode = SPolygonMode::try_from(poly).map_err(|_| MaterialDefReadError::InvalidPass)?;
+    }
+    if let Some(b) = map.get(":conservative").and_then(|v| v.as_bool()) {
+        pass_def.conservative = b;
+    }
+
     pass_def.vs_path = map.get(":vs").and_then(|v|v.as_str()).ok_or( MaterialDefReadError::InvalidPass)?.to_string();
     pass_def.fs_path = map.get(":fs").and_then(|v|v.as_str()).ok_or( MaterialDefReadError::InvalidPass)?.to_string();
     Ok(pass_def)
