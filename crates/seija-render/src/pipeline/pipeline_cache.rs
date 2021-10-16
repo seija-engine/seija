@@ -1,7 +1,9 @@
+use std::borrow::Cow;
 use std::hash::{Hash, Hasher};
-
+use std::fs;
+use bevy_glsl_to_spirv::ShaderType;
 use fnv::{FnvHashMap, FnvHasher};
-use wgpu::{DepthStencilState, Device, FragmentState, MultisampleState, PrimitiveState, RenderPipeline, StencilState};
+use wgpu::{DepthStencilState, Device, FragmentState, MultisampleState, PipelineLayout, PipelineLayoutDescriptor, PrimitiveState, RenderPipeline, RenderPipelineDescriptor, ShaderModule, ShaderModuleDescriptor, StencilState, VertexState};
 
 use crate::{material::{MaterialDef, PassDef}, resource::Mesh};
 
@@ -37,11 +39,11 @@ impl PipelineCache {
     fn compile_pipelines(&self,mesh:&Mesh,mat_def:&MaterialDef,device:&Device) {
         let prim_state = mesh.primitive_state();
         for pass in  mat_def.pass_list.iter() {
-            self.compile_pipeline(pass, &prim_state,device);
+            self.compile_pipeline(mesh,pass, &prim_state,device);
         }
     }
 
-    fn compile_pipeline(&self,pass:&PassDef,mesh_prim_state:&PrimitiveState,device:&Device) {
+    fn compile_pipeline(&self,mesh:&Mesh,pass:&PassDef,mesh_prim_state:&PrimitiveState,device:&Device) -> Option<RenderPipeline> {
         let mut cur_primstate = mesh_prim_state.clone();
         cur_primstate.cull_mode = (&pass.cull).into();
         cur_primstate.front_face = pass.front_face.0;
@@ -66,27 +68,55 @@ impl PipelineCache {
             }
         };
 
-        let multisample = MultisampleState {
+       let vert_shader = Self::create_shader_module(&pass.vs_path,device,ShaderType::Vertex)?;
+       let frag_shader = Self::create_shader_module(&pass.fs_path,device,ShaderType::Fragment)?;
+
+       
+      let pipeline_layout = Self::create_pipeline_layout(device);
+
+       let render_pipeline_desc = RenderPipelineDescriptor {
+           label:None,
+           layout:Some(&pipeline_layout),
+           vertex:VertexState {  module:&vert_shader, entry_point:"main", buffers:&[mesh.vert_layout()] },
+           primitive:cur_primstate,
+           depth_stencil:Some(depth_stencil),
+           multisample: MultisampleState {
             count: 1,
             mask: !0,
             alpha_to_coverage_enabled: false,
-        };
-    
-
-        Self::create_shader_module(&pass.vs_path);
-       /*
-     
-        pub layout: Option<&'a PipelineLayout>,
-  
-        pub vertex: VertexState<'a>,
-
-        pub fragment: Option<FragmentState<'a>>,
-       */
-
+        },
+           fragment:Some(FragmentState { module:&frag_shader, entry_point:"main", targets:&[] })
+       };
+       let render_pipeline = device.create_render_pipeline(&render_pipeline_desc);
+       Some(render_pipeline)
     }
 
-    fn create_shader_module(path:&str) {
-        
+    fn create_pipeline_layout(device:&Device) -> PipelineLayout {
+        let layout_desc = PipelineLayoutDescriptor {
+            label:None,
+            bind_group_layouts:&[],
+            push_constant_ranges:&[],
+        };
+        device.create_pipeline_layout(&layout_desc)
+    }
+
+    fn create_shader_module(path:&str,device:&Device,ty:ShaderType) -> Option<ShaderModule> {
+       let code_string = fs::read_to_string(path).ok()?;
+       match bevy_glsl_to_spirv::compile(&code_string, ty, None) {
+           Ok(spirv_bytes) => {
+               let spirv: Cow<[u32]> = spirv_bytes.into();
+               let shader_module = device.create_shader_module(&ShaderModuleDescriptor {
+                  label:None,
+                  source:wgpu::ShaderSource::SpirV(spirv),
+                  flags:Default::default()
+               });
+              return Some(shader_module);
+           },
+           Err(err) => {
+               eprintln!("path:{} err:{}",path,&err);
+               return None;
+           }
+       }
     }
 
     fn compile_frag_shader<'a>(&self,pass:&PassDef) -> FragmentState<'a> {

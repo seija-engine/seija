@@ -11,6 +11,7 @@ use seija_winit::WinitModule;
 use seija_transform::{Transform, TransformModule, hierarchy::Parent};
 
 fn main() {
+    env_logger::init();
     let mut app = App::new();
     app.add_module(CoreModule);
     app.add_module(WinitModule::default());

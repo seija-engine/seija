@@ -88,9 +88,9 @@ fn read_pass(json_value:&Value) -> Result<PassDef,MaterialDefReadError> {
     if let Some(s) = map.get(":front-face").and_then(|v| v.as_str()) {
         pass_def.front_face = SFrontFace::try_from(s).map_err(|_| MaterialDefReadError::InvalidPass )?
     }
-    if let Some(b) = map.get(":clamp-depth").and_then(|v| v.as_bool()) {
-        pass_def.clamp_depth = b;
-    }
+    //if let Some(b) = map.get(":clamp-depth").and_then(|v| v.as_bool()) {
+    //    pass_def.clamp_depth = b;
+    //}
     if let Some(z_test) = map.get(":z-test").and_then(|v| v.as_str()) {
         pass_def.z_test = ZTest::try_from(z_test).map_err(|_| MaterialDefReadError::InvalidPass)?;
     }

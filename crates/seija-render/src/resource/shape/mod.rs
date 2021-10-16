@@ -111,6 +111,7 @@ impl From<Box> for Mesh {
         mesh.add_value(normals);
         mesh.add_value(uvs);
         mesh.set_indices(Some(indices));
+        mesh.build();
         mesh
     }
 }

@@ -3,7 +3,7 @@ use bevy_ecs::prelude::*;
 use fnv::FnvHasher;
 use seija_asset::{AssetEvent, Assets, Handle, HandleUntyped};
 use seija_core::{bytes::AsBytes, event::{EventReader, Events, ManualEventReader}};
-use wgpu::{BufferUsage, IndexFormat, PrimitiveState, PrimitiveTopology, VertexFormat};
+use wgpu::{BufferUsage, IndexFormat, PrimitiveState, PrimitiveTopology, VertexAttribute, VertexBufferLayout, VertexFormat};
 use seija_core::TypeUuid;
 use uuid::Uuid;
 
@@ -16,34 +16,9 @@ use super::shape;
 pub struct Mesh {
     typ:PrimitiveTopology,
     values:Vec<VertexAttributeValues>,
-    indices:Option<Indices>
-}
-
-impl Mesh {
-    pub fn layout_hash_u64(&self) -> u64 {
-        let mut fnv_hasher = FnvHasher::default();
-        self.hash(&mut fnv_hasher);
-        fnv_hasher.finish()
-    }
-
-    pub fn primitive_state(&self) -> PrimitiveState {
-        PrimitiveState {
-            topology:self.typ,
-            front_face:wgpu::FrontFace::Cw,
-            cull_mode:None,
-            clamp_depth:false,
-            polygon_mode:wgpu::PolygonMode::Fill,
-            strip_index_format:self.index_format(),
-            conservative:false
-        }
-    }
-
-    fn index_format(&self) -> Option<IndexFormat> {
-        self.indices.as_ref().map(|v| match v {
-            Indices::U16(_) => IndexFormat::Uint16,
-            Indices::U32(_) => IndexFormat::Uint32,
-        })
-    }
+    indices:Option<Indices>,
+    attrs:Vec<VertexAttribute>,
+    array_stride:u64
 }
 
 impl Hash for Mesh {
@@ -224,7 +199,9 @@ impl Mesh {
         Mesh {
             typ,
             values:Vec::new(),
-            indices:None
+            indices:None,
+            attrs:vec![],
+            array_stride:0
         }
     }
     pub fn typ(&self) -> PrimitiveTopology {
@@ -237,6 +214,58 @@ impl Mesh {
 
     pub fn set_indices(&mut self,indices:Option<Indices>) {
         self.indices = indices
+    }
+
+    pub fn layout_hash_u64(&self) -> u64 {
+        let mut fnv_hasher = FnvHasher::default();
+        self.hash(&mut fnv_hasher);
+        fnv_hasher.finish()
+    }
+
+    pub fn vert_layout(&self) -> VertexBufferLayout {
+        VertexBufferLayout {
+            array_stride:self.array_stride,
+            step_mode:wgpu::InputStepMode::Vertex,
+            attributes:&self.attrs
+        }
+    }
+
+    pub fn build(&mut self) {
+        let mut attributes:Vec<VertexAttribute> = Vec::new();
+        let mut accumulated_offset = 0;
+        for value in self.values.iter() {
+            let format = VertexFormat::from(value);
+            let add_size = format.size();
+            attributes.push(VertexAttribute {
+                format,
+                shader_location : 0,
+                offset:accumulated_offset
+            });
+            accumulated_offset += add_size;
+        }
+        self.attrs = attributes;
+        self.array_stride = accumulated_offset;
+        
+        
+    }
+
+    pub fn primitive_state(&self) -> PrimitiveState {
+        PrimitiveState {
+            topology:self.typ,
+            front_face:Default::default(),
+            cull_mode:None,
+            clamp_depth:false,
+            polygon_mode:wgpu::PolygonMode::Fill,
+            strip_index_format:None,
+            conservative:false
+        }
+    }
+
+    pub fn index_format(&self) -> Option<IndexFormat> {
+        self.indices.as_ref().map(|v| match v {
+            Indices::U16(_) => IndexFormat::Uint16,
+            Indices::U32(_) => IndexFormat::Uint32,
+        })
     }
 
     pub fn get_index_buffer_bytes(&self) -> Option<Vec<u8>> {

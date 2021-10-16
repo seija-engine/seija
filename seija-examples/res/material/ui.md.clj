@@ -10,7 +10,6 @@
         :front-face "Ccw"
         :z-write true
         :z-test "<"
-        :clamp-depth true
         :cull "Back"
         :vs "res/material/ui.vert"
         :fs "res/material/ui.frag"
