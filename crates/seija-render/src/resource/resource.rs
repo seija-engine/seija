@@ -127,6 +127,7 @@ impl RenderResources {
     }
 
     pub fn clear_swap_chain_texture(&mut self) {
+        
         self.main_swap_chain_frame = None;
     }
 }

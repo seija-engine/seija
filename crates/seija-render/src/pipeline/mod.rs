@@ -1,6 +1,6 @@
 mod pipeline_cache;
 use bevy_ecs::prelude::{Mut, Query, Res, ResMut, World};
-pub use pipeline_cache::{PipelineCache,PipelineKey};
+pub use pipeline_cache::{PipelineCache,PipelineKey,RenderPipelines};
 use seija_asset::{Assets, Handle};
 
 use crate::{material::{Material, MaterialStorage}, render::RenderContext, resource::Mesh};

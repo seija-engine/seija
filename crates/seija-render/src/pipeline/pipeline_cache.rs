@@ -11,7 +11,7 @@ use crate::{material::{MaterialDef, PassDef}, resource::Mesh};
 pub struct PipelineKey<'a>(&'a String,u64);
 
 pub struct RenderPipelines {
-    pipelines:Vec<RenderPipeline>
+   pub pipelines:Vec<RenderPipeline>
 }
 
 impl RenderPipelines {
@@ -26,21 +26,34 @@ pub struct PipelineCache {
 }
 
 impl PipelineCache {
+
+    pub fn get_pipeline(&self,def_name:&String,mesh:&Mesh) -> Option<&RenderPipelines> {
+        let mut hasher = FnvHasher::default();
+        PipelineKey(def_name,mesh.layout_hash_u64()).hash(&mut hasher);
+        let key = hasher.finish();
+        self.cache_pipelines.get(&key)
+    }
+
     pub fn check_build(&mut self,mesh:&Mesh,mat_def:&MaterialDef,device:&Device) {
         let mut hasher = FnvHasher::default();
         PipelineKey(&mat_def.name,mesh.layout_hash_u64()).hash(&mut hasher);
         let key = hasher.finish();
         if !self.cache_pipelines.contains_key(&key) {
-            self.compile_pipelines(mesh, mat_def, device);
-            self.cache_pipelines.insert(key, RenderPipelines::new(vec![]));
+            let pipes = self.compile_pipelines(mesh, mat_def, device);
+            self.cache_pipelines.insert(key, pipes);
         }
     }
 
-    fn compile_pipelines(&self,mesh:&Mesh,mat_def:&MaterialDef,device:&Device) {
+    fn compile_pipelines(&self,mesh:&Mesh,mat_def:&MaterialDef,device:&Device) -> RenderPipelines {
         let prim_state = mesh.primitive_state();
+        let mut pipes:Vec<RenderPipeline> = Vec::new();
         for pass in  mat_def.pass_list.iter() {
-            self.compile_pipeline(mesh,pass, &prim_state,device);
+           if let Some(pipe) = self.compile_pipeline(mesh,pass, &prim_state,device) {
+               dbg!(&pipe);
+               pipes.push(pipe);
+           }
         }
+        RenderPipelines::new(pipes)
     }
 
     fn compile_pipeline(&self,mesh:&Mesh,pass:&PassDef,mesh_prim_state:&PrimitiveState,device:&Device) -> Option<RenderPipeline> {

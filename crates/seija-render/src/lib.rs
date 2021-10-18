@@ -1,4 +1,5 @@
 use camera::{view_list::view_list_system,camera::CamerasBuffer};
+use graph::nodes::SwapchainNode;
 use pipeline::{PipelineCache, update_pipeline_cache};
 use render::{AppRender, Config,RenderContext, RenderGraphContext};
 use resource::{Mesh, RenderResources};
@@ -65,6 +66,13 @@ fn get_render_system(w:&mut World) -> impl FnMut(&mut World) {
 
 fn add_base_nodes(graph_ctx:&mut RenderGraphContext) {
     let pass_node = PassNode;
-    graph_ctx.graph.add_node("pass", pass_node);
+    let pass_id = graph_ctx.graph.add_node("pass", pass_node);
+
+    let swap_chain_node = SwapchainNode::new();
+    let swap_id = graph_ctx.graph.add_node("swapchain", swap_chain_node);
+
+
+    graph_ctx.graph.add_link( swap_id ,pass_id , vec![0], vec![0]).unwrap();
+
     graph_ctx.build_iter();
 }

@@ -70,7 +70,9 @@ pub struct GraphNode {
     pub name:Option<Cow<'static,str>>,
     pub node:Box<dyn INode>,
     pub edges: Edges,
+    //
     pub inputs:Vec<Option<RenderResourceId>>,
+    //
     pub outputs:Vec<Option<RenderResourceId>>,
 }
 

@@ -1,9 +1,10 @@
 use std::cmp::Ordering;
 
-use bevy_ecs::prelude::{Entity, Query};
+use bevy_ecs::prelude::{Entity, Query, Res};
+use seija_asset::Handle;
 use seija_transform::Transform;
 
-use crate::material::{Material, RenderOrder};
+use crate::material::{Material, MaterialStorage, RenderOrder};
 
 use super::camera::Camera;
 
@@ -17,6 +18,7 @@ impl Default for ViewList {
     fn default() -> Self {
         let mut values =  Vec::new();
         values.resize(RenderOrder::MAX.into(), ViewEntities::default());
+        
         Self { values }
     }
 }
@@ -56,7 +58,7 @@ pub struct ViewEntities {
 }
 #[derive(Clone,Debug)]
 pub struct ViewEntity {
-    entity:Entity,
+    pub entity:Entity,
     order:f32
 }
 
@@ -68,14 +70,17 @@ impl ViewEntity {
 
 
 pub(crate) fn view_list_system(mut camera_query: Query<(&mut Camera,&Transform)>,
-                               view_query:Query<(Entity,&Transform,&Material)>) {
+                               view_query:Query<(Entity,&Transform,&Handle<Material>)>,
+                               mat_storage:Res<MaterialStorage>) {
     for (mut camera,camera_trans) in camera_query.iter_mut() {
         camera.view_list.clear();
+        let mats = mat_storage.mateials.read();
         let camera_position = camera_trans.global().position;
-        for (entity, trans, material) in view_query.iter() {
+        for (entity, trans, matid) in view_query.iter() {
             let position = trans.global().position;
             let dis_order = (camera_position - position).length_squared();
-            camera.view_list.add_entity(material.order, ViewEntity {entity,order:dis_order });
+            let mat = mats.get(&matid.id).unwrap();
+            camera.view_list.add_entity(mat.order, ViewEntity {entity,order:dis_order });
         }
         camera.view_list.sort();
     }
