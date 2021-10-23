@@ -5,7 +5,7 @@ use seija_core::window::AppWindow;
 use seija_winit::event::{WindowCreated, WindowResized};
 use std::{borrow::Cow, sync::Arc};
 use wgpu::{CommandEncoder, CommandEncoderDescriptor, Device};
-use crate::camera::camera::update_camera;
+use crate::camera::camera::{CameraState, update_camera};
 use crate::graph::{LinearGraphIter, RenderGraph};
 use crate::material::{MaterialSystem};
 use crate::pipeline::{PipelineCache, update_pipeline_cache};
@@ -29,7 +29,8 @@ unsafe impl Sync for RenderContext {}
 pub struct RenderContext {
     pub device:Arc<Device>,
     pub resources:RenderResources,
-    pub command_encoder:Option<CommandEncoder>
+    pub command_encoder:Option<CommandEncoder>,
+    pub camera_state:CameraState
 }
 
 pub struct AppRender {
@@ -105,7 +106,7 @@ impl AppRender {
         render_ctx.command_encoder = Some(self.device.create_command_encoder(&CommandEncoderDescriptor::default()));
         self.update_winodw_surface(world,&mut render_ctx.resources);
         update_camera(world,render_ctx);
-        render_ctx.resources.next_swap_chain_texture();
+        
         self.material_sys.update(world,&self.device,render_ctx.command_encoder.as_mut().unwrap());
         graph_ctx.graph.prepare(world);
         for node_id in graph_ctx.graph_iter.nodes.iter() {
@@ -125,7 +126,7 @@ impl AppRender {
         }
         
         let command_buffer = render_ctx.command_encoder.take().unwrap().finish();
-       
+        
         self.queue.submit(Some(command_buffer));
         render_ctx.resources.clear_swap_chain_texture();
         

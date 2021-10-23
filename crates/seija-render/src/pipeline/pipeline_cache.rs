@@ -1,11 +1,17 @@
-use std::borrow::Cow;
+use core::slice;
+
+use std::io;
 use std::hash::{Hash, Hasher};
 use std::fs;
-use bevy_glsl_to_spirv::ShaderType;
 use fnv::{FnvHashMap, FnvHasher};
-use wgpu::{DepthStencilState, Device, FragmentState, MultisampleState, PipelineLayout, PipelineLayoutDescriptor, PrimitiveState, RenderPipeline, RenderPipelineDescriptor, ShaderModule, ShaderModuleDescriptor, StencilState, VertexState};
-
+use wgpu::{BindGroupLayout, DepthStencilState, Device, 
+          FragmentState, MultisampleState, PipelineLayout, 
+          PipelineLayoutDescriptor, PrimitiveState, RenderPipeline, 
+          RenderPipelineDescriptor, ShaderModule, 
+          ShaderModuleDescriptor, ShaderStage, StencilState, VertexState};
 use crate::{material::{MaterialDef, PassDef}, resource::Mesh};
+
+
 
 #[derive(Hash,PartialEq, Eq,Debug)]
 pub struct PipelineKey<'a>(&'a String,u64);
@@ -49,7 +55,6 @@ impl PipelineCache {
         let mut pipes:Vec<RenderPipeline> = Vec::new();
         for pass in  mat_def.pass_list.iter() {
            if let Some(pipe) = self.compile_pipeline(mesh,pass, &prim_state,device) {
-               dbg!(&pipe);
                pipes.push(pipe);
            }
         }
@@ -81,30 +86,68 @@ impl PipelineCache {
             }
         };
 
-       let vert_shader = Self::create_shader_module(&pass.vs_path,device,ShaderType::Vertex)?;
-       let frag_shader = Self::create_shader_module(&pass.fs_path,device,ShaderType::Fragment)?;
+       let vert_shader = Self::read_shader_module(&pass.vs_path,device)?;
+       let frag_shader = Self::read_shader_module(&pass.fs_path,device)?;
 
        
       let pipeline_layout = Self::create_pipeline_layout(device);
+
+      let targets = vec![wgpu::ColorTargetState {
+        format: wgpu::TextureFormat::Bgra8UnormSrgb,
+        blend: Some(wgpu::BlendState {
+            color: wgpu::BlendComponent {
+                src_factor: wgpu::BlendFactor::SrcAlpha,
+                dst_factor: wgpu::BlendFactor::OneMinusSrcAlpha,
+                operation: wgpu::BlendOperation::Add,
+            },
+            alpha: wgpu::BlendComponent {
+                src_factor: wgpu::BlendFactor::One,
+                dst_factor: wgpu::BlendFactor::One,
+                operation: wgpu::BlendOperation::Add,
+            },
+        }),
+        write_mask: wgpu::ColorWrite::ALL,
+    }];
 
        let render_pipeline_desc = RenderPipelineDescriptor {
            label:None,
            layout:Some(&pipeline_layout),
            vertex:VertexState {  module:&vert_shader, entry_point:"main", buffers:&[mesh.vert_layout()] },
            primitive:cur_primstate,
-           depth_stencil:Some(depth_stencil),
+           depth_stencil:None,
            multisample: MultisampleState {
             count: 1,
             mask: !0,
             alpha_to_coverage_enabled: false,
         },
-           fragment:Some(FragmentState { module:&frag_shader, entry_point:"main", targets:&[] })
+           fragment:Some(FragmentState { module:&frag_shader, entry_point:"main", targets:&targets })
        };
        let render_pipeline = device.create_render_pipeline(&render_pipeline_desc);
        Some(render_pipeline)
     }
 
+    fn create_camera_bind_group_layout(device:&Device) -> BindGroupLayout {
+        let camera_view_proj = wgpu::BindGroupLayoutEntry {
+            binding:0,
+            visibility:ShaderStage::VERTEX,
+            ty:wgpu::BindingType::Buffer {
+                ty:wgpu::BufferBindingType::Uniform,
+                has_dynamic_offset:false,
+                min_binding_size:None
+            },
+            count:None
+        };
+
+        let bind_group_layout_desc = &wgpu::BindGroupLayoutDescriptor {
+            label:None,
+            entries:&[camera_view_proj]
+        };
+
+        device.create_bind_group_layout(bind_group_layout_desc)
+    }
+
     fn create_pipeline_layout(device:&Device) -> PipelineLayout {
+        let bind_group_layout = Self::create_camera_bind_group_layout(device);
         let layout_desc = PipelineLayoutDescriptor {
             label:None,
             bind_group_layouts:&[],
@@ -113,26 +156,55 @@ impl PipelineCache {
         device.create_pipeline_layout(&layout_desc)
     }
 
-    fn create_shader_module(path:&str,device:&Device,ty:ShaderType) -> Option<ShaderModule> {
-       let code_string = fs::read_to_string(path).ok()?;
-       match bevy_glsl_to_spirv::compile(&code_string, ty, None) {
-           Ok(spirv_bytes) => {
-               let spirv: Cow<[u32]> = spirv_bytes.into();
-               let shader_module = device.create_shader_module(&ShaderModuleDescriptor {
-                  label:None,
-                  source:wgpu::ShaderSource::SpirV(spirv),
-                  flags:Default::default()
-               });
-              return Some(shader_module);
-           },
-           Err(err) => {
-               eprintln!("path:{} err:{}",path,&err);
-               return None;
-           }
-       }
+    fn read_shader_module(path:&str,device:&Device) -> Option<ShaderModule> {
+       let code_bytes = fs::read(path).ok()?;
+       let bytes = read_spirv(std::io::Cursor::new(&code_bytes)).unwrap();
+       
+       let shader_module = device.create_shader_module(&ShaderModuleDescriptor {
+        label:None,
+        source:wgpu::ShaderSource::SpirV(bytes.into()),
+        flags:Default::default()
+       });
+       Some(shader_module)
     }
 
-    fn compile_frag_shader<'a>(&self,pass:&PassDef) -> FragmentState<'a> {
-        todo!()
+   
+}
+
+pub fn read_spirv<R: io::Read + io::Seek>(mut x: R) -> io::Result<Vec<u32>> {
+    let size = x.seek(io::SeekFrom::End(0))?;
+    if size % 4 != 0 {
+        return Err(io::Error::new(
+            io::ErrorKind::InvalidData,
+            "input length not divisible by 4",
+        ));
     }
+    if size > usize::max_value() as u64 {
+        return Err(io::Error::new(io::ErrorKind::InvalidData, "input too long"));
+    }
+    let words = (size / 4) as usize;
+    let mut result = Vec::<u32>::with_capacity(words);
+    x.seek(io::SeekFrom::Start(0))?;
+    unsafe {
+        // Writing all bytes through a pointer with less strict alignment when our type has no
+        // invalid bitpatterns is safe.
+        x.read_exact(slice::from_raw_parts_mut(
+            result.as_mut_ptr() as *mut u8,
+            words * 4,
+        ))?;
+        result.set_len(words);
+    }
+    const MAGIC_NUMBER: u32 = 0x07230203;
+    if result.len() > 0 && result[0] == MAGIC_NUMBER.swap_bytes() {
+        for word in &mut result {
+            *word = word.swap_bytes();
+        }
+    }
+    if result.len() == 0 || result[0] != MAGIC_NUMBER {
+        return Err(io::Error::new(
+            io::ErrorKind::InvalidData,
+            "input missing SPIR-V magic number",
+        ));
+    }
+    Ok(result)
 }

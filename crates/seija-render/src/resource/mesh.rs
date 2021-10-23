@@ -1,4 +1,4 @@
-use std::{collections::HashSet, hash::{Hash, Hasher}};
+use std::{collections::HashSet, hash::{Hash, Hasher}, ops::Range};
 use bevy_ecs::prelude::*;
 use fnv::FnvHasher;
 use seija_asset::{AssetEvent, Assets, Handle, HandleUntyped};
@@ -275,6 +275,14 @@ impl Mesh {
                 Indices::U32(v) => v.as_slice().as_bytes().to_vec(),
             }
         })
+    }
+
+    pub fn indices_range(&self) -> Option<Range<u32>> {
+        match &self.indices {
+            Some(Indices::U32(indices)) => Some(0..indices.len() as u32),
+            Some(Indices::U16(indices)) => Some(0..indices.len() as u32),
+            None => None,
+        }
     }
 
     pub fn count_vertices(&self) -> usize { 

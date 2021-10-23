@@ -11,7 +11,7 @@
         :z-write true
         :z-test "<"
         :cull "Back"
-        :vs "res/material/ui.vert"
-        :fs "res/material/ui.frag"
+        :vs "res/material/vert.spv"
+        :fs "res/material/frag.spv"
     }
 }

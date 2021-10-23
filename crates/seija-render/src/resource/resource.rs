@@ -1,11 +1,12 @@
 use std::{collections::HashMap, ops::Range, sync::Arc};
 use seija_asset::HandleUntyped;
 use uuid::Uuid;
-use wgpu::{BufferUsage, util::DeviceExt};
+use wgpu::{Buffer, BufferUsage, Device, SwapChainError, SwapChainFrame, TextureView, util::DeviceExt};
 
 #[derive(Debug,Clone,Hash,PartialEq, Eq)]
 pub enum RenderResourceId {
-    Buffer(BufferId)
+    Buffer(BufferId),
+    MainSwap
 }
 
 #[derive(Copy, Clone, Hash, Eq, PartialEq, Debug)]
@@ -20,9 +21,10 @@ pub struct RenderResources {
     pub device: Arc<wgpu::Device>,
     main_surface:Option<wgpu::Surface>,
     main_swap_chain:Option<wgpu::SwapChain>,
-    main_swap_chain_frame:Option<wgpu::SwapChainFrame>,
+    pub main_swap_chain_frame:Option<wgpu::SwapChainFrame>,
 
     pub buffers: HashMap<BufferId, Arc<wgpu::Buffer>>,
+    
 
     resources:HashMap<(HandleUntyped,u8),RenderResourceId>
 }
@@ -78,6 +80,19 @@ impl RenderResources {
         id
     }
 
+    pub fn map_raw_buffer(device:&Device,buffer:&Buffer,map_mode:wgpu::MapMode) {
+        let buffer_slice = buffer.slice(..);
+        let data = buffer_slice.map_async(map_mode);
+        device.poll(wgpu::Maintain::Wait);
+        if futures_lite::future::block_on(data).is_err() {
+            panic!("Failed to map buffer to host.");
+        }
+    }
+
+    pub fn unmap_raw_buffer(buffer:&Buffer) {
+        buffer.unmap();
+    }
+
     pub fn map_buffer(&mut self,id:BufferId,mode:wgpu::MapMode) {
         let buffer = self.buffers.get(&id).unwrap();
         let buffer_slice = buffer.slice(..);
@@ -115,16 +130,33 @@ impl RenderResources {
         
     }
 
-    pub fn next_swap_chain_texture(&mut self) {
-        if let Some(swap_chain) = self.main_swap_chain.as_mut() {
-            match swap_chain.get_current_frame() {
-                Ok(frame) => {
-                    self.main_swap_chain_frame = Some(frame)
-                },
-                Err(err) => panic!("{}",err)
+    pub fn next_swap_chain_texture(&mut self) -> Result<RenderResourceId,SwapChainError> {
+       self.main_swap_chain.as_mut().ok_or(SwapChainError::Lost)
+                                    .and_then(|v| v.get_current_frame())
+                                    .map(|s| {
+                                        self.main_swap_chain_frame = Some(s);
+                                        RenderResourceId::MainSwap
+                                    })
+    }
+
+    pub fn get_texture_view(&self,res_id:&RenderResourceId) -> Option<&TextureView> {
+        match res_id {
+            RenderResourceId::MainSwap => {
+                Some(&self.main_swap_chain_frame.as_ref().unwrap().output.view)
             }
+            _ => None
         }
     }
+
+    pub fn get_buffer(&self,res_id:&RenderResourceId) -> Option<&wgpu::Buffer> {
+        match res_id {
+            RenderResourceId::Buffer(buffer_id) => {
+                Some( self.buffers.get(buffer_id).unwrap())
+            }
+            _ => None
+        }
+        
+    } 
 
     pub fn clear_swap_chain_texture(&mut self) {
         

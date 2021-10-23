@@ -1,3 +1,4 @@
+use camera::camera::CameraState;
 use camera::{view_list::view_list_system,camera::CamerasBuffer};
 use graph::nodes::SwapchainNode;
 use pipeline::{PipelineCache, update_pipeline_cache};
@@ -37,7 +38,7 @@ impl IModule for RenderModule {
         app.schedule.add_stage_before(RenderStage::AfterRender, RenderStage::Render, SystemStage::single(render_system.exclusive_system()));
         app.schedule.add_stage_before(RenderStage::Render, RenderStage::PostRender, SystemStage::parallel());
 
-        app.add_resource(CamerasBuffer::default());
+        
         material::init_material(app);
         resource::init_resource(app);
         app.add_system(RenderStage::AfterRender, update_pipeline_cache.system());
@@ -52,6 +53,7 @@ fn get_render_system(w:&mut World) -> impl FnMut(&mut World) {
         device:app_render.device.clone(),
         command_encoder:None,
         resources:RenderResources::new(app_render.device.clone()),
+        camera_state:CameraState::default()
     };
     w.insert_resource(PipelineCache::default());
     w.insert_resource(render_ctx);
@@ -65,7 +67,7 @@ fn get_render_system(w:&mut World) -> impl FnMut(&mut World) {
 }
 
 fn add_base_nodes(graph_ctx:&mut RenderGraphContext) {
-    let pass_node = PassNode;
+    let pass_node = PassNode::new();
     let pass_id = graph_ctx.graph.add_node("pass", pass_node);
 
     let swap_chain_node = SwapchainNode::new();

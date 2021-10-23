@@ -83,12 +83,11 @@ fn on_update(mut commands:Commands,mut childrens:Query<(Entity,&mut RootComponen
           is_rm = true;
        }
    }
+   /* 
    if is_rm {
       let (fst_e,_) = mats.iter().next().unwrap();
       let mut a = commands.entity(fst_e);
       a.despawn();
       println!("despawn");
-
-      
-   }
+   }*/
 }

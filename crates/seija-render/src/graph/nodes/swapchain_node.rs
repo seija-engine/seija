@@ -17,7 +17,9 @@ impl INode for SwapchainNode {
                         ctx:&mut RenderContext,
                         inputs:&Vec<Option<RenderResourceId>>,
                         outputs:&mut Vec<Option<RenderResourceId>>) {
-                            
+       if let Ok(res_id) = ctx.resources.next_swap_chain_texture() {
+           outputs[0] = Some(res_id)
+       }
     }
 
     fn output_count(&self) -> usize { 1 }
