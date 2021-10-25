@@ -4,7 +4,7 @@ use bevy_ecs::prelude::{Changed, Entity, Local, Mut, RemovedComponents, World};
 use glam::Mat4;
 use seija_core::bytes::AsBytes;
 use seija_transform::Transform;
-use wgpu::{Buffer, BufferUsage, Device};
+use wgpu::{BindingResource, Buffer, BufferUsage, Device};
 use crate::MATRIX_SIZE;
 use crate::resource::{BufferId, RenderResources};
 use crate::render::RenderContext;
@@ -62,10 +62,16 @@ pub struct CameraState {
     cameras_buffer:CamerasBuffer
 }
 
+impl CameraState {
+    pub fn init(ctx:&mut RenderContext) {
+        
+    }
+}
+
 pub struct CameraBuffer {
     pub staging_buffer:Option<Buffer>,
     pub view_proj:Buffer,
-    pub view:Buffer,
+    pub view:Buffer
 }
 
 #[derive(Default)]
@@ -94,6 +100,7 @@ impl CamerasBuffer {
                 usage:BufferUsage::COPY_DST | BufferUsage::UNIFORM,
                 mapped_at_creation:false
             });
+            device.create_bind_group(desc)
             self.buffers.insert(eid,CameraBuffer {
                 staging_buffer:None,
                 view_proj,

@@ -54,7 +54,6 @@ impl INode for PassNode {
 
                                         
                                         
-                                        
                                         render_pass.set_vertex_buffer(0, vert_buffer.slice(0..));
                                         render_pass.set_index_buffer(idx_buffer.slice(0..), mesh.index_format().unwrap());
                                         render_pass.set_pipeline(pipe);

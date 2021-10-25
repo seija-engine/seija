@@ -1,6 +1,7 @@
 use camera::camera::CameraState;
 use camera::{view_list::view_list_system,camera::CamerasBuffer};
 use graph::nodes::SwapchainNode;
+use pipeline::render_bindings::RenderBindings;
 use pipeline::{PipelineCache, update_pipeline_cache};
 use render::{AppRender, Config,RenderContext, RenderGraphContext};
 use resource::{Mesh, RenderResources};
@@ -49,16 +50,18 @@ impl IModule for RenderModule {
 fn get_render_system(w:&mut World) -> impl FnMut(&mut World) {
     let mut app_render = AppRender::new_sync(Config::default());
     let mut graph_ctx = RenderGraphContext::default();
-    let render_ctx = RenderContext {
+    let mut render_ctx = RenderContext {
         device:app_render.device.clone(),
         command_encoder:None,
         resources:RenderResources::new(app_render.device.clone()),
-        camera_state:CameraState::default()
+        camera_state:CameraState::default(),
+        global_bindings:RenderBindings::default()
     };
     w.insert_resource(PipelineCache::default());
+    app_render.init(w,&mut render_ctx);
     w.insert_resource(render_ctx);
     add_base_nodes(&mut graph_ctx);
-
+    
     move |_w| {
         _w.resource_scope(|world:&mut World,mut ctx:Mut<RenderContext>| {
             app_render.update(world,&mut graph_ctx,&mut ctx); 
