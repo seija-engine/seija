@@ -68,7 +68,7 @@ impl PipelineCache {
         cur_primstate.clamp_depth = pass.clamp_depth;
         cur_primstate.polygon_mode = pass.polygon_mode.0;
         cur_primstate.conservative = pass.conservative;
-
+        /* 
         let depth_stencil = DepthStencilState {
             format: wgpu::TextureFormat::Depth32Float,
             depth_write_enabled: pass.z_write,
@@ -84,7 +84,7 @@ impl PipelineCache {
                 slope_scale: 0.0,
                 clamp: 0.0,
             }
-        };
+        };*/
 
        let vert_shader = Self::read_shader_module(&pass.vs_path,device)?;
        let frag_shader = Self::read_shader_module(&pass.fs_path,device)?;

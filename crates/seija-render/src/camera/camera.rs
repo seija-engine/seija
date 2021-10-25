@@ -4,9 +4,10 @@ use bevy_ecs::prelude::{Changed, Entity, Local, Mut, RemovedComponents, World};
 use glam::Mat4;
 use seija_core::bytes::AsBytes;
 use seija_transform::Transform;
-use wgpu::{BindingResource, Buffer, BufferUsage, Device};
+use wgpu::{BindingResource, Buffer, BufferUsage, Device, ShaderStage};
 use crate::MATRIX_SIZE;
-use crate::resource::{BufferId, RenderResources};
+use crate::pipeline::render_bindings::RenderBindings;
+use crate::resource::{BufferId, RenderResourceId, RenderResources};
 use crate::render::RenderContext;
 
 use super::view_list::ViewList;
@@ -64,14 +65,14 @@ pub struct CameraState {
 
 impl CameraState {
     pub fn init(ctx:&mut RenderContext) {
-        
     }
 }
 
 pub struct CameraBuffer {
-    pub staging_buffer:Option<Buffer>,
-    pub view_proj:Buffer,
-    pub view:Buffer
+    pub bindings:RenderBindings,
+    pub staging_buffer:Option<BufferId>,
+    pub view_proj:BufferId,
+    pub view:BufferId
 }
 
 #[derive(Default)]
@@ -86,47 +87,49 @@ impl Camera {
 }
 
 impl CamerasBuffer {
-    pub fn get_or_create_buffer(&mut self,eid:u32,device:&Device) -> &mut CameraBuffer {
+    pub fn get_or_create_buffer(&mut self,eid:u32,device:&Device,resources:&mut RenderResources) -> &mut CameraBuffer {
         if !self.buffers.contains_key(&eid) {
-            let view_proj = device.create_buffer(&wgpu::BufferDescriptor {
+            let view_proj = resources.create_buffer(&wgpu::BufferDescriptor {
                 label:None,
                 size:MATRIX_SIZE,
                 usage:BufferUsage::COPY_DST | BufferUsage::UNIFORM,
                 mapped_at_creation:false
             });
-            let view = device.create_buffer(&wgpu::BufferDescriptor {
+            let view = resources.create_buffer(&wgpu::BufferDescriptor {
                 label:None,
                 size:MATRIX_SIZE,
                 usage:BufferUsage::COPY_DST | BufferUsage::UNIFORM,
                 mapped_at_creation:false
             });
-            device.create_bind_group(desc)
+            let mut bindings = RenderBindings::default();
+    
+            bindings.add_uniform(ShaderStage::VERTEX, view_proj);
+            bindings.add_uniform(ShaderStage::VERTEX, view);
+            bindings.build(device,resources);
             self.buffers.insert(eid,CameraBuffer {
+                bindings,
                 staging_buffer:None,
                 view_proj,
                 view
             });
         }
         self.buffers.get_mut(&eid).unwrap()
+        
     }
 }
 
 
 pub(crate) fn update_camera(world:&mut World,ctx:&mut RenderContext) {
     let mut camera_query = world.query::<(Entity,&Transform, &Camera)>();
+  
     for (e,t,camera) in camera_query.iter(world) {
-        let buffer = ctx.camera_state.cameras_buffer.get_or_create_buffer(e.id(),&ctx.device);
-        if let Some(staging_buffer) = buffer.staging_buffer.as_ref() {
+        let buffer = ctx.camera_state.cameras_buffer.get_or_create_buffer(e.id(), &ctx.device,&mut ctx.resources);
+        if let Some(staging_buffer) = buffer.staging_buffer {
            {
-                let buffer_slice = staging_buffer.slice(..);
-                let data = buffer_slice.map_async(wgpu::MapMode::Write);
-                ctx.device.poll(wgpu::Maintain::Wait);
-                if futures_lite::future::block_on(data).is_err() {
-                    panic!("Failed to map buffer to host.");
-                };
+                ctx.resources.map_buffer(staging_buffer, wgpu::MapMode::Write);
            }
         } else {
-            let staging_buffer = ctx.device.create_buffer(&wgpu::BufferDescriptor {
+            let staging_buffer = ctx.resources.create_buffer(&wgpu::BufferDescriptor {
                 label:None,
                 size:MATRIX_SIZE * 2,
                 usage:BufferUsage::COPY_SRC | BufferUsage::MAP_WRITE,
@@ -137,24 +140,21 @@ pub(crate) fn update_camera(world:&mut World,ctx:&mut RenderContext) {
 
         let command = ctx.command_encoder.as_mut().unwrap();
         
-        let staging_buffer = buffer.staging_buffer.as_ref().unwrap();
+        let staging_buffer = buffer.staging_buffer.unwrap();
         {
             let view_proj_matrix = t.global().matrix().inverse() * camera.projection.matrix();
-            let buffer_slice = staging_buffer.slice(0..MATRIX_SIZE * 2);
-            let mut data = buffer_slice.get_mapped_range_mut();
-            data[0..crate::MATRIX_SIZE as usize].copy_from_slice(view_proj_matrix.to_cols_array_2d().as_bytes());
-
             let view_matrix = t.global().matrix();
-            data[(MATRIX_SIZE as usize) ..(MATRIX_SIZE*2) as usize].copy_from_slice(view_matrix.to_cols_array_2d().as_bytes());
-
-            command.copy_buffer_to_buffer(staging_buffer, 0, 
-                                      &buffer.view_proj, 0, MATRIX_SIZE);
-            command.copy_buffer_to_buffer(staging_buffer, MATRIX_SIZE,
-                                      &buffer.view_proj, 0, MATRIX_SIZE);
+            ctx.resources.write_mapped_buffer(staging_buffer, 0..(MATRIX_SIZE * 2),&mut |bytes,_| {
+                bytes[0..crate::MATRIX_SIZE as usize].copy_from_slice(view_proj_matrix.to_cols_array_2d().as_bytes());
+                bytes[(MATRIX_SIZE as usize) ..(MATRIX_SIZE*2) as usize].copy_from_slice(view_matrix.to_cols_array_2d().as_bytes());
+            });
+            
+            ctx.resources.copy_buffer_to_buffer(command, staging_buffer,0, buffer.view_proj,0, MATRIX_SIZE);
+            ctx.resources.copy_buffer_to_buffer(command, staging_buffer,MATRIX_SIZE, buffer.view,0, MATRIX_SIZE);
         }
         
         
-        staging_buffer.unmap();
+        ctx.resources.unmap_buffer(staging_buffer);
     }
     for e in world.removed::<Camera>() {
         ctx.camera_state.cameras_buffer.buffers.remove(&e.id());

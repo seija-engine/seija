@@ -1,7 +1,7 @@
 use std::{collections::HashMap, ops::Range, sync::Arc};
 use seija_asset::HandleUntyped;
 use uuid::Uuid;
-use wgpu::{Buffer, BufferUsage, Device, SwapChainError, SwapChainFrame, TextureView, util::DeviceExt};
+use wgpu::{Buffer, BufferUsage, Device, SwapChainError, TextureView, util::DeviceExt};
 
 #[derive(Debug,Clone,Hash,PartialEq, Eq)]
 pub enum RenderResourceId {
@@ -23,7 +23,7 @@ pub struct RenderResources {
     main_swap_chain:Option<wgpu::SwapChain>,
     pub main_swap_chain_frame:Option<wgpu::SwapChainFrame>,
 
-    pub buffers: HashMap<BufferId, Arc<wgpu::Buffer>>,
+    pub buffers: HashMap<BufferId, wgpu::Buffer>,
     
 
     resources:HashMap<(HandleUntyped,u8),RenderResourceId>
@@ -49,7 +49,7 @@ impl RenderResources {
         let buffer = self.device.create_buffer(desc);
        
         let id = BufferId::new();
-        self.buffers.insert(id, Arc::new(buffer));
+        self.buffers.insert(id, buffer);
         id
     }
 
@@ -76,21 +76,8 @@ impl RenderResources {
             usage
         });
         let id = BufferId::new();
-        self.buffers.insert(id, Arc::new(buffer));
+        self.buffers.insert(id, buffer);
         id
-    }
-
-    pub fn map_raw_buffer(device:&Device,buffer:&Buffer,map_mode:wgpu::MapMode) {
-        let buffer_slice = buffer.slice(..);
-        let data = buffer_slice.map_async(map_mode);
-        device.poll(wgpu::Maintain::Wait);
-        if futures_lite::future::block_on(data).is_err() {
-            panic!("Failed to map buffer to host.");
-        }
-    }
-
-    pub fn unmap_raw_buffer(buffer:&Buffer) {
-        buffer.unmap();
     }
 
     pub fn map_buffer(&mut self,id:BufferId,mode:wgpu::MapMode) {
@@ -154,9 +141,28 @@ impl RenderResources {
                 Some( self.buffers.get(buffer_id).unwrap())
             }
             _ => None
-        }
-        
+        }  
     } 
+
+    pub fn copy_buffer_to_buffer(
+        &self,
+        command_encoder: &mut wgpu::CommandEncoder,
+        source_buffer: BufferId,
+        source_offset: u64,
+        destination_buffer: BufferId,
+        destination_offset: u64,
+        size: u64,
+    ) {
+        let source = self.buffers.get(&source_buffer).unwrap();
+        let destination = self.buffers.get(&destination_buffer).unwrap();
+        command_encoder.copy_buffer_to_buffer(
+            source,
+            source_offset,
+            destination,
+            destination_offset,
+            size,
+        );
+    }
 
     pub fn clear_swap_chain_texture(&mut self) {
         
