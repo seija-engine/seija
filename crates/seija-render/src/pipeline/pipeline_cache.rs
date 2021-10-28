@@ -3,13 +3,17 @@ use core::slice;
 use std::io;
 use std::hash::{Hash, Hasher};
 use std::fs;
+use std::sync::Arc;
 use fnv::{FnvHashMap, FnvHasher};
 use wgpu::{BindGroupLayout, DepthStencilState, Device, 
           FragmentState, MultisampleState, PipelineLayout, 
           PipelineLayoutDescriptor, PrimitiveState, RenderPipeline, 
           RenderPipelineDescriptor, ShaderModule, 
           ShaderModuleDescriptor, ShaderStage, StencilState, VertexState};
+use crate::RenderContext;
 use crate::{material::{MaterialDef, PassDef}, resource::Mesh};
+
+use super::render_bindings::RenderBindGroupLayout;
 
 
 
@@ -31,7 +35,9 @@ pub struct PipelineCache {
     cache_pipelines:FnvHashMap<u64,RenderPipelines>
 }
 
+
 impl PipelineCache {
+
 
     pub fn get_pipeline(&self,def_name:&String,mesh:&Mesh) -> Option<&RenderPipelines> {
         let mut hasher = FnvHasher::default();
@@ -40,28 +46,28 @@ impl PipelineCache {
         self.cache_pipelines.get(&key)
     }
 
-    pub fn check_build(&mut self,mesh:&Mesh,mat_def:&MaterialDef,device:&Device) {
+    pub fn check_build(&mut self,mesh:&Mesh,mat_def:&MaterialDef,ctx:&RenderContext) {
         let mut hasher = FnvHasher::default();
         PipelineKey(&mat_def.name,mesh.layout_hash_u64()).hash(&mut hasher);
         let key = hasher.finish();
         if !self.cache_pipelines.contains_key(&key) {
-            let pipes = self.compile_pipelines(mesh, mat_def, device);
+            let pipes = self.compile_pipelines(mesh, mat_def,ctx);
             self.cache_pipelines.insert(key, pipes);
         }
     }
 
-    fn compile_pipelines(&self,mesh:&Mesh,mat_def:&MaterialDef,device:&Device) -> RenderPipelines {
+    fn compile_pipelines(&mut self,mesh:&Mesh,mat_def:&MaterialDef,ctx:&RenderContext) -> RenderPipelines {
         let prim_state = mesh.primitive_state();
         let mut pipes:Vec<RenderPipeline> = Vec::new();
         for pass in  mat_def.pass_list.iter() {
-           if let Some(pipe) = self.compile_pipeline(mesh,pass, &prim_state,device) {
+           if let Some(pipe) = self.compile_pipeline(mesh,pass, &prim_state,ctx) {
                pipes.push(pipe);
            }
         }
         RenderPipelines::new(pipes)
     }
 
-    fn compile_pipeline(&self,mesh:&Mesh,pass:&PassDef,mesh_prim_state:&PrimitiveState,device:&Device) -> Option<RenderPipeline> {
+    fn compile_pipeline(&mut self,mesh:&Mesh,pass:&PassDef,mesh_prim_state:&PrimitiveState,ctx:&RenderContext) -> Option<RenderPipeline> {
         let mut cur_primstate = mesh_prim_state.clone();
         cur_primstate.cull_mode = (&pass.cull).into();
         cur_primstate.front_face = pass.front_face.0;
@@ -86,11 +92,11 @@ impl PipelineCache {
             }
         };*/
 
-       let vert_shader = Self::read_shader_module(&pass.vs_path,device)?;
-       let frag_shader = Self::read_shader_module(&pass.fs_path,device)?;
+       let vert_shader = Self::read_shader_module(&pass.vs_path,&ctx.device)?;
+       let frag_shader = Self::read_shader_module(&pass.fs_path,&ctx.device)?;
 
        
-      let pipeline_layout = Self::create_pipeline_layout(device);
+      let pipeline_layout = self.create_pipeline_layout(ctx);
 
       let targets = vec![wgpu::ColorTargetState {
         format: wgpu::TextureFormat::Bgra8UnormSrgb,
@@ -122,38 +128,18 @@ impl PipelineCache {
         },
            fragment:Some(FragmentState { module:&frag_shader, entry_point:"main", targets:&targets })
        };
-       let render_pipeline = device.create_render_pipeline(&render_pipeline_desc);
+       let render_pipeline = ctx.device.create_render_pipeline(&render_pipeline_desc);
        Some(render_pipeline)
     }
 
-    fn create_camera_bind_group_layout(device:&Device) -> BindGroupLayout {
-        let camera_view_proj = wgpu::BindGroupLayoutEntry {
-            binding:0,
-            visibility:ShaderStage::VERTEX,
-            ty:wgpu::BindingType::Buffer {
-                ty:wgpu::BufferBindingType::Uniform,
-                has_dynamic_offset:false,
-                min_binding_size:None
-            },
-            count:None
-        };
-
-        let bind_group_layout_desc = &wgpu::BindGroupLayoutDescriptor {
-            label:None,
-            entries:&[camera_view_proj]
-        };
-
-        device.create_bind_group_layout(bind_group_layout_desc)
-    }
-
-    fn create_pipeline_layout(device:&Device) -> PipelineLayout {
-        let bind_group_layout = Self::create_camera_bind_group_layout(device);
+    fn create_pipeline_layout(&mut self,ctx:&RenderContext) -> PipelineLayout {
+        let camer_layout = ctx.camera_state.camera_layout.layout.as_ref().unwrap();;
         let layout_desc = PipelineLayoutDescriptor {
             label:None,
-            bind_group_layouts:&[],
+            bind_group_layouts:&[camer_layout],
             push_constant_ranges:&[],
         };
-        device.create_pipeline_layout(&layout_desc)
+        ctx.device.create_pipeline_layout(&layout_desc)
     }
 
     fn read_shader_module(path:&str,device:&Device) -> Option<ShaderModule> {

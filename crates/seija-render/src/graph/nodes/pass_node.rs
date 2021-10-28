@@ -1,4 +1,4 @@
-use crate::{camera::camera::Camera, graph::node::INode, material::{Material, MaterialStorage}, pipeline::{PipelineCache, RenderPipelines}, render::{RenderContext}, resource::Mesh};
+use crate::{RenderContext, camera::camera::Camera, graph::node::INode, material::{Material, MaterialStorage}, pipeline::{PipelineCache, RenderPipelines}, resource::Mesh};
 use bevy_ecs::prelude::*;
 
 use seija_asset::{Assets, Handle};
@@ -38,27 +38,32 @@ impl INode for PassNode {
                 depth_stencil_attachment:None,
             });
             
-            for (_,camera) in camera_query.iter(world) {
-                for view_entites in camera.view_list.values.iter() {
-                    for ve in view_entites.value.iter() {
-                        if let Ok((_,hmesh,hmat))  = render_query.get(world, ve.entity) {
-                            let mesh = meshs.get(&hmesh.id).unwrap();
-                            let mat = mats.get(&hmat.id).unwrap();
-                            if let Some(pipes) = pipeline_cahce.get_pipeline(&mat.def.name, mesh) {
-                                if let Some(mesh_buffer_id)  = ctx.resources.get_render_resource(hmesh.clone_weak_untyped(), 0) {
-                                    for pipe in pipes.pipelines.iter() {
-                                        
-                                        let idx_id = ctx.resources.get_render_resource(hmesh.clone_weak_untyped(), 1).unwrap();
-                                        let vert_buffer = ctx.resources.get_buffer(&mesh_buffer_id).unwrap();
-                                        let idx_buffer = ctx.resources.get_buffer(&idx_id).unwrap();
-
-                                        
-                                        
-                                        render_pass.set_vertex_buffer(0, vert_buffer.slice(0..));
-                                        render_pass.set_index_buffer(idx_buffer.slice(0..), mesh.index_format().unwrap());
-                                        render_pass.set_pipeline(pipe);
-
-                                        render_pass.draw_indexed(mesh.indices_range().unwrap(),0, 0..1)
+            for (e,camera) in camera_query.iter(world) {
+                if let Some(camera_buffer)  = ctx.camera_state.cameras_buffer.buffers.get(&e.id()) {
+                    for view_entites in camera.view_list.values.iter() {
+                        for ve in view_entites.value.iter() {
+                            if let Ok((_,hmesh,hmat))  = render_query.get(world, ve.entity) {
+                                let mesh = meshs.get(&hmesh.id).unwrap();
+                                let mat = mats.get(&hmat.id).unwrap();
+                                if let Some(pipes) = pipeline_cahce.get_pipeline(&mat.def.name, mesh) {
+                                    if let Some(mesh_buffer_id)  = ctx.resources.get_render_resource(hmesh.clone_weak_untyped(), 0) {
+                                        for pipe in pipes.pipelines.iter() {
+                                            
+                                            let idx_id = ctx.resources.get_render_resource(hmesh.clone_weak_untyped(), 1).unwrap();
+                                            let vert_buffer = ctx.resources.get_buffer(&mesh_buffer_id).unwrap();
+                                            let idx_buffer = ctx.resources.get_buffer(&idx_id).unwrap();
+    
+                                            if let Some(bind_group) = camera_buffer.bind_group.bind_group.as_ref() {
+                                                render_pass.set_bind_group(0, bind_group, &[]);
+                                                render_pass.set_vertex_buffer(0, vert_buffer.slice(0..));
+                                                render_pass.set_index_buffer(idx_buffer.slice(0..), mesh.index_format().unwrap());
+                                                render_pass.set_pipeline(pipe);
+        
+                                                render_pass.draw_indexed(mesh.indices_range().unwrap(),0, 0..1)
+                                            }
+                                            
+                                            
+                                        }
                                     }
                                 }
                             }

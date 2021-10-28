@@ -1,6 +1,6 @@
 use std::{borrow::Cow};
 use super::RenderGraphError;
-use crate::{render::{RenderContext}, resource::RenderResourceId};
+use crate::{RenderContext, resource::RenderResourceId};
 use bevy_ecs::prelude::*;
 use uuid::Uuid;
 

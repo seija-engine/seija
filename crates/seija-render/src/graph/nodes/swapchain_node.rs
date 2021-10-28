@@ -1,6 +1,6 @@
 use bevy_ecs::prelude::World;
 
-use crate::{graph::node::INode, render::RenderContext, resource::RenderResourceId};
+use crate::{RenderContext, graph::node::INode, resource::RenderResourceId};
 
 pub struct SwapchainNode {
 

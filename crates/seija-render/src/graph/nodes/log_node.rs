@@ -1,4 +1,4 @@
-use crate::{graph::node::INode, render::{RenderContext}};
+use crate::{RenderContext, graph::node::INode};
 use bevy_ecs::prelude::*;
 use crate::resource::RenderResourceId;
 pub struct LogNode(pub String,pub usize,pub usize);

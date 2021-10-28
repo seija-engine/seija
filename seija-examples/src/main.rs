@@ -62,7 +62,7 @@ fn create_elem(commands:&mut Commands,pos:Vec3,parent:Entity,meshs:&mut Assets<M
     elem.insert(t);
     elem.insert(Parent(parent));
 
-    let cube = Cube::new(2f32);
+    let cube = Cube::new(1.9f32);
     let cube_mesh:Mesh = cube.into();   
     let cube_mesh_handle = meshs.add( cube_mesh);
     

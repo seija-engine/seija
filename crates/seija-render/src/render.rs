@@ -8,8 +8,7 @@ use wgpu::{CommandEncoder, CommandEncoderDescriptor, Device};
 use crate::camera::camera::{CameraState, update_camera};
 use crate::graph::{LinearGraphIter, RenderGraph};
 use crate::material::{MaterialSystem};
-use crate::pipeline::render_bindings::RenderBindings;
-use crate::pipeline::{PipelineCache, update_pipeline_cache};
+use crate::render_context::RenderContext;
 use crate::resource::{self, Mesh, RenderResources};
 
 #[derive(Default)]
@@ -25,15 +24,7 @@ impl RenderGraphContext {
     }
 }
 
-unsafe impl Send for RenderContext {}
-unsafe impl Sync for RenderContext {}
-pub struct RenderContext {
-    pub device:Arc<Device>,
-    pub resources:RenderResources,
-    pub command_encoder:Option<CommandEncoder>,
-    pub camera_state:CameraState,
-    pub global_bindings:RenderBindings
-}
+
 
 pub struct AppRender {
     pub instance: wgpu::Instance,
@@ -105,7 +96,7 @@ impl AppRender {
     }
 
     pub fn init(&mut self,world: &mut World,ctx:&mut RenderContext) {
-        CameraState::init(ctx);
+        
     }
 
     pub fn update(&mut self, world: &mut World, graph_ctx: &mut RenderGraphContext,render_ctx:&mut RenderContext) {

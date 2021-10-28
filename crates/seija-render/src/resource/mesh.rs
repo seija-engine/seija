@@ -7,7 +7,7 @@ use wgpu::{BufferUsage, IndexFormat, PrimitiveState, PrimitiveTopology, VertexAt
 use seija_core::TypeUuid;
 use uuid::Uuid;
 
-use crate::{render::RenderContext, resource::RenderResourceId};
+use crate::{RenderContext,resource::RenderResourceId};
 
 use super::shape;
 
