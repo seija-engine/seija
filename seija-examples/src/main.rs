@@ -6,7 +6,7 @@ use glam::Vec3;
 use seija_app::App;
 use seija_asset::{AssetEvent, AssetModule, Assets, Handle, HandleId};
 use seija_core::{CoreModule, CoreStage, StartupStage, event::EventReader};
-use seija_render::{RenderModule, camera::{camera::{Camera, Orthographic}}, material::{Material, MaterialStorage, RenderOrder, read_material_def}, resource::{shape::Cube,Mesh}};
+use seija_render::{RenderModule, camera::{camera::{Camera, Orthographic, Perspective}}, material::{Material, MaterialStorage, RenderOrder, read_material_def}, resource::{shape::Cube,Mesh}};
 use seija_winit::WinitModule;
 use seija_transform::{Transform, TransformModule, hierarchy::Parent};
 
@@ -32,7 +32,8 @@ fn on_start_up(mut commands:Commands,mut meshs:ResMut<Assets<Mesh>>,storage:Res<
         let mut root = commands.spawn();
         let t = Transform::default();
         root.insert(t);
-        let camera = Camera::from_2d(Orthographic::default());
+       
+        let camera = Camera::from_3d(Perspective::default());
         root.insert(camera);
 
         

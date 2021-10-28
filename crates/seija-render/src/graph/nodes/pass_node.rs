@@ -79,7 +79,7 @@ impl INode for PassNode {
 impl PassNode {
     pub fn new() -> PassNode {
         PassNode {
-            operations:Operations { load:wgpu::LoadOp::Clear(wgpu::Color{r:0.5,g:0.1,b:0.1,a:0.0}), store:true }
+            operations:Operations { load:wgpu::LoadOp::Clear(wgpu::Color{r:0.01,g:0.01,b:0.01,a:0.0}), store:true }
         }
     }
     

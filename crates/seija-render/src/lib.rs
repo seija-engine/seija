@@ -1,5 +1,5 @@
-use camera::camera::CameraState;
-use camera::{view_list::view_list_system,camera::CamerasBuffer};
+use camera::system::CameraState;
+use camera::{view_list::view_list_system,system::CamerasBuffer};
 use graph::nodes::SwapchainNode;
 use pipeline::{PipelineCache, update_pipeline_cache};
 use render::{AppRender, Config , RenderGraphContext};
@@ -19,7 +19,9 @@ pub mod pipeline;
 mod render_context;
 mod render;
 mod memory;
+mod transform_buffer;
 
+pub use transform_buffer::TransformBuffer;
 pub use render_context::{RenderContext};
 
 const MATRIX_SIZE: u64 = std::mem::size_of::<[[f32; 4]; 4]>() as u64;
@@ -56,7 +58,8 @@ fn get_render_system(w:&mut World) -> impl FnMut(&mut World) {
         device:app_render.device.clone(),
         command_encoder:None,
         resources:RenderResources::new(app_render.device.clone()),
-        camera_state:CameraState::new(&app_render.device)
+        camera_state:CameraState::new(&app_render.device),
+        transform_buffer:TransformBuffer::new()
     };
     w.insert_resource(PipelineCache::default());
     app_render.init(w,&mut render_ctx);

@@ -69,11 +69,11 @@ impl Transform {
 
 pub(crate) fn update_transform_system(
                                 children_query: Query<Option<&Children>, (With<Parent>, With<Transform>)>,
-                                mut query_set:QuerySet<(
-                                Query<(Entity, Option<&Children>, &mut Transform),Without<Parent>>,
-                                Query<&mut Transform, With<Parent>>,
-                                Query<Entity, Changed<Transform>>
-                               )>) {
+                                query_set:QuerySet<(
+                                                    Query<(Entity, Option<&Children>, &mut Transform),Without<Parent>>,
+                                                    Query<&mut Transform, With<Parent>>,
+                                                    Query<Entity, Changed<Transform>>)>
+                               ) {
     unsafe {
         for (entity, children, mut transform) in query_set.q0().iter_unsafe() {
             let mut changed = false;

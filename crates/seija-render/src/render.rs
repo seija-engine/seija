@@ -5,7 +5,7 @@ use seija_core::window::AppWindow;
 use seija_winit::event::{WindowCreated, WindowResized};
 use std::{borrow::Cow, sync::Arc};
 use wgpu::{CommandEncoder, CommandEncoderDescriptor, Device};
-use crate::camera::camera::{CameraState, update_camera};
+use crate::camera::system::{CameraState, update_camera};
 use crate::graph::{LinearGraphIter, RenderGraph};
 use crate::material::{MaterialSystem};
 use crate::render_context::RenderContext;
@@ -103,6 +103,7 @@ impl AppRender {
         render_ctx.command_encoder = Some(self.device.create_command_encoder(&CommandEncoderDescriptor::default()));
         self.update_winodw_surface(world,&mut render_ctx.resources);
         update_camera(world,render_ctx);
+        render_ctx.transform_buffer.update(world);
         
         self.material_sys.update(world,&self.device,render_ctx.command_encoder.as_mut().unwrap());
         graph_ctx.graph.prepare(world);
