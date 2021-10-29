@@ -107,17 +107,18 @@ impl<T: Asset> Assets<T> {
 
     pub fn update_assets_system(server:Res<AssetServer>,mut assets:ResMut<Assets<T>>) {
         let life_events = server.lifecycle_events.read();
-        let life_event = life_events.get(&T::TYPE_UUID).unwrap();
-        loop {
-            match life_event.receiver.try_recv() {
-                Ok(LifecycleEvent::Create(_id)) => { },
-                Ok(LifecycleEvent::Free(id)) => {
-                    assets.remove(id);
-                },
-                Err(TryRecvError::Empty) => {
-                    break;
+        if let Some(life_event) = life_events.get(&T::TYPE_UUID) {
+            loop {
+                match life_event.receiver.try_recv() {
+                    Ok(LifecycleEvent::Create(_id)) => { },
+                    Ok(LifecycleEvent::Free(id)) => {
+                        assets.remove(id);
+                    },
+                    Err(TryRecvError::Empty) => {
+                        break;
+                    }
+                    Err(TryRecvError::Disconnected) => panic!("AssetChannel disconnected."),
                 }
-                Err(TryRecvError::Disconnected) => panic!("AssetChannel disconnected."),
             }
         }
     }

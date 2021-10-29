@@ -78,6 +78,7 @@ impl Default for Perspective {
             aspect_ratio: 1.0,
         }
     }
+
 }
 
 impl Perspective {

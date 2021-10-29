@@ -103,7 +103,7 @@ impl AppRender {
         render_ctx.command_encoder = Some(self.device.create_command_encoder(&CommandEncoderDescriptor::default()));
         self.update_winodw_surface(world,&mut render_ctx.resources);
         update_camera(world,render_ctx);
-        render_ctx.transform_buffer.update(world);
+        render_ctx.transform_buffer.update(world,&self.device,&mut render_ctx.resources,render_ctx.command_encoder.as_mut().unwrap());
         
         self.material_sys.update(world,&self.device,render_ctx.command_encoder.as_mut().unwrap());
         graph_ctx.graph.prepare(world);

@@ -42,7 +42,7 @@ impl INode for PassNode {
                 if let Some(camera_buffer)  = ctx.camera_state.cameras_buffer.buffers.get(&e.id()) {
                     for view_entites in camera.view_list.values.iter() {
                         for ve in view_entites.value.iter() {
-                            if let Ok((_,hmesh,hmat))  = render_query.get(world, ve.entity) {
+                            if let Ok((re,hmesh,hmat))  = render_query.get(world, ve.entity) {
                                 let mesh = meshs.get(&hmesh.id).unwrap();
                                 let mat = mats.get(&hmat.id).unwrap();
                                 if let Some(pipes) = pipeline_cahce.get_pipeline(&mat.def.name, mesh) {
@@ -54,12 +54,15 @@ impl INode for PassNode {
                                             let idx_buffer = ctx.resources.get_buffer(&idx_id).unwrap();
     
                                             if let Some(bind_group) = camera_buffer.bind_group.bind_group.as_ref() {
-                                                render_pass.set_bind_group(0, bind_group, &[]);
-                                                render_pass.set_vertex_buffer(0, vert_buffer.slice(0..));
-                                                render_pass.set_index_buffer(idx_buffer.slice(0..), mesh.index_format().unwrap());
-                                                render_pass.set_pipeline(pipe);
+                                                if let Some(trans_info) = ctx.transform_buffer.get_info(&re.id()) {
+                                                    render_pass.set_bind_group(0, bind_group, &[]);
+                                                    render_pass.set_bind_group(1, trans_info.bind_group.bind_group.as_ref().unwrap(), &[]);
+                                                    render_pass.set_vertex_buffer(0, vert_buffer.slice(0..));
+                                                    render_pass.set_index_buffer(idx_buffer.slice(0..), mesh.index_format().unwrap());
+                                                    render_pass.set_pipeline(pipe);
         
-                                                render_pass.draw_indexed(mesh.indices_range().unwrap(),0, 0..1)
+                                                    render_pass.draw_indexed(mesh.indices_range().unwrap(),0, 0..1)
+                                                }
                                             }
                                             
                                             

@@ -105,7 +105,7 @@ pub(crate) fn update_camera(world:&mut World,ctx:&mut RenderContext) {
         let buffer = ctx.camera_state.cameras_buffer.get_or_create_buffer(e.id(), &ctx.device,&ctx.camera_state.camera_layout,&mut ctx.resources);
         if let Some(staging_buffer) = buffer.staging_buffer {
            {
-                ctx.resources.map_buffer(staging_buffer, wgpu::MapMode::Write);
+                ctx.resources.map_buffer(&staging_buffer, wgpu::MapMode::Write);
            }
         } else {
             let staging_buffer = ctx.resources.create_buffer(&wgpu::BufferDescriptor {
@@ -124,17 +124,17 @@ pub(crate) fn update_camera(world:&mut World,ctx:&mut RenderContext) {
             let view_proj_matrix = t.global().matrix().inverse() * camera.projection.matrix();
             let view_matrix = t.global().matrix();
 
-            ctx.resources.write_mapped_buffer(staging_buffer, 0..(MATRIX_SIZE * 2),&mut |bytes,_| {
+            ctx.resources.write_mapped_buffer(&staging_buffer, 0..(MATRIX_SIZE * 2),&mut |bytes,_| {
                 bytes[0..crate::MATRIX_SIZE as usize].copy_from_slice(view_proj_matrix.to_cols_array_2d().as_bytes());
                 bytes[(MATRIX_SIZE as usize) ..(MATRIX_SIZE*2) as usize].copy_from_slice(view_matrix.to_cols_array_2d().as_bytes());
             });
             
-            ctx.resources.copy_buffer_to_buffer(command, staging_buffer,0, buffer.view_proj,0, MATRIX_SIZE);
-            ctx.resources.copy_buffer_to_buffer(command, staging_buffer,MATRIX_SIZE, buffer.view,0, MATRIX_SIZE);
+            ctx.resources.copy_buffer_to_buffer(command, &staging_buffer,0, &buffer.view_proj,0, MATRIX_SIZE);
+            ctx.resources.copy_buffer_to_buffer(command, &staging_buffer,MATRIX_SIZE, &buffer.view,0, MATRIX_SIZE);
         }
         
         
-        ctx.resources.unmap_buffer(staging_buffer);
+        ctx.resources.unmap_buffer(&staging_buffer);
     }
     for e in world.removed::<Camera>() {
         ctx.camera_state.cameras_buffer.buffers.remove(&e.id());

@@ -6,6 +6,7 @@ use wgpu::{Buffer, BufferUsage, Device, SwapChainError, TextureView, util::Devic
 #[derive(Debug,Clone,Hash,PartialEq, Eq)]
 pub enum RenderResourceId {
     Buffer(BufferId),
+    BufferAddr(BufferId,u64,u64),
     MainSwap
 }
 
@@ -80,8 +81,8 @@ impl RenderResources {
         id
     }
 
-    pub fn map_buffer(&mut self,id:BufferId,mode:wgpu::MapMode) {
-        let buffer = self.buffers.get(&id).unwrap();
+    pub fn map_buffer(&mut self,id:&BufferId,mode:wgpu::MapMode) {
+        let buffer = self.buffers.get(id).unwrap();
         let buffer_slice = buffer.slice(..);
         let data = buffer_slice.map_async(mode);
         self.device.poll(wgpu::Maintain::Wait);
@@ -90,13 +91,13 @@ impl RenderResources {
         }
     }
 
-    pub fn unmap_buffer(&self, id: BufferId) {
-        let buffer =self.buffers.get(&id).unwrap();
+    pub fn unmap_buffer(&self, id: &BufferId) {
+        let buffer =self.buffers.get(id).unwrap();
         buffer.unmap();
     }
 
-    pub fn write_mapped_buffer(&self,id:BufferId,range:Range<u64>,write:&mut dyn FnMut(&mut [u8],&RenderResources)) {
-        let buffer = self.buffers.get(&id).unwrap();
+    pub fn write_mapped_buffer(&self,id:&BufferId,range:Range<u64>,write:&mut dyn FnMut(&mut [u8],&RenderResources)) {
+        let buffer = self.buffers.get(id).unwrap();
         let buffer_slice = buffer.slice(range);
         let mut data = buffer_slice.get_mapped_range_mut();
         write(&mut data, self);
@@ -147,14 +148,14 @@ impl RenderResources {
     pub fn copy_buffer_to_buffer(
         &self,
         command_encoder: &mut wgpu::CommandEncoder,
-        source_buffer: BufferId,
+        source_buffer: &BufferId,
         source_offset: u64,
-        destination_buffer: BufferId,
+        destination_buffer: &BufferId,
         destination_offset: u64,
         size: u64,
     ) {
-        let source = self.buffers.get(&source_buffer).unwrap();
-        let destination = self.buffers.get(&destination_buffer).unwrap();
+        let source = self.buffers.get(source_buffer).unwrap();
+        let destination = self.buffers.get(destination_buffer).unwrap();
         command_encoder.copy_buffer_to_buffer(
             source,
             source_offset,

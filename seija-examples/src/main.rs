@@ -1,8 +1,8 @@
-use std::cell::RefMut;
+use std::{cell::RefMut, ops::Sub};
 
 use lite_clojure_eval::EvalRT;
 use bevy_ecs::prelude::{Commands, Entity, IntoSystem, Query, Res, ResMut};
-use glam::Vec3;
+use glam::{Quat, Vec3};
 use seija_app::App;
 use seija_asset::{AssetEvent, AssetModule, Assets, Handle, HandleId};
 use seija_core::{CoreModule, CoreStage, StartupStage, event::EventReader};
@@ -32,8 +32,9 @@ fn on_start_up(mut commands:Commands,mut meshs:ResMut<Assets<Mesh>>,storage:Res<
         let mut root = commands.spawn();
         let t = Transform::default();
         root.insert(t);
-       
-        let camera = Camera::from_3d(Perspective::default());
+        let mut per = Perspective::default();
+        per.aspect_ratio = 640f32 / 480f32;
+        let camera = Camera::from_3d(per);
         root.insert(camera);
 
         
@@ -48,7 +49,9 @@ fn on_start_up(mut commands:Commands,mut meshs:ResMut<Assets<Mesh>>,storage:Res<
   
     storage.add_def(material_def);
   
-    create_elem(&mut commands, Vec3::new(2f32, 2f32, 2f32), root,&mut meshs,storage);
+    create_elem(&mut commands, Vec3::new(8f32, 0f32, -20f32), root,&mut meshs,&storage);
+
+    create_elem(&mut commands, Vec3::new(-8f32, 0f32, -20f32), root,&mut meshs,&storage);
 }
 
 
@@ -56,10 +59,11 @@ fn on_start_up(mut commands:Commands,mut meshs:ResMut<Assets<Mesh>>,storage:Res<
 
 
 fn create_elem(commands:&mut Commands,pos:Vec3,parent:Entity,meshs:&mut Assets<Mesh>,
-               storage:Res<MaterialStorage>) -> Entity {
+               storage:&Res<MaterialStorage>) -> Entity {
     let mut elem = commands.spawn();
     let mut t = Transform::default();
     t.local.position = pos;
+    t.local.rotation = Quat::from_rotation_y(45f32);
     elem.insert(t);
     elem.insert(Parent(parent));
 
@@ -74,21 +78,15 @@ fn create_elem(commands:&mut Commands,pos:Vec3,parent:Entity,meshs:&mut Assets<M
     elem.id()
 }
 
-fn on_update(mut commands:Commands,mut childrens:Query<(Entity,&mut RootComponent,&Camera)>,mats:Query<(Entity,&Handle<Material>)>) {
-   let mut is_rm:bool = false;
-   for (e,mut t,_c) in childrens.iter_mut() {
-       t.number += 1;
-       if t.number > 100 {
-          let mut e_cmd = commands.entity(e);
-          e_cmd.remove::<RootComponent>();
-          is_rm = true;
-       }
-   }
-   /* 
-   if is_rm {
-      let (fst_e,_) = mats.iter().next().unwrap();
-      let mut a = commands.entity(fst_e);
-      a.despawn();
-      println!("despawn");
-   }*/
+fn on_update(mut commands:Commands,mut renders:Query<(Entity,&mut Transform,&Handle<Mesh>,&Handle<Material>)>,mats:Query<(Entity,&Handle<Material>)>) {
+    for (e,mut t,_,_) in renders.iter_mut() {
+        if t.local.position.x == 8f32 {
+            let v:f32 = (std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_millis() % 3600) as f32;
+       
+            t.local.rotation = Quat::from_euler(glam::EulerRot::XYZ, 0f32, v * 0.1f32 * 0.0174533f32, 0f32);
+        }
+        
+       
+       
+    }
 }

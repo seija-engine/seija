@@ -133,10 +133,11 @@ impl PipelineCache {
     }
 
     fn create_pipeline_layout(&mut self,ctx:&RenderContext) -> PipelineLayout {
-        let camer_layout = ctx.camera_state.camera_layout.layout.as_ref().unwrap();;
+        let camera_layout = ctx.camera_state.camera_layout.layout.as_ref().unwrap();
+        let trans_layout = ctx.transform_buffer.trans_layout.layout.as_ref().unwrap();
         let layout_desc = PipelineLayoutDescriptor {
             label:None,
-            bind_group_layouts:&[camer_layout],
+            bind_group_layouts:&[camera_layout,trans_layout],
             push_constant_ranges:&[],
         };
         ctx.device.create_pipeline_layout(&layout_desc)
