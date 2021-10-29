@@ -8,6 +8,7 @@ pub enum UniformType {
    
     FLOAT(Vec<f32>),
     FLOAT3(Vec<[f32;3]>),
+    FLOAT4(Vec<[f32;4]>),
     
     INT(Vec<i32>),
     
@@ -25,6 +26,7 @@ impl UniformType {
             UniformType::INT(_) => 1,
             UniformType::UINT(_) => 1,
             UniformType::FLOAT3(_) => 3,
+            UniformType::FLOAT4(_) => 4,
             UniformType::MAT3(_) => 12,
             UniformType::MAT4(_) => 16,
         }
@@ -37,6 +39,7 @@ impl UniformType {
             UniformType::INT(_) => 1,
             UniformType::UINT(_) => 1,
             UniformType::FLOAT3(_) => 4,
+            UniformType::FLOAT4(_) => 4,
             UniformType::MAT3(_) => 4,
             UniformType::MAT4(_) => 4,
         }
@@ -167,6 +170,18 @@ fn read_prop(name:&str,map:&Map<String,Value>) -> Result<PropInfo,()>   {
             };
             let arr:Vec<[f32;3]> = read_default::<[f32;3]>(default,array_size,f,[0f32,0f32,0f32])?;
             return Ok(PropInfo { name:name.to_string(), array_size, typ:UniformType::FLOAT3(arr) })
+        },
+        "float4" => {
+            let f = |v:&Value| { 
+                let arr = v.as_array().unwrap();
+                let x = arr[0].as_f64().unwrap() as f32;
+                let y = arr[1].as_f64().unwrap() as f32;
+                let z = arr[2].as_f64().unwrap() as f32;
+                let w = arr[3].as_f64().unwrap() as f32;
+                [x,y,z,w]
+            };
+            let arr:Vec<[f32;4]> = read_default::<[f32;4]>(default,array_size,f,[0f32,0f32,0f32,0f32])?;
+            return Ok(PropInfo { name:name.to_string(), array_size, typ:UniformType::FLOAT4(arr) })
         },
          "int" => {
             let f = |v:&Value| { v.as_i64().unwrap_or(0i64) as i32  };

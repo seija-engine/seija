@@ -57,6 +57,8 @@ impl INode for PassNode {
                                                 if let Some(trans_info) = ctx.transform_buffer.get_info(&re.id()) {
                                                     render_pass.set_bind_group(0, bind_group, &[]);
                                                     render_pass.set_bind_group(1, trans_info.bind_group.bind_group.as_ref().unwrap(), &[]);
+                                                    render_pass.set_bind_group(2, mat.bind_group.as_ref().unwrap().bind_group.as_ref().unwrap(), &[]);
+
                                                     render_pass.set_vertex_buffer(0, vert_buffer.slice(0..));
                                                     render_pass.set_index_buffer(idx_buffer.slice(0..), mesh.index_format().unwrap());
                                                     render_pass.set_pipeline(pipe);

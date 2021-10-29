@@ -1,6 +1,6 @@
 use std::{alloc, convert::TryFrom, sync::Arc};
 use seija_core::bytes::AsBytes;
-use glam::{Mat3, Mat4, Vec3};
+use glam::{Mat3, Mat4, Vec3, Vec4};
 use serde_json::Value;
 
 use super::uniform_buffer_def::{UniformBufferDef, UniformType};
@@ -99,6 +99,12 @@ impl TypedUniformBuffer {
                         self.buffer.write_bytes(info.get_buffer_offset(idx), v);
                     }
                 }
+                ,UniformType::FLOAT4(arr) => {
+                    for idx in 0..info.size {
+                        let v = arr.get(idx).map(|v|v.clone()).unwrap_or([0f32,0f32,0f32,0f32]);  
+                        self.buffer.write_bytes(info.get_buffer_offset(idx), v);
+                    }
+                },
                 _ => {}
             }
         }
@@ -146,6 +152,12 @@ impl TypedUniformBuffer {
     pub fn set_float3(&mut self,name:&str,v3:Vec3,idx:usize) {
         if let Some(offset) = self.def.get_offset(name, idx) {
             self.buffer.write_bytes(offset, v3.to_array());
+        }
+    }
+
+    pub fn set_float4(&mut self,name:&str,v4:Vec4,idx:usize) {
+        if let Some(offset) = self.def.get_offset(name, idx) {
+            self.buffer.write_bytes(offset, v4.to_array());
         }
     }
 

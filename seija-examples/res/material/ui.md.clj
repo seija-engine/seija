@@ -2,9 +2,7 @@
     :name "ui-color"
     :order "Transparent"
     :props [
-        {:name "scale" :type "float" :default 3.14141},
-        {:name "width" :type "int" :default 100},
-        {:name "position" :type "float3" :default [0,0,0]}
+        {:name "color" :type "float4" :default [0,0.8,1,1]}
     ]
     :pass {
         :front-face "Ccw"

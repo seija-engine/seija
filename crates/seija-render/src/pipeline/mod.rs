@@ -17,6 +17,6 @@ pub fn update_pipeline_cache(mut pipeline_cache:ResMut<PipelineCache>,
     for (mesh,material) in query.iter() {
         let mesh = meshs.get(&mesh.id).unwrap();
         let mat = mats.get(&material.id).unwrap();
-        pipeline_cache.check_build(mesh, &mat.def,&ctx);
+        pipeline_cache.update(mesh, &mat.def,&ctx);
     }
 }

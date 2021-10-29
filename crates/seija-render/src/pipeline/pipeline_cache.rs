@@ -46,7 +46,7 @@ impl PipelineCache {
         self.cache_pipelines.get(&key)
     }
 
-    pub fn check_build(&mut self,mesh:&Mesh,mat_def:&MaterialDef,ctx:&RenderContext) {
+    pub fn update(&mut self,mesh:&Mesh,mat_def:&MaterialDef,ctx:&RenderContext) {
         let mut hasher = FnvHasher::default();
         PipelineKey(&mat_def.name,mesh.layout_hash_u64()).hash(&mut hasher);
         let key = hasher.finish();
@@ -135,9 +135,11 @@ impl PipelineCache {
     fn create_pipeline_layout(&mut self,ctx:&RenderContext) -> PipelineLayout {
         let camera_layout = ctx.camera_state.camera_layout.layout.as_ref().unwrap();
         let trans_layout = ctx.transform_buffer.trans_layout.layout.as_ref().unwrap();
+        let material_layout = ctx.material_sys.material_layout.layout.as_ref().unwrap();
+
         let layout_desc = PipelineLayoutDescriptor {
             label:None,
-            bind_group_layouts:&[camera_layout,trans_layout],
+            bind_group_layouts:&[camera_layout,trans_layout,material_layout],
             push_constant_ranges:&[],
         };
         ctx.device.create_pipeline_layout(&layout_desc)

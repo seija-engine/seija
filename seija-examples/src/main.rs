@@ -1,8 +1,8 @@
-use std::{cell::RefMut, ops::Sub};
+use std::{cell::RefMut, io::Read, ops::Sub};
 
 use lite_clojure_eval::EvalRT;
 use bevy_ecs::prelude::{Commands, Entity, IntoSystem, Query, Res, ResMut};
-use glam::{Quat, Vec3};
+use glam::{Quat, Vec3, Vec4};
 use seija_app::App;
 use seija_asset::{AssetEvent, AssetModule, Assets, Handle, HandleId};
 use seija_core::{CoreModule, CoreStage, StartupStage, event::EventReader};
@@ -49,9 +49,9 @@ fn on_start_up(mut commands:Commands,mut meshs:ResMut<Assets<Mesh>>,storage:Res<
   
     storage.add_def(material_def);
   
-    create_elem(&mut commands, Vec3::new(8f32, 0f32, -20f32), root,&mut meshs,&storage);
+    create_elem(&mut commands, Vec3::new(8f32, 0f32, -20f32), root,&mut meshs,&storage,Vec4::new(1f32, 0f32, 0f32, 1f32));
 
-    create_elem(&mut commands, Vec3::new(-8f32, 0f32, -20f32), root,&mut meshs,&storage);
+    create_elem(&mut commands, Vec3::new(-8f32, 0f32, -20f32), root,&mut meshs,&storage,Vec4::new(0f32, 1f32, 0f32, 1f32));
 }
 
 
@@ -59,7 +59,7 @@ fn on_start_up(mut commands:Commands,mut meshs:ResMut<Assets<Mesh>>,storage:Res<
 
 
 fn create_elem(commands:&mut Commands,pos:Vec3,parent:Entity,meshs:&mut Assets<Mesh>,
-               storage:&Res<MaterialStorage>) -> Entity {
+               storage:&Res<MaterialStorage>,color:Vec4) -> Entity {
     let mut elem = commands.spawn();
     let mut t = Transform::default();
     t.local.position = pos;
@@ -72,6 +72,9 @@ fn create_elem(commands:&mut Commands,pos:Vec3,parent:Entity,meshs:&mut Assets<M
     let cube_mesh_handle = meshs.add( cube_mesh);
     
     let material = storage.create_material("ui-color").unwrap();
+    let mut mats = storage.mateials.write();
+    let mat = mats.get_mut(&material.id).unwrap();
+    mat.props.set_float4("color", color, 0);
    
     elem.insert(cube_mesh_handle);
     elem.insert(material);

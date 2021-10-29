@@ -3,7 +3,7 @@ use wgpu::{BindGroup, BindGroupEntry, Device};
 
 use crate::resource::{BufferId, RenderResourceId, RenderResources};
 
-#[derive(Default)]
+#[derive(Default,Debug)]
 pub struct RenderBindGroupValues {
     entrys:Vec<RenderResourceId>,
 }
@@ -18,7 +18,7 @@ impl RenderBindGroupValues {
     }
 }
 
-#[derive(Default)]
+#[derive(Default,Debug)]
 pub struct  RenderBindGroupLayout {
     layout_entrys:Vec<wgpu::BindGroupLayoutEntry>,
     pub layout:Option<wgpu::BindGroupLayout>,
@@ -39,7 +39,7 @@ impl RenderBindGroupLayout {
     }
 }
 
-#[derive(Default)]
+#[derive(Default,Debug)]
 pub struct RenderBindGroup {
     pub values:RenderBindGroupValues,
     pub layout:Arc<RenderBindGroupLayout>,

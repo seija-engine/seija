@@ -1,6 +1,7 @@
 use camera::system::CameraState;
 use camera::{view_list::view_list_system,system::CamerasBuffer};
 use graph::nodes::SwapchainNode;
+use material::MaterialSystem;
 use pipeline::{PipelineCache, update_pipeline_cache};
 use render::{AppRender, Config , RenderGraphContext};
 use resource::{Mesh, RenderResources};
@@ -59,7 +60,8 @@ fn get_render_system(w:&mut World) -> impl FnMut(&mut World) {
         command_encoder:None,
         resources:RenderResources::new(app_render.device.clone()),
         camera_state:CameraState::new(&app_render.device),
-        transform_buffer:TransformBuffer::new(&app_render.device)
+        transform_buffer:TransformBuffer::new(&app_render.device),
+        material_sys:MaterialSystem::new(&app_render.device)
     };
     w.insert_resource(PipelineCache::default());
     app_render.init(w,&mut render_ctx);

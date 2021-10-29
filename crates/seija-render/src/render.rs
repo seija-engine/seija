@@ -34,7 +34,6 @@ pub struct AppRender {
     pub window_resized_event_reader: ManualEventReader<WindowResized>,
     pub window_created_event_reader: ManualEventReader<WindowCreated>,
     mesh_event_reader:ManualEventReader<AssetEvent<Mesh>>,
-    material_sys:MaterialSystem,
 }
 
 pub struct Config {
@@ -91,7 +90,6 @@ impl AppRender {
             window_created_event_reader:Default::default(),
             window_resized_event_reader:Default::default(),
             mesh_event_reader:Default::default(),
-            material_sys:MaterialSystem::default(),
         }
     }
 
@@ -99,13 +97,12 @@ impl AppRender {
         
     }
 
-    pub fn update(&mut self, world: &mut World, graph_ctx: &mut RenderGraphContext,render_ctx:&mut RenderContext) {
-        render_ctx.command_encoder = Some(self.device.create_command_encoder(&CommandEncoderDescriptor::default()));
-        self.update_winodw_surface(world,&mut render_ctx.resources);
-        update_camera(world,render_ctx);
-        render_ctx.transform_buffer.update(world,&self.device,&mut render_ctx.resources,render_ctx.command_encoder.as_mut().unwrap());
-        
-        self.material_sys.update(world,&self.device,render_ctx.command_encoder.as_mut().unwrap());
+    pub fn update(&mut self, world: &mut World, graph_ctx: &mut RenderGraphContext,ctx:&mut RenderContext) {
+        ctx.command_encoder = Some(self.device.create_command_encoder(&CommandEncoderDescriptor::default()));
+        self.update_winodw_surface(world,&mut ctx.resources);
+        update_camera(world,ctx);
+        ctx.transform_buffer.update(world,&self.device,&mut ctx.resources,ctx.command_encoder.as_mut().unwrap());
+        ctx.material_sys.update(world, &ctx.device, ctx.command_encoder.as_mut().unwrap(),&mut ctx.resources);
         graph_ctx.graph.prepare(world);
         for node_id in graph_ctx.graph_iter.nodes.iter() {
             let cur_node = graph_ctx.graph.get_node(node_id).unwrap();
@@ -119,16 +116,16 @@ impl AppRender {
             }
 
             if let Ok(node) = graph_ctx.graph.get_node_mut(node_id) {
-                node.node.update(world,render_ctx, &new_inputs, &mut node.outputs);
+                node.node.update(world,ctx, &new_inputs, &mut node.outputs);
             }
         }
         
-        let command_buffer = render_ctx.command_encoder.take().unwrap().finish();
+        let command_buffer = ctx.command_encoder.take().unwrap().finish();
         
         self.queue.submit(Some(command_buffer));
-        render_ctx.resources.clear_swap_chain_texture();
+        ctx.resources.clear_swap_chain_texture();
         
-        resource::update_mesh_system(world,&mut self.mesh_event_reader,render_ctx);
+        resource::update_mesh_system(world,&mut self.mesh_event_reader,ctx);
     }
 
     

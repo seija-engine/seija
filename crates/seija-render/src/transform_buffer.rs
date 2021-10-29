@@ -99,7 +99,6 @@ impl TransformBuffer {
 
             let new_item = TransItem { index:self.len,bind_group };
             self.len += 1;
-            println!("add {}",eid);
             self.infos.insert(eid, new_item);
         }
         self.infos.get_mut(&eid).unwrap()  

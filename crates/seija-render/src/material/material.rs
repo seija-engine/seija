@@ -1,11 +1,12 @@
-use std::collections::HashMap;
 use std::sync::Arc;
 use super::{MaterialDef, RenderOrder};
 use lite_clojure_eval::EvalRT;
 use seija_core::{TypeUuid, bytes::Bytes};
 use wgpu::{BufferUsage, Device};
 use wgpu::{util::DeviceExt};
-use crate::{material::read_material_def, memory::{TypedUniformBuffer, UniformBuffer}, render::AppRender};
+use crate::pipeline::render_bindings::{RenderBindGroup, RenderBindGroupLayout};
+use crate::resource::{BufferId, RenderResourceId, RenderResources};
+use crate::{material::read_material_def, memory::{TypedUniformBuffer}};
 use uuid::Uuid;
 
 #[derive(Debug,TypeUuid)]
@@ -14,7 +15,8 @@ pub struct Material {
     pub def:Arc<MaterialDef>,
     pub order:RenderOrder,
     pub props:TypedUniformBuffer,
-    pub buffer:Option<wgpu::Buffer>
+    pub buffer:Option<BufferId>,
+    pub bind_group:Option<RenderBindGroup>
 }
 
 impl Material {
@@ -24,19 +26,20 @@ impl Material {
             order:def.order,
             def,
             props,
-            buffer:None
+            buffer:None,
+            bind_group:None
         }
     }
 
-    pub fn check_create(&mut self,device:&Device) {
-     
+    pub fn check_create(&mut self,resources:&mut RenderResources,device:&Device,mat_layout:&Arc<RenderBindGroupLayout>) {
         if self.buffer.is_none() {
-            let buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
-                contents:self.props.get_buffer(),
-                label:None,
-                usage:BufferUsage::COPY_DST | BufferUsage::UNIFORM,
-            });
-            self.buffer = Some(buffer);
+            let buffer = resources.create_buffer_with_data(BufferUsage::COPY_DST | BufferUsage::UNIFORM, self.props.get_buffer());
+            dbg!(self.props.get_buffer());
+            self.buffer = Some(buffer.clone());
+            let mut bind_group = RenderBindGroup::from_layout(mat_layout);
+            bind_group.values.add(RenderResourceId::Buffer(buffer));
+            bind_group.build(device, resources);
+            self.bind_group = Some(bind_group);
             self.props.clear_dirty();
         }
         
@@ -69,7 +72,7 @@ fn test_material() {
     let mut vm = EvalRT::new();
     let material_def = read_material_def(&mut vm, &test_md_string).unwrap();
     
-    let mut mat = Material::from_def(Arc::new(material_def));
+    let mat = Material::from_def(Arc::new(material_def));
     let s = mat.props.get_f32("scale", 0);
     println!(" {}",s);
 }

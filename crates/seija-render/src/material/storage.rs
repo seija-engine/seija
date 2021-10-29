@@ -14,7 +14,7 @@ pub struct MaterialDefInfo {
 }
 
 pub struct MaterialStorage {
-    pub(crate) mateials:RwLock<Assets<Material>>,
+    pub mateials:RwLock<Assets<Material>>,
     pub(crate) name_map:RwLock<HashMap<String,MaterialDefInfo>>,
 }
 
@@ -52,6 +52,8 @@ impl MaterialStorage {
         }
         None
     }
+
+    
 }
 
 pub fn material_storage_event(server:Res<AssetServer>,storage:ResMut<MaterialStorage>) {
