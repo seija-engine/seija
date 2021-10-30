@@ -34,7 +34,6 @@ impl Material {
     pub fn check_create(&mut self,resources:&mut RenderResources,device:&Device,mat_layout:&Arc<RenderBindGroupLayout>) {
         if self.buffer.is_none() {
             let buffer = resources.create_buffer_with_data(BufferUsage::COPY_DST | BufferUsage::UNIFORM, self.props.get_buffer());
-            dbg!(self.props.get_buffer());
             self.buffer = Some(buffer.clone());
             let mut bind_group = RenderBindGroup::from_layout(mat_layout);
             bind_group.values.add(RenderResourceId::Buffer(buffer));

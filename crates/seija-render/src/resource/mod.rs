@@ -1,13 +1,13 @@
 mod resource;
+mod texture;
 mod mesh;
 pub mod shape;
-use bevy_ecs::prelude::IntoSystem;
 pub use mesh::{Mesh,update_mesh_system};
 pub use  resource::{RenderResources,RenderResourceId,BufferId};
 
 use seija_app::{App};
 use seija_asset::{AddAsset};
-use seija_core::{AddCore, CoreStage};
+use seija_core::{AddCore};
 
 pub(crate) fn init_resource(app:&mut App) {
     app.add_asset::<Mesh>();
