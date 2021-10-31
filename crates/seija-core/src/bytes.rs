@@ -1,3 +1,4 @@
+pub use bytemuck::{cast_slice,cast_slice_mut};
 pub trait AsBytes {
     fn as_bytes(&self) -> &[u8];
 }

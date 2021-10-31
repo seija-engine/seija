@@ -1,7 +1,8 @@
 mod resource;
-mod texture;
 mod mesh;
+mod texture;
 pub mod shape;
+pub use texture::{Texture};
 pub use mesh::{Mesh,update_mesh_system};
 pub use  resource::{RenderResources,RenderResourceId,BufferId};
 

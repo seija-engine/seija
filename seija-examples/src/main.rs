@@ -6,7 +6,7 @@ use glam::{Quat, Vec3, Vec4};
 use seija_app::App;
 use seija_asset::{AssetEvent, AssetModule, Assets, Handle, HandleId};
 use seija_core::{CoreModule, CoreStage, StartupStage, event::EventReader};
-use seija_render::{RenderModule, camera::{camera::{Camera, Orthographic, Perspective}}, material::{Material, MaterialStorage, RenderOrder, read_material_def}, resource::{shape::Cube,Mesh}};
+use seija_render::{RenderModule, camera::{camera::{Camera, Orthographic, Perspective}}, material::{Material, MaterialStorage, RenderOrder, read_material_def}, resource::{Mesh, Texture, shape::Cube}};
 use seija_winit::WinitModule;
 use seija_transform::{Transform, TransformModule, hierarchy::Parent};
 
@@ -43,6 +43,10 @@ fn on_start_up(mut commands:Commands,mut meshs:ResMut<Assets<Mesh>>,storage:Res<
         root.id()
     };
     
+    let bytes = std::fs::read("res/texture/WoodFloor043_1K_Color.jpg").unwrap();
+    let tex = Texture::from_bytes(&bytes).unwrap();
+    println!("texture load success");
+
     let test_md_string = std::fs::read_to_string("res/material/ui.md.clj").unwrap();
     let mut vm = EvalRT::new();
     let material_def = read_material_def(&mut vm, &test_md_string).unwrap();
