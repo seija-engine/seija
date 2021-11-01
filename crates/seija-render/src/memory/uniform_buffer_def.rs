@@ -99,8 +99,9 @@ impl TryFrom<&Value> for UniformBufferDef {
         for item in arr {
             if let Some(map) = item.as_object() {
                 let prop_name = map.get(":name").and_then(|v| v.as_str()).ok_or(())?;
-                let prop = read_prop(prop_name,map)?;
-                props.push(prop);
+                if let Some(prop) = read_prop(prop_name,map)? {
+                    props.push(prop);
+                }
             }   
         }
        
@@ -145,7 +146,7 @@ fn build_props(props:&Vec<PropInfo>) -> (Vec<UniformInfo>,HashMap<String,usize>,
     (info_list,name_map,size as usize)
 }
 
-fn read_prop(name:&str,map:&Map<String,Value>) -> Result<PropInfo,()>   {
+fn read_prop(name:&str,map:&Map<String,Value>) -> Result<Option<PropInfo>,()>   {
     let prop_type = map.get(":type").and_then(|v| v.as_str()).ok_or(())?;
     let (type_name,array_size) = split_type_size_str(prop_type);
     let default = map.get(":default");
@@ -153,12 +154,12 @@ fn read_prop(name:&str,map:&Map<String,Value>) -> Result<PropInfo,()>   {
         "bool" => {
             let f = |v:&Value| { v.as_bool().unwrap_or(false)};
             let arr = read_default(default,array_size,f,false)?;
-            return Ok(PropInfo { name:name.to_string(), array_size, typ:UniformType::BOOL(arr) })
+            return Ok(Some(PropInfo { name:name.to_string(), array_size, typ:UniformType::BOOL(arr) }))
          },
          "float" => {
              let f = |v:&Value| { v.as_f64().unwrap_or(0f64) as f32  };
              let arr = read_default(default,array_size,f,0f32)?;
-             return Ok(PropInfo { name:name.to_string(), array_size, typ:UniformType::FLOAT(arr) })
+             return Ok(Some(PropInfo { name:name.to_string(), array_size, typ:UniformType::FLOAT(arr) }))
          },
          "float3" => {
             let f = |v:&Value| { 
@@ -169,7 +170,7 @@ fn read_prop(name:&str,map:&Map<String,Value>) -> Result<PropInfo,()>   {
                 [x,y,z]
             };
             let arr:Vec<[f32;3]> = read_default::<[f32;3]>(default,array_size,f,[0f32,0f32,0f32])?;
-            return Ok(PropInfo { name:name.to_string(), array_size, typ:UniformType::FLOAT3(arr) })
+            return Ok(Some(PropInfo { name:name.to_string(), array_size, typ:UniformType::FLOAT3(arr) }))
         },
         "float4" => {
             let f = |v:&Value| { 
@@ -181,28 +182,27 @@ fn read_prop(name:&str,map:&Map<String,Value>) -> Result<PropInfo,()>   {
                 [x,y,z,w]
             };
             let arr:Vec<[f32;4]> = read_default::<[f32;4]>(default,array_size,f,[0f32,0f32,0f32,0f32])?;
-            return Ok(PropInfo { name:name.to_string(), array_size, typ:UniformType::FLOAT4(arr) })
+            return Ok(Some(PropInfo { name:name.to_string(), array_size, typ:UniformType::FLOAT4(arr) }))
         },
          "int" => {
             let f = |v:&Value| { v.as_i64().unwrap_or(0i64) as i32  };
             let arr = read_default(default,array_size,f,0i32)?;
-            return Ok(PropInfo { name:name.to_string(), array_size, typ:UniformType::INT(arr) })
+            return Ok(Some(PropInfo { name:name.to_string(), array_size, typ:UniformType::INT(arr) }))
          },
          "uint" => {
             let f = |v:&Value| { v.as_i64().unwrap_or(0i64) as u32  };
             let arr = read_default(default,array_size,f,0u32)?;
-            return Ok(PropInfo { name:name.to_string(), array_size, typ:UniformType::UINT(arr) })
+            return Ok(Some(PropInfo { name:name.to_string(), array_size, typ:UniformType::UINT(arr) }))
          },
          "mat3" => {
              let def = Mat3::default();
-             return Ok(PropInfo { name:name.to_string(), array_size, typ:UniformType::MAT3(def) })
+             return Ok(Some(PropInfo { name:name.to_string(), array_size, typ:UniformType::MAT3(def) }))
          },
          "mat4" => {
-            return Ok(PropInfo { name:name.to_string(), array_size, typ:UniformType::MAT4(Mat4::default()) })
+            return Ok(Some(PropInfo { name:name.to_string(), array_size, typ:UniformType::MAT4(Mat4::default()) }))
          },
-         _ => {}
+         _ => return Ok(None)
     }
-    Err(())
 }
 
 fn read_default<T:Copy>(default:Option<&Value>,arr_size:usize,f:fn(&Value) -> T,def:T) -> Result<Vec<T>,()>  {

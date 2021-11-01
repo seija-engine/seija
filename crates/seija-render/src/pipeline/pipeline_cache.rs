@@ -3,7 +3,7 @@ use core::slice;
 use std::io;
 use std::hash::{Hash, Hasher};
 use std::fs;
-use std::sync::Arc;
+use std::sync::{ RwLockReadGuard};
 use fnv::{FnvHashMap, FnvHasher};
 use wgpu::{BindGroupLayout, DepthStencilState, Device, 
           FragmentState, MultisampleState, PipelineLayout, 
@@ -12,8 +12,6 @@ use wgpu::{BindGroupLayout, DepthStencilState, Device,
           ShaderModuleDescriptor, ShaderStage, StencilState, VertexState};
 use crate::RenderContext;
 use crate::{material::{MaterialDef, PassDef}, resource::Mesh};
-
-use super::render_bindings::RenderBindGroupLayout;
 
 
 
@@ -56,9 +54,12 @@ impl PipelineCache {
         }
     }
 
-    fn compile_pipelines(&mut self,mesh:&Mesh,mat_def:&MaterialDef,ctx:&RenderContext) -> RenderPipelines {
+    
+
+    fn compile_pipelines<'m>(&mut self,mesh:&Mesh,mat_def:&'m MaterialDef,ctx:&RenderContext) -> RenderPipelines {
         let prim_state = mesh.primitive_state();
         let mut pipes:Vec<RenderPipeline> = Vec::new();
+      
         for pass in  mat_def.pass_list.iter() {
            if let Some(pipe) = self.compile_pipeline(mesh,pass, &prim_state,ctx) {
                pipes.push(pipe);
@@ -67,7 +68,10 @@ impl PipelineCache {
         RenderPipelines::new(pipes)
     }
 
-    fn compile_pipeline(&mut self,mesh:&Mesh,pass:&PassDef,mesh_prim_state:&PrimitiveState,ctx:&RenderContext) -> Option<RenderPipeline> {
+    fn compile_pipeline(&mut self,
+                        mesh:&Mesh,pass:&PassDef,
+                        mesh_prim_state:&PrimitiveState,
+                        ctx:&RenderContext) -> Option<RenderPipeline> {
         let mut cur_primstate = mesh_prim_state.clone();
         cur_primstate.cull_mode = (&pass.cull).into();
         cur_primstate.front_face = pass.front_face.0;
@@ -133,13 +137,15 @@ impl PipelineCache {
     }
 
     fn create_pipeline_layout(&mut self,ctx:&RenderContext) -> PipelineLayout {
-        let camera_layout = ctx.camera_state.camera_layout.layout.as_ref().unwrap();
-        let trans_layout = ctx.transform_buffer.trans_layout.layout.as_ref().unwrap();
-        let material_layout = ctx.material_sys.material_layout.layout.as_ref().unwrap();
-
+        let camera_layout:&wgpu::BindGroupLayout = &ctx.camera_state.camera_layout;
+        let trans_layout = &ctx.transform_buffer.trans_layout;
+        let material_layout = &ctx.material_sys.material_layout;
+        let mut layouts = vec![camera_layout,trans_layout,material_layout];
+        
+     
         let layout_desc = PipelineLayoutDescriptor {
             label:None,
-            bind_group_layouts:&[camera_layout,trans_layout,material_layout],
+            bind_group_layouts:&layouts,
             push_constant_ranges:&[],
         };
         ctx.device.create_pipeline_layout(&layout_desc)

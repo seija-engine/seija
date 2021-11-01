@@ -6,53 +6,32 @@ use seija_core::bytes::AsBytes;
 use seija_transform::Transform;
 use wgpu::{BufferUsage, Device, ShaderStage};
 
-use crate::{MATRIX_SIZE, RenderContext, pipeline::render_bindings::{RenderBindGroup, RenderBindGroupLayout}, resource::{BufferId, RenderResourceId, RenderResources}};
+use crate::{MATRIX_SIZE, RenderContext, pipeline::render_bindings::{BindGroupBuilder, BindGroupLayoutBuilder}, resource::{BufferId, RenderResourceId, RenderResources}};
 
 use super::camera::Camera;
 
-
-#[derive(Default)]
 pub struct CameraState {
     pub cameras_buffer:CamerasBuffer,
-    pub camera_layout:Arc<RenderBindGroupLayout>
+    pub camera_layout:Arc<wgpu::BindGroupLayout>
 }
 
 impl CameraState {
     pub fn new(device:&Device) -> CameraState {
-        let mut camera_layout = RenderBindGroupLayout::default();
-        camera_layout.add_layout(wgpu::BindGroupLayoutEntry {
-            binding:0,
-            visibility:ShaderStage::VERTEX,
-            ty:wgpu::BindingType::Buffer {
-                ty:wgpu::BufferBindingType::Uniform,
-                has_dynamic_offset:false,
-                min_binding_size:None
-            },
-            count:None
-        });
+        let mut layout_builder = BindGroupLayoutBuilder::new();
+        layout_builder.add_uniform(ShaderStage::VERTEX);
+        layout_builder.add_uniform(ShaderStage::VERTEX);
 
-        camera_layout.add_layout(wgpu::BindGroupLayoutEntry {
-            binding:1,
-            visibility:ShaderStage::VERTEX,
-            ty:wgpu::BindingType::Buffer {
-                ty:wgpu::BufferBindingType::Uniform,
-                has_dynamic_offset:false,
-                min_binding_size:None
-            },
-            count:None
-        });
-        camera_layout.build(device);
 
         CameraState {
             cameras_buffer:CamerasBuffer::default(),
-            camera_layout:Arc::new(camera_layout)
+            camera_layout:Arc::new(layout_builder.build(device))
         }
     }
     
 }
 
 pub struct CameraBuffer {
-    pub bind_group:RenderBindGroup,
+    pub bind_group:wgpu::BindGroup,
     pub staging_buffer:Option<BufferId>,
     pub view_proj:BufferId,
     pub view:BufferId
@@ -65,7 +44,7 @@ pub struct CamerasBuffer {
 
 
 impl CamerasBuffer {
-    pub fn get_or_create_buffer(&mut self,eid:u32,device:&Device,camera_layout:&Arc<RenderBindGroupLayout>,resources:&mut RenderResources) -> &mut CameraBuffer {
+    pub fn get_or_create_buffer(&mut self,eid:u32,device:&Device,camera_layout:&Arc<wgpu::BindGroupLayout>,resources:&mut RenderResources) -> &mut CameraBuffer {
         if !self.buffers.contains_key(&eid) {
             let view_proj = resources.create_buffer(&wgpu::BufferDescriptor {
                 label:None,
@@ -79,11 +58,13 @@ impl CamerasBuffer {
                 usage:BufferUsage::COPY_DST | BufferUsage::UNIFORM,
                 mapped_at_creation:false
             });
-            let mut bind_group = RenderBindGroup::from_layout(camera_layout);
-            
-            bind_group.values.add(RenderResourceId::Buffer(view_proj));
-            bind_group.values.add(RenderResourceId::Buffer(view));
-            bind_group.build(device,resources);
+
+            let mut bind_group_builder = BindGroupBuilder::new();
+            bind_group_builder.add_buffer(view_proj);
+            bind_group_builder.add_buffer(view);
+            let bind_group = bind_group_builder.build(camera_layout, device, resources);
+
+           
             
             self.buffers.insert(eid,CameraBuffer {
                 bind_group,

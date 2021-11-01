@@ -27,7 +27,7 @@ impl INode for PassNode {
             let mats = mat_storages.mateials.read();
             
             
-            let view = ctx.resources.get_texture_view(view_id).unwrap();
+            let view = ctx.resources.get_texture_view_by_resid(view_id).unwrap();
             let mut render_pass = command.begin_render_pass(&wgpu::RenderPassDescriptor {
                 label:None,
                 color_attachments:&[wgpu::RenderPassColorAttachment {
@@ -50,21 +50,19 @@ impl INode for PassNode {
                                         for pipe in pipes.pipelines.iter() {
                                             
                                             let idx_id = ctx.resources.get_render_resource(hmesh.clone_weak_untyped(), 1).unwrap();
-                                            let vert_buffer = ctx.resources.get_buffer(&mesh_buffer_id).unwrap();
-                                            let idx_buffer = ctx.resources.get_buffer(&idx_id).unwrap();
+                                            let vert_buffer = ctx.resources.get_buffer_by_resid(&mesh_buffer_id).unwrap();
+                                            let idx_buffer = ctx.resources.get_buffer_by_resid(&idx_id).unwrap();
     
-                                            if let Some(bind_group) = camera_buffer.bind_group.bind_group.as_ref() {
-                                                if let Some(trans_info) = ctx.transform_buffer.get_info(&re.id()) {
-                                                    render_pass.set_bind_group(0, bind_group, &[]);
-                                                    render_pass.set_bind_group(1, trans_info.bind_group.bind_group.as_ref().unwrap(), &[]);
-                                                    render_pass.set_bind_group(2, mat.bind_group.as_ref().unwrap().bind_group.as_ref().unwrap(), &[]);
+                                            if let Some(trans_info) = ctx.transform_buffer.get_info(&re.id()) {
+                                                render_pass.set_bind_group(0, &camera_buffer.bind_group, &[]);
+                                                render_pass.set_bind_group(1, &trans_info.bind_group, &[]);
+                                                render_pass.set_bind_group(2, mat.bind_group.as_ref().unwrap(), &[]);
 
-                                                    render_pass.set_vertex_buffer(0, vert_buffer.slice(0..));
-                                                    render_pass.set_index_buffer(idx_buffer.slice(0..), mesh.index_format().unwrap());
-                                                    render_pass.set_pipeline(pipe);
-        
-                                                    render_pass.draw_indexed(mesh.indices_range().unwrap(),0, 0..1)
-                                                }
+                                                render_pass.set_vertex_buffer(0, vert_buffer.slice(0..));
+                                                render_pass.set_index_buffer(idx_buffer.slice(0..), mesh.index_format().unwrap());
+                                                render_pass.set_pipeline(pipe);
+    
+                                                render_pass.draw_indexed(mesh.indices_range().unwrap(),0, 0..1)
                                             }
                                             
                                             

@@ -9,7 +9,7 @@ use crate::camera::system::{CameraState, update_camera};
 use crate::graph::{LinearGraphIter, RenderGraph};
 use crate::material::{MaterialSystem};
 use crate::render_context::RenderContext;
-use crate::resource::{self, Mesh, RenderResources};
+use crate::resource::{self, Mesh, RenderResources, Texture};
 
 #[derive(Default)]
 pub struct RenderGraphContext {
@@ -34,6 +34,7 @@ pub struct AppRender {
     pub window_resized_event_reader: ManualEventReader<WindowResized>,
     pub window_created_event_reader: ManualEventReader<WindowCreated>,
     mesh_event_reader:ManualEventReader<AssetEvent<Mesh>>,
+    texture_event_reader:ManualEventReader<AssetEvent<Texture>>,
 }
 
 pub struct Config {
@@ -90,6 +91,7 @@ impl AppRender {
             window_created_event_reader:Default::default(),
             window_resized_event_reader:Default::default(),
             mesh_event_reader:Default::default(),
+            texture_event_reader:Default::default()
         }
     }
 
@@ -126,6 +128,7 @@ impl AppRender {
         ctx.resources.clear_swap_chain_texture();
         
         resource::update_mesh_system(world,&mut self.mesh_event_reader,ctx);
+        resource::update_texture_system(world, &mut self.texture_event_reader, ctx);
     }
 
     

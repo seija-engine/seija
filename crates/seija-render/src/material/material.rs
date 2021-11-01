@@ -1,11 +1,11 @@
 use std::sync::Arc;
 use super::{MaterialDef, RenderOrder};
 use lite_clojure_eval::EvalRT;
+use seija_asset::Handle;
 use seija_core::{TypeUuid, bytes::Bytes};
 use wgpu::{BufferUsage, Device};
-use wgpu::{util::DeviceExt};
-use crate::pipeline::render_bindings::{RenderBindGroup, RenderBindGroupLayout};
-use crate::resource::{BufferId, RenderResourceId, RenderResources};
+use crate::pipeline::render_bindings::BindGroupBuilder;
+use crate::resource::{BufferId, RenderResourceId, RenderResources, Texture};
 use crate::{material::read_material_def, memory::{TypedUniformBuffer}};
 use uuid::Uuid;
 
@@ -16,7 +16,9 @@ pub struct Material {
     pub order:RenderOrder,
     pub props:TypedUniformBuffer,
     pub buffer:Option<BufferId>,
-    pub bind_group:Option<RenderBindGroup>
+    pub bind_group:Option<wgpu::BindGroup>,
+    pub texture_bind_group:Option<wgpu::BindGroup>,
+    pub textures:Vec<Handle<Texture>>,
 }
 
 impl Material {
@@ -27,22 +29,27 @@ impl Material {
             def,
             props,
             buffer:None,
-            bind_group:None
+            bind_group:None,
+            textures:Vec::new(),
+            texture_bind_group:None
         }
     }
 
-    pub fn check_create(&mut self,resources:&mut RenderResources,device:&Device,mat_layout:&Arc<RenderBindGroupLayout>) {
+    pub fn update(&mut self,resources:&mut RenderResources,device:&Device,mat_layout:&wgpu::BindGroupLayout) {
         if self.buffer.is_none() {
             let buffer = resources.create_buffer_with_data(BufferUsage::COPY_DST | BufferUsage::UNIFORM, self.props.get_buffer());
             self.buffer = Some(buffer.clone());
-            let mut bind_group = RenderBindGroup::from_layout(mat_layout);
-            bind_group.values.add(RenderResourceId::Buffer(buffer));
-            bind_group.build(device, resources);
-            self.bind_group = Some(bind_group);
+            let mut bind_group_builder = BindGroupBuilder::new();
+            bind_group_builder.add_buffer(buffer);
+            self.bind_group = Some(bind_group_builder.build(mat_layout, device, resources) );
             self.props.clear_dirty();
         }
-        
+
+        if self.textures.len() > 0 && self.texture_bind_group.is_none() {
+           
+        }
     }
+
 
 }
 

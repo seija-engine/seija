@@ -1,8 +1,15 @@
+use std::collections::HashSet;
+use bevy_ecs::prelude::World;
 use image::ImageError;
-use seija_core::TypeUuid;
+use seija_asset::{AssetEvent, Assets, Handle};
+use seija_core::{TypeUuid, event::{Events, ManualEventReader}};
 use uuid::Uuid;
 use wgpu::{TextureFormat};
 use seija_core::bytes::{cast_slice};
+
+use crate::RenderContext;
+
+use super::RenderResourceId;
 
 #[derive(Debug, TypeUuid)]
 #[uuid = "9fb83fbe-b850-42e0-a58c-53da87aaaa04"]
@@ -28,6 +35,28 @@ impl Texture {
     pub fn from_bytes(bytes:&[u8]) -> Result<Texture,ImageError> {
         let images = image::load_from_memory(bytes)?;
         Ok(images.into())
+    }
+
+    pub fn desc(&self,usage:wgpu::TextureUsage) -> wgpu::TextureDescriptor {
+        wgpu::TextureDescriptor {
+            label:None,
+            size:self.size,
+            mip_level_count:1,
+            sample_count:1,
+            dimension:self.dimension,
+            format:self.format,
+            usage
+        }
+    }
+
+    pub fn view_desc(&self) -> wgpu::TextureViewDescriptor {
+        wgpu::TextureViewDescriptor {
+            label:None,
+            format:Some(self.format),
+            dimension:Some(wgpu::TextureViewDimension::D2),
+
+            ..Default::default()
+        }
     }
 }
 
@@ -123,5 +152,34 @@ impl From<image::DynamicImage> for Texture {
         }
 
         Texture::new(wgpu::Extent3d {width,height,depth_or_array_layers:1},wgpu::TextureDimension::D2,data,format)
+    }
+}
+
+
+
+pub fn update_texture_system(world:&mut World,texture_reader:&mut ManualEventReader<AssetEvent<Texture>>,ctx:&mut RenderContext) {
+    let texture_events = world.get_resource::<Events<AssetEvent<Texture>>>().unwrap();
+    let mut changed_textures:HashSet<Handle<Texture>> = Default::default();
+    for event in texture_reader.iter(texture_events) {
+        match event {
+            AssetEvent::Created { handle } => {
+                changed_textures.insert(handle.clone_weak());
+            },
+            AssetEvent::Modified { .. } => {},
+            AssetEvent::Removed { handle } => {
+                changed_textures.remove(&handle);
+            }
+        }
+    }
+
+    let textures = world.get_resource::<Assets<Texture>>().unwrap();
+    for texture_handle in changed_textures.iter() {
+        if let Some(texture) = textures.get(&texture_handle.id) {
+            let texture_id = ctx.resources.create_texture(&texture.desc(wgpu::TextureUsage::SAMPLED),&texture.view_desc());
+            ctx.resources.set_render_resource(texture_handle.clone_weak_untyped(), RenderResourceId::Texture(texture_id), 0);
+
+            let sampler_id = ctx.resources.create_sampler(&texture.sampler);
+            ctx.resources.set_render_resource(texture_handle.clone_weak_untyped(), RenderResourceId::Sampler(sampler_id), 1);
+        }
     }
 }

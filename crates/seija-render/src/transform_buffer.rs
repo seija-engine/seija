@@ -1,18 +1,16 @@
-use std::sync::Arc;
-
 use bevy_ecs::prelude::{Changed, Entity, World};
 use seija_asset::Handle;
 use seija_core::bytes::AsBytes;
 use seija_transform::Transform;
 use wgpu::{CommandEncoder, Device};
 
-use crate::{material::Material, pipeline::render_bindings::{RenderBindGroup, RenderBindGroupLayout}, resource::{BufferId, Mesh, RenderResourceId, RenderResources}};
+use crate::{material::Material, pipeline::render_bindings::{BindGroupBuilder, BindGroupLayoutBuilder}, resource::{BufferId, Mesh, RenderResourceId, RenderResources}};
 
 const MIN_BUFFER_SIZE:usize = 4;
 
 pub struct TransItem {
     index:usize,
-    pub bind_group:RenderBindGroup
+    pub bind_group:wgpu::BindGroup
 }
 
 pub struct TransformBuffer {
@@ -21,30 +19,21 @@ pub struct TransformBuffer {
     stage_buffer:Option<BufferId>,
     uniform_buffer:Option<BufferId>,
     infos:fnv::FnvHashMap<u32,TransItem>,
-    pub trans_layout:Arc<RenderBindGroupLayout> 
+    pub trans_layout:wgpu::BindGroupLayout
 }
 
 impl TransformBuffer {
     pub fn new(device:&Device) -> TransformBuffer {
-        let mut trans_layout = RenderBindGroupLayout::default();
-        trans_layout.add_layout(wgpu::BindGroupLayoutEntry {
-            binding:0,
-            visibility:wgpu::ShaderStage::VERTEX,
-            ty:wgpu::BindingType::Buffer {
-                ty:wgpu::BufferBindingType::Uniform,
-                has_dynamic_offset:false,
-                min_binding_size:None
-            },
-            count:None
-        });
-        trans_layout.build(device);
+        let mut layout_builder = BindGroupLayoutBuilder::new();
+        layout_builder.add_uniform(wgpu::ShaderStage::VERTEX);
+       
         TransformBuffer {
             buffer_cap : 0,
             len:0,
             stage_buffer:None,
             uniform_buffer:None,
             infos:fnv::FnvHashMap::default(),
-            trans_layout:Arc::new(trans_layout)
+            trans_layout:layout_builder.build(device)
         }
     }
 
@@ -91,12 +80,10 @@ impl TransformBuffer {
 
     fn update_item(&mut self,eid:u32,device:&Device,resources:&RenderResources) -> &mut TransItem {
         if !self.infos.contains_key(&eid) {
-            let mut bind_group = RenderBindGroup::from_layout(&self.trans_layout);
+            let mut build_group_builder = BindGroupBuilder::new();
             let start:u64 = self.len as u64 * wgpu::BIND_BUFFER_ALIGNMENT;
-            let res_id = RenderResourceId::BufferAddr(self.uniform_buffer.clone().unwrap(),start,crate::MATRIX_SIZE);             
-            bind_group.values.add(res_id);
-            bind_group.build(device, resources);
-
+            build_group_builder.add_buffer_addr(self.uniform_buffer.clone().unwrap(), start, crate::MATRIX_SIZE);
+            let bind_group = build_group_builder.build(&self.trans_layout, device, resources);
             let new_item = TransItem { index:self.len,bind_group };
             self.len += 1;
             self.infos.insert(eid, new_item);

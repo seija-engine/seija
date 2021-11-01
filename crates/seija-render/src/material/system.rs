@@ -3,35 +3,24 @@ use std::sync::Arc;
 use bevy_ecs::prelude::{Entity, Mut, World};
 use fnv::FnvHashMap;
 use seija_asset::Handle;
-use crate::{material::{storage::MaterialDefInfo}, pipeline::render_bindings::RenderBindGroupLayout, resource::{BufferId, RenderResources}};
+use crate::{material::{storage::MaterialDefInfo}, pipeline::render_bindings::BindGroupLayoutBuilder, resource::{BufferId, RenderResources}};
 use wgpu::{Buffer, BufferUsage, CommandEncoder, Device};
 use super::{Material, MaterialStorage};
 
 
-#[derive(Default)]
 pub struct MaterialSystem {
     buffers:FnvHashMap<String,BufferInfo>,
-    pub material_layout:Arc<RenderBindGroupLayout>
+    pub material_layout:wgpu::BindGroupLayout
 }
 
 impl MaterialSystem {
 
     pub fn new(device:&Device) -> MaterialSystem {
-        let mut material_layout = RenderBindGroupLayout::default();
-        material_layout.add_layout(wgpu::BindGroupLayoutEntry {
-            binding:0,
-            visibility:wgpu::ShaderStage::VERTEX,
-            ty:wgpu::BindingType::Buffer {
-                ty:wgpu::BufferBindingType::Uniform,
-                has_dynamic_offset:false,
-                min_binding_size:None
-            },
-            count:None
-        });
-        material_layout.build(device);
+        let mut material_layout_builder = BindGroupLayoutBuilder::new();
+        material_layout_builder.add_uniform(wgpu::ShaderStage::VERTEX);
         MaterialSystem {
             buffers:fnv::FnvHashMap::default(),
-            material_layout:Arc::new(material_layout)
+            material_layout:material_layout_builder.build(device)
         }
     }
 
@@ -67,7 +56,7 @@ impl MaterialSystem {
         let mut mats = storage.mateials.write();
         for (e,mat_handle) in query.iter(world) {
             let mat_ref = mats.get_mut(&mat_handle.id).unwrap();
-            mat_ref.check_create(resources,device,&self.material_layout);
+            mat_ref.update(resources,device,&self.material_layout);
             if mat_ref.props.is_dirty() {
                 let buffer_info = self.buffers.get_mut(&mat_ref.def.name).unwrap();  
                 buffer_info.update(mat_ref, &e,resources,commands);

@@ -1,11 +1,12 @@
-use std::{convert::{TryFrom}, sync::Arc};
+use std::{convert::{TryFrom}, ptr::NonNull, sync::{Arc,RwLock}};
+use parking_lot::lock_api::Mutex;
 use seija_core::{TypeUuid};
 use wgpu::{FrontFace, PolygonMode};
 use super::{RenderOrder, errors::MaterialDefReadError, types::{Cull, SFrontFace, SPolygonMode, ZTest}};
 use lite_clojure_eval::EvalRT;
 use serde_json::{Value};
 use uuid::Uuid;
-use crate::memory::UniformBufferDef;
+use crate::{memory::UniformBufferDef, pipeline::render_bindings::BindGroupLayoutBuilder};
 
 #[derive(Debug,TypeUuid)]
 #[uuid = "58ee0320-a01e-4a1b-9d07-ade19767853b"]
@@ -13,7 +14,7 @@ pub struct MaterialDef {
     pub name:String,
     pub order:RenderOrder,
     pub pass_list:Vec<PassDef>,
-    pub prop_def:Arc<UniformBufferDef>,
+    pub prop_def:Arc<UniformBufferDef>
 }
 
 
@@ -70,13 +71,31 @@ pub fn read_material_def(vm:&mut EvalRT,file_string:&str) -> Result<MaterialDef,
 
     let prop_value = value.get(":props").ok_or(MaterialDefReadError::InvalidProp)?;
     let buffer_def = UniformBufferDef::try_from(prop_value).map_err(|_| MaterialDefReadError::InvalidProp)?;
-
+    let texture_layout = read_texture_layout(prop_value).map_err(|_| MaterialDefReadError::InvalidProp)?;
     Ok(MaterialDef {
         name:def_name.to_string(),
         order,
         pass_list,
         prop_def:Arc::new(buffer_def)
     })
+}
+
+fn read_texture_layout(json_value:&Value) -> Result<BindGroupLayoutBuilder,()> {
+    let arr = json_value.as_array().ok_or( ())?;
+    let mut texture_layout_builder = BindGroupLayoutBuilder::new();
+    for item in arr {
+        if let Some(map) = item.as_object() {
+            let prop_type = map.get(":type").and_then(|v| v.as_str()).ok_or(())?;
+            match prop_type {
+                "Texture" => {
+                    texture_layout_builder.add_texture();
+                    texture_layout_builder.add_sampler();
+                },
+                _ => {}
+            }
+        }
+    }
+    Ok(texture_layout_builder)
 }
 
 fn read_pass(json_value:&Value) -> Result<PassDef,MaterialDefReadError> {

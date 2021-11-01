@@ -27,7 +27,7 @@ pub struct  RootComponent {
     number:i32
 }
 
-fn on_start_up(mut commands:Commands,mut meshs:ResMut<Assets<Mesh>>,storage:Res<MaterialStorage>) {
+fn on_start_up(mut commands:Commands,mut meshs:ResMut<Assets<Mesh>>,storage:Res<MaterialStorage>,mut textures:ResMut<Assets<Texture>>) {
     let root = {
         let mut root = commands.spawn();
         let t = Transform::default();
@@ -45,6 +45,8 @@ fn on_start_up(mut commands:Commands,mut meshs:ResMut<Assets<Mesh>>,storage:Res<
     
     let bytes = std::fs::read("res/texture/WoodFloor043_1K_Color.jpg").unwrap();
     let tex = Texture::from_bytes(&bytes).unwrap();
+    let wood_texture = textures.add(tex);
+
     println!("texture load success");
 
     let test_md_string = std::fs::read_to_string("res/material/ui.md.clj").unwrap();
@@ -53,9 +55,10 @@ fn on_start_up(mut commands:Commands,mut meshs:ResMut<Assets<Mesh>>,storage:Res<
   
     storage.add_def(material_def);
   
-    create_elem(&mut commands, Vec3::new(8f32, 0f32, -20f32), root,&mut meshs,&storage,Vec4::new(1f32, 0f32, 0f32, 1f32));
+    create_elem(&mut commands, Vec3::new(8f32, 0f32, -20f32), 
+         root,&mut meshs,&storage,Vec4::new(1f32, 0f32, 0f32, 1f32),wood_texture.clone_weak());
 
-    create_elem(&mut commands, Vec3::new(-8f32, 0f32, -20f32), root,&mut meshs,&storage,Vec4::new(0f32, 1f32, 0f32, 1f32));
+    create_elem(&mut commands, Vec3::new(-8f32, 0f32, -20f32), root,&mut meshs,&storage,Vec4::new(0f32, 1f32, 0f32, 1f32),wood_texture);
 }
 
 
@@ -63,7 +66,7 @@ fn on_start_up(mut commands:Commands,mut meshs:ResMut<Assets<Mesh>>,storage:Res<
 
 
 fn create_elem(commands:&mut Commands,pos:Vec3,parent:Entity,meshs:&mut Assets<Mesh>,
-               storage:&Res<MaterialStorage>,color:Vec4) -> Entity {
+               storage:&Res<MaterialStorage>,color:Vec4,texture:Handle<Texture>) -> Entity {
     let mut elem = commands.spawn();
     let mut t = Transform::default();
     t.local.position = pos;
@@ -79,6 +82,7 @@ fn create_elem(commands:&mut Commands,pos:Vec3,parent:Entity,meshs:&mut Assets<M
     let mut mats = storage.mateials.write();
     let mat = mats.get_mut(&material.id).unwrap();
     mat.props.set_float4("color", color, 0);
+    mat.textures.push(texture);
    
     elem.insert(cube_mesh_handle);
     elem.insert(material);

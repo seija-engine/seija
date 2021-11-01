@@ -1,67 +1,100 @@
 use std::{collections::btree_map::Entry, num::{NonZeroU32, NonZeroU64}, sync::Arc};
-use wgpu::{BindGroup, BindGroupEntry, Device};
+use seija_asset::Handle;
+use wgpu::{BindGroup, BindGroupEntry, Device, ShaderStage};
 
-use crate::resource::{BufferId, RenderResourceId, RenderResources};
+use crate::resource::{BufferId, RenderResourceId, RenderResources, Texture};
 
-#[derive(Default,Debug)]
-pub struct RenderBindGroupValues {
-    entrys:Vec<RenderResourceId>,
+pub struct BindGroupLayoutBuilder {
+    layout_entrys:Vec<wgpu::BindGroupLayoutEntry>
 }
 
-impl RenderBindGroupValues {
-    pub fn add(&mut self,res_id:RenderResourceId) {
-        self.entrys.push(res_id);
-    }
+impl BindGroupLayoutBuilder {
+    pub fn new() -> BindGroupLayoutBuilder {
+        BindGroupLayoutBuilder {
+            layout_entrys:Vec::new()
+        }
+    } 
 
-    pub fn set(&mut self,idx:usize,res_id:RenderResourceId) {
-        self.entrys[idx] = res_id;
-    }
-}
-
-#[derive(Default,Debug)]
-pub struct  RenderBindGroupLayout {
-    layout_entrys:Vec<wgpu::BindGroupLayoutEntry>,
-    pub layout:Option<wgpu::BindGroupLayout>,
-}
-
-impl RenderBindGroupLayout {
     pub fn add_layout(&mut self,layout:wgpu::BindGroupLayoutEntry) {
         self.layout_entrys.push(layout);
     }
 
-    pub fn build(&mut self,device:&Device) {
-        let desc = wgpu::BindGroupLayoutDescriptor {
+    pub fn add_sampler(&mut self) {
+        let entry = wgpu::BindGroupLayoutEntry {
+            binding:self.layout_entrys.len() as u32,
+            visibility:ShaderStage::FRAGMENT,
+            ty:wgpu::BindingType::Sampler {comparison: false, filtering: false },
+            count:None
+        };
+        self.layout_entrys.push(entry);
+    }
+
+    pub fn add_texture(&mut self) {
+        let texture_entry = wgpu::BindGroupLayoutEntry {
+            binding:self.layout_entrys.len() as u32,
+            visibility:ShaderStage::FRAGMENT,
+            ty:wgpu::BindingType::Texture {
+                sample_type:wgpu::TextureSampleType::Float { filterable: true },
+                view_dimension:wgpu::TextureViewDimension::D2,
+                multisampled:false
+            },
+            count:None
+        };
+        self.layout_entrys.push(texture_entry);
+    }
+
+    pub fn add_uniform(&mut self,stage:wgpu::ShaderStage) {
+        let entry = wgpu::BindGroupLayoutEntry {
+            binding:self.layout_entrys.len() as u32,
+            visibility:stage,
+            ty:wgpu::BindingType::Buffer {
+                ty:wgpu::BufferBindingType::Uniform,
+                has_dynamic_offset:false,
+                min_binding_size:None
+            },
+            count:None
+        };
+        self.layout_entrys.push(entry);
+    }
+
+    pub fn build(&mut self,device:&Device) -> wgpu::BindGroupLayout {
+        device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
             label:None,
             entries:&self.layout_entrys
-        };
-        let layout = device.create_bind_group_layout(&desc);
-        self.layout = Some(layout)
+        })
     }
 }
 
-#[derive(Default,Debug)]
-pub struct RenderBindGroup {
-    pub values:RenderBindGroupValues,
-    pub layout:Arc<RenderBindGroupLayout>,
-    pub bind_group:Option<wgpu::BindGroup>,
+
+enum BindGroupItem {
+    Texture(Handle<Texture>),
+    ResId(RenderResourceId)
 }
 
-impl RenderBindGroup {
-    pub fn from_layout(layout:&Arc<RenderBindGroupLayout>) -> RenderBindGroup {
-        RenderBindGroup {
-            values:RenderBindGroupValues::default(),
-            layout:layout.clone(),
-            bind_group:None
-        }
+pub struct BindGroupBuilder {
+    entrys:Vec<BindGroupItem>
+}
+
+impl BindGroupBuilder {
+    pub fn new() -> BindGroupBuilder {
+        BindGroupBuilder { entrys: Vec::new() }
     }
 
-    pub fn build(&mut self,device:&Device,resources:&RenderResources) {
+    pub fn add_buffer(&mut self,buffer_id:BufferId) {
+        self.entrys.push(BindGroupItem::ResId(RenderResourceId::Buffer(buffer_id)));
+    }
+
+    pub fn add_buffer_addr(&mut self,buffer_id:BufferId,start:u64,count:u64) {
+        self.entrys.push(BindGroupItem::ResId(RenderResourceId::BufferAddr(buffer_id,start,count)));
+    }
+
+    pub fn build(&self,layout:&wgpu::BindGroupLayout,device:&Device,resources:&RenderResources) -> wgpu::BindGroup {
         let mut entrys:Vec<BindGroupEntry> = Vec::new();
         let mut index:u32 = 0;
-        for res_id in self.values.entrys.iter() {
-            match res_id {
-                &RenderResourceId::Buffer(_) => {
-                    let buffer = resources.get_buffer(res_id).unwrap();
+        for item in self.entrys.iter() {
+            match item {
+                BindGroupItem::ResId(RenderResourceId::Buffer(buffer_id)) => {
+                    let buffer = resources.get_buffer(buffer_id).unwrap();
                     entrys.push(BindGroupEntry {
                         binding:index,
                         resource:wgpu::BindingResource::Buffer(wgpu::BufferBinding {
@@ -70,33 +103,40 @@ impl RenderBindGroup {
                             size:None
                         }),
                     });
-                }
-                &RenderResourceId::BufferAddr(buffer_id,start,size) => {
-                    let buffer = resources.buffers.get(&buffer_id).unwrap();
+                    index += 1;
+                },
+                BindGroupItem::ResId(RenderResourceId::BufferAddr(buffer_id,start,count)) => {
+                    let buffer = resources.get_buffer(buffer_id).unwrap();
                     entrys.push(BindGroupEntry {
                         binding:index,
                         resource:wgpu::BindingResource::Buffer(wgpu::BufferBinding {
                             buffer,
-                            offset:start,
-                            size:Some(NonZeroU64::new(size).unwrap())
+                            offset:*start,
+                            size:Some(NonZeroU64::new(*count).unwrap())
                         }),
                     });
+                    index += 1;
                 },
-                &RenderResourceId::MainSwap => {  unimplemented!() }
+                BindGroupItem::ResId(_) => {},
+                BindGroupItem::Texture(texture_handle) => {
+                    let handle_id = texture_handle.clone_weak_untyped();
+                    let res_texture_id = resources.get_render_resource(handle_id, 0).and_then(|v|v.into_texture_id()).unwrap();
+                    let res_sampler_id = resources.get_render_resource(handle_id, 1).and_then(|v|v.into_sampler_id()).unwrap();
+                    let texture_view = resources.get_texture_view(&res_texture_id).unwrap();
+                    let sampler = resources.get_sampler(&res_sampler_id).unwrap();
+
+                    entrys.push(BindGroupEntry { binding:index, resource:wgpu::BindingResource::TextureView(texture_view) });
+                    index += 1;
+                    entrys.push(BindGroupEntry { binding:index, resource:wgpu::BindingResource::Sampler(sampler) });
+                    index += 1;
+                }
             }
-            index+= 1;
         }
-
-        let group_desc = wgpu::BindGroupDescriptor {
+        
+        device.create_bind_group(&wgpu::BindGroupDescriptor {
             label:None,
-            layout:self.layout.layout.as_ref().unwrap(),
-            entries:&entrys,
-        };
-        let bind_group = device.create_bind_group(&group_desc);
-        self.bind_group = Some(bind_group);
+            layout,
+            entries:&entrys
+        })
     }
-}
-
-pub struct RenderBindGroupBuilder {
-
 }

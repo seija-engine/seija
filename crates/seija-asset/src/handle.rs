@@ -4,6 +4,7 @@ use uuid::Uuid;
 
 use crate::{asset::Asset, server::RefEvent};
 
+//TODO 替换UUID
 #[derive(Debug,Clone, Copy,PartialEq, Eq,Hash)]
 pub struct  HandleId {
     typ:Uuid,

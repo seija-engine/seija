@@ -1,5 +1,6 @@
 use std::{collections::HashMap, ops::Range, sync::Arc};
 use seija_asset::HandleUntyped;
+use seija_core::IDGenU64;
 use uuid::Uuid;
 use wgpu::{Buffer, BufferUsage, Device, SwapChainError, TextureView, util::DeviceExt};
 
@@ -7,15 +8,35 @@ use wgpu::{Buffer, BufferUsage, Device, SwapChainError, TextureView, util::Devic
 pub enum RenderResourceId {
     Buffer(BufferId),
     BufferAddr(BufferId,u64,u64),
+    Texture(TextureId),
+    Sampler(SamplerId),
     MainSwap
 }
 
-#[derive(Copy, Clone, Hash, Eq, PartialEq, Debug)]
-pub struct BufferId(pub Uuid);
+impl RenderResourceId {
+    pub fn into_texture_id(&self) -> Option<TextureId> {
+        match self {
+            RenderResourceId::Texture(texture_id) => Some(*texture_id),
+            _ => None
+        }
+    }
 
-impl BufferId {
-    pub fn new() -> BufferId { BufferId(Uuid::new_v4()) }
+    pub fn into_sampler_id(&self) -> Option<SamplerId> {
+        match self {
+            RenderResourceId::Sampler(sampler_id) => Some(*sampler_id),
+            _ => None
+        }
+    }
 }
+
+#[derive(Copy, Clone, Hash, Eq, PartialEq, Debug)]
+pub struct BufferId(u64);
+
+#[derive(Copy, Clone, Hash, Eq, PartialEq, Debug)]
+pub struct TextureId(u64);
+
+#[derive(Copy, Clone, Hash, Eq, PartialEq, Debug)]
+pub struct SamplerId(u64);
 
 
 pub struct RenderResources {
@@ -24,10 +45,17 @@ pub struct RenderResources {
     main_swap_chain:Option<wgpu::SwapChain>,
     pub main_swap_chain_frame:Option<wgpu::SwapChainFrame>,
 
+   
     pub buffers: HashMap<BufferId, wgpu::Buffer>,
-    
+    pub textures: HashMap<TextureId, wgpu::Texture>,
+    pub texture_views: HashMap<TextureId, wgpu::TextureView>,
+    pub samplers: HashMap<SamplerId, wgpu::Sampler>,
 
-    resources:HashMap<(HandleUntyped,u8),RenderResourceId>
+    resources:HashMap<(HandleUntyped,u8),RenderResourceId>,
+
+    buffer_id_gen:IDGenU64,
+    texture_id_gen:IDGenU64,
+    sampler_id_gen:IDGenU64
 }
 
 impl RenderResources {
@@ -38,7 +66,13 @@ impl RenderResources {
             main_swap_chain:None,
             main_swap_chain_frame:None,
             buffers:HashMap::default(),
-            resources:HashMap::default()
+            textures:HashMap::default(),
+            resources:HashMap::default(),
+            buffer_id_gen:IDGenU64::new(),
+            texture_id_gen:IDGenU64::new(),
+            texture_views:HashMap::default(),
+            samplers:HashMap::default(),
+            sampler_id_gen:IDGenU64::new()
         }
     }
 
@@ -49,7 +83,7 @@ impl RenderResources {
     pub fn create_buffer(&mut self,desc:&wgpu::BufferDescriptor) -> BufferId {
         let buffer = self.device.create_buffer(desc);
        
-        let id = BufferId::new();
+        let id = BufferId(self.buffer_id_gen.next());
         self.buffers.insert(id, buffer);
         id
     }
@@ -76,7 +110,7 @@ impl RenderResources {
             label:None,
             usage
         });
-        let id = BufferId::new();
+        let id = BufferId(self.buffer_id_gen.next());
         self.buffers.insert(id, buffer);
         id
     }
@@ -127,7 +161,7 @@ impl RenderResources {
                                     })
     }
 
-    pub fn get_texture_view(&self,res_id:&RenderResourceId) -> Option<&TextureView> {
+    pub fn get_texture_view_by_resid(&self,res_id:&RenderResourceId) -> Option<&TextureView> {
         match res_id {
             RenderResourceId::MainSwap => {
                 Some(&self.main_swap_chain_frame.as_ref().unwrap().output.view)
@@ -136,13 +170,25 @@ impl RenderResources {
         }
     }
 
-    pub fn get_buffer(&self,res_id:&RenderResourceId) -> Option<&wgpu::Buffer> {
+    pub fn get_texture_view(&self,texture_id: &TextureId) -> Option<&wgpu::TextureView> {
+        self.texture_views.get(texture_id)
+    }
+
+    pub fn get_sampler(&self,sampler_id: &SamplerId) -> Option<&wgpu::Sampler> {
+        self.samplers.get(sampler_id)
+    }
+
+    pub fn get_buffer_by_resid(&self,res_id:&RenderResourceId) -> Option<&wgpu::Buffer> {
         match res_id {
             RenderResourceId::Buffer(buffer_id) => {
                 Some( self.buffers.get(buffer_id).unwrap())
             }
             _ => None
         }  
+    } 
+
+    pub fn get_buffer(&self,buffer_id:&BufferId) -> Option<&wgpu::Buffer> {
+        self.buffers.get(buffer_id)
     } 
 
     pub fn copy_buffer_to_buffer(
@@ -163,6 +209,24 @@ impl RenderResources {
             destination_offset,
             size,
         );
+    }
+
+    pub fn create_texture(&mut self,texture_desc:&wgpu::TextureDescriptor,view_desc:&wgpu::TextureViewDescriptor) -> TextureId {
+        let texture = self.device.create_texture(texture_desc);
+        let texture_id = TextureId(self.texture_id_gen.next());
+        
+        let texture_view = texture.create_view(view_desc);
+
+        self.textures.insert(texture_id, texture);
+        self.texture_views.insert(texture_id, texture_view);
+        texture_id
+    }
+
+    pub fn create_sampler(&mut self, sampler_desc: &wgpu::SamplerDescriptor) -> SamplerId {
+        let sampler = self.device.create_sampler(sampler_desc);
+        let sampler_id = SamplerId(self.sampler_id_gen.next());
+        self.samplers.insert(sampler_id, sampler);
+        sampler_id
     }
 
     pub fn clear_swap_chain_texture(&mut self) {

@@ -4,6 +4,7 @@ use bevy_ecs::schedule::{StageLabel};
 use event::Events;
 use seija_app::{IModule,App};
 use time::{Time};
+use std::sync::atomic::{AtomicU64,Ordering};
 
 pub mod bytes;
 pub mod time;
@@ -30,15 +31,13 @@ pub enum StartupStage {
     PostStartup,
 }
 
-#[derive(Default)]
-pub struct TestInt(pub i32);
+
 pub struct CoreModule;
 
 impl IModule for CoreModule {
     fn init(&mut self, app:&mut App) {
         self.add_core_stages(app);
         app.init_resource::<Time>();
-        app.init_resource::<TestInt>();
         app.add_system(CoreStage::First, time::time_system.exclusive_system());
         app.add_system(CoreStage::Last, World::clear_trackers.exclusive_system());
     }
@@ -70,5 +69,21 @@ impl AddCore for App {
     fn add_event<T:Component>(&mut self) {
         self.add_resource(Events::<T>::default());
         self.add_system(CoreStage::First, Events::<T>::update_system.system());
+    }
+}
+
+
+
+pub struct IDGenU64 {
+    atom:AtomicU64,
+}
+
+impl IDGenU64 {
+    pub fn new() -> IDGenU64 {
+        IDGenU64 { atom:AtomicU64::new(0) }
+    }
+
+    pub fn next(&self) -> u64 {
+        self.atom.fetch_add(1, Ordering::Relaxed)
     }
 }
