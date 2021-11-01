@@ -1,9 +1,10 @@
-use std::{collections::btree_map::Entry, num::{NonZeroU32, NonZeroU64}, sync::Arc};
+use std::{ num::{NonZeroU64}};
 use seija_asset::Handle;
-use wgpu::{BindGroup, BindGroupEntry, Device, ShaderStage};
+use wgpu::{BindGroupEntry, Device, ShaderStage};
 
 use crate::resource::{BufferId, RenderResourceId, RenderResources, Texture};
 
+#[derive(Debug)]
 pub struct BindGroupLayoutBuilder {
     layout_entrys:Vec<wgpu::BindGroupLayoutEntry>
 }
@@ -13,7 +14,9 @@ impl BindGroupLayoutBuilder {
         BindGroupLayoutBuilder {
             layout_entrys:Vec::new()
         }
-    } 
+    }
+
+    pub fn is_empty(&self) -> bool { self.layout_entrys.is_empty() }
 
     pub fn add_layout(&mut self,layout:wgpu::BindGroupLayoutEntry) {
         self.layout_entrys.push(layout);
@@ -57,7 +60,7 @@ impl BindGroupLayoutBuilder {
         self.layout_entrys.push(entry);
     }
 
-    pub fn build(&mut self,device:&Device) -> wgpu::BindGroupLayout {
+    pub fn build(&self,device:&Device) -> wgpu::BindGroupLayout {
         device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
             label:None,
             entries:&self.layout_entrys
@@ -82,6 +85,10 @@ impl BindGroupBuilder {
 
     pub fn add_buffer(&mut self,buffer_id:BufferId) {
         self.entrys.push(BindGroupItem::ResId(RenderResourceId::Buffer(buffer_id)));
+    }
+
+    pub fn add_texture(&mut self,texture:Handle<Texture>) {
+        self.entrys.push(BindGroupItem::Texture(texture));
     }
 
     pub fn add_buffer_addr(&mut self,buffer_id:BufferId,start:u64,count:u64) {

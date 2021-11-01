@@ -1,11 +1,11 @@
 use std::sync::Arc;
 use super::{MaterialDef, RenderOrder};
-use lite_clojure_eval::EvalRT;
+
 use seija_asset::Handle;
-use seija_core::{TypeUuid, bytes::Bytes};
+use seija_core::{TypeUuid};
 use wgpu::{BufferUsage, Device};
 use crate::pipeline::render_bindings::BindGroupBuilder;
-use crate::resource::{BufferId, RenderResourceId, RenderResources, Texture};
+use crate::resource::{BufferId, RenderResources, Texture};
 use crate::{material::read_material_def, memory::{TypedUniformBuffer}};
 use uuid::Uuid;
 
@@ -35,7 +35,7 @@ impl Material {
         }
     }
 
-    pub fn update(&mut self,resources:&mut RenderResources,device:&Device,mat_layout:&wgpu::BindGroupLayout) {
+    pub fn update(&mut self,resources:&mut RenderResources,device:&Device,mat_layout:&wgpu::BindGroupLayout,texture_layout:Option<&wgpu::BindGroupLayout>) {
         if self.buffer.is_none() {
             let buffer = resources.create_buffer_with_data(BufferUsage::COPY_DST | BufferUsage::UNIFORM, self.props.get_buffer());
             self.buffer = Some(buffer.clone());
@@ -45,9 +45,16 @@ impl Material {
             self.props.clear_dirty();
         }
 
-        if self.textures.len() > 0 && self.texture_bind_group.is_none() {
-           
+        if !self.def.texture_layout_builder.is_empty() && self.texture_bind_group.is_none() {
+            let mut bind_group_builder = BindGroupBuilder::new();
+            for texture in self.textures.iter() {
+                bind_group_builder.add_texture(texture.clone_weak());
+            }
+            let bind_group = bind_group_builder.build(texture_layout.unwrap(), device, resources);
+            self.texture_bind_group = Some(bind_group);
         }
+
+        
     }
 
 
@@ -57,6 +64,7 @@ impl Material {
 
 #[test]
 fn test_material() {
+    use lite_clojure_eval::EvalRT;
     let test_md_string = r#"
     {
         :name "ui-color"

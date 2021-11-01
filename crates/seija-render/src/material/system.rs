@@ -1,16 +1,15 @@
-use std::sync::Arc;
-
 use bevy_ecs::prelude::{Entity, Mut, World};
 use fnv::FnvHashMap;
 use seija_asset::Handle;
 use crate::{material::{storage::MaterialDefInfo}, pipeline::render_bindings::BindGroupLayoutBuilder, resource::{BufferId, RenderResources}};
-use wgpu::{Buffer, BufferUsage, CommandEncoder, Device};
+use wgpu::{BufferUsage, CommandEncoder, Device};
 use super::{Material, MaterialStorage};
 
 
 pub struct MaterialSystem {
     buffers:FnvHashMap<String,BufferInfo>,
-    pub material_layout:wgpu::BindGroupLayout
+    pub material_layout:wgpu::BindGroupLayout,
+    pub material_texture_layouts:FnvHashMap<String,wgpu::BindGroupLayout>
 }
 
 impl MaterialSystem {
@@ -20,18 +19,29 @@ impl MaterialSystem {
         material_layout_builder.add_uniform(wgpu::ShaderStage::VERTEX);
         MaterialSystem {
             buffers:fnv::FnvHashMap::default(),
-            material_layout:material_layout_builder.build(device)
+            material_layout:material_layout_builder.build(device),
+            material_texture_layouts:FnvHashMap::default()
         }
     }
 
 
     pub fn update(&mut self,world:&mut World,device:&Device,commands: &mut CommandEncoder,resources:&mut RenderResources) {
-        world.resource_scope(|w,storage:Mut<MaterialStorage>| {
-            self._update(w,device, storage,commands,resources);
+        world.resource_scope(|w,mut storage:Mut<MaterialStorage>| {
+            self.update_material_texture_layout(&mut storage,device);
+            self.update_material_props(w,device, storage,commands,resources);
         });
     }
+
+    fn update_material_texture_layout(&mut self,storage:&mut Mut<MaterialStorage>,device:&Device) {
+        let name_map_ref = storage.name_map.read();
+        for (def_name,mat_def_info) in  name_map_ref.iter() {
+            if self.material_texture_layouts.contains_key(def_name) { continue; }
+            let layout = mat_def_info.def.texture_layout_builder.build(device);
+            self.material_texture_layouts.insert(def_name.clone(), layout);
+        }
+    }
     
-    fn _update(&mut self,world:&mut World,device:&Device,storage:Mut<MaterialStorage>,commands: &mut CommandEncoder,resources:&mut RenderResources) {
+    fn update_material_props(&mut self,world:&mut World,device:&Device,storage:Mut<MaterialStorage>,commands: &mut CommandEncoder,resources:&mut RenderResources) {
         {
             let rm_list:Vec<Entity> = world.removed::<Handle<Material>>().collect();
             let name_map_ref = storage.name_map.read();
@@ -56,17 +66,13 @@ impl MaterialSystem {
         let mut mats = storage.mateials.write();
         for (e,mat_handle) in query.iter(world) {
             let mat_ref = mats.get_mut(&mat_handle.id).unwrap();
-            mat_ref.update(resources,device,&self.material_layout);
+            mat_ref.update(resources,device,&self.material_layout,self.material_texture_layouts.get(&mat_ref.def.name));
             if mat_ref.props.is_dirty() {
                 let buffer_info = self.buffers.get_mut(&mat_ref.def.name).unwrap();  
                 buffer_info.update(mat_ref, &e,resources,commands);
                 mat_ref.props.clear_dirty();
             }   
         }
-
-        
-       
-       
     }   
 }
 
@@ -153,13 +159,4 @@ impl BufferInfo {
             v
         }
     }
-}
-
-#[test]
-fn aaa() {
-   
-    let n = 8;
-    let v:u32 = !3;
-    let v2 = (n + 3) & v;
-    dbg!(v2);
 }

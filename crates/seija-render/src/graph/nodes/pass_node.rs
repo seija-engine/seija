@@ -57,7 +57,9 @@ impl INode for PassNode {
                                                 render_pass.set_bind_group(0, &camera_buffer.bind_group, &[]);
                                                 render_pass.set_bind_group(1, &trans_info.bind_group, &[]);
                                                 render_pass.set_bind_group(2, mat.bind_group.as_ref().unwrap(), &[]);
-
+                                                if let Some(texture_bind_group) = mat.texture_bind_group.as_ref() {
+                                                    render_pass.set_bind_group(3, texture_bind_group, &[]);
+                                                }
                                                 render_pass.set_vertex_buffer(0, vert_buffer.slice(0..));
                                                 render_pass.set_index_buffer(idx_buffer.slice(0..), mesh.index_format().unwrap());
                                                 render_pass.set_pipeline(pipe);
