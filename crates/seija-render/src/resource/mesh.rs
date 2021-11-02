@@ -233,15 +233,17 @@ impl Mesh {
     pub fn build(&mut self) {
         let mut attributes:Vec<VertexAttribute> = Vec::new();
         let mut accumulated_offset = 0;
+        let mut location:u32 = 0;
         for value in self.values.iter() {
             let format = VertexFormat::from(value);
             let add_size = format.size();
             attributes.push(VertexAttribute {
                 format,
-                shader_location : 0,
+                shader_location : location,
                 offset:accumulated_offset
             });
             accumulated_offset += add_size;
+            location += 1;
         }
         self.attrs = attributes;
         self.array_stride = accumulated_offset;

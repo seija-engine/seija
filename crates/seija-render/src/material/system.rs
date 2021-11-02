@@ -66,6 +66,9 @@ impl MaterialSystem {
         let mut mats = storage.mateials.write();
         for (e,mat_handle) in query.iter(world) {
             let mat_ref = mats.get_mut(&mat_handle.id).unwrap();
+            if !mat_ref.is_ready(resources) {
+                continue;
+            }
             mat_ref.update(resources,device,&self.material_layout,self.material_texture_layouts.get(&mat_ref.def.name));
             if mat_ref.props.is_dirty() {
                 let buffer_info = self.buffers.get_mut(&mat_ref.def.name).unwrap();  

@@ -2,7 +2,12 @@
 
 layout(location = 0) out vec4 o_Target;
 layout(location = 3) in vec4 in_Color;
+layout(location = 4) in vec2 in_Uv;
+
+layout(set = 3, binding = 0) uniform texture2D mainTexture;
+layout(set = 3, binding = 1) uniform sampler mainSampler;
 
 void main() {
-    o_Target = vec4(in_Color.x,in_Color.y,in_Color.z,1);
+    vec4 outColor = texture(sampler2D(mainTexture,mainSampler),in_Uv);
+    o_Target = outColor * in_Color;
 }

@@ -132,9 +132,13 @@ impl BindGroupBuilder {
                     let texture_view = resources.get_texture_view(&res_texture_id).unwrap();
                     let sampler = resources.get_sampler(&res_sampler_id).unwrap();
 
-                    entrys.push(BindGroupEntry { binding:index, resource:wgpu::BindingResource::TextureView(texture_view) });
+                    let entry = BindGroupEntry { binding:index, resource:wgpu::BindingResource::TextureView(texture_view) };
+                    dbg!(&entry);
+                    entrys.push(entry);
                     index += 1;
-                    entrys.push(BindGroupEntry { binding:index, resource:wgpu::BindingResource::Sampler(sampler) });
+                    let entry = BindGroupEntry { binding:index, resource:wgpu::BindingResource::Sampler(sampler) };
+                    dbg!(&entry);
+                    entrys.push(entry);
                     index += 1;
                 }
             }

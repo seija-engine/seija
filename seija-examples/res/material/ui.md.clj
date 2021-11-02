@@ -2,7 +2,7 @@
     :name "ui-color"
     :order "Transparent"
     :props [
-        {:name "color" :type "float4" :default [0,0.8,1,1]}
+        {:name "color" :type "float4" :default [1,1,1,1]}
         {:name "mainTexture" :type "Texture"}
     ]
     :pass {

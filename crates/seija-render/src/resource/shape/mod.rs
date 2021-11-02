@@ -108,8 +108,8 @@ impl From<Box> for Mesh {
 
         let mut mesh = Mesh::new(wgpu::PrimitiveTopology::TriangleList);
         mesh.add_value(positions);
-        //mesh.add_value(normals);
-        //mesh.add_value(uvs);
+        mesh.add_value(normals);
+        mesh.add_value(uvs);
         mesh.set_indices(Some(indices));
         mesh.build();
         mesh

@@ -35,6 +35,15 @@ impl Material {
         }
     }
 
+    pub fn is_ready(&self,resources:&RenderResources) -> bool {
+        for texture in self.textures.iter() {
+            if resources.get_render_resource(texture.clone_weak_untyped(), 0).is_none() {
+                return false;
+            }
+        }
+        true
+    }
+
     pub fn update(&mut self,resources:&mut RenderResources,device:&Device,mat_layout:&wgpu::BindGroupLayout,texture_layout:Option<&wgpu::BindGroupLayout>) {
         if self.buffer.is_none() {
             let buffer = resources.create_buffer_with_data(BufferUsage::COPY_DST | BufferUsage::UNIFORM, self.props.get_buffer());

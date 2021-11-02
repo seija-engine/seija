@@ -61,7 +61,7 @@ impl PipelineCache {
         let mut pipes:Vec<RenderPipeline> = Vec::new();
       
         for pass in  mat_def.pass_list.iter() {
-           if let Some(pipe) = self.compile_pipeline(mesh,pass, &prim_state,ctx) {
+           if let Some(pipe) = self.compile_pipeline(mesh,pass, &prim_state,ctx,mat_def) {
                pipes.push(pipe);
            }
         }
@@ -71,7 +71,7 @@ impl PipelineCache {
     fn compile_pipeline(&mut self,
                         mesh:&Mesh,pass:&PassDef,
                         mesh_prim_state:&PrimitiveState,
-                        ctx:&RenderContext) -> Option<RenderPipeline> {
+                        ctx:&RenderContext,mat_def:&MaterialDef) -> Option<RenderPipeline> {
         let mut cur_primstate = mesh_prim_state.clone();
         cur_primstate.cull_mode = (&pass.cull).into();
         cur_primstate.front_face = pass.front_face.0;
@@ -100,7 +100,7 @@ impl PipelineCache {
        let frag_shader = Self::read_shader_module(&pass.fs_path,&ctx.device)?;
 
        
-      let pipeline_layout = self.create_pipeline_layout(ctx);
+      let pipeline_layout = self.create_pipeline_layout(ctx,mat_def);
 
       let targets = vec![wgpu::ColorTargetState {
         format: wgpu::TextureFormat::Bgra8UnormSrgb,
@@ -136,12 +136,14 @@ impl PipelineCache {
        Some(render_pipeline)
     }
 
-    fn create_pipeline_layout(&mut self,ctx:&RenderContext) -> PipelineLayout {
+    fn create_pipeline_layout(&mut self,ctx:&RenderContext,mat_def:&MaterialDef) -> PipelineLayout {
         let camera_layout:&wgpu::BindGroupLayout = &ctx.camera_state.camera_layout;
         let trans_layout = &ctx.transform_buffer.trans_layout;
         let material_layout = &ctx.material_sys.material_layout;
         let mut layouts = vec![camera_layout,trans_layout,material_layout];
-        
+        if let Some(layout) = ctx.material_sys.material_texture_layouts.get(&mat_def.name) {
+            layouts.push(layout);
+        }
      
         let layout_desc = PipelineLayoutDescriptor {
             label:None,

@@ -1,8 +1,13 @@
-use std::{collections::HashMap, ops::Range, sync::Arc};
+use std::{collections::HashMap, num::NonZeroU32, ops::Range, sync::Arc};
+use glam::{Vec3, Vec3A};
 use seija_asset::HandleUntyped;
 use seija_core::IDGenU64;
 use uuid::Uuid;
 use wgpu::{Buffer, BufferUsage, Device, SwapChainError, TextureView, util::DeviceExt};
+
+use super::Texture;
+
+pub const COPY_BYTES_PER_ROW_ALIGNMENT: usize = wgpu::COPY_BYTES_PER_ROW_ALIGNMENT as usize;
 
 #[derive(Debug,Clone,Hash,PartialEq, Eq)]
 pub enum RenderResourceId {
@@ -227,6 +232,57 @@ impl RenderResources {
         let sampler_id = SamplerId(self.sampler_id_gen.next());
         self.samplers.insert(sampler_id, sampler);
         sampler_id
+    }
+
+    pub fn fill_texture(&mut self,texture:&Texture,texture_id:&TextureId,command:&mut wgpu::CommandEncoder) {
+        let gpu_texture:&wgpu::Texture = self.textures.get(&texture_id).unwrap();
+        let width = texture.size.width as usize;
+        let aligned_width = Self::get_aligned_texture_size(width);
+        let format_size:usize = texture.format.describe().block_size as usize;
+        let mut aligned_data = vec![0;format_size * aligned_width * texture.size.height as usize];
+
+        texture.data.chunks_exact(format_size * width)
+                    .enumerate()
+                    .for_each(|(index, row)| {
+                                let offset = index * aligned_width * format_size;
+                                aligned_data[offset..(offset + width * format_size)]
+                                    .copy_from_slice(row);
+                              });
+
+        let texture_buffer = self.create_buffer_with_data(wgpu::BufferUsage::COPY_SRC,&aligned_data);
+        self.copy_buffer_to_texture(command, texture_buffer, 0, 
+                                    NonZeroU32::new((format_size * aligned_width) as u32).unwrap(), 
+                                    texture_id, wgpu::Origin3d::default(), 0, texture.size)
+    }
+
+    pub fn copy_buffer_to_texture(&self,
+                                  command: &mut wgpu::CommandEncoder,
+                                  source_buffer: BufferId,
+                                  source_offset: u64,
+                                  source_bytes_per_row: NonZeroU32,
+                                  dest_texture: &TextureId,
+                                  dest_origin:wgpu::Origin3d,
+                                  dest_mip_level: u32,
+                                  size: wgpu::Extent3d) {
+        let source = self.buffers.get(&source_buffer).unwrap();
+        let dest = self.textures.get(&dest_texture).unwrap();
+        command.copy_buffer_to_texture(
+            wgpu::ImageCopyBuffer { 
+                buffer: source, 
+                layout: wgpu::ImageDataLayout { 
+                    offset: source_offset, 
+                    bytes_per_row: Some(source_bytes_per_row), 
+                    rows_per_image: None
+                }
+            },wgpu::ImageCopyTexture { 
+                texture: dest, 
+                mip_level: dest_mip_level, 
+                origin: dest_origin 
+            },size);                          
+    }
+
+    fn get_aligned_texture_size(size: usize) -> usize {
+        (size + COPY_BYTES_PER_ROW_ALIGNMENT - 1) & !(COPY_BYTES_PER_ROW_ALIGNMENT - 1)
     }
 
     pub fn clear_swap_chain_texture(&mut self) {

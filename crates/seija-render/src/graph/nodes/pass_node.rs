@@ -45,6 +45,9 @@ impl INode for PassNode {
                             if let Ok((re,hmesh,hmat))  = render_query.get(world, ve.entity) {
                                 let mesh = meshs.get(&hmesh.id).unwrap();
                                 let mat = mats.get(&hmat.id).unwrap();
+                                if !mat.is_ready(&ctx.resources) {
+                                    continue;
+                                }
                                 if let Some(pipes) = pipeline_cahce.get_pipeline(&mat.def.name, mesh) {
                                     if let Some(mesh_buffer_id)  = ctx.resources.get_render_resource(hmesh.clone_weak_untyped(), 0) {
                                         for pipe in pipes.pipelines.iter() {

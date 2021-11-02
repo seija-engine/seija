@@ -102,6 +102,7 @@ impl AppRender {
     pub fn update(&mut self, world: &mut World, graph_ctx: &mut RenderGraphContext,ctx:&mut RenderContext) {
         ctx.command_encoder = Some(self.device.create_command_encoder(&CommandEncoderDescriptor::default()));
         self.update_winodw_surface(world,&mut ctx.resources);
+        
         update_camera(world,ctx);
         ctx.transform_buffer.update(world,&self.device,&mut ctx.resources,ctx.command_encoder.as_mut().unwrap());
         ctx.material_sys.update(world, &ctx.device, ctx.command_encoder.as_mut().unwrap(),&mut ctx.resources);
@@ -122,13 +123,14 @@ impl AppRender {
             }
         }
         
+        resource::update_mesh_system(world,&mut self.mesh_event_reader,ctx);
+        resource::update_texture_system(world, &mut self.texture_event_reader, ctx);
+
         let command_buffer = ctx.command_encoder.take().unwrap().finish();
-        
         self.queue.submit(Some(command_buffer));
         ctx.resources.clear_swap_chain_texture();
         
-        resource::update_mesh_system(world,&mut self.mesh_event_reader,ctx);
-        resource::update_texture_system(world, &mut self.texture_event_reader, ctx);
+        
     }
 
     

@@ -55,10 +55,10 @@ fn on_start_up(mut commands:Commands,mut meshs:ResMut<Assets<Mesh>>,storage:Res<
   
     storage.add_def(material_def);
   
-    create_elem(&mut commands, Vec3::new(8f32, 0f32, -20f32), 
-         root,&mut meshs,&storage,Vec4::new(1f32, 0f32, 0f32, 1f32),wood_texture.clone_weak());
+    //create_elem(&mut commands, Vec3::new(8f32, 0f32, -20f32), 
+    //     root,&mut meshs,&storage,Vec4::new(1f32, 0f32, 0f32, 1f32),wood_texture.clone_weak());
 
-    create_elem(&mut commands, Vec3::new(-8f32, 0f32, -20f32), root,&mut meshs,&storage,Vec4::new(0f32, 1f32, 0f32, 1f32),wood_texture);
+    create_elem(&mut commands, Vec3::new(0f32, 0f32, -10f32), root,&mut meshs,&storage,Vec4::new(1f32, 1f32, 1f32, 1f32),wood_texture);
 }
 
 
@@ -91,11 +91,9 @@ fn create_elem(commands:&mut Commands,pos:Vec3,parent:Entity,meshs:&mut Assets<M
 
 fn on_update(mut commands:Commands,mut renders:Query<(Entity,&mut Transform,&Handle<Mesh>,&Handle<Material>)>,mats:Query<(Entity,&Handle<Material>)>) {
     for (e,mut t,_,_) in renders.iter_mut() {
-        if t.local.position.x == 8f32 {
-            let v:f32 = (std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_millis() % 3600) as f32;
+        let v:f32 = (std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_millis() % 3600) as f32;
        
-            t.local.rotation = Quat::from_euler(glam::EulerRot::XYZ, 0f32, v * 0.1f32 * 0.0174533f32, 0f32);
-        }
+        t.local.rotation = Quat::from_euler(glam::EulerRot::XYZ, 30f32 * 0.0174533f32, v * 0.1f32 * 0.0174533f32, 0f32);
         
        
        
