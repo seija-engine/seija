@@ -8,7 +8,7 @@
         b. <del> 修改摄像机的Buffer存储 </del>  
         c. <del> 完成PassNode </del>  
         d. <del> 绘制出第一个Cube </del>  
-        e. 完成材质属性配置中贴图的支持
+        e. <del> 完成材质属性配置中贴图的支持 </del>
 
   2. 完成gltf模型渲染
 

@@ -78,11 +78,15 @@ impl TextureProps {
 
     pub fn set(&mut self,name:&str,texture:Handle<Texture>) {
         if let Some(index) = self.def.texture_idxs.get(name) {
+
             if let Some(old_texture) = &self.textures[*index] {
-                self.is_dirty = old_texture.id != texture.id;
+               if !self.is_dirty && old_texture.id != texture.id {
+                   self.is_dirty = true;
+               }
             } else {
                 self.is_dirty = true;
             }
+            
             self.textures[*index] = Some(texture);
         }
     }
@@ -105,7 +109,6 @@ impl TextureProps {
             return;
         }
         if self.is_dirty {
-            println!("build");
             let mut bind_group_builder = BindGroupBuilder::new();
             for texture in self.textures.iter() {
                 bind_group_builder.add_texture(texture.as_ref().unwrap().clone_weak());
