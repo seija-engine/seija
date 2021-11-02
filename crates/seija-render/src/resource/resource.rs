@@ -1,6 +1,6 @@
 use std::{collections::HashMap, num::NonZeroU32, ops::Range, sync::Arc};
 use glam::{Vec3, Vec3A};
-use seija_asset::HandleUntyped;
+use seija_asset::{HandleId, HandleUntyped};
 use seija_core::IDGenU64;
 use uuid::Uuid;
 use wgpu::{Buffer, BufferUsage, Device, SwapChainError, TextureView, util::DeviceExt};
@@ -55,8 +55,8 @@ pub struct RenderResources {
     pub textures: HashMap<TextureId, wgpu::Texture>,
     pub texture_views: HashMap<TextureId, wgpu::TextureView>,
     pub samplers: HashMap<SamplerId, wgpu::Sampler>,
+    resources:HashMap<HandleId,[Option<RenderResourceId>;4]>,
 
-    resources:HashMap<(HandleUntyped,u8),RenderResourceId>,
 
     buffer_id_gen:IDGenU64,
     texture_id_gen:IDGenU64,
@@ -93,16 +93,22 @@ impl RenderResources {
         id
     }
 
-    pub fn set_render_resource(&mut self,handle:HandleUntyped,res_id:RenderResourceId,idx:u8) {
-        self.resources.insert((handle,idx), res_id);
+    pub fn set_render_resource(&mut self,handle:&HandleId,res_id:RenderResourceId,idx:usize) {
+        let entry = self.resources.entry(*handle).or_insert([None,None,None,None]);
+        entry[idx] = Some(res_id);
     }
 
-    pub fn get_render_resource(&self,handle:HandleUntyped,idx:u8) -> Option<RenderResourceId> {
-        self.resources.get(&(handle,idx)).cloned()
+    pub fn get_render_resource(&self,handle:&HandleId,idx:usize) -> Option<&RenderResourceId> {
+        self.resources.get(handle).and_then(|arr| arr[idx].as_ref())
     }
 
-    pub fn remove_render_resource(&mut self,handle:HandleUntyped,idx:u8) {
-        self.resources.remove(&(handle, idx));
+    pub fn remove_render_resource(&mut self,handle:&HandleId,idx:usize) {
+        if let Some(arr) = self.resources.get_mut(handle) {
+            arr[idx] = None;
+            if arr.iter().all(|v| v.is_none()) {
+                self.resources.remove(handle);
+            }
+        }
     }
 
     pub fn remove_buffer(&mut self,id:BufferId) {

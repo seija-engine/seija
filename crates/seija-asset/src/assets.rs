@@ -25,7 +25,7 @@ impl<T: Asset> Debug for AssetEvent<T> {
 
 #[derive(Debug)]
 pub struct Assets<T: Asset> {
-    assets: HashMap<HandleId, T>,
+    pub assets: HashMap<HandleId, T>,
     pub events:Events<AssetEvent<T>>,
     ref_sender:Sender<RefEvent>
 }

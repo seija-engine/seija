@@ -45,14 +45,14 @@ impl INode for PassNode {
                             if let Ok((re,hmesh,hmat))  = render_query.get(world, ve.entity) {
                                 let mesh = meshs.get(&hmesh.id).unwrap();
                                 let mat = mats.get(&hmat.id).unwrap();
-                                if !mat.is_ready(&ctx.resources) {
+                                if !mat.is_ready(&ctx.resources) || mat.texture_props.is_dirty() {
                                     continue;
                                 }
                                 if let Some(pipes) = pipeline_cahce.get_pipeline(&mat.def.name, mesh) {
-                                    if let Some(mesh_buffer_id)  = ctx.resources.get_render_resource(hmesh.clone_weak_untyped(), 0) {
+                                    if let Some(mesh_buffer_id)  = ctx.resources.get_render_resource(&hmesh.id, 0) {
                                         for pipe in pipes.pipelines.iter() {
                                             
-                                            let idx_id = ctx.resources.get_render_resource(hmesh.clone_weak_untyped(), 1).unwrap();
+                                            let idx_id = ctx.resources.get_render_resource(&hmesh.id, 1).unwrap();
                                             let vert_buffer = ctx.resources.get_buffer_by_resid(&mesh_buffer_id).unwrap();
                                             let idx_buffer = ctx.resources.get_buffer_by_resid(&idx_id).unwrap();
     
@@ -60,7 +60,7 @@ impl INode for PassNode {
                                                 render_pass.set_bind_group(0, &camera_buffer.bind_group, &[]);
                                                 render_pass.set_bind_group(1, &trans_info.bind_group, &[]);
                                                 render_pass.set_bind_group(2, mat.bind_group.as_ref().unwrap(), &[]);
-                                                if let Some(texture_bind_group) = mat.texture_bind_group.as_ref() {
+                                                if let Some(texture_bind_group) = mat.texture_props.bind_group.as_ref() {
                                                     render_pass.set_bind_group(3, texture_bind_group, &[]);
                                                 }
                                                 render_pass.set_vertex_buffer(0, vert_buffer.slice(0..));

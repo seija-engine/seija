@@ -47,6 +47,12 @@ fn on_start_up(mut commands:Commands,mut meshs:ResMut<Assets<Mesh>>,storage:Res<
     let tex = Texture::from_bytes(&bytes).unwrap();
     let wood_texture = textures.add(tex);
 
+    let bytes = std::fs::read("res/texture/b.jpg").unwrap();
+    let tex = Texture::from_bytes(&bytes).unwrap();
+    let b_texture = textures.add(tex);
+
+    let texture_comp = TestComp { fst:wood_texture,snd:b_texture };
+
     println!("texture load success");
 
     let test_md_string = std::fs::read_to_string("res/material/ui.md.clj").unwrap();
@@ -58,15 +64,18 @@ fn on_start_up(mut commands:Commands,mut meshs:ResMut<Assets<Mesh>>,storage:Res<
     //create_elem(&mut commands, Vec3::new(8f32, 0f32, -20f32), 
     //     root,&mut meshs,&storage,Vec4::new(1f32, 0f32, 0f32, 1f32),wood_texture.clone_weak());
 
-    create_elem(&mut commands, Vec3::new(0f32, 0f32, -10f32), root,&mut meshs,&storage,Vec4::new(1f32, 1f32, 1f32, 1f32),wood_texture);
+    create_elem(&mut commands, Vec3::new(0f32, 0f32, -10f32), root,&mut meshs,&storage,Vec4::new(1f32, 1f32, 1f32, 1f32),texture_comp);
 }
 
 
-
+struct TestComp {
+    fst:Handle<Texture>,
+    snd:Handle<Texture>
+}
 
 
 fn create_elem(commands:&mut Commands,pos:Vec3,parent:Entity,meshs:&mut Assets<Mesh>,
-               storage:&Res<MaterialStorage>,color:Vec4,texture:Handle<Texture>) -> Entity {
+               storage:&Res<MaterialStorage>,color:Vec4,test_comp:TestComp) -> Entity {
     let mut elem = commands.spawn();
     let mut t = Transform::default();
     t.local.position = pos;
@@ -82,17 +91,28 @@ fn create_elem(commands:&mut Commands,pos:Vec3,parent:Entity,meshs:&mut Assets<M
     let mut mats = storage.mateials.write();
     let mat = mats.get_mut(&material.id).unwrap();
     mat.props.set_float4("color", color, 0);
-    mat.textures.push(texture);
-   
+    mat.texture_props.set("mainTexture", test_comp.fst.clone_weak());
     elem.insert(cube_mesh_handle);
     elem.insert(material);
+    elem.insert(test_comp);
     elem.id()
 }
 
-fn on_update(mut commands:Commands,mut renders:Query<(Entity,&mut Transform,&Handle<Mesh>,&Handle<Material>)>,mats:Query<(Entity,&Handle<Material>)>) {
-    for (e,mut t,_,_) in renders.iter_mut() {
+fn on_update(mats:ResMut<MaterialStorage>,mut renders:Query<(Entity,&mut Transform,&Handle<Mesh>,&Handle<Material>,&TestComp)>) {
+    for (e,mut t,_,mat_handle,test_comp) in renders.iter_mut() {
         let v:f32 = (std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_millis() % 3600) as f32;
        
+        let mut mat_map = mats.mateials.write();
+        let mat_mut = mat_map.get_mut(&mat_handle.id).unwrap();
+
+        
+
+        if v > 1800f32 {
+           mat_mut.texture_props.set("mainTexture", test_comp.fst.clone_weak());
+        } else {
+           mat_mut.texture_props.set("mainTexture", test_comp.snd.clone_weak());
+        }
+
         t.local.rotation = Quat::from_euler(glam::EulerRot::XYZ, 30f32 * 0.0174533f32, v * 0.1f32 * 0.0174533f32, 0f32);
         
        

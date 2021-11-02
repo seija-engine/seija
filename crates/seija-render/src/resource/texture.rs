@@ -177,10 +177,10 @@ pub fn update_texture_system(world:&mut World,texture_reader:&mut ManualEventRea
     for texture_handle in changed_textures.iter() {
         if let Some(texture) = textures.get(&texture_handle.id) {
             let texture_id = ctx.resources.create_texture(&texture.desc(wgpu::TextureUsage::SAMPLED | wgpu::TextureUsage::COPY_DST),&texture.view_desc());
-            ctx.resources.set_render_resource(texture_handle.clone_weak_untyped(), RenderResourceId::Texture(texture_id), 0);
+            ctx.resources.set_render_resource(&texture_handle.id, RenderResourceId::Texture(texture_id), 0);
 
             let sampler_id = ctx.resources.create_sampler(&texture.sampler);
-            ctx.resources.set_render_resource(texture_handle.clone_weak_untyped(), RenderResourceId::Sampler(sampler_id), 1);
+            ctx.resources.set_render_resource(&texture_handle.id, RenderResourceId::Sampler(sampler_id), 1);
 
           
            ctx.resources.fill_texture(texture, &texture_id,command);

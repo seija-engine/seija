@@ -1,7 +1,7 @@
 use std::{collections::HashSet, hash::{Hash, Hasher}, ops::Range};
 use bevy_ecs::prelude::*;
 use fnv::FnvHasher;
-use seija_asset::{AssetEvent, Assets, Handle, HandleUntyped};
+use seija_asset::{AssetEvent, Assets, Handle, HandleId, HandleUntyped};
 use seija_core::{bytes::AsBytes, event::{EventReader, Events, ManualEventReader}};
 use wgpu::{BufferUsage, IndexFormat, PrimitiveState, PrimitiveTopology, VertexAttribute, VertexBufferLayout, VertexFormat};
 use seija_core::TypeUuid;
@@ -328,8 +328,8 @@ pub fn update_mesh_system(world:&mut World,mesh_reader:&mut ManualEventReader<As
                     AssetEvent::Modified { .. } => { }
                     AssetEvent::Removed { ref handle } =>  { 
                         changed_meshes.remove(handle);
-                        remove_resource(handle.clone_weak_untyped(),0,ctx);
-                        remove_resource(handle.clone_weak_untyped(),1,ctx);
+                        remove_resource(&handle.id,0,ctx);
+                        remove_resource(&handle.id,1,ctx);
                     }
                 }
             }   
@@ -341,19 +341,19 @@ pub fn update_mesh_system(world:&mut World,mesh_reader:&mut ManualEventReader<As
         if let Some(mesh) = meshs.get(&mesh_handle.id) {
             let vert_bytes = mesh.get_vertex_buffer_data();
             let vert_buffer = ctx.resources.create_buffer_with_data(BufferUsage::VERTEX, &vert_bytes);
-            ctx.resources.set_render_resource(mesh_handle.clone_weak_untyped(), RenderResourceId::Buffer(vert_buffer), 0);
+            ctx.resources.set_render_resource(&mesh_handle.id, RenderResourceId::Buffer(vert_buffer), 0);
 
             if let Some(idx_bytes) = mesh.get_index_buffer_bytes() {
                let index_buffer = ctx.resources.create_buffer_with_data(BufferUsage::INDEX, &idx_bytes);
-               ctx.resources.set_render_resource(mesh_handle.clone_weak_untyped(), RenderResourceId::Buffer(index_buffer), 1);
+               ctx.resources.set_render_resource(&mesh_handle.id, RenderResourceId::Buffer(index_buffer), 1);
             }
         }
     }
 }
 
-fn remove_resource(handle:HandleUntyped,idx:u8,ctx:&mut RenderContext) {
-    if let Some(RenderResourceId::Buffer(buffer)) = ctx.resources.get_render_resource(handle.clone(), idx) {
-        ctx.resources.remove_buffer(buffer);
-        ctx.resources.remove_render_resource(handle, idx);
+fn remove_resource(handle:&HandleId,idx:usize,ctx:&mut RenderContext) {
+    if let Some(RenderResourceId::Buffer(buffer)) = ctx.resources.get_render_resource(handle, idx) {
+        ctx.resources.remove_buffer(*buffer);
+        ctx.resources.remove_render_resource(&handle, idx);
     }
 }

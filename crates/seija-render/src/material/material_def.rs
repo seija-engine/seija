@@ -1,4 +1,4 @@
-use std::{convert::{TryFrom}, sync::{Arc}};
+use std::{collections::HashMap, convert::{TryFrom}, sync::{Arc}};
 use seija_core::{TypeUuid};
 use wgpu::{FrontFace, PolygonMode};
 use super::{RenderOrder, errors::MaterialDefReadError, types::{Cull, SFrontFace, SPolygonMode, ZTest}};
@@ -14,9 +14,9 @@ pub struct MaterialDef {
     pub order:RenderOrder,
     pub pass_list:Vec<PassDef>,
     pub prop_def:Arc<UniformBufferDef>,
+    pub texture_idxs:HashMap<String,usize>,
     pub texture_layout_builder:BindGroupLayoutBuilder
 }
-
 
 #[derive(Debug)]
 pub struct PassDef {
@@ -71,32 +71,38 @@ pub fn read_material_def(vm:&mut EvalRT,file_string:&str) -> Result<MaterialDef,
 
     let prop_value = value.get(":props").ok_or(MaterialDefReadError::InvalidProp)?;
     let buffer_def = UniformBufferDef::try_from(prop_value).map_err(|_| MaterialDefReadError::InvalidProp)?;
-    let texture_layout_builder = read_texture_layout_builder(prop_value).map_err(|_| MaterialDefReadError::InvalidProp)?;
+    let (texture_layout_builder,texture_idxs) = read_texture_prop(prop_value).map_err(|_| MaterialDefReadError::InvalidProp)?;
     Ok(MaterialDef {
         name:def_name.to_string(),
         order,
         pass_list,
         prop_def:Arc::new(buffer_def),
-        texture_layout_builder
+        texture_layout_builder,
+        texture_idxs
     })
 }
 
-fn read_texture_layout_builder(json_value:&Value) -> Result<BindGroupLayoutBuilder,()> {
+fn read_texture_prop(json_value:&Value) -> Result<(BindGroupLayoutBuilder,HashMap<String,usize>),()> {
     let arr = json_value.as_array().ok_or( ())?;
     let mut texture_layout_builder = BindGroupLayoutBuilder::new();
+    let mut texture_idxs:HashMap<String,usize> = HashMap::default();
+    let mut texture_index:usize = 0;
     for item in arr {
         if let Some(map) = item.as_object() {
             let prop_type = map.get(":type").and_then(|v| v.as_str()).ok_or(())?;
             match prop_type {
                 "Texture" => {
+                    let prop_name = map.get(":name").and_then(|v| v.as_str()).ok_or(())?;
                     texture_layout_builder.add_texture();
                     texture_layout_builder.add_sampler();
+                    texture_idxs.insert(prop_name.to_string(), texture_index);
+                    texture_index += 1;
                 },
                 _ => {}
             }
         }
     }
-    Ok(texture_layout_builder)
+    Ok((texture_layout_builder,texture_idxs))
 }
 
 fn read_pass(json_value:&Value) -> Result<PassDef,MaterialDefReadError> {

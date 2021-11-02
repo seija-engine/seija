@@ -45,7 +45,7 @@ impl WinitWindow {
                 builder.with_inner_size(LogicalSize::new(config.width,config.height))
              }
         };
-        let window = builder.build(&event_loop).unwrap();
+        let window = builder.with_title(&config.title).build(&event_loop).unwrap();
         (WinitWindow {  title: config.title.clone(), window,vsync:config.vsync },event_loop)
     }
 }

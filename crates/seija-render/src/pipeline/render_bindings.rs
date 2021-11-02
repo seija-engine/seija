@@ -126,18 +126,15 @@ impl BindGroupBuilder {
                 },
                 BindGroupItem::ResId(_) => {},
                 BindGroupItem::Texture(texture_handle) => {
-                    let handle_id = texture_handle.clone_weak_untyped();
-                    let res_texture_id = resources.get_render_resource(handle_id, 0).and_then(|v|v.into_texture_id()).unwrap();
-                    let res_sampler_id = resources.get_render_resource(handle_id, 1).and_then(|v|v.into_sampler_id()).unwrap();
+                    let res_texture_id = resources.get_render_resource(&texture_handle.id, 0).and_then(|v|v.into_texture_id()).unwrap();
+                    let res_sampler_id = resources.get_render_resource(&texture_handle.id, 1).and_then(|v|v.into_sampler_id()).unwrap();
                     let texture_view = resources.get_texture_view(&res_texture_id).unwrap();
                     let sampler = resources.get_sampler(&res_sampler_id).unwrap();
 
                     let entry = BindGroupEntry { binding:index, resource:wgpu::BindingResource::TextureView(texture_view) };
-                    dbg!(&entry);
                     entrys.push(entry);
                     index += 1;
                     let entry = BindGroupEntry { binding:index, resource:wgpu::BindingResource::Sampler(sampler) };
-                    dbg!(&entry);
                     entrys.push(entry);
                     index += 1;
                 }
