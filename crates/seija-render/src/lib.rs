@@ -11,6 +11,7 @@ use bevy_ecs::prelude::*;
 use seija_core::{CoreStage};
 use crate::graph::nodes::PassNode;
 use seija_asset::{AddAsset};
+pub use wgpu;
 
 pub mod material;
 pub mod camera;

@@ -352,8 +352,8 @@ pub fn update_mesh_system(world:&mut World,mesh_reader:&mut ManualEventReader<As
 }
 
 fn remove_resource(handle:&HandleId,idx:usize,ctx:&mut RenderContext) {
-    if let Some(RenderResourceId::Buffer(buffer)) = ctx.resources.get_render_resource(handle, idx) {
-        ctx.resources.remove_buffer(*buffer);
+    if let Some(RenderResourceId::Buffer(buffer)) = ctx.resources.get_render_resource(handle, idx).map(|v| v.clone()) {
+        ctx.resources.remove_buffer(buffer);
         ctx.resources.remove_render_resource(&handle, idx);
     }
 }
