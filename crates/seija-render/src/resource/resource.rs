@@ -177,6 +177,9 @@ impl RenderResources {
             RenderResourceId::MainSwap => {
                 Some(&self.main_swap_chain_frame.as_ref().unwrap().output.view)
             }
+            RenderResourceId::Texture(texture_id) => {
+                self.texture_views.get(texture_id)
+            }
             _ => None
         }
     }

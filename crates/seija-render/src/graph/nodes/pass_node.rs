@@ -9,7 +9,7 @@ pub struct PassNode {
 }
 
 impl INode for PassNode {
-    fn input_count(&self) -> usize { 1 }
+    fn input_count(&self) -> usize { 2 }
     
     fn update(&mut self,world: &mut World,
               ctx:&mut RenderContext,
@@ -17,7 +17,13 @@ impl INode for PassNode {
               _outputs:&mut Vec<Option<RenderResourceId>>) {
         
         let target_view = &inputs[0];
+        let depth_view = &inputs[1];
+        if depth_view.is_none() {
+            return;;
+        }
+
         let mut command = ctx.command_encoder.take().unwrap();
+        
         if let Some(view_id) = target_view.as_ref() {   
             let mut camera_query = world.query::<(Entity, &Camera)>();
             let mut render_query = world.query::<(Entity,&Handle<Mesh>,&Handle<Material>)>();
@@ -28,6 +34,7 @@ impl INode for PassNode {
             
             
             let view = ctx.resources.get_texture_view_by_resid(view_id).unwrap();
+            
             let mut render_pass = command.begin_render_pass(&wgpu::RenderPassDescriptor {
                 label:None,
                 color_attachments:&[wgpu::RenderPassColorAttachment {
@@ -35,7 +42,18 @@ impl INode for PassNode {
                     resolve_target:None,
                     ops:self.operations
                 }],
-                depth_stencil_attachment:None,
+                depth_stencil_attachment:if let Some(depth_view) = depth_view {
+                    Some(wgpu::RenderPassDepthStencilAttachment {
+                        view:ctx.resources.get_texture_view_by_resid(depth_view).unwrap(),
+                        stencil_ops: None,
+                        depth_ops: Some(Operations {
+                            load: wgpu::LoadOp::Clear(1.0),
+                            store: true,
+                        }),
+                    })
+                } else {
+                   None
+                },
             });
             
             for (e,camera) in camera_query.iter(world) {

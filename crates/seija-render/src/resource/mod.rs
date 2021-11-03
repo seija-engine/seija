@@ -4,7 +4,7 @@ mod texture;
 pub mod shape;
 pub use texture::{Texture,update_texture_system};
 pub use mesh::{Mesh,update_mesh_system,VertexAttributeValues,Indices};
-pub use  resource::{RenderResources,RenderResourceId,BufferId};
+pub use  resource::{RenderResources,RenderResourceId,BufferId,TextureId};
 
 use seija_app::{App};
 use seija_asset::{AddAsset};

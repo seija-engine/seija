@@ -9,7 +9,7 @@ use seija_app::IModule;
 use seija_app::{App};
 use bevy_ecs::prelude::*;
 use seija_core::{CoreStage};
-use crate::graph::nodes::PassNode;
+use crate::graph::nodes::{PassNode, WindowTextureNode};
 use seija_asset::{AddAsset};
 pub use wgpu;
 
@@ -83,8 +83,20 @@ fn add_base_nodes(graph_ctx:&mut RenderGraphContext) {
     let swap_chain_node = SwapchainNode::new();
     let swap_id = graph_ctx.graph.add_node("swapchain", swap_chain_node);
 
+    let depth_node = WindowTextureNode::new(wgpu::TextureDescriptor { 
+        label: None,
+        size: wgpu::Extent3d::default(),
+        mip_level_count: 1,
+        sample_count: 1, 
+        dimension: wgpu::TextureDimension::D2, 
+        format: wgpu::TextureFormat::Depth32Float, 
+        usage: wgpu::TextureUsage::RENDER_ATTACHMENT 
+    });
+    let depth_node_id = graph_ctx.graph.add_node("depth", depth_node);
 
-    graph_ctx.graph.add_link( swap_id ,pass_id , vec![0], vec![0]).unwrap();
+    graph_ctx.graph.add_link( swap_id ,pass_id ,    vec![0], vec![0]).unwrap();
+    graph_ctx.graph.add_link( depth_node_id ,pass_id , vec![0], vec![1]).unwrap();
+
 
     graph_ctx.build_iter();
 }
