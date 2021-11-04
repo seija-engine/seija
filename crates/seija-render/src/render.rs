@@ -159,7 +159,9 @@ impl AppRender {
         };
         if let Some(_) = resize {
             let app_window = world.get_resource::<AppWindow>().unwrap();   
-            render_res.create_swap_chain(app_window.width(), app_window.height(), app_window.vsync());
+            if app_window.width() > 0 && app_window.height() > 0 {
+                render_res.create_swap_chain(app_window.width(), app_window.height(), app_window.vsync());
+            }
         }
         
     }

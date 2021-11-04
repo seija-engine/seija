@@ -1,5 +1,5 @@
 use bevy_ecs::prelude::World;
-use seija_core::{event::{Events, ManualEventReader}, window::AppWindow};
+use seija_core::{event::{Events, ManualEventReader}, window::{AppWindow, IWindow}};
 use seija_winit::event::{WindowCreated,WindowResized};
 use crate::{RenderContext, graph::node::INode, resource::{RenderResourceId,TextureId}};
 
@@ -43,10 +43,12 @@ impl INode for WindowTextureNode {
         
         if is_make_texture {
            let app_window = world.get_resource::<AppWindow>().unwrap();
-           self.desc.size.width = app_window.width();
-           self.desc.size.height = app_window.height();
-           let texture_id = ctx.resources.create_texture(&self.desc, &wgpu::TextureViewDescriptor::default());
-           self.texture_res_id = Some(RenderResourceId::Texture(texture_id));
+           if app_window.width() > 0 && app_window.height() > 0 {
+            self.desc.size.width = app_window.width();
+            self.desc.size.height = app_window.height();
+            let texture_id = ctx.resources.create_texture(&self.desc, &wgpu::TextureViewDescriptor::default());
+            self.texture_res_id = Some(RenderResourceId::Texture(texture_id));
+           }
         }
 
         outputs[0] = self.texture_res_id.clone()

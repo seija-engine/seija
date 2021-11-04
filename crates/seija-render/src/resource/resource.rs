@@ -175,7 +175,7 @@ impl RenderResources {
     pub fn get_texture_view_by_resid(&self,res_id:&RenderResourceId) -> Option<&TextureView> {
         match res_id {
             RenderResourceId::MainSwap => {
-                Some(&self.main_swap_chain_frame.as_ref().unwrap().output.view)
+                self.main_swap_chain_frame.as_ref().map(|v| &v.output.view)
             }
             RenderResourceId::Texture(texture_id) => {
                 self.texture_views.get(texture_id)
@@ -244,7 +244,6 @@ impl RenderResources {
     }
 
     pub fn fill_texture(&mut self,texture:&Texture,texture_id:&TextureId,command:&mut wgpu::CommandEncoder) {
-        let gpu_texture:&wgpu::Texture = self.textures.get(&texture_id).unwrap();
         let width = texture.size.width as usize;
         let aligned_width = Self::get_aligned_texture_size(width);
         let format_size:usize = texture.format.describe().block_size as usize;

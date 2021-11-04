@@ -6,33 +6,24 @@ use seija_core::{bytes::AsBytes, event::{EventReader, Events, ManualEventReader}
 use wgpu::{BufferUsage, IndexFormat, PrimitiveState, PrimitiveTopology, VertexAttribute, VertexBufferLayout, VertexFormat};
 use seija_core::TypeUuid;
 use uuid::Uuid;
-
+use bitflags::bitflags;
 use crate::{RenderContext,resource::RenderResourceId};
 
-use super::shape;
+bitflags! {
+    pub struct MeshAttributeType: usize {
+        const POSITION = 0;
+        const UV0 = 1;
+        const UV1 = 2;
 
-#[derive(Debug,TypeUuid)]
-#[uuid = "ea48c171-e7b4-4e54-8895-dda5a2d0fa90"]
-pub struct Mesh {
-    typ:PrimitiveTopology,
-    values:Vec<VertexAttributeValues>,
-    indices:Option<Indices>,
-    attrs:Vec<VertexAttribute>,
-    array_stride:u64
-}
+        const NORMAL = 3;
+        const TANGENT = 4;
 
-impl Hash for Mesh {
-    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
-        self.typ.hash(state);
-        core::mem::discriminant(&self.values).hash(state);
-        if let Some(idxs) = self.indices.as_ref() {
-            1.hash(state);
-            core::mem::discriminant(idxs).hash(state);
-        } else {
-            0.hash(state);
-        }
+        const COLOR = 5;
+
+        const MAX = 5;
     }
 }
+
 
 #[derive(Debug, Clone)]
 pub enum Indices {
@@ -194,11 +185,37 @@ impl From<Vec<[u8; 4]>> for VertexAttributeValues {
     }
 }
 
+#[derive(Debug,TypeUuid)]
+#[uuid = "ea48c171-e7b4-4e54-8895-dda5a2d0fa90"]
+pub struct Mesh {
+    typ:PrimitiveTopology,
+    values:Vec<Option<VertexAttributeValues>>,
+    indices:Option<Indices>,
+    attrs:Vec<VertexAttribute>,
+    array_stride:u64
+}
+
+impl Hash for Mesh {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        self.typ.hash(state);
+        core::mem::discriminant(&self.values).hash(state);
+        if let Some(idxs) = self.indices.as_ref() {
+            1.hash(state);
+            core::mem::discriminant(idxs).hash(state);
+        } else {
+            0.hash(state);
+        }
+    }
+}
+
 impl Mesh {
     pub fn new(typ:PrimitiveTopology) -> Mesh {
+        let mut values:Vec<Option<VertexAttributeValues>> = Vec::with_capacity(MeshAttributeType::MAX.bits);
+        values.resize(MeshAttributeType::MAX.bits, None);
+        
         Mesh {
             typ,
-            values:Vec::new(),
+            values,
             indices:None,
             attrs:vec![],
             array_stride:0
@@ -208,8 +225,8 @@ impl Mesh {
         self.typ
     }
 
-    pub fn add_value(&mut self,value:impl Into<VertexAttributeValues>) {
-        self.values.push(value.into());
+    pub fn set(&mut self,typ:MeshAttributeType,value:impl Into<VertexAttributeValues>) {
+        self.values[typ.bits] = Some(value.into());
     }
 
     pub fn set_indices(&mut self,indices:Option<Indices>) {
@@ -235,14 +252,16 @@ impl Mesh {
         let mut accumulated_offset = 0;
         let mut location:u32 = 0;
         for value in self.values.iter() {
-            let format = VertexFormat::from(value);
-            let add_size = format.size();
-            attributes.push(VertexAttribute {
-                format,
-                shader_location : location,
-                offset:accumulated_offset
-            });
-            accumulated_offset += add_size;
+            if let Some(value) = value {
+                let format = VertexFormat::from(value);
+                let add_size = format.size();
+                attributes.push(VertexAttribute {
+                    format,
+                    shader_location : location,
+                    offset:accumulated_offset
+                });
+                accumulated_offset += add_size;
+            }
             location += 1;
         }
         self.attrs = attributes;
@@ -288,27 +307,31 @@ impl Mesh {
     }
 
     pub fn count_vertices(&self) -> usize { 
-        self.values.first().map(|v| v.len()).unwrap_or(0) 
+        self.values.first().map(|v| v.as_ref().unwrap().len()).unwrap_or(0) 
     }
 
     pub fn get_vertex_buffer_data(&self) -> Vec<u8> {
         let mut vert_size:usize = 0;
         for value in self.values.iter() {
-            let format:VertexFormat = VertexFormat::from(value);
-            vert_size += format.size() as usize;
+            if let Some(value) = value {
+                let format:VertexFormat = VertexFormat::from(value);
+                vert_size += format.size() as usize;
+            }
         }
         let vertex_count = self.count_vertices();
         let mut buffer = vec![0; vertex_count * vert_size];
         let mut value_offset = 0;
         for value in self.values.iter() {
-            let format = VertexFormat::from(value);
-            let size = format.size() as usize;
-            let bytes = value.get_bytes();
-            for (vertex_index, chunk_bytes) in bytes.chunks_exact(size).enumerate() {
-                let offset = vertex_index * vert_size + value_offset;
-                buffer[offset..offset + size].copy_from_slice(chunk_bytes);
-            }
-            value_offset += size;
+            if let Some(value) = value {
+                let format = VertexFormat::from(value);
+                let size = format.size() as usize;
+                let bytes = value.get_bytes();
+                for (vertex_index, chunk_bytes) in bytes.chunks_exact(size).enumerate() {
+                    let offset = vertex_index * vert_size + value_offset;
+                    buffer[offset..offset + size].copy_from_slice(chunk_bytes);
+                }
+                value_offset += size;
+            }   
         }
         buffer
     }

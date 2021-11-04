@@ -19,7 +19,7 @@ impl INode for PassNode {
         let target_view = &inputs[0];
         let depth_view = &inputs[1];
         if depth_view.is_none() {
-            return;;
+            return;
         }
 
         let mut command = ctx.command_encoder.take().unwrap();
@@ -33,7 +33,12 @@ impl INode for PassNode {
             let mats = mat_storages.mateials.read();
             
             
-            let view = ctx.resources.get_texture_view_by_resid(view_id).unwrap();
+            let view = ctx.resources.get_texture_view_by_resid(view_id);
+            if view.is_none() {
+                ctx.command_encoder = Some(command);
+                return; 
+            }
+            let view = view.unwrap();
             
             let mut render_pass = command.begin_render_pass(&wgpu::RenderPassDescriptor {
                 label:None,

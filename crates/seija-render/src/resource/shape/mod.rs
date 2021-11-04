@@ -1,4 +1,4 @@
-use crate::resource::mesh::{Indices, Mesh};
+use crate::resource::mesh::{Indices, Mesh,MeshAttributeType};
 
 #[derive(Debug, Copy, Clone)]
 pub struct Cube {
@@ -107,9 +107,10 @@ impl From<Box> for Mesh {
         ]);
 
         let mut mesh = Mesh::new(wgpu::PrimitiveTopology::TriangleList);
-        mesh.add_value(positions);
-        mesh.add_value(normals);
-        mesh.add_value(uvs);
+        mesh.set(MeshAttributeType::POSITION,positions);
+        mesh.set(MeshAttributeType::UV0, uvs);
+        mesh.set(MeshAttributeType::NORMAL, normals);
+       
         mesh.set_indices(Some(indices));
         mesh.build();
         mesh

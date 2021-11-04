@@ -1,6 +1,6 @@
 use crate::{GltfError, asset::{GltfAsset,GltfMesh,GltfPrimitive}};
 use seija_asset::{Assets};
-use seija_render::{wgpu::{PrimitiveTopology},resource::{Mesh,VertexAttributeValues,Indices}};
+use seija_render::{resource::{Indices, Mesh, MeshAttributeType, VertexAttributeValues}, wgpu::{PrimitiveTopology}};
 
 type ImportData = (gltf::Document, Vec<gltf::buffer::Data>, Vec<gltf::image::Data>);
 
@@ -21,19 +21,27 @@ fn load_meshs(gltf:&ImportData,mesh_assets:&mut Assets<Mesh>) -> Result<Vec<Gltf
             let primitive_topology = get_primitive_topology(primitive.mode())?;
             let mut mesh = Mesh::new(primitive_topology);
             if let Some(verts) = reader.read_positions().map(|iter| VertexAttributeValues::Float3(iter.collect())) {
-                mesh.add_value(verts);
+                mesh.set(MeshAttributeType::POSITION, verts);
             }
 
             if let Some(normals) = reader.read_normals().map(|iter| VertexAttributeValues::Float3(iter.collect())) {
-                mesh.add_value(normals);
+                mesh.set(MeshAttributeType::NORMAL, normals);
             }
 
             if let Some(uvs) = reader.read_tex_coords(0).map(|iter| VertexAttributeValues::Float2(iter.into_f32().collect())) {
-                mesh.add_value(uvs);
+                mesh.set(MeshAttributeType::UV0, uvs);
+            }
+
+            if let Some(uvs2) = reader.read_tex_coords(1).map(|iter| VertexAttributeValues::Float2(iter.into_f32().collect())) {
+                mesh.set(MeshAttributeType::UV1, uvs2);
             }
 
             if let Some(tangents) = reader.read_tangents().map(|iter| VertexAttributeValues::Float4(iter.collect())) {
-                mesh.add_value(tangents);
+                mesh.set(MeshAttributeType::TANGENT, tangents);
+            }
+
+            if let Some(colors) = reader.read_colors(0).map(|iter| VertexAttributeValues::Float4(iter.into_rgba_f32().collect())) {
+                mesh.set(MeshAttributeType::COLOR, colors);
             }
 
 
