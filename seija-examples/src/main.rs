@@ -30,8 +30,10 @@ pub struct  RootComponent {
 }
 
 fn on_start_up(mut commands:Commands,mut meshs:ResMut<Assets<Mesh>>,storage:Res<MaterialStorage>,mut textures:ResMut<Assets<Texture>>) {
-    let gltf_asset = load_gltf("res/gltf/Fox/glTF/Fox.gltf", &mut meshs).unwrap();
-    let gltf_mesh = gltf_asset.meshs[0].primitives[0].mesh.clone_weak();
+    let gltf_asset = load_gltf("res/gltf/Fox/glTF/Fox.gltf", &mut meshs,&mut textures).unwrap();
+    let first_primtives = &gltf_asset.first_mesh().primitives[0];
+    let gltf_mesh = first_primtives.mesh.clone_weak();
+    let gltf_texture = first_primtives.material.as_ref().unwrap().base_color_texture.as_ref().unwrap().clone_weak();
     let root = {
         let mut root = commands.spawn();
         let t = Transform::default();
@@ -51,11 +53,10 @@ fn on_start_up(mut commands:Commands,mut meshs:ResMut<Assets<Mesh>>,storage:Res<
     let tex = Texture::from_bytes(&bytes).unwrap();
     let wood_texture = textures.add(tex);
 
-    let bytes = std::fs::read("res/gltf/Fox/glTF/Texture.png").unwrap();
-    let tex = Texture::from_bytes(&bytes).unwrap();
-    let b_texture = textures.add(tex);
+   
+   
 
-    let texture_comp = TestComp { fst:wood_texture,snd:b_texture,mesh: gltf_mesh};
+    let texture_comp = TestComp { fst:gltf_texture,snd:wood_texture,mesh: gltf_mesh};
 
     println!("texture load success");
 

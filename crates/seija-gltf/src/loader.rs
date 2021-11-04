@@ -1,22 +1,72 @@
-use crate::{GltfError, asset::{GltfAsset,GltfMesh,GltfPrimitive}};
-use seija_asset::{Assets};
-use seija_render::{resource::{Indices, Mesh, MeshAttributeType, VertexAttributeValues}, wgpu::{PrimitiveTopology}};
+use std::{path::Path, sync::Arc};
+
+use crate::{GltfError, asset::{GltfAsset, GltfMaterial, GltfMesh, GltfPrimitive}};
+use gltf::{Material};
+use seija_asset::{Assets, Handle};
+use seija_render::{resource::{Indices, Mesh,Texture, MeshAttributeType, VertexAttributeValues}, wgpu::{PrimitiveTopology}};
 
 type ImportData = (gltf::Document, Vec<gltf::buffer::Data>, Vec<gltf::image::Data>);
 
-pub fn load_gltf(path:&str,mesh_assets:&mut Assets<Mesh>) -> Result<GltfAsset,GltfError> {
+pub fn load_gltf<P>(path:P,mesh_assets:&mut Assets<Mesh>,texture_assets:&mut Assets<Texture>) -> Result<GltfAsset,GltfError> where P:AsRef<Path> {
+    let path:&Path = path.as_ref();
     let import_data:ImportData = gltf::import(path).map_err(GltfError::LoadGltfError)?;
-    let meshs = load_meshs(&import_data,mesh_assets)?;
+    let textures = load_textures(&import_data,path,texture_assets)?;
+    let materials = load_materials(&import_data,&textures)?;
+    let meshs = load_meshs(&import_data,mesh_assets,&materials)?;
+  
     Ok(GltfAsset {
-        meshs
+        meshs,
+        textures,
+        materials
     })
 }
 
-fn load_meshs(gltf:&ImportData,mesh_assets:&mut Assets<Mesh>) -> Result<Vec<GltfMesh>,GltfError> {
+fn load_textures(gltf:&ImportData,path:&Path,texture_assets:&mut Assets<Texture>) -> Result<Vec<Handle<Texture>>,GltfError> {
+    let mut textures:Vec<Handle<Texture>> = vec![];
+    for texture in gltf.0.textures() {
+        let source = texture.source().source();
+        match source {
+            gltf::image::Source::View { view, mime_type } => {
+                let start = view.offset() as usize;
+                let end = (view.offset() + view.length()) as usize;
+                let buffer = &gltf.1[view.buffer().index()][start..end];
+                let texture = Texture::from_bytes(buffer).map_err(|_| GltfError::LoadImageError)?;
+                textures.push(texture_assets.add(texture));
+            },
+            gltf::image::Source::Uri { uri, mime_type } => {
+                let texture_path = path.parent().map(|p| p.join(uri)).ok_or(GltfError::LoadImageError)?;
+                let bytes = std::fs::read(texture_path).map_err(|_| GltfError::LoadImageError)?;
+                let texture = Texture::from_bytes(&bytes).map_err(|_| GltfError::LoadImageError)?;
+                textures.push(texture_assets.add(texture));
+            }
+        }
+    }
+    Ok(textures)
+}
+
+fn load_materials(gltf:&ImportData,textures:&Vec<Handle<Texture>>) -> Result<Vec<Arc<GltfMaterial>>,GltfError> {
+    let mut materials:Vec<Arc<GltfMaterial>> = vec![];
+    for material in gltf.0.materials() {
+        let pbr = material.pbr_metallic_roughness();
+        let base_color_texture = if let Some(info) = pbr.base_color_texture() {
+           Some(textures[info.texture().index()].clone_weak())
+        } else { None };
+        
+
+        materials.push(Arc::new(GltfMaterial {
+            base_color:pbr.base_color_factor(),
+            base_color_texture
+        }));
+    }
+    Ok(materials)
+}
+
+fn load_meshs(gltf:&ImportData,mesh_assets:&mut Assets<Mesh>,materials:&Vec<Arc<GltfMaterial>>) -> Result<Vec<GltfMesh>,GltfError> {
     let mut meshs:Vec<GltfMesh> = vec![];
     for mesh in gltf.0.meshes() {
         let mut primitives:Vec<GltfPrimitive> = vec![];
         for primitive in mesh.primitives() {
+            
             let reader = primitive.reader(|buffer| Some(&gltf.1[buffer.index()]));
             let primitive_topology = get_primitive_topology(primitive.mode())?;
             let mut mesh = Mesh::new(primitive_topology);
@@ -50,7 +100,12 @@ fn load_meshs(gltf:&ImportData,mesh_assets:&mut Assets<Mesh>) -> Result<Vec<Gltf
             };
             mesh.build();
             let mesh_handle = mesh_assets.add(mesh);
-            primitives.push(GltfPrimitive { mesh: mesh_handle });
+
+            let material = primitive.material().index().and_then(|idx| materials.get(idx)).map(|v|v.clone());
+            primitives.push(GltfPrimitive { 
+                mesh: mesh_handle ,
+                material
+            });
         }
         meshs.push(GltfMesh { primitives });
     }
