@@ -8,3 +8,5 @@ edition = "2018"
 gltf = "0.16.0"
 seija-render = {path = "../seija-render"}
 seija-asset = {path = "../seija-asset"}
+seija-transform = {path = "../seija-transform"}
+glam = "0.17.1"

@@ -1,9 +1,9 @@
 use std::{path::Path, sync::Arc};
 
-use crate::{GltfError, asset::{GltfAsset, GltfMaterial, GltfMesh, GltfPrimitive}};
-use gltf::{Material};
+use crate::{GltfError, asset::{GltfAsset, GltfMaterial, GltfMesh, GltfNode, GltfPrimitive, GltfScene, NodeIndex}};
 use seija_asset::{Assets, Handle};
-use seija_render::{resource::{Indices, Mesh,Texture, MeshAttributeType, VertexAttributeValues}, wgpu::{PrimitiveTopology}};
+use seija_render::{wgpu,resource::{Indices, Mesh,Texture, MeshAttributeType, VertexAttributeValues}, wgpu::{PrimitiveTopology}};
+use seija_transform::Transform;
 
 type ImportData = (gltf::Document, Vec<gltf::buffer::Data>, Vec<gltf::image::Data>);
 
@@ -13,30 +13,76 @@ pub fn load_gltf<P>(path:P,mesh_assets:&mut Assets<Mesh>,texture_assets:&mut Ass
     let textures = load_textures(&import_data,path,texture_assets)?;
     let materials = load_materials(&import_data,&textures)?;
     let meshs = load_meshs(&import_data,mesh_assets,&materials)?;
-  
+    let mut nodes = load_nodes(&import_data)?;
+    let scenes = load_scenes(&import_data,&mut nodes)?;
+    
     Ok(GltfAsset {
+        scenes,
         meshs,
         textures,
         materials
     })
 }
 
+fn load_nodes(gltf:&ImportData) -> Result<Vec<GltfNode>,GltfError> {
+    let mut nodes:Vec<GltfNode> = vec![];
+    for node in gltf.0.nodes() {
+       let mesh = node.mesh().map(|m| m.index());
+       let transform = match node.transform() {
+           gltf::scene::Transform::Matrix {matrix} => {
+             Transform::from_matrix(glam::Mat4::from_cols_array_2d(&matrix))
+            },
+           gltf::scene::Transform::Decomposed {translation,scale,rotation} => {
+             Transform::new(glam::Vec3::from(translation), glam::Quat::from_array(rotation), glam::Vec3::from(scale))
+           }
+       };
+       nodes.push(GltfNode {
+           mesh, 
+           children:vec![],
+           transform
+       });
+    }
+    Ok(nodes)
+}
+
+fn load_scenes(gltf:&ImportData,nodes:&mut Vec<GltfNode>) -> Result<Vec<GltfScene>,GltfError> {
+    let mut scenes = vec![];
+    for scene in gltf.0.scenes() {
+        let node_indexs = scene.nodes().map(|n| n.index() ).collect();
+        scenes.push(GltfScene { nodes:node_indexs });
+        for node in scene.nodes() {
+            load_node(&node,nodes);
+        }
+    }
+    Ok(scenes)
+}
+
+fn load_node(node:&gltf::Node,nodes:&mut Vec<GltfNode>) {
+    let mut childrens:Vec<NodeIndex> = vec![];
+    for child in node.children() {
+        load_node(&child, nodes);
+        childrens.push(child.index());
+    }
+    nodes[node.index()].children = childrens;
+}
+
 fn load_textures(gltf:&ImportData,path:&Path,texture_assets:&mut Assets<Texture>) -> Result<Vec<Handle<Texture>>,GltfError> {
     let mut textures:Vec<Handle<Texture>> = vec![];
-    for texture in gltf.0.textures() {
-        let source = texture.source().source();
+    for json_texture in gltf.0.textures() {
+        let source = json_texture.source().source();
         match source {
-            gltf::image::Source::View { view, mime_type } => {
+            gltf::image::Source::View { view, mime_type:_ } => {
                 let start = view.offset() as usize;
                 let end = (view.offset() + view.length()) as usize;
                 let buffer = &gltf.1[view.buffer().index()][start..end];
                 let texture = Texture::from_bytes(buffer).map_err(|_| GltfError::LoadImageError)?;
                 textures.push(texture_assets.add(texture));
             },
-            gltf::image::Source::Uri { uri, mime_type } => {
+            gltf::image::Source::Uri { uri, mime_type:_ } => {
                 let texture_path = path.parent().map(|p| p.join(uri)).ok_or(GltfError::LoadImageError)?;
                 let bytes = std::fs::read(texture_path).map_err(|_| GltfError::LoadImageError)?;
-                let texture = Texture::from_bytes(&bytes).map_err(|_| GltfError::LoadImageError)?;
+                let mut texture = Texture::from_bytes(&bytes).map_err(|_| GltfError::LoadImageError)?;
+                texture.sampler = get_texture_sampler(&json_texture);
                 textures.push(texture_assets.add(texture));
             }
         }
@@ -121,5 +167,50 @@ fn get_primitive_topology(mode: gltf::mesh::Mode) -> Result<PrimitiveTopology, G
         gltf::mesh::Mode::Triangles => Ok(PrimitiveTopology::TriangleList),
         gltf::mesh::Mode::TriangleStrip => Ok(PrimitiveTopology::TriangleStrip),
         mode => Err(GltfError::UnsupportedPrimitive(mode)),
+    }
+}
+
+fn get_texture_sampler(texture: &gltf::Texture) -> wgpu::SamplerDescriptor<'static>  {
+    let gltf_sampler = texture.sampler();
+    
+    wgpu::SamplerDescriptor { 
+        label: None, 
+        address_mode_u: texture_address_mode(&gltf_sampler.wrap_s()), 
+        address_mode_v: texture_address_mode(&gltf_sampler.wrap_t()), 
+        mag_filter: gltf_sampler.mag_filter().map(|mf| match mf {
+            gltf::texture::MagFilter::Nearest => wgpu::FilterMode::Nearest,
+            gltf::texture::MagFilter::Linear =>  wgpu::FilterMode::Linear,
+        }).unwrap_or(wgpu::FilterMode::Nearest ), 
+        min_filter: gltf_sampler
+        .min_filter()
+        .map(|mf| match mf {
+              gltf::texture::MinFilter::Nearest
+            | gltf::texture::MinFilter::NearestMipmapNearest
+            | gltf::texture::MinFilter::NearestMipmapLinear => wgpu::FilterMode::Nearest,
+              gltf::texture::MinFilter::Linear
+            | gltf::texture::MinFilter::LinearMipmapNearest
+            | gltf::texture::MinFilter::LinearMipmapLinear => wgpu::FilterMode::Linear,
+        }).unwrap_or(wgpu::FilterMode::Linear), 
+        mipmap_filter:  gltf_sampler
+        .min_filter()
+        .map(|mf| match mf {
+              gltf::texture::MinFilter::Nearest
+            | gltf::texture::MinFilter::Linear
+            | gltf::texture::MinFilter::NearestMipmapNearest
+            | gltf::texture::MinFilter::LinearMipmapNearest => wgpu::FilterMode::Nearest,
+            gltf::texture::MinFilter::NearestMipmapLinear | gltf::texture::MinFilter::LinearMipmapLinear => {
+                wgpu::FilterMode::Linear
+            }
+        })
+        .unwrap_or(wgpu::FilterMode::Nearest),
+        ..Default::default()
+    }
+}
+
+fn texture_address_mode(gltf_address_mode: &gltf::texture::WrappingMode) -> wgpu::AddressMode {
+    match gltf_address_mode {
+        gltf::texture::WrappingMode::ClampToEdge => wgpu::AddressMode::ClampToEdge,
+        gltf::texture::WrappingMode::Repeat => wgpu::AddressMode::Repeat,
+        gltf::texture::WrappingMode::MirroredRepeat => wgpu::AddressMode::MirrorRepeat,
     }
 }

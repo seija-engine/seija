@@ -30,7 +30,7 @@ pub struct  RootComponent {
 }
 
 fn on_start_up(mut commands:Commands,mut meshs:ResMut<Assets<Mesh>>,storage:Res<MaterialStorage>,mut textures:ResMut<Assets<Texture>>) {
-    let gltf_asset = load_gltf("res/gltf/Fox/glTF/Fox.gltf", &mut meshs,&mut textures).unwrap();
+    let gltf_asset = load_gltf("res/gltf/Fox/glTF-Binary/Fox.glb", &mut meshs,&mut textures).unwrap();
     let first_primtives = &gltf_asset.first_mesh().primitives[0];
     let gltf_mesh = first_primtives.mesh.clone_weak();
     let gltf_texture = first_primtives.material.as_ref().unwrap().base_color_texture.as_ref().unwrap().clone_weak();

@@ -52,7 +52,7 @@ impl Default for TransformMatrix {
 }
 
 
-#[derive(Default,PartialEq,Clone)]
+#[derive(Default,PartialEq,Clone,Debug)]
 pub struct Transform {
     pub local:TransformMatrix,
     pub(crate) global:TransformMatrix
@@ -61,7 +61,19 @@ pub struct Transform {
 impl Transform {
     pub fn global(&self) -> &TransformMatrix {
         &self.global
-    }   
+    }
+
+    pub fn from_matrix(matrix:Mat4) -> Transform {
+        let (scale, rotation, translation) = matrix.to_scale_rotation_translation();
+        Transform::new(translation, rotation, scale)
+    }
+
+    pub fn new(position:Vec3,rotation:Quat,scale:Vec3) -> Transform {
+        Transform {
+            local: TransformMatrix {scale,rotation,position },
+            global:TransformMatrix::default()
+        }
+    }
 }
 
 

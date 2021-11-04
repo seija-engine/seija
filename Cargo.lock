@@ -1931,9 +1931,11 @@ dependencies = [
 name = "seija-gltf"
 version = "0.1.0"
 dependencies = [
+ "glam",
  "gltf",
  "seija-asset",
  "seija-render",
+ "seija-transform",
 ]
 
 [[package]]
