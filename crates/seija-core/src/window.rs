@@ -61,8 +61,8 @@ pub struct WindowConfig {
 impl Default for WindowConfig {
     fn default() -> WindowConfig {
         WindowConfig { 
-            width: 640f32, 
-            height: 480f32, 
+            width: 1024f32, 
+            height: 768f32, 
             title: String::from("seija"), 
             mode: WindowMode::Windowed,
             vsync:false,

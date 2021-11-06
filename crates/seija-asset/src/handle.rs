@@ -80,6 +80,16 @@ impl<T: Asset> Drop for Handle<T> {
     }
 }
 
+impl<T:Asset> Clone for Handle<T> {
+    fn clone(&self) -> Self {
+        self.ref_sender.as_ref().map(|sender| {
+            sender.send(RefEvent::Increment(self.id)).unwrap();
+        });
+
+        Self { id: self.id.clone(), ref_sender: self.ref_sender.clone(), marker: PhantomData }
+    }
+}
+
 
 #[derive(Debug,PartialEq, Eq,Hash,Clone, Copy)]
 pub struct HandleUntyped {

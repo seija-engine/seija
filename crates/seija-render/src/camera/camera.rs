@@ -17,6 +17,7 @@ pub struct Camera {
      }
  }
 
+ #[derive(Debug)]
 pub enum Projection {
     Ortho(Orthographic),
     Perspective(Perspective)
@@ -30,7 +31,7 @@ impl Projection {
         }
     }
 }
-
+#[derive(Debug)]
 pub struct Orthographic {
     pub left: f32,
     pub right: f32,
@@ -61,7 +62,7 @@ impl Orthographic {
 
 
 
-
+#[derive(Debug)]
 pub struct Perspective {
     pub fov: f32,
     pub aspect_ratio: f32,

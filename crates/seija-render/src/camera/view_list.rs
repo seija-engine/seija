@@ -72,11 +72,14 @@ impl ViewEntity {
 pub(crate) fn view_list_system(mut camera_query: Query<(&mut Camera,&Transform)>,
                                view_query:Query<(Entity,&Transform,&Handle<Material>)>,
                                mat_storage:Res<MaterialStorage>) {
+   
     for (mut camera,camera_trans) in camera_query.iter_mut() {
         camera.view_list.clear();
         let mats = mat_storage.mateials.read();
         let camera_position = camera_trans.global().position;
+       
         for (entity, trans, matid) in view_query.iter() {
+           
             let position = trans.global().position;
             let dis_order = (camera_position - position).length_squared();
             let mat = mats.get(&matid.id).unwrap();

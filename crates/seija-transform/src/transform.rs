@@ -63,9 +63,20 @@ impl Transform {
         &self.global
     }
 
+    pub fn set_global(&mut self,mat:TransformMatrix) {
+        self.global = mat
+    }
+
     pub fn from_matrix(matrix:Mat4) -> Transform {
         let (scale, rotation, translation) = matrix.to_scale_rotation_translation();
         Transform::new(translation, rotation, scale)
+    }
+
+    pub fn from_t_matrix(t:TransformMatrix) -> Transform {
+        Transform {
+            local:t,
+            global:TransformMatrix::default()
+        }
     }
 
     pub fn new(position:Vec3,rotation:Quat,scale:Vec3) -> Transform {

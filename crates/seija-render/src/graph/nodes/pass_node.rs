@@ -63,15 +63,19 @@ impl INode for PassNode {
             
             for (e,camera) in camera_query.iter(world) {
                 if let Some(camera_buffer)  = ctx.camera_state.cameras_buffer.buffers.get(&e.id()) {
+                  
                     for view_entites in camera.view_list.values.iter() {
+                       
                         for ve in view_entites.value.iter() {
                             if let Ok((re,hmesh,hmat))  = render_query.get(world, ve.entity) {
                                 
                                 let maybe_mesh = meshs.get(&hmesh.id);
                                 let mat = mats.get(&hmat.id).unwrap();
+                
                                 if !mat.is_ready(&ctx.resources) || maybe_mesh.is_none() {
                                     continue;
                                 }
+                               
                                 let mesh = maybe_mesh.unwrap();
                                 if let Some(pipes) = pipeline_cahce.get_pipeline(&mat.def.name, mesh) {
                                     if let Some(mesh_buffer_id)  = ctx.resources.get_render_resource(&hmesh.id, 0) {
@@ -93,9 +97,11 @@ impl INode for PassNode {
                                                     let idx_buffer = ctx.resources.get_buffer_by_resid(&idx_id).unwrap();
                                                     render_pass.set_index_buffer(idx_buffer.slice(0..), mesh.index_format().unwrap());
                                                     render_pass.set_pipeline(pipe);
+                                                   
                                                     render_pass.draw_indexed(mesh.indices_range().unwrap(),0, 0..1);
                                                 } else {
                                                     render_pass.set_pipeline(pipe);
+                                                  
                                                     render_pass.draw(0..mesh.count_vertices() as u32, 0..1);
                                                 }
                                             }

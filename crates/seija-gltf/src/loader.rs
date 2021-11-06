@@ -1,9 +1,9 @@
 use std::{path::Path, sync::Arc};
 
-use crate::{GltfError, asset::{GltfAsset, GltfMaterial, GltfMesh, GltfNode, GltfPrimitive, GltfScene, NodeIndex}};
+use crate::{GltfError, asset::{GltfAsset, GltfCamera, GltfMaterial, GltfMesh, GltfNode, GltfPrimitive, GltfScene, NodeIndex}};
 use seija_asset::{Assets, Handle};
-use seija_render::{wgpu,resource::{Indices, Mesh,Texture, MeshAttributeType, VertexAttributeValues}, wgpu::{PrimitiveTopology}};
-use seija_transform::Transform;
+use seija_render::{camera::camera::{Orthographic, Perspective, Projection}, resource::{Indices, Mesh,Texture, MeshAttributeType, VertexAttributeValues}, wgpu, wgpu::{PrimitiveTopology}};
+use seija_transform::{Transform, TransformMatrix};
 
 type ImportData = (gltf::Document, Vec<gltf::buffer::Data>, Vec<gltf::image::Data>);
 
@@ -15,12 +15,13 @@ pub fn load_gltf<P>(path:P,mesh_assets:&mut Assets<Mesh>,texture_assets:&mut Ass
     let meshs = load_meshs(&import_data,mesh_assets,&materials)?;
     let mut nodes = load_nodes(&import_data)?;
     let scenes = load_scenes(&import_data,&mut nodes)?;
-    
+
     Ok(GltfAsset {
         scenes,
         meshs,
         textures,
-        materials
+        materials,
+        nodes
     })
 }
 
@@ -36,7 +37,33 @@ fn load_nodes(gltf:&ImportData) -> Result<Vec<GltfNode>,GltfError> {
              Transform::new(glam::Vec3::from(translation), glam::Quat::from_array(rotation), glam::Vec3::from(scale))
            }
        };
+       let camera = if let Some(camera) = node.camera() {
+            Some(match camera.projection() {
+                gltf::camera::Projection::Orthographic(o) => {
+                    let xmag = o.xmag();
+                    let ymag = o.ymag();
+                    Projection::Ortho(Orthographic {
+                        left:-xmag,
+                        right: xmag,
+                        top: ymag,
+                        bottom: -ymag,
+                        far: o.zfar(),
+                        near: o.znear(),
+                        ..Default::default()
+                    })
+                },
+                gltf::camera::Projection::Perspective(p) => {
+                    Projection::Perspective(Perspective {
+                        fov: p.yfov(),
+                        near: p.znear(),
+                        ..Default::default()
+                    })
+                }
+            })
+       } else { None }.map(|p| GltfCamera {projection:p});
+
        nodes.push(GltfNode {
+           camera,
            mesh, 
            children:vec![],
            transform
@@ -47,20 +74,23 @@ fn load_nodes(gltf:&ImportData) -> Result<Vec<GltfNode>,GltfError> {
 
 fn load_scenes(gltf:&ImportData,nodes:&mut Vec<GltfNode>) -> Result<Vec<GltfScene>,GltfError> {
     let mut scenes = vec![];
+   
     for scene in gltf.0.scenes() {
         let node_indexs = scene.nodes().map(|n| n.index() ).collect();
         scenes.push(GltfScene { nodes:node_indexs });
         for node in scene.nodes() {
-            load_node(&node,nodes);
+            load_node(&node,nodes,&TransformMatrix::default());
         }
     }
     Ok(scenes)
 }
 
-fn load_node(node:&gltf::Node,nodes:&mut Vec<GltfNode>) {
+fn load_node(node:&gltf::Node,nodes:&mut Vec<GltfNode>,p_t:&TransformMatrix) {
+    let cur_mat = p_t.mul_transform(&nodes[node.index()].transform.local);
+    nodes[node.index()].transform.set_global(cur_mat.clone());
     let mut childrens:Vec<NodeIndex> = vec![];
     for child in node.children() {
-        load_node(&child, nodes);
+        load_node(&child, nodes,&cur_mat);
         childrens.push(child.index());
     }
     nodes[node.index()].children = childrens;
@@ -95,7 +125,7 @@ fn load_materials(gltf:&ImportData,textures:&Vec<Handle<Texture>>) -> Result<Vec
     for material in gltf.0.materials() {
         let pbr = material.pbr_metallic_roughness();
         let base_color_texture = if let Some(info) = pbr.base_color_texture() {
-           Some(textures[info.texture().index()].clone_weak())
+           Some(textures[info.texture().index()].clone())
         } else { None };
         
 
@@ -112,7 +142,7 @@ fn load_meshs(gltf:&ImportData,mesh_assets:&mut Assets<Mesh>,materials:&Vec<Arc<
     for mesh in gltf.0.meshes() {
         let mut primitives:Vec<GltfPrimitive> = vec![];
         for primitive in mesh.primitives() {
-            
+            //dbg!(&primitive);
             let reader = primitive.reader(|buffer| Some(&gltf.1[buffer.index()]));
             let primitive_topology = get_primitive_topology(primitive.mode())?;
             let mut mesh = Mesh::new(primitive_topology);

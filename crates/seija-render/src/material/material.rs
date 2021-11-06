@@ -92,6 +92,7 @@ impl TextureProps {
     }
 
     pub fn is_ready(&self,resources:&RenderResources) -> bool {
+        if self.textures.len() == 0 { return  true; }
         for tex in self.textures.iter() {
             if let Some(texture) = tex {
                 if resources.get_render_resource(&texture.id, 0).is_none() {
@@ -108,7 +109,7 @@ impl TextureProps {
         if self.textures.is_empty() {
             return;
         }
-        if self.is_dirty {
+        if self.is_dirty && self.textures.len() > 0 {
             let mut bind_group_builder = BindGroupBuilder::new();
             for texture in self.textures.iter() {
                 bind_group_builder.add_texture(texture.as_ref().unwrap().clone_weak());

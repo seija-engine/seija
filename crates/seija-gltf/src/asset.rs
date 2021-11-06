@@ -1,7 +1,7 @@
 use std::{rc::Rc, sync::Arc};
 use seija_transform::{Transform};
 use seija_asset::Handle;
-use seija_render::resource::{Mesh, Texture};
+use seija_render::{camera::camera::Projection, resource::{Mesh, Texture}};
 
 pub type NodeIndex = usize;
 pub type MeshIndex = usize;
@@ -11,7 +11,8 @@ pub struct GltfAsset {
     pub scenes:Vec<GltfScene>,
     pub meshs:Vec<GltfMesh>,
     pub textures:Vec<Handle<Texture>>,
-    pub materials:Vec<Arc<GltfMaterial>>
+    pub materials:Vec<Arc<GltfMaterial>>,
+    pub nodes:Vec<GltfNode>,
 }
 
 impl GltfAsset {
@@ -27,9 +28,15 @@ pub struct GltfScene {
 
 #[derive(Debug)]
 pub struct GltfNode {
+    pub camera:Option<GltfCamera>,
     pub children:Vec<NodeIndex>,
     pub mesh:Option<MeshIndex>,
     pub transform:Transform
+}
+
+#[derive(Debug)]
+pub struct GltfCamera {
+   pub projection:Projection
 }
 
 #[derive(Debug)]

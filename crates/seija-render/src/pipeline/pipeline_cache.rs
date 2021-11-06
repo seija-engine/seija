@@ -145,8 +145,11 @@ impl PipelineCache {
         let trans_layout = &ctx.transform_buffer.trans_layout;
         let material_layout = &ctx.material_sys.material_layout;
         let mut layouts = vec![camera_layout,trans_layout,material_layout];
-        if let Some(layout) = ctx.material_sys.material_texture_layouts.get(&mat_def.name) {
-            layouts.push(layout);
+
+        if mat_def.texture_idxs.len() > 0 {
+            if let Some(layout) = ctx.material_sys.material_texture_layouts.get(&mat_def.name) {
+                layouts.push(layout);
+            }
         }
      
         let layout_desc = PipelineLayoutDescriptor {

@@ -7,10 +7,12 @@ use seija_core::CoreStage;
 use seija_core::StartupStage;
 
 pub mod hierarchy;
+mod children_command;
 mod parent;
 mod transform;
 
-pub use  transform::Transform;
+pub use  transform::{Transform,TransformMatrix};
+pub use  children_command::{PushChildren,BuildChildren};
 
 
 #[derive(Debug, Hash, PartialEq, Eq, Clone, SystemLabel)]

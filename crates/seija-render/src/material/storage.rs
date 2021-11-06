@@ -53,6 +53,18 @@ impl MaterialStorage {
         None
     }
 
+    pub fn create_material_with(&self,name:&str,f:impl Fn(&mut Material)) -> Option<Handle<Material>> {
+        let mut name_map = self.name_map.write();
+        if let Some(info) = name_map.get_mut(name) {
+            let mut mat = Material::from_def(info.def.clone());
+            f(&mut mat);
+            let handle = self.mateials.write().add(mat);
+            info.mat_count += 1;
+            return Some(handle);
+        }
+        None
+    }
+
     
 }
 
