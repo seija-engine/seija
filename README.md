@@ -12,11 +12,12 @@
 
   2. 完成gltf模型渲染  
         a. <del> 完成Mesh加载和测试渲染 </del>  
-        b. <del> 完成材质Scene和Node的加载 </del>
+        b. <del> 完成材质Scene和Node的加载 </del>  
         c. <del> 根据gltf文件创建渲染对象(根据Scene,Node,Mesh创建对应元素) </del>
 
   3. 完成前向渲染的顶点光照  
         a. 先实现一个环境贴图
+        b. 实现基础光源的数据结构和Buffer传递
   
   4. 实现延迟渲染的渲染路径
   
