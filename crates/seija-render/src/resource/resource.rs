@@ -233,6 +233,8 @@ impl RenderResources {
 
         self.textures.insert(texture_id, texture);
         self.texture_views.insert(texture_id, texture_view);
+        
+       
         texture_id
     }
 
@@ -247,7 +249,11 @@ impl RenderResources {
         let width = texture.size.width as usize;
         let aligned_width = Self::get_aligned_texture_size(width);
         let format_size:usize = texture.format.describe().block_size as usize;
-        let mut aligned_data = vec![0;format_size * aligned_width * texture.size.height as usize];
+       
+        let mut aligned_data = vec![0;format_size * 
+                                              aligned_width * 
+                                              texture.size.height as usize * 
+                                              texture.size.depth_or_array_layers as usize];
 
         texture.data.chunks_exact(format_size * width)
                     .enumerate()
@@ -260,7 +266,10 @@ impl RenderResources {
         let texture_buffer = self.create_buffer_with_data(wgpu::BufferUsage::COPY_SRC,&aligned_data);
         self.copy_buffer_to_texture(command, texture_buffer, 0, 
                                     NonZeroU32::new((format_size * aligned_width) as u32).unwrap(), 
-                                    texture_id, wgpu::Origin3d::default(), 0, texture.size)
+                                    texture_id, wgpu::Origin3d::default(), 0, texture.size,
+                                   if texture.size.depth_or_array_layers > 1 {
+                                      Some(NonZeroU32::new(texture.size.height).unwrap())
+                                   } else { None })
     }
 
     pub fn copy_buffer_to_texture(&self,
@@ -271,7 +280,8 @@ impl RenderResources {
                                   dest_texture: &TextureId,
                                   dest_origin:wgpu::Origin3d,
                                   dest_mip_level: u32,
-                                  size: wgpu::Extent3d) {
+                                  size: wgpu::Extent3d,
+                                  rows_per_image:Option<NonZeroU32>) {
         let source = self.buffers.get(&source_buffer).unwrap();
         let dest = self.textures.get(&dest_texture).unwrap();
         command.copy_buffer_to_texture(
@@ -280,7 +290,7 @@ impl RenderResources {
                 layout: wgpu::ImageDataLayout { 
                     offset: source_offset, 
                     bytes_per_row: Some(source_bytes_per_row), 
-                    rows_per_image: None
+                    rows_per_image
                 }
             },wgpu::ImageCopyTexture { 
                 texture: dest, 

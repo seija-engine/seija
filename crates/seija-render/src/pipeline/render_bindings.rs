@@ -32,13 +32,13 @@ impl BindGroupLayoutBuilder {
         self.layout_entrys.push(entry);
     }
 
-    pub fn add_texture(&mut self) {
+    pub fn add_texture(&mut self,is_cube_map:bool) {
         let texture_entry = wgpu::BindGroupLayoutEntry {
             binding:self.layout_entrys.len() as u32,
             visibility:ShaderStage::FRAGMENT,
             ty:wgpu::BindingType::Texture {
                 sample_type:wgpu::TextureSampleType::Float { filterable: true },
-                view_dimension:wgpu::TextureViewDimension::D2,
+                view_dimension:if is_cube_map {wgpu::TextureViewDimension::Cube } else { wgpu::TextureViewDimension::D2 },
                 multisampled:false
             },
             count:None

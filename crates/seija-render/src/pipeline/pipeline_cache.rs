@@ -63,6 +63,8 @@ impl PipelineCache {
         for pass in  mat_def.pass_list.iter() {
            if let Some(pipe) = self.compile_pipeline(mesh,pass, &prim_state,ctx,mat_def) {
                pipes.push(pipe);
+           } else {
+               log::error!("material compile pipeline fail {}",&mat_def.name);
            }
         }
         RenderPipelines::new(pipes)
@@ -79,27 +81,22 @@ impl PipelineCache {
         cur_primstate.polygon_mode = pass.polygon_mode.0;
         cur_primstate.conservative = pass.conservative;
         
-       let depth_stencil = if pass.z_write {
-           Some(DepthStencilState {
-            format: wgpu::TextureFormat::Depth32Float,
-            depth_write_enabled: pass.z_write,
-            depth_compare: (&pass.z_test).into(),
-            stencil: StencilState {
-                front: wgpu::StencilFaceState::IGNORE,
-                back: wgpu::StencilFaceState::IGNORE,
-                read_mask: 0,
-                write_mask: 0,
-            },
-            bias: wgpu::DepthBiasState {
-                constant: 0,
-                slope_scale: 0.0,
-                clamp: 0.0,
-            }
-        })
-       } else { 
-           None
-       };
-
+       let depth_stencil = Some(DepthStencilState {
+        format: wgpu::TextureFormat::Depth32Float,
+        depth_write_enabled: pass.z_write,
+        depth_compare: (&pass.z_test).into(),
+        stencil: StencilState {
+            front: wgpu::StencilFaceState::IGNORE,
+            back: wgpu::StencilFaceState::IGNORE,
+            read_mask: 0,
+            write_mask: 0,
+        },
+        bias: wgpu::DepthBiasState {
+            constant: 0,
+            slope_scale: 0.0,
+            clamp: 0.0,
+        }
+       });
        let vert_shader = Self::read_shader_module(&pass.vs_path,&ctx.device)?;
        let frag_shader = Self::read_shader_module(&pass.fs_path,&ctx.device)?;
 

@@ -17,13 +17,14 @@ pub fn pre_start(mut commands:Commands,window:Res<AppWindow>,mats:Res<MaterialSt
     add_camera_3d(&mut commands, &window);
     load_material("res/material/model/model.mat.clj", &mats);
     load_material("res/material/color/model_color.clj", &mats);
+    load_material("res/material/skybox/sky.clj", &mats);
 }
 
 pub fn add_camera_3d(mut commands:&mut Commands,window:&AppWindow) -> Entity {
     let mut root = commands.spawn();
     let mut t = Transform::default();
-    t.local.position = Vec3::new(0f32, 0f32, 0f32);
-    //t.local.rotation = Quat::from_euler(glam::EulerRot::XYZ , 45f32, 45f32, 45f32); 
+    //t.local.position = Vec3::new(0f32, 0f32, f32);
+    //t.local.rotation = Quat::from_euler(glam::EulerRot::XYZ , 0f32, 20f32, 0f32); 
     root.insert(t);
     
     let mut per = Perspective::default();

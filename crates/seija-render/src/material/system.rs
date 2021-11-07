@@ -35,7 +35,10 @@ impl MaterialSystem {
     fn update_material_texture_layout(&mut self,storage:&mut Mut<MaterialStorage>,device:&Device) {
         let name_map_ref = storage.name_map.read();
         for (def_name,mat_def_info) in  name_map_ref.iter() {
-            if self.material_texture_layouts.contains_key(def_name) { continue; }
+            if self.material_texture_layouts.contains_key(def_name) { 
+                continue; 
+            }
+            
             let layout = mat_def_info.def.texture_layout_builder.build(device);
             self.material_texture_layouts.insert(def_name.clone(), layout);
         }

@@ -71,7 +71,8 @@ pub fn read_material_def(vm:&mut EvalRT,file_string:&str) -> Result<MaterialDef,
 
     let prop_value = value.get(":props").ok_or(MaterialDefReadError::InvalidProp)?;
     let buffer_def = UniformBufferDef::try_from(prop_value).map_err(|_| MaterialDefReadError::InvalidProp)?;
-    let (texture_layout_builder,texture_idxs) = read_texture_prop(prop_value).map_err(|_| MaterialDefReadError::InvalidProp)?;
+    let (texture_layout_builder,texture_idxs) = 
+            read_texture_prop(prop_value).map_err(|_| MaterialDefReadError::InvalidProp)?;
     Ok(MaterialDef {
         name:def_name.to_string(),
         order,
@@ -90,10 +91,16 @@ fn read_texture_prop(json_value:&Value) -> Result<(BindGroupLayoutBuilder,HashMa
     for item in arr {
         if let Some(map) = item.as_object() {
             let prop_type = map.get(":type").and_then(|v| v.as_str()).ok_or(())?;
+            let prop_name = map.get(":name").and_then(|v| v.as_str()).ok_or(())?;
             match prop_type {
                 "Texture" => {
-                    let prop_name = map.get(":name").and_then(|v| v.as_str()).ok_or(())?;
-                    texture_layout_builder.add_texture();
+                    texture_layout_builder.add_texture(false);
+                    texture_layout_builder.add_sampler();
+                    texture_idxs.insert(prop_name.to_string(), texture_index);
+                    texture_index += 1;
+                },
+                "CubeMap" => {
+                    texture_layout_builder.add_texture(true);
                     texture_layout_builder.add_sampler();
                     texture_idxs.insert(prop_name.to_string(), texture_index);
                     texture_index += 1;
