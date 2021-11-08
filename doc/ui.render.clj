@@ -33,5 +33,22 @@
 ;    VkVertexInputBindingDescription vertexBuffers[VERTEX_ATTRIBUTE_COUNT];      // 192 bytes
 ;    uint32_t padding1;                                                          // 4 bytes
 ;};  
-; 
+; struct LightsUib {
+    static constexpr utils::StaticString _name{ "LightsUniforms" };
+    math::float4 positionFalloff;     // { float3(pos), 1/falloff^2 }
+    math::half4 color;                // { half3(col),  0           }
+    math::half4 directionIES;         // { half3(dir),  IES index   }
+    math::half2 spotScaleOffset;      // { scale, offset }
+    float intensity;                            // float
+    uint32_t typeShadow;                        // 0x00.ll.ii.ct (t: 0=point, 1=spot, c:contact, ii: index, ll: layer)
+    uint32_t channels;                          // 0x000c00ll (ll: light channels, c: caster)
+    math::float4 reserved;            // 0
+
+    static uint32_t packTypeShadow(uint8_t type, bool contactShadow, uint8_t index, uint8_t layer) noexcept {
+        return (type & 0xF) | (contactShadow ? 0x10 : 0x00) | (index << 8) | (layer << 16);
+    }
+    static uint32_t packChannels(uint8_t lightChannels, bool castShadows) noexcept {
+        return lightChannels | (castShadows ? 0x10000 : 0);
+    }
+};
 ;
