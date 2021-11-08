@@ -1,6 +1,7 @@
 use camera::system::CameraState;
 use camera::{view_list::view_list_system,system::CamerasBuffer};
 use graph::nodes::SwapchainNode;
+use light::LightState;
 use material::MaterialSystem;
 use pipeline::{PipelineCache, update_pipeline_cache};
 use render::{AppRender, Config , RenderGraphContext};
@@ -18,6 +19,8 @@ pub mod camera;
 pub mod graph;
 pub mod resource;
 pub mod pipeline;
+pub mod light;
+
 mod render_context;
 mod render;
 mod memory;
@@ -45,9 +48,10 @@ impl IModule for RenderModule {
         app.schedule.add_stage_before(RenderStage::AfterRender, RenderStage::Render, SystemStage::single(render_system.exclusive_system()));
         app.schedule.add_stage_before(RenderStage::Render, RenderStage::PostRender, SystemStage::parallel());
 
-        
         material::init_material(app);
         resource::init_resource(app);
+        light::init_light(app);
+
         app.add_system(RenderStage::AfterRender, update_pipeline_cache.system());
         app.add_system(CoreStage::PostUpdate, view_list_system.system());
     }
@@ -62,7 +66,8 @@ fn get_render_system(w:&mut World) -> impl FnMut(&mut World) {
         resources:RenderResources::new(app_render.device.clone()),
         camera_state:CameraState::new(&app_render.device),
         transform_buffer:TransformBuffer::new(&app_render.device),
-        material_sys:MaterialSystem::new(&app_render.device)
+        material_sys:MaterialSystem::new(&app_render.device),
+        light_state:LightState::default()
     };
     w.insert_resource(PipelineCache::default());
     app_render.init(w,&mut render_ctx);

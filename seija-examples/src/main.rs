@@ -1,6 +1,9 @@
 mod lib;
 mod sample_gltf;
 mod cube_map;
+mod async_asset;
+
+use async_asset::AsyncAsset;
 use bevy_ecs::prelude::{IntoSystem};
 
 use cube_map::CubeMapTest;
@@ -35,6 +38,9 @@ fn main() {
         },
         "cube_map" => {
             CubeMapTest::run(&mut app)
+        }
+        "async_asset" => {
+            AsyncAsset::run(&mut app);
         }
         _ => { unimplemented!() }
     };

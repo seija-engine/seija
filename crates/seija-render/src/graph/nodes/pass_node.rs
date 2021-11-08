@@ -63,29 +63,20 @@ impl INode for PassNode {
             
             for (e,camera) in camera_query.iter(world) {
                 if let Some(camera_buffer)  = ctx.camera_state.cameras_buffer.buffers.get(&e.id()) {
-                  
                     for view_entites in camera.view_list.values.iter() {
-                       
                         for ve in view_entites.value.iter() {
                             if let Ok((re,hmesh,hmat))  = render_query.get(world, ve.entity) {
-                                
                                 let maybe_mesh = meshs.get(&hmesh.id);
                                 let mat = mats.get(&hmat.id).unwrap();
-                
                                 if !mat.is_ready(&ctx.resources) || maybe_mesh.is_none() {
                                     continue;
                                 }
-                               
                                 let mesh = maybe_mesh.unwrap();
                                 if let Some(pipes) = pipeline_cahce.get_pipeline(&mat.def.name, mesh) {
                                     if let Some(mesh_buffer_id)  = ctx.resources.get_render_resource(&hmesh.id, 0) {
                                         for pipe in pipes.pipelines.iter() {
-                                            
                                             let vert_buffer = ctx.resources.get_buffer_by_resid(&mesh_buffer_id).unwrap();
-                                            
-    
                                             if let Some(trans_info) = ctx.transform_buffer.get_info(&re.id()) {
-                                               
                                                 render_pass.set_bind_group(0, &camera_buffer.bind_group, &[]);
                                                 render_pass.set_bind_group(1, &trans_info.bind_group, &[]);
                                                 render_pass.set_bind_group(2, mat.bind_group.as_ref().unwrap(), &[]);
@@ -104,8 +95,6 @@ impl INode for PassNode {
                                                     render_pass.draw(0..mesh.count_vertices() as u32, 0..1);
                                                 }
                                             }
-                                            
-                                            
                                         }
                                     }
                                 }

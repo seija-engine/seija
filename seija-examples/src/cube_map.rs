@@ -47,7 +47,7 @@ fn on_start(mut commands:Commands,
 
 fn on_update(mut query:Query<(Entity,&Camera,&mut Transform)>) {
     let v:f32 = (std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_millis() % 36000) as f32;
-    for (e,m,mut t) in query.iter_mut() {
+    for (_e,_m,mut t) in query.iter_mut() {
         let r = v * 0.01f32 * 0.0174533f32;
         t.local.position = Vec3::new(400f32, 0f32, 0f32);
         t.local.rotation = Quat::from_euler(glam::EulerRot::XYZ  , 0f32, r, 0f32);

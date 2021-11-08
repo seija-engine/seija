@@ -106,6 +106,7 @@ impl AppRender {
         update_camera(world,ctx);
         ctx.transform_buffer.update(world,&self.device,&mut ctx.resources,ctx.command_encoder.as_mut().unwrap());
         ctx.material_sys.update(world, &ctx.device, ctx.command_encoder.as_mut().unwrap(),&mut ctx.resources);
+        ctx.light_state.update(world);
         graph_ctx.graph.prepare(world);
         for node_id in graph_ctx.graph_iter.nodes.iter() {
             let cur_node = graph_ctx.graph.get_node(node_id).unwrap();
