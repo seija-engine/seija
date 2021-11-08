@@ -97,11 +97,10 @@ impl INode for PassNode {
                                                     let idx_buffer = ctx.resources.get_buffer_by_resid(&idx_id).unwrap();
                                                     render_pass.set_index_buffer(idx_buffer.slice(0..), mesh.index_format().unwrap());
                                                     render_pass.set_pipeline(pipe);
-                                                   
                                                     render_pass.draw_indexed(mesh.indices_range().unwrap(),0, 0..1);
                                                 } else {
                                                     render_pass.set_pipeline(pipe);
-                                                  
+                                                    
                                                     render_pass.draw(0..mesh.count_vertices() as u32, 0..1);
                                                 }
                                             }

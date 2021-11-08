@@ -74,7 +74,7 @@ impl Default for Perspective {
     fn default() -> Self {
         Perspective {
             fov: std::f32::consts::PI / 4.0,
-            near: 1.0,
+            near: 0.001f32,
             far: 1000.0,
             aspect_ratio: 1.0,
         }

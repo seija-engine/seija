@@ -19,8 +19,6 @@ impl CameraState {
     pub fn new(device:&Device) -> CameraState {
         let mut layout_builder = BindGroupLayoutBuilder::new();
         layout_builder.add_uniform(ShaderStage::VERTEX);
-        layout_builder.add_uniform(ShaderStage::VERTEX);
-
 
         CameraState {
             cameras_buffer:CamerasBuffer::default(),
@@ -33,8 +31,7 @@ impl CameraState {
 pub struct CameraBuffer {
     pub bind_group:wgpu::BindGroup,
     pub staging_buffer:Option<BufferId>,
-    pub view_proj:BufferId,
-    pub view:BufferId
+    pub uniform:BufferId
 }
 
 #[derive(Default)]
@@ -46,22 +43,17 @@ pub struct CamerasBuffer {
 impl CamerasBuffer {
     pub fn get_or_create_buffer(&mut self,eid:u32,device:&Device,camera_layout:&Arc<wgpu::BindGroupLayout>,resources:&mut RenderResources) -> &mut CameraBuffer {
         if !self.buffers.contains_key(&eid) {
-            let view_proj = resources.create_buffer(&wgpu::BufferDescriptor {
+            let uniform = resources.create_buffer(&wgpu::BufferDescriptor {
                 label:None,
-                size:MATRIX_SIZE,
+                size:MATRIX_SIZE * 3,
                 usage:BufferUsage::COPY_DST | BufferUsage::UNIFORM,
                 mapped_at_creation:false
             });
-            let view = resources.create_buffer(&wgpu::BufferDescriptor {
-                label:None,
-                size:MATRIX_SIZE,
-                usage:BufferUsage::COPY_DST | BufferUsage::UNIFORM,
-                mapped_at_creation:false
-            });
+            
 
             let mut bind_group_builder = BindGroupBuilder::new();
-            bind_group_builder.add_buffer(view_proj);
-            bind_group_builder.add_buffer(view);
+            bind_group_builder.add_buffer(uniform);
+           
             let bind_group = bind_group_builder.build(camera_layout, device, resources);
 
            
@@ -69,8 +61,7 @@ impl CamerasBuffer {
             self.buffers.insert(eid,CameraBuffer {
                 bind_group,
                 staging_buffer:None,
-                view_proj,
-                view
+                uniform
             });
         }
 
@@ -91,7 +82,7 @@ pub(crate) fn update_camera(world:&mut World,ctx:&mut RenderContext) {
         } else {
             let staging_buffer = ctx.resources.create_buffer(&wgpu::BufferDescriptor {
                 label:None,
-                size:MATRIX_SIZE * 2,
+                size:MATRIX_SIZE * 3,
                 usage:BufferUsage::COPY_SRC | BufferUsage::MAP_WRITE,
                 mapped_at_creation:true
             });
@@ -102,16 +93,18 @@ pub(crate) fn update_camera(world:&mut World,ctx:&mut RenderContext) {
         
         let staging_buffer = buffer.staging_buffer.unwrap();
         {
-            let view_proj_matrix = t.global().matrix().inverse() * camera.projection.matrix();
-            let view_matrix = t.global().matrix();
-
-            ctx.resources.write_mapped_buffer(&staging_buffer, 0..(MATRIX_SIZE * 2),&mut |bytes,_| {
+            let proj = camera.projection.matrix();
+            let view_proj_matrix = t.global().matrix().inverse() * proj;
+            let view_matrix = t.global().matrix().inverse();
+           
+            ctx.resources.write_mapped_buffer(&staging_buffer, 0..(MATRIX_SIZE * 3),&mut |bytes,_| {
                 bytes[0..crate::MATRIX_SIZE as usize].copy_from_slice(view_proj_matrix.to_cols_array_2d().as_bytes());
                 bytes[(MATRIX_SIZE as usize) ..(MATRIX_SIZE*2) as usize].copy_from_slice(view_matrix.to_cols_array_2d().as_bytes());
+                bytes[(MATRIX_SIZE*2) as usize .. (MATRIX_SIZE*3) as usize].clone_from_slice(proj.to_cols_array_2d().as_bytes());
             });
             
-            ctx.resources.copy_buffer_to_buffer(command, &staging_buffer,0, &buffer.view_proj,0, MATRIX_SIZE);
-            ctx.resources.copy_buffer_to_buffer(command, &staging_buffer,MATRIX_SIZE, &buffer.view,0, MATRIX_SIZE);
+            ctx.resources.copy_buffer_to_buffer(command, &staging_buffer,0, &buffer.uniform,0, MATRIX_SIZE * 3);
+           
         }
         
         

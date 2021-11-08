@@ -6,7 +6,7 @@ use seija_asset::{Asset, Assets, Handle, HandleId};
 use seija_core::{CoreStage, StartupStage, window::AppWindow};
 use seija_examples::IExamples;
 use seija_gltf::{create_gltf, load_gltf};
-use seija_render::{material::MaterialStorage, resource::{CubeMapBuilder, Mesh, Texture, shape::Cube}};
+use seija_render::{camera::camera::Camera, material::MaterialStorage, resource::{CubeMapBuilder, Mesh, Texture, shape::{Cube, SkyBox}}};
 use seija_transform::Transform;
 
 pub struct CubeMapTest;
@@ -35,39 +35,21 @@ fn on_start(mut commands:Commands,
     let texture_handle = HandleId::random::<Texture>();
     textures.set_untracked(texture_handle,texture.unwrap());
 
-    let mesh = Cube::new(2f32).into();
-    let cube_mesh = meshs.add(mesh);
-    let mut t = Transform::default();
-    t.local.position = Vec3::new(0f32,0f32,-1f32);
-    t.local.rotation = Quat::from_euler(glam::EulerRot::XYZ , 0f32, 0.65f32, 0f32);
-    
+    let sky:Mesh = SkyBox.into();
+    let cube_mesh = meshs.add(sky);
+    let t = Transform::default();
     let mat_handle = materials.create_material_with("sky-box", |mat| {
         mat.texture_props.set("mainTexture", Handle::weak(texture_handle));
     }).unwrap();
     commands.spawn().insert(t).insert(cube_mesh).insert(mat_handle);
-
-    let fox_asset = load_gltf("res/gltf/Fox/glTF-Binary/Fox.glb",&mut meshs,
-                                 &mut textures).unwrap();
-   
-     create_gltf(
-  Vec3::new(0f32, -50f32, -300f32),
-      &fox_asset, &mut commands,&|gltf_material| {
-      if let Some(texture) = gltf_material.base_color_texture.as_ref() {
-         materials.create_material_with("model",|mat| {
-            mat.texture_props.set("mainTexture", texture.clone());
-         })
-      } else {
-         materials.create_material_with("model-color",|mat| {
-            mat.props.set_float4("color", Vec4::from(gltf_material.base_color), 0);
-         }) 
-      }
-   });
+ 
 }
 
-fn on_update(mut query:Query<(Entity,&Handle<Mesh>,&mut Transform)>) {
+fn on_update(mut query:Query<(Entity,&Camera,&mut Transform)>) {
     let v:f32 = (std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_millis() % 36000) as f32;
     for (e,m,mut t) in query.iter_mut() {
         let r = v * 0.01f32 * 0.0174533f32;
-        t.local.rotation = Quat::from_euler(glam::EulerRot::XYZ  , 0f32, r , 0f32);
+        t.local.position = Vec3::new(400f32, 0f32, 0f32);
+        t.local.rotation = Quat::from_euler(glam::EulerRot::XYZ  , 0f32, r, 0f32);
     }
  }
