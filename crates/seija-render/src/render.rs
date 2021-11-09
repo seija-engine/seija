@@ -47,12 +47,14 @@ pub struct Config {
 
 impl Default for Config {
     fn default() -> Self {
+        let mut limits:wgpu::Limits = Default::default();
+        limits.max_bind_groups = 8;
         Self {
             device_label: None,
             backed: wgpu::BackendBit::VULKAN,
             power_pref: wgpu::PowerPreference::HighPerformance,
             features: Default::default(),
-            limits: Default::default(),
+            limits,
         }
     }
 }
@@ -106,7 +108,7 @@ impl AppRender {
         update_camera(world,ctx);
         ctx.transform_buffer.update(world,&self.device,&mut ctx.resources,ctx.command_encoder.as_mut().unwrap());
         ctx.material_sys.update(world, &ctx.device, ctx.command_encoder.as_mut().unwrap(),&mut ctx.resources);
-        ctx.light_state.update(world);
+        ctx.light_state.update(world,&mut ctx.resources,ctx.command_encoder.as_mut().unwrap(),&ctx.device);
         graph_ctx.graph.prepare(world);
         for node_id in graph_ctx.graph_iter.nodes.iter() {
             let cur_node = graph_ctx.graph.get_node(node_id).unwrap();

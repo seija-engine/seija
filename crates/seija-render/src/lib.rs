@@ -67,7 +67,7 @@ fn get_render_system(w:&mut World) -> impl FnMut(&mut World) {
         camera_state:CameraState::new(&app_render.device),
         transform_buffer:TransformBuffer::new(&app_render.device),
         material_sys:MaterialSystem::new(&app_render.device),
-        light_state:LightState::default()
+        light_state:LightState::new(&app_render.device)
     };
     w.insert_resource(PipelineCache::default());
     app_render.init(w,&mut render_ctx);

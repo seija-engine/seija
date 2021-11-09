@@ -148,6 +148,10 @@ impl PipelineCache {
                 layouts.push(layout);
             }
         }
+        
+        if mat_def.is_light {
+            layouts.push(&ctx.light_state.layout);
+        }
      
         let layout_desc = PipelineLayoutDescriptor {
             label:None,

@@ -83,11 +83,16 @@ impl INode for PassNode {
                                                 if let Some(texture_bind_group) = mat.texture_props.bind_group.as_ref() {
                                                     render_pass.set_bind_group(3, texture_bind_group, &[]);
                                                 }
+                                                if mat.def.is_light {
+                                                    render_pass.set_bind_group(4, ctx.light_state.bind_group.as_ref().unwrap(), &[]);
+                                                }
+                                                
                                                 render_pass.set_vertex_buffer(0, vert_buffer.slice(0..));
                                                 if let Some(idx_id) = ctx.resources.get_render_resource(&hmesh.id, 1) {
                                                     let idx_buffer = ctx.resources.get_buffer_by_resid(&idx_id).unwrap();
                                                     render_pass.set_index_buffer(idx_buffer.slice(0..), mesh.index_format().unwrap());
                                                     render_pass.set_pipeline(pipe);
+                                                   
                                                     render_pass.draw_indexed(mesh.indices_range().unwrap(),0, 0..1);
                                                 } else {
                                                     render_pass.set_pipeline(pipe);

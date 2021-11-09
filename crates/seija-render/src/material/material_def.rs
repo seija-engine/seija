@@ -12,6 +12,7 @@ use crate::{memory::UniformBufferDef, pipeline::render_bindings::BindGroupLayout
 pub struct MaterialDef {
     pub name:String,
     pub order:RenderOrder,
+    pub is_light:bool,
     pub pass_list:Vec<PassDef>,
     pub prop_def:Arc<UniformBufferDef>,
     pub texture_idxs:HashMap<String,usize>,
@@ -48,14 +49,19 @@ impl Default for PassDef {
 }
 
 pub fn read_material_def(vm:&mut EvalRT,file_string:&str) -> Result<MaterialDef,MaterialDefReadError>  {
+    let mut is_light = false;
     let value:Value = vm.eval_string(String::default(), file_string).ok_or(MaterialDefReadError::LanguageError)?.into();
     let value_object = value.as_object().ok_or(MaterialDefReadError::FormatError)?;
-   
+    
     //name
     let def_name = value_object.get(":name").and_then(|v| v.as_str()).ok_or(MaterialDefReadError::InvalidName)?;
     //order
     let order_str = value.get(":order").and_then(|v| v.as_str()).unwrap_or(&"Opaque");
     let order = RenderOrder::try_from(order_str).map_err(|s| MaterialDefReadError::InvalidOrder(s))?;
+    //light
+    if let Some(light) = value.get(":light").and_then(|v| v.as_bool()) {
+        is_light = light;
+    }
     //pass
     let json_pass = value.get(":pass").ok_or(MaterialDefReadError::InvalidPass)?;
     let mut pass_list:Vec<PassDef> = Vec::new();
@@ -79,7 +85,8 @@ pub fn read_material_def(vm:&mut EvalRT,file_string:&str) -> Result<MaterialDef,
         pass_list,
         prop_def:Arc::new(buffer_def),
         texture_layout_builder,
-        texture_idxs
+        texture_idxs,
+        is_light
     })
 }
 

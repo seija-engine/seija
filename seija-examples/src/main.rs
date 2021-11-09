@@ -1,12 +1,14 @@
 mod lib;
 mod sample_gltf;
 mod cube_map;
+mod light_test;
 mod async_asset;
 
 use async_asset::AsyncAsset;
 use bevy_ecs::prelude::{IntoSystem};
 
 use cube_map::CubeMapTest;
+use light_test::LightTest;
 use sample_gltf::SampleGltf;
 use seija_app::App;
 use seija_asset::{AssetModule};
@@ -18,7 +20,7 @@ use seija_render::{RenderModule};
 use seija_winit::WinitModule;
 use seija_transform::{TransformModule};
 
-const TEST_NAME:&'static str = "cube_map";
+const TEST_NAME:&'static str = "light_test";
 
 fn main() {
     env_logger::init();
@@ -42,6 +44,9 @@ fn main() {
         "async_asset" => {
             AsyncAsset::run(&mut app);
         }
+        "light_test" => {
+            LightTest::run(&mut app);
+        },
         _ => { unimplemented!() }
     };
 

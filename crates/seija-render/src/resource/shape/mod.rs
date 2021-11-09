@@ -1,7 +1,9 @@
 use crate::resource::mesh::{Indices, Mesh,MeshAttributeType};
 mod skybox;
+mod sphere;
 
 pub use skybox::SkyBox;
+pub use sphere::Sphere;
 
 #[derive(Debug, Copy, Clone)]
 pub struct Cube {

@@ -18,6 +18,7 @@ pub fn pre_start(mut commands:Commands,window:Res<AppWindow>,mats:Res<MaterialSt
     load_material("res/material/model/model.mat.clj", &mats);
     load_material("res/material/color/model_color.clj", &mats);
     load_material("res/material/skybox/sky.clj", &mats);
+    load_material("res/material/light/light.clj", &mats);
 }
 
 pub fn add_camera_3d(mut commands:&mut Commands,window:&AppWindow) -> Entity {
