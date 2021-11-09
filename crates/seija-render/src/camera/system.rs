@@ -45,7 +45,7 @@ impl CamerasBuffer {
         if !self.buffers.contains_key(&eid) {
             let uniform = resources.create_buffer(&wgpu::BufferDescriptor {
                 label:None,
-                size:MATRIX_SIZE * 3,
+                size:MATRIX_SIZE * 3 + 16,
                 usage:BufferUsage::COPY_DST | BufferUsage::UNIFORM,
                 mapped_at_creation:false
             });
@@ -82,7 +82,7 @@ pub(crate) fn update_camera(world:&mut World,ctx:&mut RenderContext) {
         } else {
             let staging_buffer = ctx.resources.create_buffer(&wgpu::BufferDescriptor {
                 label:None,
-                size:MATRIX_SIZE * 3,
+                size:MATRIX_SIZE * 3 + 16,
                 usage:BufferUsage::COPY_SRC | BufferUsage::MAP_WRITE,
                 mapped_at_creation:true
             });
@@ -96,11 +96,14 @@ pub(crate) fn update_camera(world:&mut World,ctx:&mut RenderContext) {
             let proj = camera.projection.matrix();
             let view_proj_matrix = t.global().matrix().inverse() * proj;
             let view_matrix = t.global().matrix().inverse();
+            let mut pos_bytes:[f32;4] = [0f32,0f32,0f32,1f32];
+            let pos = t.global().position.write_to_slice(&mut pos_bytes);
            
-            ctx.resources.write_mapped_buffer(&staging_buffer, 0..(MATRIX_SIZE * 3),&mut |bytes,_| {
+            ctx.resources.write_mapped_buffer(&staging_buffer, 0..(MATRIX_SIZE * 3) + 16,&mut |bytes,_| {
                 bytes[0..crate::MATRIX_SIZE as usize].copy_from_slice(view_proj_matrix.to_cols_array_2d().as_bytes());
                 bytes[(MATRIX_SIZE as usize) ..(MATRIX_SIZE*2) as usize].copy_from_slice(view_matrix.to_cols_array_2d().as_bytes());
-                bytes[(MATRIX_SIZE*2) as usize .. (MATRIX_SIZE*3) as usize].clone_from_slice(proj.to_cols_array_2d().as_bytes());
+                bytes[(MATRIX_SIZE*2) as usize .. (MATRIX_SIZE*3) as usize].copy_from_slice(proj.to_cols_array_2d().as_bytes());
+                bytes[(MATRIX_SIZE*3) as usize .. (MATRIX_SIZE*3) as usize + 16].copy_from_slice(pos_bytes.as_bytes());
             });
             
             ctx.resources.copy_buffer_to_buffer(command, &staging_buffer,0, &buffer.uniform,0, MATRIX_SIZE * 3);

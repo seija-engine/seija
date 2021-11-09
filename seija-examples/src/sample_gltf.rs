@@ -44,14 +44,14 @@ fn on_start(mut commands:Commands,
    
    let buggy_asset = load_gltf("res/gltf/Buggy.glb",&mut meshs,&mut textures).unwrap();
    create_gltf(
-  Vec3::new(0f32, -50f32, -200f32),
+  Vec3::new(0f32, 0f32, -200f32),
       &buggy_asset, &mut commands,&|gltf_material| {
       if let Some(texture) = gltf_material.base_color_texture.as_ref() {
-         materials.create_material_with("model",|mat| {
+         materials.create_material_with("light",|mat| {
             mat.texture_props.set("mainTexture", texture.clone());
          })
       } else {
-         materials.create_material_with("model-color",|mat| {
+         materials.create_material_with("light",|mat| {
             mat.props.set_float4("color", Vec4::from(gltf_material.base_color), 0);
          }) 
       }

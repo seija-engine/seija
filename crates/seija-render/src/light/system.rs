@@ -18,7 +18,7 @@ impl LightState {
     pub fn new(device:&wgpu::Device) -> Self {
         device.limits().max_bind_groups;
         let mut layout_builder = BindGroupLayoutBuilder::new();
-        layout_builder.add_uniform(wgpu::ShaderStage::VERTEX);
+        layout_builder.add_uniform(wgpu::ShaderStage::FRAGMENT);
         let layout = layout_builder.build(device);
         Self {
             staging_buffer:None,

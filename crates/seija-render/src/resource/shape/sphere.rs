@@ -21,7 +21,7 @@ impl Default for Sphere {
     fn default() -> Self {
         Self { 
             radius: 1.0, 
-            subdivisions:2 
+            subdivisions:5 
         }
     }
 }
