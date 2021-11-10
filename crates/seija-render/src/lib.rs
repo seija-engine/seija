@@ -21,6 +21,7 @@ pub mod resource;
 pub mod pipeline;
 pub mod light;
 
+mod mesh_render;
 mod render_context;
 mod render;
 mod memory;

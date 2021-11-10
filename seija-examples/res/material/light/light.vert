@@ -31,7 +31,7 @@ void main() {
     vec4 pos = TransMat * vec4(Vertex_Position, 1.0);
     out_Pos =  pos;
     gl_Position = ViewProj * pos;
-    vec3 normal = transpose(inverse(mat3x3(ViewMat) * mat3x3(TransMat)))  *  Vertex_Normal;
+    vec3 normal = transpose(inverse(mat3x3(TransMat)))  *  Vertex_Normal;
     out_Normal = normal.xyz;
     out_Color = MatColor;
     out_Uv = Vertex_Uv;

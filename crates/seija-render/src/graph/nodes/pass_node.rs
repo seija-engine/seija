@@ -8,6 +8,12 @@ pub struct PassNode {
     operations:Operations<Color>
 }
 
+impl PassNode {
+    pub fn draw() {
+   
+    }
+}
+
 impl INode for PassNode {
     fn input_count(&self) -> usize { 2 }
     
