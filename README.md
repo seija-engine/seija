@@ -15,7 +15,7 @@
         b. <del> 完成材质Scene和Node的加载 </del>  
         c. <del> 根据gltf文件创建渲染对象(根据Scene,Node,Mesh创建对应元素) </del>
 
-  3. 完成前向渲染的顶点光照  
+  3. 完成前向渲染的基础光照  
         a. <del>先实现一个环境贴图 </del>  
         b. <del>实现基础光源的数据结构和Buffer传递</del>  
         c. <del>实现Phong和Blinn Phong光照 </del>  
