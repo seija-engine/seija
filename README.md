@@ -18,7 +18,7 @@
   3. 完成前向渲染的顶点光照  
         a. <del>先实现一个环境贴图 </del>  
         b. <del>实现基础光源的数据结构和Buffer传递</del>  
-        c. <del>实现Phong光照 </del>  
+        c. <del>实现Phong和Blinn Phong光照 </del>  
   
   4. 实现PBR体系以及PBR相关内建Shader  
 

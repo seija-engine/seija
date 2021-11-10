@@ -35,7 +35,7 @@ fn on_start(mut commands:Commands,
        
    });
    let mut t = Transform::default();
-   //t.local.scale =  Vec3::ONE * 1.5f32;
+  t.local.scale = Vec3::new(0.5f32, 1f32, 1f32);
    t.local.position = Vec3::new(0f32, 0f32, -10f32);
    commands.spawn()
            .insert(mesh_handle)

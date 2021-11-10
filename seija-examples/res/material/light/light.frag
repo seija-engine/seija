@@ -18,21 +18,31 @@ layout(set = 4, binding = 0) uniform Light {
 layout(set = 3, binding = 0) uniform texture2D mainTexture;
 layout(set = 3, binding = 1) uniform sampler mainSampler;
 
+
+
+vec3 phongSpecular(vec3 N,vec3 L,vec3 V) {
+    vec3 R = reflect(-L,N);
+    return vec3(1,1,1) * pow(max(0,dot(V,R)),32);
+}
+
+vec3 blinnPhongSpecular(vec3 N,vec3 L,vec3 V) {
+    vec3 H = normalize(V + L);
+    float spec = pow(max(0,dot(N, H)), 32);
+    return vec3(1,1,1) * spec;
+}
+
 void main() {
     vec4 textureColor = texture(sampler2D(mainTexture,mainSampler),in_Uv);
     vec3 N = normalize(in_Normal);
     vec3 L = normalize(directional_dir.xyz);
-    vec3 R = reflect(-L,N);
     vec3 V = normalize(in_cameraPos.xyz - in_Pos.xyz);
     
-    vec4 diffuse = directional_color * max(0,dot(N,L));
+    vec3 diffuse = directional_color.rgb * max(0,dot(N,L));
 
-    vec4 specular = vec4(1,1,1,1) * pow(max(0,dot(V,R)),32);
+    vec3 specular = phongSpecular(N,L,V);
 
    
-    vec4 lightColor = ambient + diffuse + specular;
+    vec3 lightColor = ambient.rgb + diffuse + specular;
 
-    o_Target = textureColor * lightColor;
-   
-  
+    o_Target = textureColor * vec4(lightColor,1); 
 }

@@ -35,7 +35,7 @@ impl Default for LightEnvInner {
     fn default() -> Self {
        
         Self { 
-            ambient_color: [0.1f32, 0.1f32, 0.1f32, 0.1f32],
+            ambient_color: [0.05f32, 0.05f32, 0.05f32, 1f32],
             directional_dir:[0.5f32, 0.5f32, 0f32,1f32],
             directional_color:[1f32,1f32,1f32,1f32]
         }
