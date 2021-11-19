@@ -84,6 +84,8 @@ pub fn read_image_info(dyn_image:image::DynamicImage) -> ImageInfo {
     let height;
 
     match dyn_image {
+        //TODO 这个应该读成R8Unorm,但是R8Unorm还得进行gamma校正，但是Rgba8UnormSrgb并不用校正。
+        //需要一个关于gamma校正的统一处理方案
         image::DynamicImage::ImageLuma8(i) => {
             let buffer = image::DynamicImage::ImageLuma8(i).into_rgba8();
             width = buffer.width();

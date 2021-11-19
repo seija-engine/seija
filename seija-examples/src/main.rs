@@ -3,6 +3,7 @@ mod sample_gltf;
 mod cube_map;
 mod light_test;
 mod async_asset;
+mod pbr;
 
 use async_asset::AsyncAsset;
 use bevy_ecs::prelude::{IntoSystem};
@@ -20,7 +21,7 @@ use seija_render::{RenderModule};
 use seija_winit::WinitModule;
 use seija_transform::{TransformModule};
 
-const TEST_NAME:&'static str = "light_test";
+const TEST_NAME:&'static str = "pbr_test";
 
 fn main() {
     env_logger::init();
@@ -47,6 +48,9 @@ fn main() {
         "light_test" => {
             LightTest::run(&mut app);
         },
+        "pbr_test" => {
+            pbr::PbrTest::run(&mut app);
+        }
         _ => { unimplemented!() }
     };
 

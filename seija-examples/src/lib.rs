@@ -2,9 +2,9 @@ use bevy_ecs::{prelude::{Commands, Entity, Res}, schedule::SystemDescriptor, sys
 use glam::{Quat, Vec3, Vec4};
 use lite_clojure_eval::EvalRT;
 use seija_app::App;
-use seija_asset::Handle;
+use seija_asset::{Assets, Handle};
 use seija_core::{CoreStage, window::AppWindow};
-use seija_render::{camera::{camera::Perspective,camera::Camera}, material::{MaterialStorage, read_material_def}, resource::Mesh};
+use seija_render::{camera::{camera::Perspective,camera::Camera}, material::{MaterialStorage, read_material_def}, resource::{Mesh, Texture}};
 use seija_transform::{Transform, hierarchy::Parent};
 use bevy_ecs::prelude::*;
 
@@ -19,6 +19,7 @@ pub fn pre_start(mut commands:Commands,window:Res<AppWindow>,mats:Res<MaterialSt
     load_material("res/material/color/model_color.clj", &mats);
     load_material("res/material/skybox/sky.clj", &mats);
     load_material("res/material/light/light.clj", &mats);
+    load_material("res/material/pbr/pbr.clj", &mats);
 }
 
 pub fn add_camera_3d(mut commands:&mut Commands,window:&AppWindow) -> Entity {
@@ -38,12 +39,19 @@ pub fn add_camera_3d(mut commands:&mut Commands,window:&AppWindow) -> Entity {
 }
 
 pub fn load_material(path:&str,mats:&MaterialStorage) {
+    println!("load_material:{}",path);
     let code_string = std::fs::read_to_string(path).unwrap();
     let mut vm = EvalRT::new();
     let mat_def = read_material_def(&mut vm, &code_string).unwrap();
     mats.add_def(mat_def);
 }
 
+
+pub fn load_texture(textures:&mut Assets<Texture>,path:&str) -> Handle<Texture> {
+    let wood_texture = Texture::from_bytes(&std::fs::read(path).unwrap()).unwrap();
+    println!("{} format:{:?}",path,wood_texture.format);
+    textures.add(wood_texture)
+}
 
 pub fn add_render_mesh(
                        

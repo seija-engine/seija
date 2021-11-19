@@ -30,7 +30,7 @@ fn on_start(mut commands:Commands,
    let texture_handle = textures.add(texture);
    let mesh = Sphere::new(2f32);//Sphere::new(2f32);
    let mesh_handle = meshs.add(mesh.into());
-   let material_handle = materials.create_material_with("light", |mat|  {
+   let material_handle = materials.create_material_with("light", |mat| {
        mat.texture_props.set("mainTexture", texture_handle.clone())
        
    });

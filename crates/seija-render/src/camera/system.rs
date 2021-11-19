@@ -97,7 +97,7 @@ pub(crate) fn update_camera(world:&mut World,ctx:&mut RenderContext) {
             let view_proj_matrix = t.global().matrix().inverse() * proj;
             let view_matrix = t.global().matrix().inverse();
             let mut pos_bytes:[f32;4] = [0f32,0f32,0f32,1f32];
-            let pos = t.global().position.write_to_slice(&mut pos_bytes);
+            t.global().position.write_to_slice(&mut pos_bytes);
            
             ctx.resources.write_mapped_buffer(&staging_buffer, 0..(MATRIX_SIZE * 3) + 16,&mut |bytes,_| {
                 bytes[0..crate::MATRIX_SIZE as usize].copy_from_slice(view_proj_matrix.to_cols_array_2d().as_bytes());
