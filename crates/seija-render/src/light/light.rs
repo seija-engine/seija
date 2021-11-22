@@ -1,3 +1,4 @@
+use glam::Vec3;
 use seija_core::bytes::{ Byteable};
 
 unsafe impl Byteable for LightEnvInner {}
@@ -21,7 +22,12 @@ impl LightEnv {
         &self.inner
     }
 
-    
+    pub fn set_directional(&mut self,dir:Vec3) {
+        self.inner.directional_dir[0] = dir.x;
+        self.inner.directional_dir[1] = dir.y;
+        self.inner.directional_dir[2] = dir.z;
+        self.is_dirty = true;
+    }   
 }
 
 #[repr(C)]

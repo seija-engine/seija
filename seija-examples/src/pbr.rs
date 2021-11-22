@@ -4,7 +4,7 @@ use bevy_ecs::prelude::{Commands, Entity, IntoSystem, Query, Res, ResMut};
 use seija_asset::{Assets, Handle};
 use seija_core::{CoreStage, StartupStage, window::AppWindow};
 
-use seija_render::{light::LightEnv, material::MaterialStorage, resource::{Mesh, Texture, shape::Sphere}};
+use seija_render::{wgpu,light::LightEnv, material::MaterialStorage, resource::{Mesh, Texture, shape::{Cube, Sphere}}};
 use seija_transform::Transform;
 
 pub struct PbrTest;
@@ -21,9 +21,9 @@ fn on_start(mut commands:Commands,mut meshs:ResMut<Assets <Mesh>>,mut textures:R
 }
 
 fn create_pbr_sphere(commands:&mut Commands,textures:&mut Assets<Texture>,meshs:&mut Assets<Mesh>,materials:Res<MaterialStorage>) {
-    let h_texture = load_texture(textures, "res/texture/WoodFloor043_1K_Color.jpg");
-    let h_roughness = load_texture(textures, "res/texture/WoodFloor043_1K_Roughness.jpg");
-    let h_normal = load_texture(textures, "res/texture/WoodFloor043_1K_Normal.jpg");
+    let h_texture = load_texture(textures, "res/texture/WoodFloor043_1K_Color.jpg",Some(wgpu::TextureFormat::Rgba8UnormSrgb));
+    let h_roughness = load_texture(textures, "res/texture/WoodFloor043_1K_Roughness.jpg",Some(wgpu::TextureFormat::R8Unorm));
+    let h_normal = load_texture(textures, "res/texture/WoodFloor043_1K_Normal.jpg",Some(wgpu::TextureFormat::Rgba8Unorm));
     let mesh:Mesh = Sphere::new(2f32).into();
     let h_mesh = meshs.add(mesh);
     let h_material = materials.create_material_with("pbr", |mat| {
@@ -39,12 +39,17 @@ fn create_pbr_sphere(commands:&mut Commands,textures:&mut Assets<Texture>,meshs:
            .insert(t);
 }
 
-fn on_update(light:ResMut<LightEnv>,mut query:Query<(Entity,&Handle<Mesh>,&mut Transform)>) {
-    let v:f32 = (std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_millis() % 36000) as f32;
-    let r = v * 0.01f32 * 0.0174533f32;
+fn on_update(mut light:ResMut<LightEnv>,mut query:Query<(Entity,&Handle<Mesh>,&mut Transform)>) {
+   
+    let v:f32 = (std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_millis() % 3600) as f32;
+    let r = v * 0.1f32 * 0.0174533f32;
     
     for (_,_,mut t) in query.iter_mut() {
-        t.local.rotation = Quat::from_euler(glam::EulerRot::XYZ  , 0f32, r, r)
-        
+        let r = Quat::from_euler(glam::EulerRot::XYZ  , 0f32, r, 0f32);
+        //light.set_directional(Vec3::new(0.12013617f32, 0f32,  -0.99275744f32));
+        //println!("dir:{:?}",r * Vec3::new(1f32, 0f32, 0f32));
+        light.set_directional(r * Vec3::new(1f32, 0f32,  0f32));
+        //t.local.rotation = Quat::from_euler(glam::EulerRot::XYZ  , 0f32, r, 0f32)
+        t.local.rotation = Quat::from_euler(glam::EulerRot::XYZ  , 0f32, 45f32 * 0.0174533f32, 0f32);
     }
 }

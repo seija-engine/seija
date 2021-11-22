@@ -1,6 +1,8 @@
 use std::f32::consts::PI;
 use crate::resource::{Indices, Mesh,MeshAttributeType};
 
+use super::calc_tangent;
+
 #[derive(Debug, Clone, Copy)]
 pub struct Sphere {
     /// The radius of the sphere.
@@ -83,11 +85,13 @@ impl From<Sphere> for Mesh {
             }
         }
 
+        let tangents = calc_tangent(&vertices, &uvs, &indices);
         let mut mesh = Mesh::new(wgpu::PrimitiveTopology::TriangleList);
         mesh.set_indices(Some(Indices::U32(indices)));
         mesh.set(MeshAttributeType::POSITION, vertices);
         mesh.set(MeshAttributeType::NORMAL, normals);
         mesh.set(MeshAttributeType::UV0, uvs);
+        mesh.set(MeshAttributeType::TANGENT, tangents);
         mesh.build();
         mesh
     }

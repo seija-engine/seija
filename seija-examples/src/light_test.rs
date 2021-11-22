@@ -26,7 +26,7 @@ fn on_start(mut commands:Commands,
     window:Res<AppWindow>,
     materials:Res<MaterialStorage>) {
    
-   let texture = Texture::from_bytes(&std::fs::read("res/texture/WoodFloor043_1K_Color.jpg").unwrap()).unwrap() ;
+   let texture = Texture::from_bytes(&std::fs::read("res/texture/WoodFloor043_1K_Color.jpg").unwrap(),None).unwrap() ;
    let texture_handle = textures.add(texture);
    let mesh = Sphere::new(2f32);//Sphere::new(2f32);
    let mesh_handle = meshs.add(mesh.into());

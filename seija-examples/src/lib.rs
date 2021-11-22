@@ -7,6 +7,7 @@ use seija_core::{CoreStage, window::AppWindow};
 use seija_render::{camera::{camera::Perspective,camera::Camera}, material::{MaterialStorage, read_material_def}, resource::{Mesh, Texture}};
 use seija_transform::{Transform, hierarchy::Parent};
 use bevy_ecs::prelude::*;
+use seija_render::wgpu;
 
 pub trait IExamples {
     fn run(app:&mut App);
@@ -47,14 +48,13 @@ pub fn load_material(path:&str,mats:&MaterialStorage) {
 }
 
 
-pub fn load_texture(textures:&mut Assets<Texture>,path:&str) -> Handle<Texture> {
-    let wood_texture = Texture::from_bytes(&std::fs::read(path).unwrap()).unwrap();
+pub fn load_texture(textures:&mut Assets<Texture>,path:&str,format:Option<wgpu::TextureFormat>) -> Handle<Texture> {
+    let wood_texture = Texture::from_bytes(&std::fs::read(path).unwrap(),format).unwrap();
     println!("{} format:{:?}",path,wood_texture.format);
     textures.add(wood_texture)
 }
 
 pub fn add_render_mesh(
-                       
                        mut commands:&mut Commands,
                        mesh:Handle<Mesh>,
                        texture:Handle<seija_render::resource::Texture>,

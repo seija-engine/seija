@@ -105,13 +105,13 @@ fn load_textures(gltf:&ImportData,path:&Path,texture_assets:&mut Assets<Texture>
                 let start = view.offset() as usize;
                 let end = (view.offset() + view.length()) as usize;
                 let buffer = &gltf.1[view.buffer().index()][start..end];
-                let texture = Texture::from_bytes(buffer).map_err(|_| GltfError::LoadImageError)?;
+                let texture = Texture::from_bytes(buffer,None).map_err(|_| GltfError::LoadImageError)?;
                 textures.push(texture_assets.add(texture));
             },
             gltf::image::Source::Uri { uri, mime_type:_ } => {
                 let texture_path = path.parent().map(|p| p.join(uri)).ok_or(GltfError::LoadImageError)?;
                 let bytes = std::fs::read(texture_path).map_err(|_| GltfError::LoadImageError)?;
-                let mut texture = Texture::from_bytes(&bytes).map_err(|_| GltfError::LoadImageError)?;
+                let mut texture = Texture::from_bytes(&bytes,None).map_err(|_| GltfError::LoadImageError)?;
                 texture.sampler = get_texture_sampler(&json_texture);
                 textures.push(texture_assets.add(texture));
             }

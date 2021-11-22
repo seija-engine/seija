@@ -8,6 +8,7 @@ layout(location = 1) in vec4 in_Pos;
 layout(location = 2) in vec3 in_Normal;
 layout(location = 3) in vec4 in_Color;
 layout(location = 4) in vec2 in_Uv;
+layout(location = 5) in vec4 in_Tangent;
 
 layout(set = 4, binding = 0) uniform Light {
     vec4 ambient;
@@ -39,6 +40,20 @@ float D_GGX(float roughness, float NoH, const vec3 n, const vec3 h) {
     return saturateMediump(d);
 }
 
+float D_GGX2(float NoH, float roughness) {
+    float a = NoH * roughness;
+    float k = roughness / (1.0 - NoH * NoH + a * a);
+    return k * k * (1.0 / PI);
+}
+
+float D_GGX3(float roughness, float NoH, const vec3 h) {
+    float oneMinusNoHSquared = 1.0 - NoH * NoH;
+    float a = NoH * roughness;
+    float k = roughness / (oneMinusNoHSquared + a * a);
+    float d = k * k * (1.0 / PI);
+    return d;
+}
+
 
 vec3 F_Schlick(float VoH, vec3 f0) {
     float f = pow(1.0 - VoH, 5.0);
@@ -49,50 +64,18 @@ float F_Schlick(float VoH, float f0, float f90) {
     return f0 + (f90 - f0) * pow(1.0 - VoH, 5.0);
 }
 
-float pow5(float x) {
-    float x2 = x * x;
-    return x2 * x2 * x;
-}
-
-vec3 F_Schlick(const vec3 f0, float f90, float VoH) {
-    // not using mix to keep the vec3 and float versions identical
-    return f0 + (f90 - f0) * pow5(1.0 - VoH);
-}
-
-vec3 fresnel(vec3 f0, float LoH) {
-    float f90 = saturate(dot(f0, vec3(50.0 * 0.33)));
-    return F_Schlick(f0, f90, LoH);
-}
-
-float Fr_DisneyDiffuse(float NdotV, float NdotL, float LdotH, float roughness)
-{
-	float E_bias        = 0.0 * (1.0 - roughness) + 0.5 * roughness;
-	float E_factor      = 1.0 * (1.0 - roughness) + (1.0 / 1.51) * roughness;
-	float fd90          = E_bias + 2.0 * LdotH * LdotH * roughness;
-	vec3  f0            = vec3(1.0);
-	float light_scatter = F_Schlick(f0, fd90, NdotL).r;
-	float view_scatter  = F_Schlick(f0, fd90, NdotV).r;
-	return light_scatter * view_scatter * E_factor;
-}
-
-float D_GGX_TR(vec3 N, vec3 H, float a)
-{
-    float a2     = a*a;
-    float NdotH  = max(dot(N, H), 0.0);
-    float NdotH2 = NdotH*NdotH;
-
-    float nom    = a2;
-    float denom  = (NdotH2 * (a2 - 1.0) + 1.0);
-    denom        = PI * denom * denom;
-
-    return nom / denom;
+float Fd_Burley(float NoV, float NoL, float LoH, float roughness) {
+    float f90 = 0.5 + 2.0 * roughness * LoH * LoH;
+    float lightScatter = F_Schlick(NoL, 1.0, f90);
+    float viewScatter = F_Schlick(NoV, 1.0, f90);
+    return lightScatter * viewScatter * (1.0 / PI);
 }
 
 float V_SmithGGXCorrelated(float NoV, float NoL, float roughness) {
     float a2 = roughness * roughness;
     float GGXV = NoL * sqrt(NoV * NoV * (1.0 - a2) + a2);
     float GGXL = NoV * sqrt(NoL * NoL * (1.0 - a2) + a2);
-    return 0.5 / (GGXV + GGXL);
+    return saturate(0.5 / (GGXV + GGXL));
 }
 
 
@@ -102,30 +85,41 @@ void main() {
     vec4  normalColor = texture(sampler2D(normalTexture,normalSampler),in_Uv);
     float roughness = roughnessColor.r;
 
-    vec3 normal = normalColor.rgb;   
+ 
 
-    vec3 N = normalize(normal) + in_Normal;
+    vec3 N = normalize(in_Normal);
+    vec3 T = normalize(in_Tangent.xyz);
+    vec3 B = cross(N, T) * in_Tangent.w;
+    mat3 TBN = mat3(T, B, N);
+
+    vec3 normal = normalColor.rgb * 2.0 - 1.0;
+    N = normalize(TBN * normal);
+    N = normalize(in_Normal);
+    
     vec3 L = normalize(directional_dir.xyz);
     vec3 V = normalize(in_cameraPos.xyz - in_Pos.xyz);
     vec3 H = normalize(V + L);
     
-    float NoL = max(dot(N, L),0);
-    float NoV = max(dot(N, V), 0);
+    float NoL = saturate(dot(N, L));
+    float NoV = saturate(dot(N, V));
     float NoH = saturate(dot(N, H));
-    float VoH = dot(V, H);
-    float LoH =  saturate(dot(L, H));
-  
+    float VoH = saturate(dot(V, H));
+    float LoH = saturate(dot(L, H));
+   
 
-    float Specular_D = D_GGX(roughness,NoH,N,H);
-    float Specular_Vis = V_SmithGGXCorrelated(NoV,NoL,roughness);
-    if(Specular_Vis > 1) {
-        Specular_Vis = 1;
-    }
-
-    vec3 Specular_F = fresnel(vec3(roughness),LoH);
-    vec3 specular = Specular_F * Specular_D  * Specular_Vis;
-    float diffuse = Fr_DisneyDiffuse(NoV, NoL, LoH,roughness);
+    float Specular_D = D_GGX3(roughness,NoH,H);
+   
+    float Specular_G = V_SmithGGXCorrelated(NoV,NoL,roughness);
+    vec3 Specular_F = F_Schlick(VoH,vec3(0.2));
+    vec3 specular = Specular_F  * Specular_G * Specular_D;
     
+    float diffuse = Fd_Burley(NoV, NoL, LoH,roughness);
 
-    o_Target = vec4(vec3(normal),1); 
+    vec3 outColor = textureColor.rgb;
+    if(NoL > 0) {
+        outColor = outColor + textureColor.rgb * specular;
+    }
+    
+    
+    o_Target = vec4(outColor,1); 
 }
