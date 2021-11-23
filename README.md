@@ -10,6 +10,7 @@
         d. <del> 绘制出第一个Cube </del>  
         e. <del> 完成材质属性配置中贴图的支持 </del>
 
+
   2. 完成gltf模型渲染  
         a. <del> 完成Mesh加载和测试渲染 </del>  
         b. <del> 完成材质Scene和Node的加载 </del>  
@@ -21,10 +22,14 @@
         c. <del>实现Phong和Blinn Phong光照 </del>  
   
   4. 实现PBR体系以及PBR相关内建Shader  
+        a. <del> 完成PBR Cook-Torrance的BRDF的高光和漫反射部分。 </del>  
 
-  5. 实现延迟渲染的渲染路径
+  5. 进一步优化材质系统  
+        a. 需要对glsl进行进一步扩展
+
+  6. 实现延迟渲染的渲染路径
   
-  6. [可选] 梳理整个渲染管线以及材质系统，看是否可以进一步抽象，是否可以实现某种DSL简化结构。
+  7. [可选] 梳理整个渲染管线以及材质系统，看是否可以进一步抽象，是否可以实现某种DSL简化结构。
 
 Ⅱ. 接入脚本层
   1. 接入graalvm，使用Scala 
