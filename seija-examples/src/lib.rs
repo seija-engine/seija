@@ -49,9 +49,9 @@ pub fn load_material(path:&str,mats:&MaterialStorage) {
 
 
 pub fn load_texture(textures:&mut Assets<Texture>,path:&str,format:Option<wgpu::TextureFormat>) -> Handle<Texture> {
-    let wood_texture = Texture::from_bytes(&std::fs::read(path).unwrap(),format).unwrap();
-    println!("{} format:{:?}",path,wood_texture.format);
-    textures.add(wood_texture)
+    let texture = Texture::from_bytes(&std::fs::read(path).unwrap(),format).unwrap();
+    println!("{} format:{:?}",path,texture.format);
+    textures.add(texture)
 }
 
 pub fn add_render_mesh(

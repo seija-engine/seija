@@ -140,11 +140,11 @@ impl PipelineCache {
     fn create_pipeline_layout(&mut self,ctx:&RenderContext,mat_def:&MaterialDef) -> PipelineLayout {
         let camera_layout:&wgpu::BindGroupLayout = &ctx.camera_state.camera_layout;
         let trans_layout = &ctx.transform_buffer.trans_layout;
-        let material_layout = &ctx.material_sys.material_layout;
+        let material_layout = &ctx.material_sys.layout;
         let mut layouts = vec![camera_layout,trans_layout,material_layout];
 
-        if mat_def.texture_idxs.len() > 0 {
-            if let Some(layout) = ctx.material_sys.material_texture_layouts.get(&mat_def.name) {
+        if mat_def.tex_prop_def.indexs.len() > 0 {
+            if let Some(layout) = ctx.material_sys.texture_layouts.get(&mat_def.name) {
                 layouts.push(layout);
             }
         }

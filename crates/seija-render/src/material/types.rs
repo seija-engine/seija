@@ -1,4 +1,4 @@
-use std::convert::{TryFrom, TryInto};
+use std::convert::{TryFrom};
 use wgpu::{CompareFunction, Face, FrontFace, PolygonMode};
 use num_enum::{IntoPrimitive,TryFromPrimitive};
 

@@ -4,7 +4,7 @@ use wgpu::{BindGroupEntry, Device, ShaderStage};
 
 use crate::resource::{BufferId, RenderResourceId, RenderResources, Texture};
 
-#[derive(Debug)]
+#[derive(Debug,Default)]
 pub struct BindGroupLayoutBuilder {
     layout_entrys:Vec<wgpu::BindGroupLayoutEntry>
 }

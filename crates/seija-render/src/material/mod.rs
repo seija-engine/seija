@@ -3,6 +3,7 @@ mod material;
 mod types;
 mod storage;
 mod system;
+mod texture_prop_def;
 pub mod errors;
 pub use material::{Material};
 pub use storage::MaterialStorage;
@@ -20,7 +21,9 @@ pub(crate) fn init_material(app:&mut App) {
     let server = app.world.get_resource::<AssetServer>().unwrap();
     server.register_type::<Material>();
     
-    let storage = MaterialStorage::new(server.ref_counter.channel.sender.clone());
+    let mut storage = MaterialStorage::new(server.ref_counter.channel.sender.clone());
+    storage.init(&mut app.world);
+
     app.add_resource(storage);
    
     app.add_system(AssetStage::AssetEvents, material_storage_event.system());

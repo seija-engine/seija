@@ -1,10 +1,14 @@
 {
     :name "pbr"
     :order "Opaque"
+
+    :shader-macros ["NORMAL_MAP","FRESNEL"]
     :light true
+    
+    
     :props [
         {:name "color" :type "float4" :default [1,1,1,1]}
-        {:name "baseColor" :type "Texture"}
+        {:name "baseColor" :type "Texture" :default "white"}
         {:name "roughness" :type "Texture"}
         {:name "normal" :type "Texture"}
     ]

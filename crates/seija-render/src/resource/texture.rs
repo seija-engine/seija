@@ -1,5 +1,6 @@
 use std::{collections::HashSet, path::Path};
 use bevy_ecs::prelude::World;
+use glam::Vec3;
 use image::ImageError;
 use seija_asset::{AssetEvent, Assets, Handle};
 use seija_core::{TypeUuid, event::{Events, ManualEventReader}};
@@ -65,6 +66,24 @@ impl Texture {
         }
     }
 }
+
+
+pub fn color_texture(color:[u8;4],size:usize) -> Texture {
+    let pixel_len = size * size;
+    let mut data:Vec<u8> = Vec::with_capacity(pixel_len * 4);
+    for idx in 0..pixel_len {
+        let start = idx * 4;
+        data.extend_from_slice(&color);
+    }
+    Texture {
+        data,
+        size:wgpu::Extent3d { width:size as u32,height:size as u32,depth_or_array_layers:1 },
+        format:wgpu::TextureFormat::Rgba8Unorm,
+        dimension:wgpu::TextureDimension::D2,
+        sampler:wgpu::SamplerDescriptor::default()
+    }
+}
+
 
 #[derive(Debug)]
 pub struct ImageInfo {
@@ -186,8 +205,6 @@ impl From<image::DynamicImage> for Texture {
         info.format)
     }
 }
-
-
 
 pub fn update_texture_system(world:&mut World,texture_reader:&mut ManualEventReader<AssetEvent<Texture>>,ctx:&mut RenderContext) {
     let command = ctx.command_encoder.as_mut().unwrap();

@@ -3,7 +3,7 @@ mod mesh;
 mod texture;
 mod cube_map;
 pub mod shape;
-pub use texture::{Texture,update_texture_system,ImageInfo,read_image_info,load_image_info};
+pub use texture::{Texture,update_texture_system,ImageInfo,read_image_info,load_image_info,color_texture};
 pub use cube_map::{CubeMapBuilder};
 pub use mesh::{Mesh,update_mesh_system,VertexAttributeValues,Indices,MeshAttributeType};
 pub use  resource::{RenderResources,RenderResourceId,BufferId,TextureId};

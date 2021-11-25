@@ -17,6 +17,7 @@ impl IExamples for PbrTest {
 }
 
 fn on_start(mut commands:Commands,mut meshs:ResMut<Assets <Mesh>>,mut textures:ResMut<Assets<Texture>>,window:Res<AppWindow>,materials:Res<MaterialStorage>) {
+    //load_texture(&mut textures,"res/texture/red.jpg",None);
     create_pbr_sphere(&mut commands,&mut textures,&mut meshs,materials);
 }
 
@@ -28,15 +29,15 @@ fn create_pbr_sphere(commands:&mut Commands,textures:&mut Assets<Texture>,meshs:
     let h_mesh = meshs.add(mesh);
     let h_material = materials.create_material_with("pbr", |mat| {
         mat.texture_props.set("baseColor", h_texture.clone());
-        mat.texture_props.set("roughness", h_roughness.clone());
-        mat.texture_props.set("normal", h_normal.clone());
+        //mat.texture_props.set("roughness", h_roughness.clone());
+        //mat.texture_props.set("normal", h_normal.clone());
     });
     let mut t = Transform::default();
     t.local.position = Vec3::new(0f32, 0f32, -10f32);
     commands.spawn()
-           .insert(h_mesh)
-           .insert(h_material.unwrap())
-           .insert(t);
+            .insert(h_mesh)
+            .insert(h_material.unwrap())
+            .insert(t);
 }
 
 fn on_update(mut light:ResMut<LightEnv>,mut query:Query<(Entity,&Handle<Mesh>,&mut Transform)>) {

@@ -43,15 +43,17 @@ pub struct RenderModule;
 
 impl IModule for RenderModule {
     fn init(&mut self,app:&mut App) {
-        let render_system = get_render_system(&mut app.world);
+        
+        resource::init_resource(app);
+        material::init_material(app);
+        light::init_light(app);
 
+        let render_system = get_render_system(&mut app.world);
         app.schedule.add_stage_after(CoreStage::PostUpdate, RenderStage::AfterRender, SystemStage::parallel());
         app.schedule.add_stage_before(RenderStage::AfterRender, RenderStage::Render, SystemStage::single(render_system.exclusive_system()));
         app.schedule.add_stage_before(RenderStage::Render, RenderStage::PostRender, SystemStage::parallel());
 
-        material::init_material(app);
-        resource::init_resource(app);
-        light::init_light(app);
+        
 
         app.add_system(RenderStage::AfterRender, update_pipeline_cache.system());
         app.add_system(CoreStage::PostUpdate, view_list_system.system());
@@ -70,6 +72,7 @@ fn get_render_system(w:&mut World) -> impl FnMut(&mut World) {
         material_sys:MaterialSystem::new(&app_render.device),
         light_state:LightState::new(&app_render.device)
     };
+
     w.insert_resource(PipelineCache::default());
     w.insert_resource(render_ctx);
     add_base_nodes(&mut app_render.graph);

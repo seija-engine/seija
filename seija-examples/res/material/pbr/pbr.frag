@@ -22,8 +22,8 @@ layout(set = 3, binding = 1) uniform sampler baseColorSampler;
 layout(set = 3, binding = 2) uniform texture2D roughnessTexture;
 layout(set = 3, binding = 3) uniform sampler roughnessSampler;
 
-layout(set = 3, binding = 3) uniform texture2D normalTexture;
-layout(set = 3, binding = 4) uniform sampler normalSampler;
+layout(set = 3, binding = 4) uniform texture2D normalTexture;
+layout(set = 3, binding = 5) uniform sampler normalSampler;
 
 #define saturate(x) clamp(x, 0.0, 1.0)
 #define MEDIUMP_FLT_MAX    65504.0

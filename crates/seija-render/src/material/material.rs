@@ -21,9 +21,9 @@ pub struct Material {
 }
 
 impl Material {
-    pub fn from_def(def:Arc<MaterialDef>) -> Material {
+    pub fn from_def(def:Arc<MaterialDef>,default_textures:&Vec<Handle<Texture>>) -> Material {
         let props = TypedUniformBuffer::from_def(def.prop_def.clone());
-        let texture_props = TextureProps::from_def(&def);
+        let texture_props = TextureProps::from_def(&def,default_textures);
         Material {
             order:def.order,
             def,
@@ -56,18 +56,18 @@ impl Material {
 pub struct TextureProps {
     is_dirty:bool,
     def:Arc<MaterialDef>,
-    pub textures:Vec<Option<Handle<Texture>>>,
+    pub textures:Vec<Handle<Texture>>,
     pub bind_group:Option<wgpu::BindGroup>
 }
 
 impl TextureProps {
-    pub fn from_def(def:&Arc<MaterialDef>) -> TextureProps {
-        let mut textures:Vec<Option<Handle<Texture>>> = Vec::with_capacity(def.texture_idxs.len());
-        for _ in 0..def.texture_idxs.len() {
-            textures.push(None);
+    pub fn from_def(def:&Arc<MaterialDef>,default_textures:&Vec<Handle<Texture>>) -> TextureProps {
+        let mut textures:Vec<Handle<Texture>> = Vec::with_capacity(def.tex_prop_def.indexs.len());
+        for (_,(_,def_index)) in def.tex_prop_def.indexs.iter() {
+            textures.push(default_textures[*def_index].clone_weak());
         }
         TextureProps {
-            is_dirty:false,
+            is_dirty:true,
             def:def.clone(),
             textures,
             bind_group:None
@@ -77,29 +77,20 @@ impl TextureProps {
     pub fn is_dirty(&self) -> bool { self.is_dirty }
 
     pub fn set(&mut self,name:&str,texture:Handle<Texture>) {
-        if let Some(index) = self.def.texture_idxs.get(name) {
-
-            if let Some(old_texture) = &self.textures[*index] {
-               if !self.is_dirty && old_texture.id != texture.id {
-                   self.is_dirty = true;
-               }
-            } else {
+        if let Some((index,_)) = self.def.tex_prop_def.indexs.get(name) {
+            let old_texture = &self.textures[*index];
+            if !self.is_dirty && old_texture.id != texture.id {
                 self.is_dirty = true;
             }
-            
-            self.textures[*index] = Some(texture);
+            self.textures[*index] = texture;
         }
     }
 
     pub fn is_ready(&self,resources:&RenderResources) -> bool {
-        if self.textures.len() == 0 { return  true; }
+        if self.textures.is_empty() { return  true; }
         for tex in self.textures.iter() {
-            if let Some(texture) = tex {
-                if resources.get_render_resource(&texture.id, 0).is_none() {
-                    return false;
-                }
-            } else {
-                return false
+            if resources.get_render_resource(&tex.id, 0).is_none() {
+                return false;
             }
         }
         true
@@ -112,7 +103,7 @@ impl TextureProps {
         if self.is_dirty && self.textures.len() > 0 {
             let mut bind_group_builder = BindGroupBuilder::new();
             for texture in self.textures.iter() {
-                bind_group_builder.add_texture(texture.as_ref().unwrap().clone_weak());
+                bind_group_builder.add_texture(texture.clone_weak());
             }
             let bind_group = bind_group_builder.build(texture_layout.unwrap(), device, resources);
             self.bind_group = Some(bind_group);
@@ -121,33 +112,3 @@ impl TextureProps {
     }
 }
 
-
-#[test]
-fn test_material() {
-    use crate::material::read_material_def;
-    use lite_clojure_eval::EvalRT;
-    let test_md_string = r#"
-    {
-        :name "ui-color"
-        :order "Transparent"
-        :props [
-            {:name "scale" :type "float" :default 3.14159265358},
-            {:name "width" :type "int" :default 123456789},
-            {:name "isMask" :type "bool" :default true},
-        ]
-        :pass {
-            :z-write true
-            :z-test "<"
-            :cull "Back"
-            :vs "ui.vert"
-            :fs "ui.frag"
-        }
-    }
-    "#;
-    let mut vm = EvalRT::new();
-    let material_def = read_material_def(&mut vm, &test_md_string).unwrap();
-    
-    let mat = Material::from_def(Arc::new(material_def));
-    let s = mat.props.get_f32("scale", 0);
-    println!(" {}",s);
-}
