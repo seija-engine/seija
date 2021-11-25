@@ -86,7 +86,6 @@ impl TransformBuffer {
         if !self.infos.contains_key(&eid) {
             let mut build_group_builder = BindGroupBuilder::new();
             let start:u64 = self.len as u64 * wgpu::BIND_BUFFER_ALIGNMENT;
-            //println!("start:{} count:{}",start,crate::MATRIX_SIZE);
             build_group_builder.add_buffer_addr(self.uniform_buffer.clone().unwrap(), start, crate::MATRIX_SIZE);
             let bind_group = build_group_builder.build(&self.trans_layout, device, resources);
             let new_item = TransItem { index:self.len,bind_group };

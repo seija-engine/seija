@@ -1,12 +1,10 @@
 use std::{collections::HashMap, sync::Arc};
-
 use bevy_ecs::prelude::{Entity, World};
-use glam::{EulerRot, Quat};
 use seija_core::bytes::AsBytes;
 use seija_transform::Transform;
 use wgpu::{BufferUsage, Device, ShaderStage};
 
-use crate::{MATRIX_SIZE, RenderContext, pipeline::render_bindings::{BindGroupBuilder, BindGroupLayoutBuilder}, resource::{BufferId, RenderResourceId, RenderResources}};
+use crate::{MATRIX_SIZE, RenderContext, pipeline::render_bindings::{BindGroupBuilder, BindGroupLayoutBuilder}, resource::{BufferId, RenderResources}};
 
 use super::camera::Camera;
 

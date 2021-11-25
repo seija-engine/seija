@@ -1,8 +1,8 @@
-use crate::{RenderContext, camera::camera::Camera, graph::node::INode, material::{Material, MaterialStorage}, pipeline::{PipelineCache, RenderPipelines}, resource::Mesh};
+use crate::{RenderContext, camera::camera::Camera, graph::node::INode, material::{Material, MaterialStorage}, pipeline::{PipelineCache}, resource::Mesh};
 use bevy_ecs::prelude::*;
 
 use seija_asset::{Assets, Handle};
-use wgpu::{Color, CommandEncoder, Device, Operations, TextureView};
+use wgpu::{Color, Operations};
 use crate::resource::RenderResourceId;
 pub struct PassNode {
     operations:Operations<Color>
@@ -37,7 +37,6 @@ impl INode for PassNode {
             let meshs = world.get_resource::<Assets<Mesh>>().unwrap();
             let mat_storages = world.get_resource::<MaterialStorage>().unwrap();
             let mats = mat_storages.mateials.read();
-            
             
             let view = ctx.resources.get_texture_view_by_resid(view_id);
             if view.is_none() {

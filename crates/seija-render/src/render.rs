@@ -1,26 +1,26 @@
-use bevy_ecs::prelude::{World,Res};
-use seija_asset::{AssetEvent, Assets};
-use seija_core::event::{EventReader, Events, ManualEventReader};
+use bevy_ecs::prelude::{World};
+use seija_asset::{AssetEvent};
+use seija_core::event::{Events, ManualEventReader};
 use seija_core::window::AppWindow;
 use seija_winit::event::{WindowCreated, WindowResized};
 use std::{borrow::Cow, sync::Arc};
-use wgpu::{CommandEncoder, CommandEncoderDescriptor, Device};
-use crate::camera::system::{CameraState, update_camera};
-use crate::graph::{LinearGraphIter, RenderGraph};
-use crate::material::{MaterialSystem};
+use wgpu::{CommandEncoderDescriptor, Device, Instance, Queue};
+use crate::camera::system::{update_camera};
+use crate::graph::{self, LinearGraphIter, RenderGraph};
 use crate::render_context::RenderContext;
 use crate::resource::{self, Mesh, RenderResources, Texture};
 
 #[derive(Default)]
 pub struct RenderGraphContext {
     pub graph: RenderGraph,
-    pub graph_iter: Arc<LinearGraphIter>
+    pub graph_iter: LinearGraphIter
 }
 
 
 impl RenderGraphContext {
-    pub fn build_iter(&mut self) {
-        self.graph_iter = Arc::new(LinearGraphIter::from_graph(&self.graph));
+    pub fn build(&mut self) {
+        self.graph.build_iter();
+        self.graph_iter = LinearGraphIter::from_graph(&self.graph);
     }
 }
 
@@ -30,6 +30,8 @@ pub struct AppRender {
     pub instance: wgpu::Instance,
     pub device: Arc<wgpu::Device>,
     pub queue: wgpu::Queue,
+
+    pub graph:RenderGraphContext,
 
     pub window_resized_event_reader: ManualEventReader<WindowResized>,
     pub window_created_event_reader: ManualEventReader<WindowCreated>,
@@ -65,6 +67,21 @@ impl AppRender {
     }
 
     pub async fn new(config: Config) -> AppRender {
+        let (device,instance,queue) = AppRender::create_wgpu(config).await;
+        AppRender {
+            instance,
+            device,
+            queue,
+            window_created_event_reader:Default::default(),
+            window_resized_event_reader:Default::default(),
+            mesh_event_reader:Default::default(),
+            texture_event_reader:Default::default(),
+
+            graph:RenderGraphContext::default()
+        }
+    }
+
+    async fn create_wgpu(config:Config) -> (Arc<Device>,Instance,Queue) {
         let instance = wgpu::Instance::new(config.backed);
         let adapter = instance
             .request_adapter(&wgpu::RequestAdapterOptions {
@@ -85,23 +102,11 @@ impl AppRender {
             )
             .await
             .unwrap();
-        let arc_device = Arc::new(device);
-        AppRender {
-            instance,
-            device: arc_device.clone(),
-            queue,
-            window_created_event_reader:Default::default(),
-            window_resized_event_reader:Default::default(),
-            mesh_event_reader:Default::default(),
-            texture_event_reader:Default::default()
-        }
+        (Arc::new(device),instance,queue)
     }
 
-    pub fn init(&mut self,world: &mut World,ctx:&mut RenderContext) {
-        
-    }
 
-    pub fn update(&mut self, world: &mut World, graph_ctx: &mut RenderGraphContext,ctx:&mut RenderContext) {
+    pub fn update(&mut self, world: &mut World,ctx:&mut RenderContext) {
         ctx.command_encoder = Some(self.device.create_command_encoder(&CommandEncoderDescriptor::default()));
         self.update_winodw_surface(world,&mut ctx.resources);
         
@@ -109,19 +114,19 @@ impl AppRender {
         ctx.transform_buffer.update(world,&self.device,&mut ctx.resources,ctx.command_encoder.as_mut().unwrap());
         ctx.material_sys.update(world, &ctx.device, ctx.command_encoder.as_mut().unwrap(),&mut ctx.resources);
         ctx.light_state.update(world,&mut ctx.resources,ctx.command_encoder.as_mut().unwrap(),&ctx.device);
-        graph_ctx.graph.prepare(world);
-        for node_id in graph_ctx.graph_iter.nodes.iter() {
-            let cur_node = graph_ctx.graph.get_node(node_id).unwrap();
+        self.graph.graph.prepare(world);
+        for node_id in self.graph.graph_iter.nodes.iter() {
+            let cur_node = self.graph.graph.get_node(node_id).unwrap();
             let mut new_inputs = cur_node.inputs.clone();
             for parent_edge in cur_node.edges.input_edges.iter() {
-                let parent_node = graph_ctx.graph.get_node(&parent_edge.output_node).unwrap();
+                let parent_node = self.graph.graph.get_node(&parent_edge.output_node).unwrap();
                 for i in 0..parent_edge.output_idxs.len() {
                     let out_value = &parent_node.outputs[i];
                     new_inputs[parent_edge.input_idxs[i]] = out_value.clone();
                 }
             }
 
-            if let Ok(node) = graph_ctx.graph.get_node_mut(node_id) {
+            if let Ok(node) = self.graph.graph.get_node_mut(node_id) {
                 node.node.update(world,ctx, &new_inputs, &mut node.outputs);
             }
         }
@@ -132,11 +137,7 @@ impl AppRender {
         let command_buffer = ctx.command_encoder.take().unwrap().finish();
         self.queue.submit(Some(command_buffer));
         ctx.resources.clear_swap_chain_texture();
-        
-        
     }
-
-    
 
     fn update_winodw_surface(&mut self, world: &mut World,render_res:&mut RenderResources) {
         let mut is_create_window = false;

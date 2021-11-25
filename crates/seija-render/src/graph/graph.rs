@@ -6,7 +6,7 @@ use super::RenderGraphError;
 pub struct RenderGraph {
     nodes: HashMap<NodeId, GraphNode>,
     node_names: HashMap<Cow<'static, str>, NodeId>,
-    iter:LinearGraphIter,
+    pub iter:LinearGraphIter,
 }
 
 impl Debug for RenderGraph {

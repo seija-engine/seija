@@ -4,9 +4,9 @@ use super::{MaterialDef, RenderOrder};
 use seija_asset::Handle;
 use seija_core::{TypeUuid};
 use wgpu::{BufferUsage, Device};
-use crate::pipeline::render_bindings::{BindGroupBuilder, BindGroupLayoutBuilder};
+use crate::pipeline::render_bindings::{BindGroupBuilder};
 use crate::resource::{BufferId, RenderResources, Texture};
-use crate::{material::read_material_def, memory::{TypedUniformBuffer}};
+use crate::{memory::{TypedUniformBuffer}};
 use uuid::Uuid;
 
 #[derive(Debug,TypeUuid)]
@@ -124,6 +124,7 @@ impl TextureProps {
 
 #[test]
 fn test_material() {
+    use crate::material::read_material_def;
     use lite_clojure_eval::EvalRT;
     let test_md_string = r#"
     {
