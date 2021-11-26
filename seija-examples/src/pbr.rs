@@ -28,7 +28,7 @@ fn create_pbr_sphere(commands:&mut Commands,textures:&mut Assets<Texture>,meshs:
     let mesh:Mesh = Sphere::new(2f32).into();
     let h_mesh = meshs.add(mesh);
     let h_material = materials.create_material_with("pbr", |mat| {
-        mat.texture_props.set("baseColor", h_texture.clone());
+        //mat.texture_props.set("baseColor", h_texture.clone());
         //mat.texture_props.set("roughness", h_roughness.clone());
         //mat.texture_props.set("normal", h_normal.clone());
     });

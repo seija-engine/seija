@@ -1971,6 +1971,7 @@ dependencies = [
  "lite-clojure-eval",
  "log",
  "num_enum",
+ "once_cell",
  "parking_lot",
  "raw-window-handle",
  "seija-app",

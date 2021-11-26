@@ -72,7 +72,6 @@ pub fn color_texture(color:[u8;4],size:usize) -> Texture {
     let pixel_len = size * size;
     let mut data:Vec<u8> = Vec::with_capacity(pixel_len * 4);
     for idx in 0..pixel_len {
-        let start = idx * 4;
         data.extend_from_slice(&color);
     }
     Texture {

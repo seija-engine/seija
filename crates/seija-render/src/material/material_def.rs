@@ -1,7 +1,7 @@
 use std::{convert::{TryFrom}, sync::{Arc}};
 use seija_core::{TypeUuid};
 use wgpu::{FrontFace, PolygonMode};
-use super::{RenderOrder, errors::MaterialDefReadError, texture_prop_def::TexturePropDef, types::{Cull, SFrontFace, SPolygonMode, ZTest}};
+use super::{RenderOrder, errors::MaterialDefReadError, storage::DEFAULT_TEXTURES, texture_prop_def::TexturePropDef, types::{Cull, SFrontFace, SPolygonMode, ZTest}};
 use lite_clojure_eval::EvalRT;
 use serde_json::{Value};
 use uuid::Uuid;
@@ -96,18 +96,24 @@ fn read_texture_prop(json_value:&Value) -> Result<TexturePropDef,()> {
         if let Some(map) = item.as_object() {
             let prop_type = map.get(":type").and_then(|v| v.as_str()).ok_or(())?;
             let prop_name = map.get(":name").and_then(|v| v.as_str()).ok_or(())?;
+            let def_name = map.get(":default").and_then(|v| v.as_str());
+            let mut def_index = 0;
+            if let Some(def_name) = def_name {
+                let idx = DEFAULT_TEXTURES.get(def_name).map(|s| *s).unwrap_or(0);
+                def_index = idx;
+            }
             match prop_type {
                 "Texture" => {
                     texture_props.layout_builder.add_texture(false);
                     texture_props.layout_builder.add_sampler();
-                    texture_props.indexs.insert(prop_name.to_string(), (texture_index,0));
+                    texture_props.indexs.insert(prop_name.to_string(), (texture_index,def_index));
                    
                     texture_index += 1;
                 },
                 "CubeMap" => {
                     texture_props.layout_builder.add_texture(true);
                     texture_props.layout_builder.add_sampler();
-                    texture_props.indexs.insert(prop_name.to_string(), (texture_index,0));
+                    texture_props.indexs.insert(prop_name.to_string(), (texture_index,def_index));
                     texture_index += 1;
                 },
                 _ => {}

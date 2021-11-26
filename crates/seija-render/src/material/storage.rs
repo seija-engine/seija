@@ -4,9 +4,18 @@ use crossbeam_channel::{Sender, TryRecvError};
 use parking_lot::RwLock;
 use seija_asset::{ AssetServer, Assets, Handle, LifecycleEvent, RefEvent};
 use seija_core::{TypeUuid};
+use once_cell::sync::Lazy;
+
 
 use crate::{material::Material, resource::{Texture, color_texture}};
 use super::MaterialDef;
+
+pub(crate) static DEFAULT_TEXTURES:Lazy<HashMap<String,usize>> = Lazy::new(|| {
+    let mut m:HashMap<String,usize> = HashMap::new();
+    m.insert("white".to_string(), 0);
+    m.insert("blue".to_string(), 1);
+    m   
+});
 
 pub struct MaterialDefInfo {
    pub def:Arc<MaterialDef>,
