@@ -25,8 +25,8 @@
         a. <del> 完成PBR Cook-Torrance的BRDF的高光和漫反射部分。 </del>  
 
   5. 进一步优化材质系统  
-        a. <del> 实现贴图属性的默认值 </del>
-        b. 优化材质读取Shader和Shader的组织方式
+        a. <del> 实现贴图属性的默认值 </del>  
+        b. 优化材质读取Shader和Shader的组织方式  
 
   6. 实现延迟渲染的渲染路径
   
