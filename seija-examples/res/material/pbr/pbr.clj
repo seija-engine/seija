@@ -17,12 +17,12 @@
         :cull "Back"
         :vs "res/material/pbr/vert.spv"
         :fs "res/material/pbr/frag.spv"
-        :shader { 
-            :macros ["NORMAL_MAP","FRESNEL"]
+        :shader {
             :name "pbr"
-            :frag "void on_material(MaterialInput input) {
-                   
-            }"    
+            :macros ["NORMAL_MAP"]
+            :vert-process "void process() {
+
+            }"
         }
     }
 }
