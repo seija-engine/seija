@@ -5,4 +5,8 @@ edition = "2018"
 
 [dependencies]
 shaderc = "0.7.2"
-glob = "0.3.0"
+walkdir = "2.3.2"
+log = "0.4.14"
+env_logger = "0.8.4"
+serde_json = "1.0.64"
+lite-clojure-eval = {git = "https://github.com/seija-engine/lite-clojure.git"}
