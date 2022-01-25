@@ -4,7 +4,7 @@ use super::node::{Edge, GraphNode, INode, NodeId};
 use super::RenderGraphError;
 
 pub struct RenderGraph {
-    nodes: HashMap<NodeId, GraphNode>,
+    nodes: HashMap<NodeId, GraphNode>, //TODO 替换为普通索引
     node_names: HashMap<Cow<'static, str>, NodeId>,
     pub iter:LinearGraphIter,
 }
