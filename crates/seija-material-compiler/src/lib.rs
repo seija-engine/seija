@@ -1,3 +1,5 @@
+use glsl_pkg::PackageManager;
+
 use crate::backend::SeijaShaderBackend;
 
 mod backend;
@@ -5,10 +7,9 @@ mod backend;
 
 #[test]
 fn test_fn() {
-    use glsl_pkg::{CompileConfig,CompileTask,Compiler,CompileEnv};
-    let mut cfg = CompileConfig::new(SeijaShaderBackend::new());
-    cfg.set_source_path("path");
-    let mut compiler = Compiler::new(cfg);
-    let task = CompileTask::new("name", vec![]);
-    compiler.run_task(&task);
+   let backend = SeijaShaderBackend::new();
+   let mut pkg_mgr = PackageManager::new();
+   pkg_mgr.add_dir("../shaders");
+   pkg_mgr.set_out_path("../.shader_out");
+   pkg_mgr.compile("core", "color", vec![], &backend);
 }

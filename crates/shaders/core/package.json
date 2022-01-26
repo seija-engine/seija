@@ -1,0 +1,29 @@
+{
+    "name":"core",
+
+    "shaders": [
+      {
+        "name": "color",
+        "vertex": {
+          "POSITION": "require",
+          "COLOR": "option",
+          "NORMAL": "option"
+        },
+        "backend": [ "Camera", "Transform3D" ],
+        "slots": [ "material_vertex", "material_frag" ],
+        "vs": "color.vs_main",
+        "fs": "color.fs_main"
+      },
+      {
+        "name": "pbr",
+        "vertex": {
+          "POSITION": "require",
+          "NORMAL": "require"
+        },
+        "backend": [ "Camera", "Transform3D" ],
+        "slots": [ "material_vertex", "material_frag" ],
+        "vs": "pbr.vs_main",
+        "fs": "pbr.fs_main"
+      }
+    ]
+}
