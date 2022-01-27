@@ -1,4 +1,4 @@
-use std::{convert::{TryFrom}, sync::{Arc}};
+use std::{convert::{TryFrom}, sync::{Arc}, cell::Ref};
 use seija_core::{TypeUuid};
 use wgpu::{FrontFace, PolygonMode};
 use super::{RenderOrder, errors::MaterialDefReadError, storage::DEFAULT_TEXTURES, texture_prop_def::TexturePropDef, types::{Cull, SFrontFace, SPolygonMode, ZTest}};
@@ -27,7 +27,10 @@ pub struct PassDef {
     pub z_test:ZTest,
     pub cull:Cull,
     pub clamp_depth:bool,
+    pub shader_info:ShaderInfoDef,
+    //TODO delete it
     pub vs_path:String,
+    //TODO delete it
     pub fs_path:String
 }
 
@@ -42,9 +45,15 @@ impl Default for PassDef {
             clamp_depth:false,
             cull: Cull::Back,
             vs_path:String::default(),
-            fs_path:String::default() 
+            fs_path:String::default(),
+            shader_info:ShaderInfoDef::default()
         }
     }
+}
+#[derive(Debug,Default)]
+pub struct ShaderInfoDef {
+    pub name:String,
+    pub macros:Arc<Vec<String>>
 }
 
 pub fn read_material_def(vm:&mut EvalRT,file_string:&str) -> Result<MaterialDef,MaterialDefReadError>  {
@@ -61,6 +70,7 @@ pub fn read_material_def(vm:&mut EvalRT,file_string:&str) -> Result<MaterialDef,
     if let Some(light) = value.get(":light").and_then(|v| v.as_bool()) {
         is_light = light;
     }
+    
     //pass
     let json_pass = value.get(":pass").ok_or(MaterialDefReadError::InvalidPass)?;
     let mut pass_list:Vec<PassDef> = Vec::new();
@@ -130,26 +140,42 @@ fn read_pass(json_value:&Value) -> Result<PassDef,MaterialDefReadError> {
         pass_def.z_write = z_write;
     }
     if let Some(s) = map.get(":front-face").and_then(|v| v.as_str()) {
-        pass_def.front_face = SFrontFace::try_from(s).map_err(|_| MaterialDefReadError::InvalidPass )?
+        pass_def.front_face = SFrontFace::try_from(s).map_err(|_| MaterialDefReadError::InvalidPassProp(":front-face".into()) )?
     }
     //if let Some(b) = map.get(":clamp-depth").and_then(|v| v.as_bool()) {
     //    pass_def.clamp_depth = b;
     //}
+    
     if let Some(z_test) = map.get(":z-test").and_then(|v| v.as_str()) {
-        pass_def.z_test = ZTest::try_from(z_test).map_err(|_| MaterialDefReadError::InvalidPass)?;
+        pass_def.z_test = ZTest::try_from(z_test).map_err(|_| MaterialDefReadError::InvalidPassProp(":z-test".into()))?;
     }
     if let Some(cull) = map.get(":cull").and_then(|v| v.as_str()) {
-        pass_def.cull = Cull::try_from(cull).map_err(|_| MaterialDefReadError::InvalidPass)?;
+        pass_def.cull = Cull::try_from(cull).map_err(|_| MaterialDefReadError::InvalidPassProp(":cull".into()))?;
     }
     if let Some(poly) = map.get(":polygon-mode").and_then(|v| v.as_str()) {
-        pass_def.polygon_mode = SPolygonMode::try_from(poly).map_err(|_| MaterialDefReadError::InvalidPass)?;
+        pass_def.polygon_mode = SPolygonMode::try_from(poly).map_err(|_| MaterialDefReadError::InvalidPassProp(":polygon-mode".into()))?;
     }
     if let Some(b) = map.get(":conservative").and_then(|v| v.as_bool()) {
         pass_def.conservative = b;
     }
-
-    pass_def.vs_path = map.get(":vs").and_then(|v|v.as_str()).ok_or( MaterialDefReadError::InvalidPass)?.to_string();
-    pass_def.fs_path = map.get(":fs").and_then(|v|v.as_str()).ok_or( MaterialDefReadError::InvalidPass)?.to_string();
+    let shader_value =  map.get(":shader").ok_or(MaterialDefReadError::InvalidPassProp("shader".into()))?;
+    pass_def.shader_info = ShaderInfoDef::try_from(shader_value)?;
     Ok(pass_def)
 }
 
+impl TryFrom<&Value> for ShaderInfoDef  {
+    type Error = MaterialDefReadError;
+    fn try_from(value: &Value) -> Result<Self, Self::Error> {
+        let name = value.get(":name").and_then(|v| v.as_str()).ok_or(MaterialDefReadError::InvalidPassProp("shader".into()))?;
+        let mut macro_arr = vec![];
+        if let Some(macros) = value.get(":macros") {
+            macro_arr = macros.as_array().map(|arr| {
+               arr.iter().filter_map(|v| v.as_str()).map(|v| v.to_string()).collect()
+           }).unwrap_or(vec![]);
+        }
+        Ok(ShaderInfoDef {
+            name:name.to_string(),
+            macros:Arc::new(macro_arr)
+        })
+    }
+}

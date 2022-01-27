@@ -14,7 +14,7 @@
         :z-test "<"
         :cull "Back"
         :shader {
-            :name "pbr"
+            :name "core.color"
             :macros ["NORMAL_MAP"]
             :vert-process "void process() {
 

@@ -36,6 +36,7 @@ impl IShaderBackend for SeijaShaderBackend {
     fn trait_fns<W:Write>(&self) -> HashMap<String, fn(&mut W)> {
         let mut traits:HashMap<String,fn(&mut W)> = HashMap::default();
         traits.insert("Camera".into(), get_camera_trait);
+        traits.insert("Transform3D".into(), get_transform3d_trait);
         traits
     }
 
@@ -62,4 +63,12 @@ fn get_camera_trait<W:Write>(writer:&mut W) {
     writer.write_str("mat4 getCameraViewProject() {\r\n").unwrap();
     writer.write_str("  return frameUniforms.cameraVP;\r\n").unwrap();
     writer.write_str("}\r\n").unwrap();
+}
+
+fn get_transform3d_trait<W:Write>(writer:&mut W) {
+    writer.write_str("mat4 getObjectTransform() {\r\n").unwrap();
+    writer.write_str("  return objectUniforms.transform;\r\n").unwrap();
+    writer.write_str("}\r\n").unwrap();
+
+   
 }
