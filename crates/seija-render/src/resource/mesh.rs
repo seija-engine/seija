@@ -198,7 +198,8 @@ pub struct Mesh {
 impl Hash for Mesh {
     fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
         self.typ.hash(state);
-        core::mem::discriminant(&self.values).hash(state);
+        //TODO Fix
+        core::mem::discriminant(&self.typ).hash(state);
         if let Some(idxs) = self.indices.as_ref() {
             1.hash(state);
             core::mem::discriminant(idxs).hash(state);

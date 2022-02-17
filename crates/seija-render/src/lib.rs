@@ -10,7 +10,10 @@ use seija_app::IModule;
 use seija_app::{App};
 use bevy_ecs::prelude::*;
 use seija_core::{CoreStage};
+use uniforms::UniformContext;
 use crate::graph::nodes::{PassNode, WindowTextureNode};
+#[macro_use]
+extern crate downcast;
 
 pub use wgpu;
 
@@ -26,6 +29,7 @@ mod render_context;
 mod render;
 mod memory;
 mod transform_buffer;
+mod uniforms;
 
 pub use transform_buffer::TransformBuffer;
 pub use render_context::{RenderContext};
@@ -70,7 +74,8 @@ fn get_render_system(w:&mut World) -> impl FnMut(&mut World) {
         camera_state:CameraState::new(&app_render.device),
         transform_buffer:TransformBuffer::new(&app_render.device),
         material_sys:MaterialSystem::new(&app_render.device),
-        light_state:LightState::new(&app_render.device)
+        light_state:LightState::new(&app_render.device),
+        uniforms:UniformContext::default()
     };
 
     w.insert_resource(PipelineCache::default());
