@@ -722,12 +722,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "downcast"
-version = "0.11.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1435fa1053d8b2fbbe9be7e97eca7f33d37b28409959813daefc1446a14247f1"
-
-[[package]]
 name = "downcast-rs"
 version = "1.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -762,6 +756,19 @@ name = "env_logger"
 version = "0.8.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a19187fea3ac7e84da7dacf48de0c45d63c6a76f9490dae389aead16c243fce3"
+dependencies = [
+ "atty",
+ "humantime",
+ "log",
+ "regex",
+ "termcolor",
+]
+
+[[package]]
+name = "env_logger"
+version = "0.9.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0b2cf0344971ee6c64c31be0d530793fba457d322dfec2810c453d0ef228f9c3"
 dependencies = [
  "atty",
  "humantime",
@@ -1096,9 +1103,9 @@ checksum = "e01732b97afd8508eee3333a541b9f7610f454bb818669e66e90f5f57c93a776"
 
 [[package]]
 name = "glam"
-version = "0.18.0"
+version = "0.20.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "525a3e490ba77b8e326fb67d4b44b4bd2f920f44d4cc73ccec50adc68e3bee34"
+checksum = "e4fa84eead97d5412b2a20aed4d66612a97a9e41e08eababdb9ae2bf88667490"
 
 [[package]]
 name = "glob"
@@ -1143,7 +1150,7 @@ name = "glsl-pkg"
 version = "0.1.0"
 dependencies = [
  "anyhow",
- "env_logger",
+ "env_logger 0.8.4",
  "glsl-lang",
  "glsl-pack-rtbase",
  "lang-util",
@@ -1256,11 +1263,11 @@ dependencies = [
 
 [[package]]
 name = "hexasphere"
-version = "4.1.1"
+version = "6.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b69824ef63443efe6187c621d24ef1a3c6a0381881cc024ff47be38a8bfc1127"
+checksum = "9dc62dcfd68ec810c4707804556f2e88655012b1a373b0e0bbbe88a9db366627"
 dependencies = [
- "glam 0.18.0",
+ "glam 0.20.2",
  "lazy_static",
 ]
 
@@ -2217,7 +2224,7 @@ name = "seija-examples"
 version = "0.1.0"
 dependencies = [
  "bevy_ecs",
- "env_logger",
+ "env_logger 0.9.0",
  "glam 0.17.3",
  "lite-clojure-eval",
  "seija-app",
@@ -2246,7 +2253,7 @@ name = "seija-material-compiler"
 version = "0.1.0"
 dependencies = [
  "anyhow",
- "env_logger",
+ "env_logger 0.8.4",
  "glob",
  "glsl-pkg",
  "lite-clojure-eval",
@@ -2263,8 +2270,7 @@ dependencies = [
  "bevy_ecs",
  "bitflags",
  "crossbeam-channel",
- "downcast",
- "env_logger",
+ "env_logger 0.9.0",
  "fnv",
  "futures-lite",
  "glam 0.17.3",

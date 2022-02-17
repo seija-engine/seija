@@ -6,3 +6,10 @@
 ## 一些前提
 1. 一份uniform数据由 ”场景内实际的数据对象“  "收集后的容器" “GPU的BufferId和Layout”组成。
 2. 希望 ”场景内实际的数据对象“ ->  "收集后的容器" 这一步在render graph中完成
+3. 材质需要知道自己使用了哪些Uniform
+
+## 尝试1
+1. "收集后的容器"和stage buffer存在graph node中
+2. “GPU的BufferId和Layout”存在RenderContext上
+3. 创建Pipeline的时候需要根据具体的shader的backend来引用对应的Uniform
+4. 渲染的时候同上，需要知道怎么set Uniform

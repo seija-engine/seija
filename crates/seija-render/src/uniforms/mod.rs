@@ -1,29 +1,19 @@
-use downcast::Any;
+use crate::resource::BufferId;
+use std::collections::{HashMap};
 
-use downcast::{downcast};
-
-mod camera;
-
-pub trait IUniform :Any {
-    
+pub struct GPUUniform {
+    buffer:Option<BufferId>,
+    layout:wgpu::BindGroupLayout,
+    bind_group:Option<wgpu::BindGroup>
 }
-
-downcast!(dyn IUniform);
 
 #[derive(Default)]
-pub struct UniformContext {
-    uniforms:Vec<Box<dyn IUniform>>
+pub struct GPUUniformList {
+  list:HashMap<String,GPUUniform>
 }
 
-impl UniformContext {
-    pub fn add<T:IUniform>(&mut self,value:T) {
-        self.uniforms.push(Box::new(value));
-    }
-    pub fn get_value<T:'static>(&mut self,idx:usize) -> &mut T {
-       let value = &mut self.uniforms[idx];
-       let ret:Result<&mut T,_> = value.downcast_mut();
-       ret.unwrap()
-    }
+impl GPUUniformList {
+
 }
 
 
