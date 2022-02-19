@@ -17,7 +17,7 @@ use seija_core::{CoreModule, CoreStage, StartupStage};
 
 use seija_examples::{IExamples, pre_start};
 
-use seija_render::{RenderModule};
+use seija_render::{RenderModule, RenderConfig};
 use seija_winit::WinitModule;
 use seija_transform::{TransformModule};
 
@@ -32,9 +32,12 @@ fn main() {
     app.add_module(WinitModule::default());
     app.add_module(TransformModule);
     app.add_module(AssetModule);
-    app.add_module(RenderModule);
+    let mut render_config = RenderConfig::default();
+    render_config.set_shader_path(".shader_out");
+    app.add_module(RenderModule(render_config));
     
-    app.add_system2(CoreStage::Startup, StartupStage::PreStartup, pre_start.system());
+    //app.add_system2(CoreStage::Startup, StartupStage::PreStartup, pre_start.system());
+    /*
     match TEST_NAME {
         "sample_gltf" => {
             SampleGltf::run(&mut app);
@@ -52,7 +55,7 @@ fn main() {
             pbr::PbrTest::run(&mut app);
         }
         _ => { unimplemented!() }
-    };
+    }; */
 
     
     app.run();

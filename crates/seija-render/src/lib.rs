@@ -1,3 +1,5 @@
+use std::path::{PathBuf, Path};
+
 use camera::system::CameraState;
 use camera::{view_list::view_list_system};
 use graph::nodes::SwapchainNode;
@@ -5,7 +7,8 @@ use light::LightState;
 use material::MaterialSystem;
 use pipeline::{PipelineCache, update_pipeline_cache};
 use render::{AppRender, Config , RenderGraphContext};
-use resource::{ RenderResources};
+use resource::{RenderResources};
+use rt_shaders::RuntimeShaderInfo;
 use seija_app::IModule;
 use seija_app::{App};
 use bevy_ecs::prelude::*;
@@ -23,6 +26,7 @@ pub mod resource;
 pub mod pipeline;
 pub mod light;
 
+mod rt_shaders;
 mod mesh_render;
 mod render_context;
 mod render;
@@ -42,7 +46,19 @@ pub enum RenderStage {
     PostRender,
 }
 
-pub struct RenderModule;
+#[derive(Default)]
+pub struct RenderConfig {
+    shader_path:PathBuf
+}
+
+impl RenderConfig {
+    pub fn set_shader_path<P:AsRef<Path>>(&mut self,path:P) {
+        self.shader_path = path.as_ref().into();
+    }
+}
+
+#[derive(Default)]
+pub struct RenderModule(pub RenderConfig);
 
 impl IModule for RenderModule {
     fn init(&mut self,app:&mut App) {
@@ -51,7 +67,7 @@ impl IModule for RenderModule {
         material::init_material(app);
         light::init_light(app);
 
-        let render_system = get_render_system(&mut app.world);
+        let render_system = self.get_render_system(&mut app.world);
         app.schedule.add_stage_after(CoreStage::PostUpdate, RenderStage::AfterRender, SystemStage::parallel());
         app.schedule.add_stage_before(RenderStage::AfterRender, RenderStage::Render, SystemStage::single(render_system.exclusive_system()));
         app.schedule.add_stage_before(RenderStage::Render, RenderStage::PostRender, SystemStage::parallel());
@@ -63,30 +79,36 @@ impl IModule for RenderModule {
     }
 }
 
-fn get_render_system(w:&mut World) -> impl FnMut(&mut World) {
-    let mut app_render = AppRender::new_sync(Config::default());
-    
-    let render_ctx = RenderContext {
-        device:app_render.device.clone(),
-        command_encoder:None,
-        resources:RenderResources::new(app_render.device.clone()),
-        camera_state:CameraState::new(&app_render.device),
-        transform_buffer:TransformBuffer::new(&app_render.device),
-        material_sys:MaterialSystem::new(&app_render.device),
-        light_state:LightState::new(&app_render.device),
-        uniforms:GPUUniformList::default()
-    };
 
-    w.insert_resource(PipelineCache::default());
-    w.insert_resource(render_ctx);
-    add_base_nodes(&mut app_render.graph);
+impl RenderModule {
+    fn get_render_system(&self,w:&mut World) -> impl FnMut(&mut World) {
+        let mut app_render = AppRender::new_sync(Config::default());
+        let mut shaders = RuntimeShaderInfo::default();
+        shaders.load(&self.0.shader_path);
+        let render_ctx = RenderContext {
+            device:app_render.device.clone(),
+            command_encoder:None,
+            resources:RenderResources::new(app_render.device.clone()),
+            camera_state:CameraState::new(&app_render.device),
+            transform_buffer:TransformBuffer::new(&app_render.device),
+            material_sys:MaterialSystem::new(&app_render.device),
+            light_state:LightState::new(&app_render.device),
+            uniforms:GPUUniformList::default(),
+            shaders
+        };
     
-    move |_w| {
-        _w.resource_scope(|world:&mut World,mut ctx:Mut<RenderContext>| {
-            app_render.update(world,&mut ctx); 
-        }); 
+        w.insert_resource(PipelineCache::default());
+        w.insert_resource(render_ctx);
+        add_base_nodes(&mut app_render.graph);
+        
+        move |_w| {
+            _w.resource_scope(|world:&mut World,mut ctx:Mut<RenderContext>| {
+                app_render.update(world,&mut ctx); 
+            }); 
+        }
     }
 }
+
 
 fn add_base_nodes(graph_ctx:&mut RenderGraphContext) {
     let pass_node = PassNode::new();

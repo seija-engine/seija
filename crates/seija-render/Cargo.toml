@@ -28,3 +28,4 @@ log = "0.4.14"
 image = "0.23.14"
 env_logger = "0.9.0"
 hexasphere = "6.0.0"
+glsl-pack-rtbase = {path = "../../../glsl-pack/glsl-pack-rtbase"}

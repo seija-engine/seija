@@ -101,7 +101,7 @@ impl PipelineCache {
        let frag_shader = Self::read_shader_module(&pass.fs_path,&ctx.device)?;
 
        
-      let pipeline_layout = self.create_pipeline_layout(ctx,mat_def);
+      let pipeline_layout = self.create_pipeline_layout(ctx,pass,mat_def);
 
       let targets = vec![wgpu::ColorTargetState {
         format: wgpu::TextureFormat::Bgra8UnormSrgb,
@@ -137,7 +137,8 @@ impl PipelineCache {
        Some(render_pipeline)
     }
 
-    fn create_pipeline_layout(&mut self,ctx:&RenderContext,mat_def:&MaterialDef) -> PipelineLayout {
+    fn create_pipeline_layout(&mut self,ctx:&RenderContext,pass_def:&PassDef,mat_def:&MaterialDef) -> PipelineLayout {
+        /* 
         let camera_layout:&wgpu::BindGroupLayout = &ctx.camera_state.camera_layout;
         let trans_layout = &ctx.transform_buffer.trans_layout;
         let material_layout = &ctx.material_sys.layout;
@@ -152,7 +153,8 @@ impl PipelineCache {
         if mat_def.is_light {
             layouts.push(&ctx.light_state.layout);
         }
-     
+        */
+        let layouts = ctx.create_bind_group_layout(pass_def);
         let layout_desc = PipelineLayoutDescriptor {
             label:None,
             bind_group_layouts:&layouts,

@@ -52,6 +52,7 @@ impl MaterialCompiler {
             log::info!("compile material success {}.{}",&task.pkg_name,&task.shader_name);
         }
       }
+      self.pkg_mgr.write_rtinfos();
    }
 
    fn collect_mat_task(&self,path:&PathBuf,tasks:&mut Vec<ShaderTask>) -> Result<()> {
@@ -91,7 +92,7 @@ fn test_fn() {
 
    let mut mc = MaterialCompiler::new();
    mc.add_shader_dir("../shaders");
-   mc.set_shader_out("../.shader_out");
+   mc.set_shader_out("../../.shader_out");
    mc.add_mat_search_path("../../seija-examples/res/new_material");
    mc.run();
 }

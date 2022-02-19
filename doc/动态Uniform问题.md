@@ -7,9 +7,17 @@
 1. 一份uniform数据由 ”场景内实际的数据对象“  "收集后的容器" “GPU的BufferId和Layout”组成。
 2. 希望 ”场景内实际的数据对象“ ->  "收集后的容器" 这一步在render graph中完成
 3. 材质需要知道自己使用了哪些Uniform
+4. 创建Pipeline的时候需要根据具体的shader的backend来引用对应的Uniform
+5. 渲染的时候同上，需要知道怎么set Uniform
 
 ## 尝试1
-1. "收集后的容器"和stage buffer存在graph node中
-2. “GPU的BufferId和Layout”存在RenderContext上
-3. 创建Pipeline的时候需要根据具体的shader的backend来引用对应的Uniform
-4. 渲染的时候同上，需要知道怎么set Uniform
+1. "收集后的容器"和stage buffer存在graph node中。-> "CollectLight3DNode"
+2. "GPU的BufferId和Layout"存在RenderContext上 -> "GPUUniformList"
+3. 编译材质的时候导出一份shader对应的backend配置,并且加载到RenderContext上 -> "RuntimeShaderInfo"
+
+
+## "GPUUniformList"需要支持什么
+1. 支持PipelineCache创建pipeline时获取BindGroupLayout。根据PassDef的Shader.name
+2. 支持RenderPipe渲染的时候按顺序设置GPUUniform
+3. 支持GraphNode获取到对应的GPUUniform
+4. 支持材质编译器根据Backend输出Shader (?)
