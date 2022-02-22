@@ -48,12 +48,12 @@ pub enum RenderStage {
 
 #[derive(Default)]
 pub struct RenderConfig {
-    shader_path:PathBuf
+    config_path:PathBuf
 }
 
 impl RenderConfig {
-    pub fn set_shader_path<P:AsRef<Path>>(&mut self,path:P) {
-        self.shader_path = path.as_ref().into();
+    pub fn set_config_path<P:AsRef<Path>>(&mut self,path:P) {
+        self.config_path = path.as_ref().into();
     }
 }
 
@@ -84,7 +84,7 @@ impl RenderModule {
     fn get_render_system(&self,w:&mut World) -> impl FnMut(&mut World) {
         let mut app_render = AppRender::new_sync(Config::default());
         let mut shaders = RuntimeShaderInfo::default();
-        shaders.load(&self.0.shader_path);
+        shaders.load(&self.0.config_path);
         let render_ctx = RenderContext {
             device:app_render.device.clone(),
             command_encoder:None,

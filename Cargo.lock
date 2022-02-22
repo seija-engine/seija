@@ -2234,6 +2234,7 @@ dependencies = [
  "seija-asset",
  "seija-core",
  "seija-gltf",
+ "seija-material-compiler",
  "seija-render",
  "seija-transform",
  "seija-winit",

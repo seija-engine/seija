@@ -3,6 +3,11 @@ name = "seija-examples"
 version = "0.1.0"
 edition = "2018"
 
+build = "build.rs"
+
+[build-dependencies]
+seija-material-compiler = {path = "../crates/seija-material-compiler"}
+
 [dependencies]
 seija-asset = {path = "../crates/seija-asset"}
 seija-app = {path = "../crates/seija-app"}

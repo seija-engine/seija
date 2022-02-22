@@ -92,7 +92,7 @@ fn test_fn() {
 
    let mut mc = MaterialCompiler::new();
    mc.add_shader_dir("../shaders");
-   mc.set_shader_out("../../.shader_out");
+   mc.set_shader_out("../../assets/.shader_out");
    mc.add_mat_search_path("../../seija-examples/res/new_material");
    mc.run();
 }
