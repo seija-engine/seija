@@ -1,5 +1,5 @@
 [package]
-name = "seija-material-compiler"
+name = "material-compiler"
 version = "0.1.0"
 edition = "2018"
 
@@ -10,6 +10,6 @@ log = "0.4.14"
 env_logger = "0.8.4"
 serde_json = "1.0.64"
 lite-clojure-eval = {git = "https://github.com/seija-engine/lite-clojure.git"}
-glsl-pkg = {path = "../../../glsl-pack/glsl-pkg"}
+glsl-pkg = {path = "../../../../glsl-pack/glsl-pkg"}
 glob = "0.3.0"
-seija-render = {path = "../seija-render"}
+seija-render = {path = "../../seija-render"}

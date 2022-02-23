@@ -1554,6 +1554,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "material-compiler"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "env_logger 0.8.4",
+ "glob",
+ "glsl-pkg",
+ "lite-clojure-eval",
+ "log",
+ "seija-render",
+ "serde_json",
+ "walkdir",
+]
+
+[[package]]
 name = "maybe-uninit"
 version = "2.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2230,11 +2245,11 @@ dependencies = [
  "env_logger 0.9.0",
  "glam 0.17.3",
  "lite-clojure-eval",
+ "material-compiler",
  "seija-app",
  "seija-asset",
  "seija-core",
  "seija-gltf",
- "seija-material-compiler",
  "seija-render",
  "seija-transform",
  "seija-winit",
@@ -2250,21 +2265,6 @@ dependencies = [
  "seija-asset",
  "seija-render",
  "seija-transform",
-]
-
-[[package]]
-name = "seija-material-compiler"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "env_logger 0.8.4",
- "glob",
- "glsl-pkg",
- "lite-clojure-eval",
- "log",
- "seija-render",
- "serde_json",
- "walkdir",
 ]
 
 [[package]]

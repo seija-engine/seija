@@ -1,7 +1,7 @@
 use std::path::PathBuf;
 use std::fs;
 use std::time::SystemTime;
-use seija_material_compiler::MaterialCompiler;
+use material_compiler::MaterialCompiler;
 
 fn main() {
     let time_path = PathBuf::from(".render_cfg/lasttime.txt");
@@ -19,12 +19,8 @@ fn main() {
         mc.set_shader_out(".render_cfg/shaders/");
         mc.add_mat_search_path("res/new_material");
         mc.run();
-
         fs::write(&time_path, last_shader_time).unwrap();
-    } 
-    
-
-   
+    }
 }
 
 fn read_shader_last_time() -> String {
