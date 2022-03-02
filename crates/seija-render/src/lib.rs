@@ -13,12 +13,11 @@ use seija_app::IModule;
 use seija_app::{App};
 use bevy_ecs::prelude::*;
 use seija_core::{CoreStage};
-use uniforms::GPUUniformList;
 use crate::graph::nodes::{PassNode, WindowTextureNode};
 
 
 pub use wgpu;
-
+mod script;
 pub mod material;
 pub mod camera;
 pub mod graph;
@@ -32,7 +31,6 @@ mod render_context;
 mod render;
 mod memory;
 mod transform_buffer;
-mod uniforms;
 
 pub use transform_buffer::TransformBuffer;
 pub use render_context::{RenderContext};
@@ -83,19 +81,8 @@ impl IModule for RenderModule {
 impl RenderModule {
     fn get_render_system(&self,w:&mut World) -> impl FnMut(&mut World) {
         let mut app_render = AppRender::new_sync(Config::default());
-        let mut shaders = RuntimeShaderInfo::default();
-        shaders.load(&self.0.config_path);
-        let render_ctx = RenderContext {
-            device:app_render.device.clone(),
-            command_encoder:None,
-            resources:RenderResources::new(app_render.device.clone()),
-            camera_state:CameraState::new(&app_render.device),
-            transform_buffer:TransformBuffer::new(&app_render.device),
-            material_sys:MaterialSystem::new(&app_render.device),
-            light_state:LightState::new(&app_render.device),
-            uniforms:GPUUniformList::default(),
-            shaders
-        };
+        
+        let render_ctx = RenderContext::new(app_render.device.clone(),&self.0.config_path);
     
         w.insert_resource(PipelineCache::default());
         w.insert_resource(render_ctx);

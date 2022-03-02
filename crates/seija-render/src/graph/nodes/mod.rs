@@ -1,6 +1,7 @@
 mod log_node;
 mod pass_node;
 mod swapchain_node;
+mod ubo_camera;
 mod window_texture_node;
 pub use log_node::LogNode;
 pub use pass_node::PassNode;

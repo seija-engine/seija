@@ -3,7 +3,7 @@ name = "seija-examples"
 version = "0.1.0"
 edition = "2018"
 
-build = "build.rs"
+#build = "build.rs"
 
 [build-dependencies]
 material-compiler = {path = "../crates/tools/material-compiler"}
@@ -16,7 +16,7 @@ seija-winit = {path = "../crates/seija-winit"}
 seija-gltf = {path = "../crates/seija-gltf"}
 seija-render = {path = "../crates/seija-render"}
 seija-transform = {path = "../crates/seija-transform"}
-lite-clojure-eval = {git = "https://github.com/seija-engine/lite-clojure.git"}
+lite-clojure-eval = {git = "https://github.com/seija-engine/lite-clojure.git", branch = "master" }
 bevy_ecs = "0.5.0"
 glam = "0.17.1"
 env_logger = "*"

@@ -21,3 +21,9 @@
 2. 支持RenderPipe渲染的时候按顺序设置GPUUniform
 3. 支持GraphNode获取到对应的GPUUniform
 4. 支持材质编译器根据Backend输出Shader (?)
+
+## 尝试2
+1. 使用`TypedUniform`，结构从配置文件中读取
+2. `TypedUniform`和Stage Buffer存在Graph Node中 (Graph Node会使用脚本组装).
+3. "GPU的BufferId和Layout"存在RenderContext上 -> "GPUUniformList"
+4. 编译材质的时候导出一份shader对应的backend配置,并且加载到RenderContext上 -> "RuntimeShaderInfo"

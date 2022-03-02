@@ -4,7 +4,7 @@ use std::time::SystemTime;
 use material_compiler::MaterialCompiler;
 
 fn main() {
-    let time_path = PathBuf::from(".render_cfg/lasttime.txt");
+    let time_path = PathBuf::from(".render/lasttime.txt");
     let last_shader_time = read_shader_last_time();
    
     let str_time = if time_path.exists() {
@@ -16,7 +16,7 @@ fn main() {
     if last_shader_time != str_time {
         let mut mc = MaterialCompiler::new();
         mc.add_shader_dir("../crates/shaders");
-        mc.set_shader_out(".render_cfg/shaders/");
+        mc.set_shader_out(".render/shaders/");
         mc.add_mat_search_path("res/new_material");
         mc.run();
         fs::write(&time_path, last_shader_time).unwrap();
