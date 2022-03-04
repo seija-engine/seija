@@ -33,7 +33,7 @@ impl RenderContext {
     pub fn new<P:AsRef<Path>>(device:Arc<Device>,config_path:P) -> Self {
         let mut shaders = RuntimeShaderInfo::default();
         shaders.load(config_path);
-        let mut ctx = RenderContext {
+        let ctx = RenderContext {
             device:device.clone(),
             command_encoder:None,
             resources:RenderResources::new(device.clone()),

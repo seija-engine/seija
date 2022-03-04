@@ -85,7 +85,7 @@ impl UniformBufferDef {
 }
 
 #[derive(Debug)]
-struct PropInfo {
+pub struct PropInfo {
     pub name:String,
     pub typ:UniformType,
     pub array_size:usize

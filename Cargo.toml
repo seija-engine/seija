@@ -6,7 +6,7 @@ members = [
     "crates/seija-winit",
     "crates/seija-render",
     "crates/seija-transform",
-    "crates/seija-gltf",
-    "crates/tools/material-compiler",
-    "seija-examples"
+    #"crates/seija-gltf",
+    #"crates/tools/material-compiler",
+    #"seija-examples"
 ]

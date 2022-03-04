@@ -14,7 +14,8 @@ use seija_app::{App};
 use bevy_ecs::prelude::*;
 use seija_core::{CoreStage};
 use crate::graph::nodes::{PassNode, WindowTextureNode};
-
+#[macro_use]
+extern crate serde_derive;
 
 pub use wgpu;
 mod script;
