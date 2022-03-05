@@ -1,5 +1,9 @@
 use std::collections::{HashSet, VecDeque};
 use std::{borrow::Cow, collections::HashMap, fmt::Debug};
+use bevy_ecs::prelude::World;
+
+use crate::RenderContext;
+
 use super::node::{Edge, GraphNode, INode, NodeId};
 use super::RenderGraphError;
 
@@ -89,9 +93,9 @@ impl RenderGraph {
         self.iter = line_graph;
     }
 
-    pub fn prepare(&mut self,world:&mut bevy_ecs::prelude::World) {
+    pub fn prepare(&mut self,world:&mut World,ctx:&mut RenderContext) {
         for node in self.nodes.values_mut() {
-            node.node.prepare(world);
+            node.node.prepare(world,ctx);
         }
 
        

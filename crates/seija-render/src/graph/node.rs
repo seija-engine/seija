@@ -17,7 +17,7 @@ pub trait INode: Send + Sync + 'static {
     fn input_count(&self)  -> usize { 0 }
     fn output_count(&self) -> usize { 0 }
 
-    fn prepare(&mut self, _world: &mut World) {}
+    fn prepare(&mut self, _world: &mut World,render_ctx:&mut RenderContext) {}
 
     fn update(&mut self,world: &mut World,render_ctx:&mut RenderContext,inputs:&Vec<Option<RenderResourceId>>,outputs:&mut Vec<Option<RenderResourceId>>);
 }

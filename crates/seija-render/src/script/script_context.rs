@@ -67,7 +67,5 @@ fn test_fn() {
             {:name "pos"      :type "float4"}
         ]
     })
-    
     "#,&mut info_set);
-
 }

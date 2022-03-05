@@ -114,7 +114,7 @@ impl AppRender {
         ctx.transform_buffer.update(world,&self.device,&mut ctx.resources,ctx.command_encoder.as_mut().unwrap());
         ctx.material_sys.update(world, &ctx.device, ctx.command_encoder.as_mut().unwrap(),&mut ctx.resources);
         ctx.light_state.update(world,&mut ctx.resources,ctx.command_encoder.as_mut().unwrap(),&ctx.device);
-        self.graph.graph.prepare(world);
+        self.graph.graph.prepare(world,ctx);
         for node_id in self.graph.graph_iter.nodes.iter() {
             let cur_node = self.graph.graph.get_node(node_id).unwrap();
             let mut new_inputs = cur_node.inputs.clone();
