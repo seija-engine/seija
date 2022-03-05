@@ -9,7 +9,6 @@
     ]
     :backends ["Camera3D"]
 })
-
 ;(def ubo-camera (node UBO_CAMERA {:backend "Camera"}))
 ;(def ubo-light (node UBO_LIGHT  {:backend "PerFrame"}))
 ;(def pass (node PASS))

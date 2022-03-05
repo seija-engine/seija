@@ -9,6 +9,7 @@ use pipeline::{PipelineCache, update_pipeline_cache};
 use render::{AppRender, Config , RenderGraphContext};
 use resource::{RenderResources};
 use rt_shaders::RuntimeShaderInfo;
+use script::RenderScriptContext;
 use seija_app::IModule;
 use seija_app::{App};
 use bevy_ecs::prelude::*;
@@ -26,6 +27,7 @@ pub mod resource;
 pub mod pipeline;
 pub mod light;
 
+mod uniforms;
 mod rt_shaders;
 mod mesh_render;
 mod render_context;
@@ -35,6 +37,7 @@ mod transform_buffer;
 
 pub use transform_buffer::TransformBuffer;
 pub use render_context::{RenderContext};
+pub use uniforms::{UBOInfoSet,UBOInfo};
 
 const MATRIX_SIZE: u64 = std::mem::size_of::<[[f32; 4]; 4]>() as u64;
 
@@ -82,18 +85,30 @@ impl IModule for RenderModule {
 impl RenderModule {
     fn get_render_system(&self,w:&mut World) -> impl FnMut(&mut World) {
         let mut app_render = AppRender::new_sync(Config::default());
-        
-        let render_ctx = RenderContext::new(app_render.device.clone(),&self.0.config_path);
-    
-        w.insert_resource(PipelineCache::default());
-        w.insert_resource(render_ctx);
-        add_base_nodes(&mut app_render.graph);
-        
+        let mut render_ctx = RenderContext::new(app_render.device.clone(),&self.0.config_path);
+        self.init_render(w,render_ctx,&mut app_render); 
         move |_w| {
             _w.resource_scope(|world:&mut World,mut ctx:Mut<RenderContext>| {
                 app_render.update(world,&mut ctx); 
             }); 
         }
+    }
+
+    fn init_render(&self,w:&mut World,mut ctx:RenderContext,app_render:&mut AppRender) {
+        let mut rsc = RenderScriptContext::new();
+        let script_path = self.0.config_path.join("render.clj");
+        match std::fs::read_to_string(script_path) {
+            Ok(code_string) => {
+                rsc.run(code_string.as_str(), &mut ctx.ubos.info);
+            },
+            Err(err) => {
+                log::error!("load render.clj error:{:?}",err);
+            }
+        }
+        
+        w.insert_resource(PipelineCache::default());
+        w.insert_resource(ctx);
+        add_base_nodes(&mut app_render.graph);
     }
 }
 

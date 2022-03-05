@@ -1,4 +1,4 @@
-use std::{collections::HashMap, convert::TryFrom};
+use std::{collections::HashMap, convert::{TryFrom, TryInto}};
 use glam::{Mat3, Mat4};
 use serde_json::{Map, Value};
 
@@ -90,29 +90,20 @@ pub struct PropInfo {
     pub typ:UniformType,
     pub array_size:usize
 }
+#[derive(Debug)]
+pub struct PropInfoList(pub Vec<PropInfo>);
 
-impl TryFrom<&Value> for UniformBufferDef {
+impl TryFrom<&Value> for PropInfoList {
     type Error = ();
-    fn try_from(value: &Value) -> Result<UniformBufferDef, ()> {
-        let mut props:Vec<PropInfo> = Vec::new();
+
+    fn try_from(value: &Value) -> Result<Self, Self::Error> {
         let arr = value.as_array().ok_or(())?;
-        for item in arr {
-            if let Some(map) = item.as_object() {
-                let prop_name = map.get(":name").and_then(|v| v.as_str()).ok_or(())?;
-                if let Some(prop) = read_prop(prop_name,map)? {
-                    props.push(prop);
-                }
-            }   
-        }
-       
-        let (infos,name_map,size) = build_props(&props);        
-        Ok(UniformBufferDef {
-            size,
-            infos,
-            names:name_map
-        })
+        let lst:Vec<PropInfo> = arr.iter().filter_map(|v|read_prop(v).unwrap_or(None)).collect();
+        Ok(PropInfoList(lst))
     }
 }
+
+
 
 fn build_props(props:&Vec<PropInfo>) -> (Vec<UniformInfo>,HashMap<String,usize>,usize) {
     let mut info_list:Vec<UniformInfo> = Vec::new();
@@ -146,7 +137,9 @@ fn build_props(props:&Vec<PropInfo>) -> (Vec<UniformInfo>,HashMap<String,usize>,
     (info_list,name_map,size as usize)
 }
 
-fn read_prop(name:&str,map:&Map<String,Value>) -> Result<Option<PropInfo>,()>   {
+fn read_prop(value:&Value) -> Result<Option<PropInfo>,()>   {
+    let map = value.as_object().ok_or(())?;
+    let name = map.get(":name").and_then(Value::as_str).ok_or(())?;
     let prop_type = map.get(":type").and_then(|v| v.as_str()).ok_or(())?;
     let (type_name,array_size) = split_type_size_str(prop_type);
     let default = map.get(":default");
@@ -234,6 +227,20 @@ fn split_type_size_str(type_name:&str) -> (&str,usize) {
         return (first,size)
     }
     return (first,1)
+}
+
+
+impl TryFrom<&Value> for UniformBufferDef {
+    type Error = ();
+    fn try_from(value: &Value) -> Result<UniformBufferDef, ()> {
+        let prop_list:PropInfoList = value.try_into()?; 
+        let (infos,name_map,size) = build_props(&prop_list.0);        
+        Ok(UniformBufferDef {
+            size,
+            infos,
+            names:name_map
+        })
+    }
 }
 
 #[test]
