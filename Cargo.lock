@@ -1505,7 +1505,7 @@ checksum = "806de604a37f6d73a83c850af7b3ba33a44f330d12fd5e4ac216645b54da912b"
 [[package]]
 name = "lite-clojure-eval"
 version = "0.1.0"
-source = "git+https://github.com/seija-engine/lite-clojure.git#03273b271785e1b8cb08e7936fa456f2fdedef2f"
+source = "git+https://github.com/seija-engine/lite-clojure.git#9f4e70d70791d8d2db3fe7b388107f3d8971b2fc"
 dependencies = [
  "gc",
  "lite-clojure-parser",
@@ -1516,7 +1516,7 @@ dependencies = [
 [[package]]
 name = "lite-clojure-parser"
 version = "0.1.0"
-source = "git+https://github.com/seija-engine/lite-clojure.git#03273b271785e1b8cb08e7936fa456f2fdedef2f"
+source = "git+https://github.com/seija-engine/lite-clojure.git#9f4e70d70791d8d2db3fe7b388107f3d8971b2fc"
 
 [[package]]
 name = "lock_api"
@@ -2370,9 +2370,9 @@ dependencies = [
 
 [[package]]
 name = "siphasher"
-version = "0.3.9"
+version = "0.3.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a86232ab60fa71287d7f2ddae4a7073f6b7aac33631c3015abb556f08c6d0a3e"
+checksum = "7bd3e3206899af3f8b12af284fafc038cc1dc2b41d1b89dd17297221c5d225de"
 
 [[package]]
 name = "slab"

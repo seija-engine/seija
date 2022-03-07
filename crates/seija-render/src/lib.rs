@@ -9,7 +9,7 @@ use pipeline::{PipelineCache, update_pipeline_cache};
 use render::{AppRender, Config , RenderGraphContext};
 use resource::{RenderResources};
 use rt_shaders::RuntimeShaderInfo;
-use script::RenderScriptContext;
+use script::{RenderScriptContext, builtin_node_creators};
 use seija_app::IModule;
 use seija_app::{App};
 use bevy_ecs::prelude::*;
@@ -85,7 +85,7 @@ impl IModule for RenderModule {
 impl RenderModule {
     fn get_render_system(&self,w:&mut World) -> impl FnMut(&mut World) {
         let mut app_render = AppRender::new_sync(Config::default());
-        let mut render_ctx = RenderContext::new(app_render.device.clone(),&self.0.config_path);
+        let render_ctx = RenderContext::new(app_render.device.clone(),&self.0.config_path);
         self.init_render(w,render_ctx,&mut app_render); 
         move |_w| {
             _w.resource_scope(|world:&mut World,mut ctx:Mut<RenderContext>| {
@@ -96,10 +96,12 @@ impl RenderModule {
 
     fn init_render(&self,w:&mut World,mut ctx:RenderContext,app_render:&mut AppRender) {
         let mut rsc = RenderScriptContext::new();
+        let creator_set = builtin_node_creators();
+        rsc.add_node_creator_set(&creator_set);
         let script_path = self.0.config_path.join("render.clj");
         match std::fs::read_to_string(script_path) {
             Ok(code_string) => {
-                rsc.run(code_string.as_str(), &mut ctx.ubos.info);
+                rsc.run(code_string.as_str(), &mut ctx.ubos.info,&mut app_render.graph);
             },
             Err(err) => {
                 log::error!("load render.clj error:{:?}",err);
