@@ -38,6 +38,9 @@ impl RenderGraph {
     pub fn iter_nodes(&self) -> impl Iterator<Item = &GraphNode> {
         self.nodes.values()
     }
+    pub fn iter_mut_nodes(&mut self) -> impl Iterator<Item = &mut GraphNode> {
+        self.nodes.values_mut()
+    }
 
     pub fn add_node<T>(&mut self,name:impl Into<Cow<'static, str>>,node:T) -> NodeId where T:INode {
         let id = NodeId::new();

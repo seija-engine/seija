@@ -189,6 +189,10 @@ impl TypedUniformBuffer {
         }
     }
 
+    pub fn set_mat4_index(&mut self,mat:&Mat4,idx:usize) {
+        self.buffer.write_bytes_(idx, mat.to_cols_array().as_bytes());
+    }
+
     pub fn get_mat4(&self,name:&str,idx:usize) -> Mat4 {
         if let Some(offset) = self.def.get_offset(name, idx) {
             let bytes:[f32;16] = self.buffer.read_bytes(offset, 64);

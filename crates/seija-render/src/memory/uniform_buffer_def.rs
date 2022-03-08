@@ -98,7 +98,15 @@ impl TryFrom<&Value> for PropInfoList {
 
     fn try_from(value: &Value) -> Result<Self, Self::Error> {
         let arr = value.as_array().ok_or(())?;
-        let lst:Vec<PropInfo> = arr.iter().filter_map(|v|read_prop(v).unwrap_or(None)).collect();
+        let lst:Vec<PropInfo> = arr.iter().filter_map(|v| {
+            match read_prop(v) {
+                Ok(v) => v,
+                Err(_) => {
+                    log::error!("read prop error:{:?}",&v);
+                    None
+                }
+            }
+        }).collect();
         Ok(PropInfoList(lst))
     }
 }
@@ -194,7 +202,7 @@ fn read_prop(value:&Value) -> Result<Option<PropInfo>,()>   {
          "mat4" => {
             return Ok(Some(PropInfo { name:name.to_string(), array_size, typ:UniformType::MAT4(Mat4::default()) }))
          },
-         _ => return Ok(None)
+         _ => return Err(())
     }
 }
 
@@ -234,6 +242,13 @@ impl TryFrom<&Value> for UniformBufferDef {
     type Error = ();
     fn try_from(value: &Value) -> Result<UniformBufferDef, ()> {
         let prop_list:PropInfoList = value.try_into()?; 
+        UniformBufferDef::try_from(&prop_list)
+    }
+}
+
+impl TryFrom<&PropInfoList> for UniformBufferDef {
+    type Error = ();
+    fn try_from(prop_list: &PropInfoList) -> Result<UniformBufferDef, ()> {
         let (infos,name_map,size) = build_props(&prop_list.0);        
         Ok(UniformBufferDef {
             size,

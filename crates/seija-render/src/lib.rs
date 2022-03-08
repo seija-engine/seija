@@ -107,11 +107,15 @@ impl RenderModule {
                 log::error!("load render.clj error:{:?}",err);
             }
         }
+        app_render.graph.build();
+
+        for node in app_render.graph.graph.iter_mut_nodes() {
+            node.node.init(w, &mut ctx);
+        }
         
         w.insert_resource(PipelineCache::default());
         w.insert_resource(ctx);
         //add_base_nodes(&mut app_render.graph);
-        app_render.graph.build();
     }
 }
 

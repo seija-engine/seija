@@ -17,7 +17,9 @@ fn create_camera_node(ctx:&mut RenderGraphContext,params:Variable) -> NodeId {
     let ubo_key = Variable::Keyword(GcRefCell::new(String::from(":ubo")));
     let ubo_name = map.borrow().get(&ubo_key).unwrap().cast_string().unwrap();
     let ubo_name_str:String = ubo_name.borrow().clone();
-    let camera_collect = CameraCollect {ubo_name:ubo_name_str};
+
+    let mut camera_collect = CameraCollect::default();
+    camera_collect.ubo_name = ubo_name_str;
     dbg!(&camera_collect.ubo_name);
     ctx.graph.add_node("CameraCollect", camera_collect)
 }

@@ -23,4 +23,17 @@ impl UBOInfoSet {
             }
         }
     }
+
+    pub fn get_info(&self,name:&str) -> Option<&UBOInfo> {
+        if let Some(info) = self.per_cameras.get(name) {
+            return Some(info)
+        }
+        if let Some(info) = self.per_frames.get(name) {
+            return Some(info)
+        }
+        if let Some(info) = self.per_objects.get(name) {
+            return Some(info)
+        }
+        None
+    }
 }

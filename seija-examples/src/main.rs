@@ -36,7 +36,7 @@ fn main() {
     render_config.set_config_path(".render");
     app.add_module(RenderModule(render_config));
     
-    //app.add_system2(CoreStage::Startup, StartupStage::PreStartup, pre_start.system());
+    app.add_system2(CoreStage::Startup, StartupStage::PreStartup, pre_start.system());
     /*
     match TEST_NAME {
         "sample_gltf" => {

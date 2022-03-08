@@ -11,9 +11,9 @@
 })
 
 (def camera (node CAMERA {:ubo "CameraBuffer" }))
-(def camera2 (node CAMERA {:ubo "CameraBuffer" }))
+;(def camera2 (node CAMERA {:ubo "CameraBuffer" }))
 
-(link-> camera camera2 {})
+;(link-> camera camera2 {})
 
 ;(def ubo-light (node UBO_LIGHT  {:backend "PerFrame"}))
 ;(def pass (node PASS))
