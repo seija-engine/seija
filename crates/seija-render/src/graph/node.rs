@@ -1,4 +1,4 @@
-use std::{borrow::Cow};
+use std::{borrow::Cow, str::FromStr, convert::TryFrom};
 use super::RenderGraphError;
 use crate::{RenderContext, resource::RenderResourceId};
 use bevy_ecs::prelude::*;
@@ -11,6 +11,14 @@ pub struct NodeId(Uuid);
 impl NodeId {
     pub fn new() -> Self { NodeId(Uuid::new_v4()) }
     pub fn uuid(&self) -> &Uuid { &self.0 }
+}
+
+impl TryFrom<&str> for NodeId {
+    type Error = ();
+    fn try_from(str: &str) -> Result<Self, Self::Error> {
+        let uuid = Uuid::from_str(str).map_err(|_|());
+        uuid.map(NodeId)
+    }
 }
 
 pub trait INode: Send + Sync + 'static {
