@@ -3,7 +3,7 @@ use std::{sync::Arc, path::Path};
 use wgpu::{CommandEncoder, Device};
 
 use crate::{TransformBuffer, camera::system::CameraState, light::LightState, material::{MaterialSystem, PassDef}, 
-resource::RenderResources,  rt_shaders::RuntimeShaderInfo, UBOInfoSet, uniforms::UniformBufferObjects, script::RenderScriptContext};
+resource::RenderResources,  rt_shaders::RuntimeShaderInfo, UBOInfoSet, uniforms::UBOContext, script::RenderScriptContext};
 
 unsafe impl Send for RenderContext {}
 unsafe impl Sync for RenderContext {}
@@ -16,12 +16,12 @@ pub struct RenderContext {
     pub transform_buffer:TransformBuffer,
     pub material_sys:MaterialSystem,
     pub shaders:RuntimeShaderInfo,
-    pub ubos:UniformBufferObjects
+    pub ubos:UBOContext
 }
 
 impl RenderContext {
     //TODO
-    pub fn create_bind_group_layout(&self,pass_def:&PassDef) -> Vec<&wgpu::BindGroupLayout> {
+    pub fn create_bind_group_layouts(&self,pass_def:&PassDef) -> Vec<&wgpu::BindGroupLayout> {
         if let Some(shader_info) = self.shaders.find_shader(&pass_def.shader_info.name) {
             vec![]
         } else {
@@ -42,7 +42,7 @@ impl RenderContext {
             material_sys:MaterialSystem::new(&device),
             light_state:LightState::new(&device),
             shaders,
-            ubos:UniformBufferObjects::default()
+            ubos:UBOContext::default()
         };
        
          

@@ -154,7 +154,7 @@ impl PipelineCache {
             layouts.push(&ctx.light_state.layout);
         }
         */
-        let layouts = ctx.create_bind_group_layout(pass_def);
+        let layouts = ctx.create_bind_group_layouts(pass_def);
         let layout_desc = PipelineLayoutDescriptor {
             label:None,
             bind_group_layouts:&layouts,

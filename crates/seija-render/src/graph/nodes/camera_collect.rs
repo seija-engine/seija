@@ -17,19 +17,7 @@ pub struct CameraCollect {
 impl INode for CameraCollect {
   
     fn init(&mut self, _world: &mut World,ctx:&mut RenderContext) {
-       let mubo_info = ctx.ubos.info.get_info(&self.ubo_name);
-       if mubo_info.is_none() {
-          log::error!("not found ubo {}",&self.ubo_name);
-          return;
-       }
-       let mdef = UniformBufferDef::try_from(&mubo_info.unwrap().props);
-       if mdef.is_err() {
-          log::error!("{} ubo props error {:?}",&self.ubo_name,&mubo_info.unwrap().props);
-          return;
-       }
-       let buffer_def = Arc::new(mdef.unwrap());
        
-       self.buffer_def = Some(buffer_def)
     }
 
     fn prepare(&mut self, world: &mut World,ctx:&mut RenderContext) {

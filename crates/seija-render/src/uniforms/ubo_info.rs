@@ -1,7 +1,7 @@
-use std::convert::{TryFrom, TryInto};
+use std::{convert::{TryFrom, TryInto}, sync::Arc};
 
 use serde_json::{Value};
-use crate::memory::{PropInfo, PropInfoList};
+use crate::memory::{PropInfo, PropInfoList, UniformBufferDef};
 #[derive(Debug)]
 pub enum UBOType {
     PerCamera,
@@ -26,7 +26,7 @@ impl TryFrom<&Value> for UBOType {
 pub struct UBOInfo {
     pub typ:UBOType,
     pub name:String,
-    pub props:PropInfoList,
+    pub props:Arc<UniformBufferDef>,
     pub backends:Vec<String>
 }
 
@@ -43,10 +43,11 @@ impl TryFrom<&Value> for UBOInfo {
                                         .ok_or(":backends")?;
         let prop_json = object.get(":props").ok_or(":props".to_string())?;
         let props:PropInfoList = prop_json.try_into().map_err(|_| ":props".to_string())?;
+        let udf = UniformBufferDef::try_from(&props).map_err(|_| ":props".to_string() )?;
         Ok(UBOInfo {
             typ,
             name:name.to_string(),
-            props,
+            props:Arc::new(udf),
             backends
         })
     }
