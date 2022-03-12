@@ -16,6 +16,7 @@
   :props [
      {:name "transform" :type "mat4"}
   ]
+  :backends ["Transform"]
 })
 
 (def camera (node CAMERA {:ubo "CameraBuffer" }))

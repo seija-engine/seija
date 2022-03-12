@@ -24,9 +24,9 @@ use seija_transform::{TransformModule};
 const TEST_NAME:&'static str = "pbr_test";
 
 fn main() {
-    env_logger::init();
-   
-
+     env_logger::Builder::new().filter_level(log::LevelFilter::Info).try_init().unwrap();
+    
+    
     let mut app = App::new();
     app.add_module(CoreModule);
     app.add_module(WinitModule::default());

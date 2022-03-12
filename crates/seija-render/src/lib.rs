@@ -1,10 +1,8 @@
 use std::path::{PathBuf, Path};
-
-use camera::system::CameraState;
 use camera::{view_list::view_list_system};
 use graph::nodes::SwapchainNode;
 use light::LightState;
-use material::MaterialSystem;
+
 use pipeline::{PipelineCache, update_pipeline_cache};
 use render::{AppRender, Config , RenderGraphContext};
 use resource::{RenderResources};
@@ -101,7 +99,7 @@ impl RenderModule {
         let script_path = self.0.config_path.join("render.clj");
         match std::fs::read_to_string(script_path) {
             Ok(code_string) => {
-                rsc.run(code_string.as_str(), &mut ctx.ubos.info,&mut app_render.graph);
+                rsc.run(code_string.as_str(), &mut ctx.ubo_ctx.info,&mut app_render.graph);
             },
             Err(err) => {
                 log::error!("load render.clj error:{:?}",err);
@@ -115,11 +113,10 @@ impl RenderModule {
         
         w.insert_resource(PipelineCache::default());
         w.insert_resource(ctx);
-        //add_base_nodes(&mut app_render.graph);
     }
 }
 
-
+/*
 fn add_base_nodes(graph_ctx:&mut RenderGraphContext) {
     let pass_node = PassNode::new();
     let pass_id = graph_ctx.graph.add_node("pass", pass_node);
@@ -143,4 +140,4 @@ fn add_base_nodes(graph_ctx:&mut RenderGraphContext) {
 
 
     graph_ctx.build();
-}
+} */

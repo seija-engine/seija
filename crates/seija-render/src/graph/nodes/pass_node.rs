@@ -65,7 +65,7 @@ impl INode for PassNode {
                    None
                 },
             });
-            
+            /* 
             for (e,camera) in camera_query.iter(world) {
                 if let Some(camera_buffer)  = ctx.camera_state.cameras_buffer.buffers.get(&e.id()) {
                     for view_entites in camera.view_list.values.iter() {
@@ -112,7 +112,7 @@ impl INode for PassNode {
                         }
                     }
                 }   
-            }
+            }*/
         }
         ctx.command_encoder = Some(command);
     }

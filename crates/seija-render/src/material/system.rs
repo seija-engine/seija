@@ -143,7 +143,6 @@ impl BufferInfo {
         resources.write_mapped_buffer(buffer_id, start as u64..end as u64, &mut |data,_| {
             data[0..self.item_size].copy_from_slice(mat.props.get_buffer());
         });
-
         resources.unmap_buffer(buffer_id);
 
         resources.copy_buffer_to_buffer(commands, 

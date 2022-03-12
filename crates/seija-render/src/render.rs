@@ -5,7 +5,6 @@ use seija_core::window::AppWindow;
 use seija_winit::event::{WindowCreated, WindowResized};
 use std::{borrow::Cow, sync::Arc};
 use wgpu::{CommandEncoderDescriptor, Device, Instance, Queue};
-use crate::camera::system::{update_camera};
 use crate::graph::{self, LinearGraphIter, RenderGraph};
 use crate::render_context::RenderContext;
 use crate::resource::{self, Mesh, RenderResources, Texture};
@@ -109,8 +108,8 @@ impl AppRender {
     pub fn update(&mut self, world: &mut World,ctx:&mut RenderContext) {
         ctx.command_encoder = Some(self.device.create_command_encoder(&CommandEncoderDescriptor::default()));
         self.update_winodw_surface(world,&mut ctx.resources);
-        
-        update_camera(world,ctx);
+        ctx.ubo_ctx.update(&mut ctx.resources,ctx.command_encoder.as_mut().unwrap());
+
         ctx.transform_buffer.update(world,&self.device,&mut ctx.resources,ctx.command_encoder.as_mut().unwrap());
         ctx.material_sys.update(world, &ctx.device, ctx.command_encoder.as_mut().unwrap(),&mut ctx.resources);
         ctx.light_state.update(world,&mut ctx.resources,ctx.command_encoder.as_mut().unwrap(),&ctx.device);

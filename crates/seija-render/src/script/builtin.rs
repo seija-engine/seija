@@ -20,6 +20,5 @@ fn create_camera_node(ctx:&mut RenderGraphContext,params:Variable) -> NodeId {
 
     let mut camera_collect = CameraCollect::default();
     camera_collect.ubo_name = ubo_name_str;
-    dbg!(&camera_collect.ubo_name);
     ctx.graph.add_node("CameraCollect", camera_collect)
 }

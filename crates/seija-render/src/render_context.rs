@@ -2,8 +2,8 @@ use std::{sync::Arc, path::Path};
 
 use wgpu::{CommandEncoder, Device};
 
-use crate::{TransformBuffer, camera::system::CameraState, light::LightState, material::{MaterialSystem, PassDef}, 
-resource::RenderResources,  rt_shaders::RuntimeShaderInfo, UBOInfoSet, uniforms::UBOContext, script::RenderScriptContext};
+use crate::{TransformBuffer, light::LightState, material::{MaterialSystem, PassDef}, 
+resource::RenderResources,  rt_shaders::RuntimeShaderInfo, uniforms::UBOContext};
 
 unsafe impl Send for RenderContext {}
 unsafe impl Sync for RenderContext {}
@@ -11,12 +11,11 @@ pub struct RenderContext {
     pub device:Arc<Device>,
     pub resources:RenderResources,
     pub command_encoder:Option<CommandEncoder>,
-    pub camera_state:CameraState,
     pub light_state:LightState,
     pub transform_buffer:TransformBuffer,
     pub material_sys:MaterialSystem,
     pub shaders:RuntimeShaderInfo,
-    pub ubos:UBOContext
+    pub ubo_ctx:UBOContext
 }
 
 impl RenderContext {
@@ -33,16 +32,15 @@ impl RenderContext {
     pub fn new<P:AsRef<Path>>(device:Arc<Device>,config_path:P) -> Self {
         let mut shaders = RuntimeShaderInfo::default();
         shaders.load(config_path);
-        let mut ctx = RenderContext {
+        let ctx = RenderContext {
             device:device.clone(),
             command_encoder:None,
             resources:RenderResources::new(device.clone()),
-            camera_state:CameraState::new(&device),
             transform_buffer:TransformBuffer::new(&device),
             material_sys:MaterialSystem::new(&device),
             light_state:LightState::new(&device),
             shaders,
-            ubos:UBOContext::default()
+            ubo_ctx:UBOContext::default()
         };
        
          

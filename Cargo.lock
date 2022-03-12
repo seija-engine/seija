@@ -2261,6 +2261,7 @@ dependencies = [
  "env_logger 0.9.0",
  "glam 0.17.3",
  "lite-clojure-eval",
+ "log",
  "material-compiler",
  "seija-app",
  "seija-asset",

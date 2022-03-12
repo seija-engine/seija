@@ -47,8 +47,8 @@ impl UniformBuffer {
 }
 #[derive(Debug)]
 pub struct TypedUniformBuffer {
-    def:Arc<UniformBufferDef>,
-    buffer:UniformBuffer
+    pub def:Arc<UniformBufferDef>,
+    pub buffer:UniformBuffer
 }
 
 impl TypedUniformBuffer {

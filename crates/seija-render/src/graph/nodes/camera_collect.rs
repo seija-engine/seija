@@ -1,46 +1,72 @@
 use std::collections::HashMap;
-use std::{convert::TryFrom, sync::Arc};
 use crate::camera::camera::{Camera};
-use crate::memory::TypedUniformBuffer;
-use crate::{RenderContext, graph::node::INode, memory::UniformBufferDef};
+use crate::uniforms::{UBOKey, UBObject};
+use crate::uniforms::backends::Camera3DBackend;
+use crate::{RenderContext, graph::node::INode};
 use bevy_ecs::prelude::*;
+use glam::Vec4;
 use seija_transform::Transform;
 use crate::resource::RenderResourceId;
 
 #[derive(Default)]
 pub struct CameraCollect {
    pub ubo_name:String,
-   buffer_def:Option<Arc<UniformBufferDef>>,
-   buffers:HashMap<u32,TypedUniformBuffer>,
+   cameras_ubo:HashMap<u32,UBOKey>,
+   backend:Option<Camera3DBackend>
 }
 
 impl INode for CameraCollect {
   
     fn init(&mut self, _world: &mut World,ctx:&mut RenderContext) {
-       
+       if let Some(info) = ctx.ubo_ctx.info.get_info(&self.ubo_name) {
+          match Camera3DBackend::from_def(&info.props) {
+              Ok(backend) => {
+                  self.backend = Some(backend)
+              },
+              Err(err) => {
+                  log::error!("camera3d backend error :{}",err);
+              }
+          }
+       }
     }
 
     fn prepare(&mut self, world: &mut World,ctx:&mut RenderContext) {
-         let mut camera_query = world.query::<(Entity,&Camera)>();
-         for (e,_) in camera_query.iter(world) {
-             if !self.buffers.contains_key(&e.id()) {
-                let typed_buffer = TypedUniformBuffer::from_def(self.buffer_def.as_ref().unwrap().clone());
-                self.buffers.insert(e.id(), typed_buffer);
-             }
-         }
+        let mut added_cameras = world.query_filtered::<Entity,(Added<Camera>,With<Transform>)>(); 
+        for v in added_cameras.iter(&world) {
+           if let Some(key) = ctx.ubo_ctx.add(self.ubo_name.as_str(), Some(v.id()), &mut ctx.resources) {
+               self.cameras_ubo.insert(v.id(), key);     
+           } else {
+               log::error!("add {} ubo error",&self.ubo_name);
+           }
+        }
     }
 
-    fn update(&mut self,world: &mut World,_:&mut RenderContext,_:&Vec<Option<RenderResourceId>>,_:&mut Vec<Option<RenderResourceId>>) {
-       let mut camera_query = world.query::<(Entity,&Transform,&Camera)>();
-       for (e,t,camera) in camera_query.iter(world) {
-           if let Some(buffer) = self.buffers.get_mut(&e.id()) {
-               let proj = camera.projection.matrix();
-               let view_proj_matrix = t.global().matrix().inverse() * proj;
-               let view_matrix = t.global().matrix().inverse();
-               let mut pos_bytes:[f32;4] = [0f32,0f32,0f32,1f32];
-               t.global().position.write_to_slice(&mut pos_bytes);
-               
-           }
-       }
+    fn update(&mut self,world: &mut World,ctx:&mut RenderContext,_:&Vec<Option<RenderResourceId>>,_:&mut Vec<Option<RenderResourceId>>) {
+        let mut cameras = world.query::<(Entity,&Transform,&Camera)>();
+        for (e,t,camera) in cameras.iter(world) {
+            if let Some(key) = self.cameras_ubo.get(&e.id()) {
+               if let Some(ubo) = ctx.ubo_ctx.buffers.get_ubo_mut(&key) {
+                   self.update_camera_buffer(ubo,t, camera);
+               }
+            }
+        }
+    }
+}
+
+impl CameraCollect {
+    fn update_camera_buffer(&self,ubo:&mut UBObject,t:&Transform,camera:&Camera) {
+        if let Some(backend) = self.backend.as_ref() {
+            let proj = camera.projection.matrix();
+            let proj_view = t.global().matrix().inverse() * proj;
+            let view = t.global().matrix().inverse();
+            let v3 = t.global().position;
+            let pos = Vec4::new(v3.x,v3.y,v3.z,0f32);
+            let buffer = &mut ubo.local.buffer;
+
+            backend.set_view(buffer, &view);
+            backend.set_proj(buffer, &proj);
+            backend.set_projview(buffer, &proj_view);
+            backend.set_position(buffer, pos);
+        }
     }
 }
