@@ -2,33 +2,33 @@ use crate::{RenderContext, camera::camera::Camera, graph::node::INode, material:
 use bevy_ecs::prelude::*;
 
 use seija_asset::{Assets, Handle};
-use wgpu::{Color, Operations};
+use seija_transform::Transform;
+use wgpu::{Color, Operations, CommandEncoder};
 use crate::resource::RenderResourceId;
 pub struct PassNode {
-    operations:Operations<Color>
+    operations:Operations<Color>,
 }
 
-impl PassNode {
-    pub fn draw() {
-   
-    }
-}
+
 
 impl INode for PassNode {
     fn input_count(&self) -> usize { 2 }
     
-    fn update(&mut self,world: &mut World,
-              ctx:&mut RenderContext,
-              inputs:&Vec<Option<RenderResourceId>>,
-              _outputs:&mut Vec<Option<RenderResourceId>>) {
-        
+    fn update(&mut self,world: &mut World,ctx:&mut RenderContext,inputs:&Vec<Option<RenderResourceId>>,_outputs:&mut Vec<Option<RenderResourceId>>) {
+            let mut command = ctx.command_encoder.take().unwrap();
+            if let Err(err) = self.draw(world,&mut command,inputs,ctx) {
+                log::error!("pass node error:{:?}",err);
+            }
+            ctx.command_encoder = Some(command);
+
+        /* 
         let target_view = &inputs[0];
         let depth_view = &inputs[1];
         if depth_view.is_none() {
             return;
         }
-
-        let mut command = ctx.command_encoder.take().unwrap();
+     
+       
         
         if let Some(view_id) = target_view.as_ref() {   
             let mut camera_query = world.query::<(Entity, &Camera)>();
@@ -65,7 +65,7 @@ impl INode for PassNode {
                    None
                 },
             });
-            /* 
+            
             for (e,camera) in camera_query.iter(world) {
                 if let Some(camera_buffer)  = ctx.camera_state.cameras_buffer.buffers.get(&e.id()) {
                     for view_entites in camera.view_list.values.iter() {
@@ -112,9 +112,9 @@ impl INode for PassNode {
                         }
                     }
                 }   
-            }*/
+            }
         }
-        ctx.command_encoder = Some(command);
+        ctx.command_encoder = Some(command);*/
     }
 }
 
@@ -125,6 +125,54 @@ impl PassNode {
         }
     }
     
+    fn draw(&mut self,world:&mut World,command:&mut CommandEncoder,inputs:&Vec<Option<RenderResourceId>>,ctx:&mut RenderContext) -> Result<(),PassError> {
+        let target_resid= inputs[0].as_ref().ok_or(PassError::ErrInput(0))?;
+        let depth_resid =  inputs[1].as_ref().ok_or(PassError::ErrInput(1))?;
+        let target_view = ctx.resources.get_texture_view_by_resid(target_resid).ok_or(PassError::ErrTargetView)?;
+        let depth_view = ctx.resources.get_texture_view_by_resid( depth_resid).ok_or(PassError::ErrTargetView)?;
 
+        let mut render_pass = command.begin_render_pass(&wgpu::RenderPassDescriptor {
+            label:None,
+            color_attachments:&[wgpu::RenderPassColorAttachment {
+                view:target_view,
+                resolve_target:None,
+                ops:self.operations
+            }],
+            depth_stencil_attachment:Some(wgpu::RenderPassDepthStencilAttachment {
+                view:depth_view,
+                stencil_ops: None,
+                depth_ops: Some(Operations {
+                    load: wgpu::LoadOp::Clear(1.0),
+                    store: true,
+                }),
+            }),
+        });
+
+        let mut render_query = world.query::<(Entity,&Handle<Mesh>,&Handle<Material>)>();
+        let mut camera_query = world.query::<(Entity,&Transform,&Camera)>();
+
+        for (e,t,camera) in camera_query.iter(world) {
+            self.draw_camera(&world,camera,&mut render_query);
+            
+        }
+        Ok(())
+    }
+
+    fn draw_camera(&mut self,world:&World,camera:&Camera,render_query:&mut QueryState<(Entity,&Handle<Mesh>,&Handle<Material>)>) {
+        for ves in camera.view_list.values.iter() {
+            for ve in ves.value.iter() {
+                if let Ok((re,hmesh,hmat))  = render_query.get(world, ve.entity) {
+
+                }
+            }
+        }
+    }
     
+}
+
+
+#[derive(Debug)] 
+enum PassError {
+    ErrInput(usize),
+    ErrTargetView
 }

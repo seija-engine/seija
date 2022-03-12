@@ -79,13 +79,13 @@ fn def_ubo(rt:&mut EvalRT,args:Vec<Variable>) -> Variable {
 }
 
 fn node(rt:&mut EvalRT,args:Vec<Variable>) -> Variable {
-    if args.len() < 2 {
+    if args.len() < 1 {
         log::error!("node args < 2");
         return Variable::Nil;
     }
     (|rt:&mut EvalRT,mut args:Vec<Variable>| {
         let node_index = args[0].cast_int()?;
-        let node_params = args.remove(1);
+        let node_params = if args.len() > 1 { args.remove(1) } else {Variable::Nil };
         let node_creator = find_userdata::<NodeCreatorContext>(rt, "NODE_CREATORS")?;
         let graph_ctx = find_userdata::<RenderGraphContext>(rt, "GRAPH_CTX")?;
         let node_id = node_creator.create(node_index as usize, node_params,graph_ctx)?;
@@ -95,7 +95,7 @@ fn node(rt:&mut EvalRT,args:Vec<Variable>) -> Variable {
 
 
 fn link_node(rt:&mut EvalRT,args:Vec<Variable>) -> Variable {
-    if args.len() < 3 {
+    if args.len() < 2 {
         log::error!("node args < 3");
         return Variable::Nil;
     }
@@ -105,14 +105,17 @@ fn link_node(rt:&mut EvalRT,args:Vec<Variable>) -> Variable {
         let snode_2 = args[1].cast_string()?;
         let node_1 = NodeId::try_from(snode_1.borrow().as_str()).ok()?;
         let node_2 = NodeId::try_from(snode_2.borrow().as_str()).ok()?;
-        let slot_map = args[2].cast_map()?;
+        
         let mut from_idxs:Vec<usize> = vec![];
         let mut to_idxs:Vec<usize>   = vec![];
-        for (k,v) in slot_map.borrow().iter() {
-            let from = k.cast_int()? as usize;
-            let to = k.cast_int()? as usize;
-            from_idxs.push(from);
-            to_idxs.push(to);
+        if args.len() > 2 {
+            let slot_map = args[2].cast_map()?;
+            for (k,v) in slot_map.borrow().iter() {
+                let from = k.cast_int()? as usize;
+                let to = v.cast_int()? as usize;
+                from_idxs.push(from);
+                to_idxs.push(to);
+            }
         }
         if let Err(err) = graph_ctx.graph.add_link(node_1, node_2, from_idxs, to_idxs) {
             log::error!("link-> err:{}",err);
