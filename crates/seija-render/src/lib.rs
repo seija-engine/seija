@@ -102,11 +102,10 @@ impl RenderModule {
             }
         }
         app_render.graph.build();
-
+        ctx.ubo_ctx.init();
         for node in app_render.graph.graph.iter_mut_nodes() {
             node.node.init(w, &mut ctx);
         }
-        
         w.insert_resource(PipelineCache::default());
         w.insert_resource(ctx);
     }

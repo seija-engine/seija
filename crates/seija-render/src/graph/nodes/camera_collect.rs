@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 use crate::camera::camera::{Camera};
-use crate::uniforms::{UBOKey, UBObject};
+use crate::uniforms::{BufferIndex, UBObject};
 use crate::uniforms::backends::Camera3DBackend;
 use crate::{RenderContext, graph::node::INode};
 use bevy_ecs::prelude::*;
@@ -11,7 +11,7 @@ use crate::resource::RenderResourceId;
 #[derive(Default)]
 pub struct CameraCollect {
    pub ubo_name:String,
-   cameras_ubo:HashMap<u32,UBOKey>,
+   cameras_ubo:HashMap<u32,BufferIndex>,
    backend:Option<Camera3DBackend>
 }
 
@@ -33,7 +33,7 @@ impl INode for CameraCollect {
     fn prepare(&mut self, world: &mut World,ctx:&mut RenderContext) {
         let mut added_cameras = world.query_filtered::<Entity,(Added<Camera>,With<Transform>)>(); 
         for v in added_cameras.iter(&world) {
-           if let Some(key) = ctx.ubo_ctx.add(self.ubo_name.as_str(), Some(v.id()), &mut ctx.resources) {
+           if let Some(key) = ctx.ubo_ctx.add_camera_buffer(self.ubo_name.as_str(), v.id(), &mut ctx.resources) {
                self.cameras_ubo.insert(v.id(), key);     
            } else {
                log::error!("add {} ubo error",&self.ubo_name);
@@ -45,7 +45,7 @@ impl INode for CameraCollect {
         let mut cameras = world.query::<(Entity,&Transform,&Camera)>();
         for (e,t,camera) in cameras.iter(world) {
             if let Some(key) = self.cameras_ubo.get(&e.id()) {
-               if let Some(ubo) = ctx.ubo_ctx.buffers.get_ubo_mut(&key) {
+               if let Some(ubo) = ctx.ubo_ctx.buffers.get_camera_mut(&key) {
                    self.update_camera_buffer(ubo,t, camera);
                }
             }

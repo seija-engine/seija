@@ -6,6 +6,15 @@ use crate::resource::RenderResources;
 use crate::{UBOInfoSet, UBOInfo};
 use super::buffer::UBObject;
 use super::ubo_info::{UBOType};
+
+#[derive(Clone, Copy,Debug)]
+pub struct BufferIndex(usize);
+
+#[derive(Clone, Copy,Debug)]
+pub struct BufferArrayIndex(usize);
+
+
+
 #[derive(Default)]
 pub struct UBOContext {
     pub info:UBOInfoSet,
@@ -13,71 +22,63 @@ pub struct UBOContext {
 }
 
 impl UBOContext {
-  pub fn add(&mut self,name:&str,eid:Option<u32>,res:&mut RenderResources) -> Option<UBOKey> {
-      if let Some(info) = self.info.get_info(name) {
-        return Some(self.buffers.add(info, res, eid))
-      }
-      None
+  
+  pub fn init(&mut self) {
+       self.buffers.init(&self.info);
   }
   
+  pub fn add_camera_buffer(&mut self,name:&str,eid:u32,res:&mut RenderResources) -> Option<BufferIndex> {
+    if let Some(info) = self.info.get_info(name) {
+      return Some(self.buffers.add_camera_buffer(info, res, eid))
+    }
+    None
+  }
+
+  pub fn add_object_buffer(&mut self,name:&str,eid:u32,res:&mut RenderResources) -> Option<BufferArrayIndex> {
+    if let Some(info) = self.info.get_info(name) {
+       return Some(self.buffers.add_object_buffer(info, res, eid))
+    }
+    None
+  }
+ 
   pub fn update(&mut self,res:&mut RenderResources,cmd:&mut CommandEncoder) {
     self.buffers.update(res,cmd);
   }
 }
 
-
-#[derive(Clone, Copy,Debug)]
-pub struct UBOKey(UBOType,usize);
-
 #[derive(Default)]
 pub struct BufferContext {
-  keys:HashMap<(Arc<String>,u32),UBOKey>,
   cameras:Vec<UBObject>,
-  frames:Vec<UBObject>,
-  objects:Vec<UBObject>
+  
 }
 
 impl BufferContext {
-  pub fn add(&mut self,info:&UBOInfo,res:&mut RenderResources,eid:Option<u32>) -> UBOKey {
-    let object = UBObject::create(info, res);
-    let key = match info.typ {
-      UBOType::PerCamera => {
-        self.cameras.push(object);
-        UBOKey(UBOType::PerCamera,self.cameras.len() - 1)
-      },
-      UBOType::PerFrame => {
-        self.frames.push(object);
-        UBOKey(UBOType::PerFrame,self.frames.len() - 1)
-      },
-      UBOType::PerObject => {
-        self.objects.push(object);
-        UBOKey(UBOType::PerObject,self.objects.len() - 1)
-      },
-    };
-    self.keys.insert((info.name.clone(),eid.unwrap_or(0)), key);
-   
-    log::info!("add ubo buffer {}",info.name.as_str());
-    key
-  }
 
-  pub fn get_ubo_mut(&mut self,key:&UBOKey) -> Option<&mut UBObject> {
-    match key.0 {
-      UBOType::PerCamera => self.cameras.get_mut(key.1),
-      UBOType::PerFrame  =>  self.frames.get_mut(key.1),
-      UBOType::PerObject => self.objects.get_mut(key.1),
+  pub fn init(&mut self,info_set:&UBOInfoSet) {
+    for (k,info) in info_set.per_objects.iter() {
+
     }
   }
 
+  pub fn add_camera_buffer(&mut self,info:&UBOInfo,res:&mut RenderResources,eid:u32) -> BufferIndex {
+    let object = UBObject::create(info, res);
+    self.cameras.push(object);
+    BufferIndex(self.cameras.len() - 1)
+  }
+
+  pub fn add_object_buffer(&mut self,info:&UBOInfo,res:&mut RenderResources,eid:u32) -> BufferArrayIndex {
+   
+    BufferArrayIndex(0)
+  }
+
+  pub fn get_camera_mut(&mut self,index:&BufferIndex) -> Option<&mut UBObject> {
+      self.cameras.get_mut(index.0)
+  }
 
   pub fn update(&mut self,res:&mut RenderResources,cmd:&mut CommandEncoder) {
     for camera in self.cameras.iter_mut() {
       camera.update(res,cmd);
     }
-    for object in self.objects.iter_mut() {
-      object.update(res,cmd);
-    }
-    for frame in self.frames.iter_mut() {
-      frame.update(res,cmd);
-    }
   }
+
 }

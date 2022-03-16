@@ -4,7 +4,7 @@ use seija_core::bytes::AsBytes;
 use seija_transform::Transform;
 use wgpu::{CommandEncoder, Device};
 
-use crate::{material::Material, pipeline::render_bindings::{BindGroupBuilder, BindGroupLayoutBuilder}, resource::{BufferId, Mesh, RenderResourceId, RenderResources}};
+use crate::{material::Material, pipeline::render_bindings::{BindGroupBuilder, BindGroupLayoutBuilder}, resource::{BufferId, Mesh, RenderResources}};
 
 const MIN_BUFFER_SIZE:usize = 4;
 
