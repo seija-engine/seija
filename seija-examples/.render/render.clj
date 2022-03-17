@@ -19,12 +19,13 @@
   :backends ["Transform"]
 })
 
-(def camera    (node CAMERA {:ubo "CameraBuffer" }))
+(def camera    (node CAMERA    {:ubo "CameraBuffer" }))
+(def transform (node TRANSFORM {:ubo "ObjectBuffer"}))
 (def swapchain (node SWAP_CHAIN))
 (def pass (node PASS))
 (def depth-texture (node WINDOW_TEXTURE))
 
-
+(link-> transform      pass)
 (link-> camera         pass)
 (link-> swapchain      pass {0 0})
 (link-> depth-texture  pass {0 1})

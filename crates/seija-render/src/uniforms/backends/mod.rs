@@ -40,3 +40,20 @@ impl Camera3DBackend {
         buffer.write_bytes(self.position_idx,  v4.to_array());
     }
 }
+
+pub struct TransformBackend {
+    trans_idx:usize
+}
+
+impl TransformBackend {
+    pub fn from_def(def:&UniformBufferDef) -> Result<TransformBackend,String> {
+        let trans_idx = def.get_offset("transform", 0).ok_or(String::from("transform"))?;
+        Ok(TransformBackend {
+            trans_idx
+        })
+    }
+
+    pub fn set_transform(&self,buffer:&mut UniformBuffer,mat:&Mat4) {
+        buffer.write_bytes_(self.trans_idx,  mat.to_cols_array().as_bytes());
+    }
+}

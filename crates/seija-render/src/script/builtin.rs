@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use lite_clojure_eval::{Variable,GcRefCell};
 
-use crate::{graph::{NodeId, nodes::{CameraCollect, SwapchainNode, PassNode, WindowTextureNode}}, render::RenderGraphContext};
+use crate::{graph::{NodeId, nodes::{CameraCollect, SwapchainNode, PassNode, WindowTextureNode, TransformCollect}}, render::RenderGraphContext};
 
 use super::{NodeCreatorSet, NodeCreatorFn};
 
@@ -12,6 +12,7 @@ pub fn builtin_node_creators() -> NodeCreatorSet {
     map.insert("SWAP_CHAIN".into(), create_swap_chain_node);
     map.insert("PASS".into(), create_pass_node);
     map.insert("WINDOW_TEXTURE".into(), create_window_texture_node);
+    map.insert("TRANSFORM".into(), create_transform_node);
     NodeCreatorSet(map)
 }
 
@@ -24,6 +25,17 @@ fn create_camera_node(ctx:&mut RenderGraphContext,params:Variable) -> NodeId {
     let mut camera_collect = CameraCollect::default();
     camera_collect.ubo_name = ubo_name_str;
     ctx.graph.add_node("CameraCollect", camera_collect)
+}
+
+fn create_transform_node(ctx:&mut RenderGraphContext,params:Variable) -> NodeId {
+    let map = params.cast_map().unwrap();
+    let ubo_key = Variable::Keyword(GcRefCell::new(String::from(":ubo")));
+    let ubo_name = map.borrow().get(&ubo_key).unwrap().cast_string().unwrap();
+    let ubo_name_str:String = ubo_name.borrow().clone();
+
+    let mut node = TransformCollect::default();
+    node.ubo_name = ubo_name_str;
+    ctx.graph.add_node("TransformCollect", node)
 }
 
 fn create_swap_chain_node(ctx:&mut RenderGraphContext,params:Variable) -> NodeId {

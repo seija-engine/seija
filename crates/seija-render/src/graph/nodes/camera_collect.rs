@@ -8,6 +8,7 @@ use glam::Vec4;
 use seija_transform::Transform;
 use crate::resource::RenderResourceId;
 
+//TODO 没有实现移除逻辑
 #[derive(Default)]
 pub struct CameraCollect {
    pub ubo_name:String,

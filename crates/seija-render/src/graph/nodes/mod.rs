@@ -9,3 +9,4 @@ pub use pass_node::PassNode;
 pub use swapchain_node::SwapchainNode;
 pub use window_texture_node::WindowTextureNode;
 pub use camera_collect::{CameraCollect};
+pub use transform_collect::{TransformCollect};

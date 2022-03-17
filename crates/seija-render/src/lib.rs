@@ -2,8 +2,6 @@ use std::path::{PathBuf, Path};
 use camera::{view_list::view_list_system};
 use pipeline::{PipelineCache, update_pipeline_cache};
 use render::{AppRender, Config };
-use resource::{RenderResources};
-use rt_shaders::RuntimeShaderInfo;
 use script::{RenderScriptContext, builtin_node_creators};
 use seija_app::IModule;
 use seija_app::{App};
@@ -27,13 +25,10 @@ mod mesh_render;
 mod render_context;
 mod render;
 mod memory;
-mod transform_buffer;
 
-pub use transform_buffer::TransformBuffer;
 pub use render_context::{RenderContext};
 pub use uniforms::{UBOInfoSet,UBOInfo};
 
-const MATRIX_SIZE: u64 = std::mem::size_of::<[[f32; 4]; 4]>() as u64;
 
 #[derive(Debug, Hash, PartialEq, Eq, Clone,StageLabel )]
 pub enum RenderStage {
@@ -110,29 +105,3 @@ impl RenderModule {
         w.insert_resource(ctx);
     }
 }
-
-/*
-fn add_base_nodes(graph_ctx:&mut RenderGraphContext) {
-    let pass_node = PassNode::new();
-    let pass_id = graph_ctx.graph.add_node("pass", pass_node);
-
-    let swap_chain_node = SwapchainNode::new();
-    let swap_id = graph_ctx.graph.add_node("swapchain", swap_chain_node);
-
-    let depth_node = WindowTextureNode::new(wgpu::TextureDescriptor { 
-        label: None,
-        size: wgpu::Extent3d::default(),
-        mip_level_count: 1,
-        sample_count: 1, 
-        dimension: wgpu::TextureDimension::D2, 
-        format: wgpu::TextureFormat::Depth32Float, 
-        usage: wgpu::TextureUsage::RENDER_ATTACHMENT 
-    });
-    let depth_node_id = graph_ctx.graph.add_node("depth", depth_node);
-
-    graph_ctx.graph.add_link( swap_id ,pass_id ,    vec![0], vec![0]).unwrap();
-    graph_ctx.graph.add_link( depth_node_id ,pass_id , vec![0], vec![1]).unwrap();
-
-
-    graph_ctx.build();
-} */

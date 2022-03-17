@@ -2,7 +2,7 @@ use std::{sync::Arc, path::Path};
 
 use wgpu::{CommandEncoder, Device};
 
-use crate::{TransformBuffer, light::LightState, material::{MaterialSystem, PassDef}, 
+use crate::{light::LightState, material::{MaterialSystem, PassDef}, 
 resource::RenderResources,  rt_shaders::RuntimeShaderInfo, uniforms::UBOContext};
 
 unsafe impl Send for RenderContext {}
@@ -12,7 +12,6 @@ pub struct RenderContext {
     pub resources:RenderResources,
     pub command_encoder:Option<CommandEncoder>,
     pub light_state:LightState,
-    pub transform_buffer:TransformBuffer,
     pub material_sys:MaterialSystem,
     pub shaders:RuntimeShaderInfo,
     pub ubo_ctx:UBOContext
@@ -36,7 +35,6 @@ impl RenderContext {
             device:device.clone(),
             command_encoder:None,
             resources:RenderResources::new(device.clone()),
-            transform_buffer:TransformBuffer::new(&device),
             material_sys:MaterialSystem::new(&device),
             light_state:LightState::new(&device),
             shaders,

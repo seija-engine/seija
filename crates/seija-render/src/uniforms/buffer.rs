@@ -1,5 +1,4 @@
 use wgpu::CommandEncoder;
-use crate::MATRIX_SIZE;
 use crate::{memory::TypedUniformBuffer, resource::{BufferId, RenderResources}, UBOInfo};
 
 
