@@ -19,6 +19,16 @@
   :backends ["Transform"]
 })
 
+(def-ubo {
+  :type :PerObject
+  :name "LightBuffer"
+  :props [
+     {:name "positionFalloff" :type "float4"}
+     {:name "direction"       :type "float3"}
+  ]
+  :backends ["Light"]
+})
+
 (def camera    (node CAMERA    {:ubo "CameraBuffer" }))
 (def transform (node TRANSFORM {:ubo "ObjectBuffer"}))
 (def swapchain (node SWAP_CHAIN))

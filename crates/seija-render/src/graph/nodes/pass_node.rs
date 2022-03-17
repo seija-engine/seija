@@ -3,7 +3,7 @@ use bevy_ecs::prelude::*;
 
 use seija_asset::{Assets, Handle};
 use seija_transform::Transform;
-use wgpu::{Color, Operations, CommandEncoder};
+use wgpu::{Color, Operations, CommandEncoder, RenderPass};
 use crate::resource::RenderResourceId;
 pub struct PassNode {
     operations:Operations<Color>,
@@ -150,23 +150,51 @@ impl PassNode {
 
         let mut render_query = world.query::<(Entity,&Handle<Mesh>,&Handle<Material>)>();
         let mut camera_query = world.query::<(Entity,&Transform,&Camera)>();
+        let pipeline_cahce = world.get_resource::<PipelineCache>().unwrap();
 
-        for (e,t,camera) in camera_query.iter(world) {
-            self.draw_camera(&world,camera,&mut render_query);
+
+        let meshs = world.get_resource::<Assets<Mesh>>().unwrap();
+        let mat_storages = world.get_resource::<MaterialStorage>().unwrap();
+        let mats = mat_storages.mateials.read();
+        
+        for (_,_,camera) in camera_query.iter(world) {
+            for ves in camera.view_list.values.iter() {
+                for view_entity in ves.value.iter() {
+                    if let Ok((_,hmesh,hmat))  = render_query.get(world, view_entity.entity) {
+                       let mesh = meshs.get(&hmesh.id).ok_or(PassError::MissMesh)?;
+                       let material = mats.get(&hmat.id).ok_or(PassError::MissMaterial)?;
+                       if !material.is_ready(&ctx.resources) { continue }
+                       if let Some(pipelines)  = pipeline_cahce.get_pipeline(&material.def.name, mesh) {
+                         if let Some(mesh_buffer_id)  = ctx.resources.get_render_resource(&hmesh.id, 0) {
+                            for pipeline in pipelines.pipelines.iter() {
+                                let vert_buffer = ctx.resources.get_buffer_by_resid(&mesh_buffer_id).unwrap();
+                                //这里设置uniform
+
+                                render_pass.set_vertex_buffer(0, vert_buffer.slice(0..));
+                                if let Some(idx_id) = ctx.resources.get_render_resource(&hmesh.id, 1) {
+                                    let idx_buffer = ctx.resources.get_buffer_by_resid(&idx_id).unwrap();
+                                    render_pass.set_index_buffer(idx_buffer.slice(0..), mesh.index_format().unwrap());
+                                    render_pass.set_pipeline(pipeline);
+                    
+                                    render_pass.draw_indexed(mesh.indices_range().unwrap(),0, 0..1);
+                                } else {
+                                    render_pass.set_pipeline(pipeline);
+                                    render_pass.draw(0..mesh.count_vertices() as u32, 0..1);
+                                }
+                            }
+                         }
+                       }
+                    }
+                }
+            }
             
         }
         Ok(())
     }
 
-    fn draw_camera(&mut self,world:&World,camera:&Camera,render_query:&mut QueryState<(Entity,&Handle<Mesh>,&Handle<Material>)>) {
-        for ves in camera.view_list.values.iter() {
-            for ve in ves.value.iter() {
-                if let Ok((re,hmesh,hmat))  = render_query.get(world, ve.entity) {
+  
 
-                }
-            }
-        }
-    }
+    
     
 }
 
@@ -174,5 +202,7 @@ impl PassNode {
 #[derive(Debug)] 
 enum PassError {
     ErrInput(usize),
-    ErrTargetView
+    ErrTargetView,
+    MissMesh,
+    MissMaterial
 }

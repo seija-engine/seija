@@ -202,7 +202,7 @@ fn read_prop(value:&Value) -> Result<Option<PropInfo>,()>   {
          "mat4" => {
             return Ok(Some(PropInfo { name:name.to_string(), array_size, typ:UniformType::MAT4(Mat4::default()) }))
          },
-         _ => return Err(())
+         _ => return Ok(None)
     }
 }
 

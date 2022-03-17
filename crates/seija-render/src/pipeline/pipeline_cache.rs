@@ -73,7 +73,8 @@ impl PipelineCache {
     fn compile_pipeline(&mut self,
                         mesh:&Mesh,pass:&PassDef,
                         mesh_prim_state:&PrimitiveState,
-                        ctx:&RenderContext,mat_def:&MaterialDef) -> Option<RenderPipeline> {
+                        ctx:&RenderContext,
+                        mat_def:&MaterialDef) -> Option<RenderPipeline> {
         let mut cur_primstate = mesh_prim_state.clone();
         cur_primstate.cull_mode = (&pass.cull).into();
         cur_primstate.front_face = pass.front_face.0;
@@ -97,8 +98,9 @@ impl PipelineCache {
             clamp: 0.0,
         }
        });
-       let vert_shader = Self::read_shader_module(&pass.vs_path,&ctx.device)?;
-       let frag_shader = Self::read_shader_module(&pass.fs_path,&ctx.device)?;
+       //TODO替换这里
+       let vert_shader = Self::read_shader_module("",&ctx.device)?;
+       let frag_shader = Self::read_shader_module("",&ctx.device)?;
 
        
       let pipeline_layout = self.create_pipeline_layout(ctx,pass,mat_def);

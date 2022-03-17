@@ -28,10 +28,7 @@ pub struct PassDef {
     pub cull:Cull,
     pub clamp_depth:bool,
     pub shader_info:ShaderInfoDef,
-    //TODO delete it
-    pub vs_path:String,
-    //TODO delete it
-    pub fs_path:String
+   
 }
 
 impl Default for PassDef {
@@ -44,8 +41,6 @@ impl Default for PassDef {
             z_test:ZTest::Less,
             clamp_depth:false,
             cull: Cull::Back,
-            vs_path:String::default(),
-            fs_path:String::default(),
             shader_info:ShaderInfoDef::default()
         }
     }
