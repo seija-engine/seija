@@ -1,10 +1,11 @@
-use std::{path::{PathBuf, Path}, fs, sync::Arc};
+use std::{path::{PathBuf}, fs, sync::Arc};
 use lite_clojure_eval::EvalRT;
-use seija_render::material::{MaterialDef,read_material_def};
+use seija_render::material::{read_material_def};
 use glsl_pkg::PackageManager;
 use crate::backend::SeijaShaderBackend;
 use anyhow::{Result, bail};
 mod backend;
+mod render_info;
 
 pub struct MaterialCompiler {
    folders:Vec<String>,
@@ -30,7 +31,8 @@ impl MaterialCompiler {
       self.folders.push(dir.to_string());
    }
 
-   pub fn run(&mut self) {
+   pub fn run(&mut self,config_path:&str) {
+      self.backend.init(config_path);
       let mut tasks:Vec<ShaderTask> = vec![];
       for folder in self.folders.iter() {
          let mut search_str = String::from(folder);
@@ -94,5 +96,5 @@ fn test_fn() {
    mc.add_shader_dir("../../shaders");
    mc.set_shader_out("../../../seija-examples/.render/shaders");
    mc.add_mat_search_path("../../../seija-examples/res/new_material");
-   mc.run();
+   mc.run("../../../seija-examples/.render/render.clj");
 }

@@ -11,14 +11,13 @@ fn main() {
         fs::read_to_string(&time_path).unwrap()
     } else {
         String::default()
-    };
-    
-    if last_shader_time != str_time {
+    }; 
+    if last_shader_time != str_time { 
         let mut mc = MaterialCompiler::new();
         mc.add_shader_dir("../crates/shaders");
         mc.set_shader_out(".render/shaders/");
         mc.add_mat_search_path("res/new_material");
-        mc.run();
+        mc.run(".render/render.clj");
         fs::write(&time_path, last_shader_time).unwrap();
     }
 }

@@ -1,11 +1,18 @@
 use std::{collections::HashMap, fmt::Write};
 use glsl_pkg::IShaderBackend;
 
+use crate::render_info::RenderInfo;
+
 pub struct SeijaShaderBackend {
+    pub render_info:RenderInfo,
     vertexs:HashMap<String,(usize,String)>
 }
 
 impl SeijaShaderBackend {
+    pub fn init(&mut self,config_path:&str) {
+        self.render_info.init();
+        self.render_info.run(config_path);
+    }
     pub fn new() -> Self {
         let mut vertexs = HashMap::new();
         vertexs.insert("POSITION".into(), (0,"vec3".into()));
@@ -14,7 +21,7 @@ impl SeijaShaderBackend {
         vertexs.insert("NORMAL".into(), (3,"vec3".into()));
         vertexs.insert("TANGENT".into(), (4,"vec3".into()));
         vertexs.insert("COLOR".into(), (5,"vec4".into()));
-        SeijaShaderBackend { vertexs }
+        SeijaShaderBackend { vertexs,render_info:RenderInfo::new() }
     }
 }
 
