@@ -6,7 +6,7 @@ use serde_json::Value;
 pub struct RenderInfo {
     rt:EvalRT,
     ubos:Vec<Arc<UBOInfo>>,
-    backend2ubo:HashMap<String,Arc<UBOInfo>>,
+    pub backend2ubo:HashMap<String,Arc<UBOInfo>>,
 }
 
 impl RenderInfo {
@@ -47,7 +47,6 @@ impl RenderInfo {
         for backend in arc_info.backends.iter() {
             self.backend2ubo.insert(backend.clone(), arc_info.clone());
         }
-        dbg!(&self.backend2ubo);
     } 
 }
 

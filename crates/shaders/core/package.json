@@ -7,7 +7,7 @@
         "vertex": {
           "POSITION": "require"
         },
-        "backend": [ "Camera", "Transform3D" ],
+        "backend": [ "Camera3D", "Transform" ],
         "slots": [],
         "vs": "color.vs_main",
         "fs": "color.fs_main"

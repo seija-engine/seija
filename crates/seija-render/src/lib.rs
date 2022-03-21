@@ -27,7 +27,8 @@ mod render;
 mod memory;
 
 pub use render_context::{RenderContext};
-pub use uniforms::{UBOInfoSet,UBOInfo};
+pub use uniforms::{UBOInfoSet,UBOInfo,};
+pub use memory::{UniformInfo,UniformType};
 
 
 #[derive(Debug, Hash, PartialEq, Eq, Clone,StageLabel )]

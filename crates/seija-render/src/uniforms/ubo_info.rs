@@ -26,6 +26,7 @@ impl TryFrom<&Value> for UBOType {
 pub struct UBOInfo {
     pub typ:UBOType,
     pub name:Arc<String>,
+    pub index:usize,
     pub props:Arc<UniformBufferDef>,
     pub backends:Vec<String>
 }
@@ -43,12 +44,14 @@ impl TryFrom<&Value> for UBOInfo {
                                         .ok_or(":backends")?;
         let prop_json = object.get(":props").ok_or(":props".to_string())?;
         let props:PropInfoList = prop_json.try_into().map_err(|_| ":props".to_string())?;
+        let prop_index = object.get(":index").and_then(|v| v.as_i64()).unwrap_or(0);
         let udf = UniformBufferDef::try_from(&props).map_err(|_| ":props".to_string() )?;
         Ok(UBOInfo {
             typ,
             name:Arc::new(name.to_string()),
             props:Arc::new(udf),
-            backends
+            backends,
+            index:prop_index as usize
         })
     }
 }

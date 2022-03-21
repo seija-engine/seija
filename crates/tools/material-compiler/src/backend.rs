@@ -1,5 +1,8 @@
-use std::{collections::HashMap, fmt::Write};
-use glsl_pkg::IShaderBackend;
+use std::{collections::{HashMap}, fmt::Write, sync::Arc};
+use glsl_pack_rtbase::shader::Shader;
+use glsl_pkg::{IShaderBackend, backends::BackendItem};
+
+use seija_render::{UBOInfo, UniformInfo,UniformType};
 
 use crate::render_info::RenderInfo;
 
@@ -40,42 +43,75 @@ impl IShaderBackend for SeijaShaderBackend {
        &self.vertexs
     }
 
-    fn trait_fns<W:Write>(&self) -> HashMap<String, fn(&mut W)> {
-        let mut traits:HashMap<String,fn(&mut W)> = HashMap::default();
-        traits.insert("Camera".into(), get_camera_trait);
-        traits.insert("Transform3D".into(), get_transform3d_trait);
-        traits
+
+    fn write_uniforms<W:Write>(&self, writer:&mut W,shader:&Shader) {
+        let mut ubos:HashMap<&String,Arc<UBOInfo>> = Default::default();
+        for backend_name in shader.backend.iter() {
+            if let Some(ubo_info) = self.render_info.backend2ubo.get(backend_name) {
+                if !ubos.contains_key(&backend_name) {
+                    ubos.insert(backend_name,ubo_info.clone());
+                }
+            }
+        }
+        let mut ubo_list = ubos.values().collect::<Vec<_>>();
+        ubo_list.sort_by(|a,b| a.index.cmp(&b.index));
+        for ubo in ubo_list.iter() {
+            write_ubo_uniform(&ubo,writer);
+        }
     }
 
-    fn write_uniforms<W:Write>(&self, writer:&mut W) {
-        writer.write_str("layout(set = 0, binding = 0) uniform FrameUniforms {\r\n").unwrap();
-        writer.write_str("  mat4 cameraVP;\r\n").unwrap();
-        writer.write_str("  mat4 cameraView;\r\n").unwrap();
-        writer.write_str("  mat4 cameraP;\r\n").unwrap();
-        writer.write_str("  vec4 cameraPos;\r\n").unwrap();
-        writer.write_str("} frameUniforms;\r\n").unwrap();
-
-        writer.write_str("layout(set = 1, binding = 0) uniform ObjectUniforms {\r\n").unwrap();
-        writer.write_str("  mat4 transform;\r\n").unwrap();
-        writer.write_str("} objectUniforms;\r\n").unwrap();
-       
+    fn write_backend_trait<W:Write>(&self, write:&mut W, shader:&Shader, backends:&glsl_pkg::backends::Backends) {
+        for backend_name in shader.backend.iter() {
+            if let Some(backend) = backends.values.get(backend_name) {
+                for fn_info in backend.fns.iter() {
+                    self.write_backend_trait_fn(write,fn_info,&backend_name);                
+                }
+            } else {
+                log::error!("not found backend {}",backend_name);
+            }
+        }
     }
 }
 
-fn get_camera_trait<W:Write>(writer:&mut W) {
-    writer.write_str("mat4 getCameraView() {\r\n").unwrap();
-    writer.write_str("  return frameUniforms.cameraView;\r\n").unwrap();
-    writer.write_str("}\r\n").unwrap();
-
-    writer.write_str("mat4 getCameraViewProject() {\r\n").unwrap();
-    writer.write_str("  return frameUniforms.cameraVP;\r\n").unwrap();
-    writer.write_str("}\r\n").unwrap();
+impl SeijaShaderBackend {
+    fn write_backend_trait_fn<W:Write>(&self,writer:&mut W,fn_info:&BackendItem,backend_name:&String) {
+        let mut new_name = fn_info.name.clone();
+        if let Some(r) = new_name.get_mut(0..1) {
+            r.make_ascii_uppercase();
+        }
+        writer.write_str(&format!("{} get{}() {{ \r\n",fn_info.typ,new_name)).unwrap();
+        if let Some(ubo_info) = self.render_info.backend2ubo.get(backend_name) {
+            writer.write_str(&format!("  return _{}.{};\r\n",&ubo_info.name,fn_info.name)).unwrap();
+        }
+        writer.write_str("}\r\n").unwrap();
+    }
 }
 
-fn get_transform3d_trait<W:Write>(writer:&mut W) {
-    writer.write_str("mat4 getObjectTransform() {\r\n").unwrap();
-    writer.write_str("  return objectUniforms.transform;\r\n").unwrap();
-    writer.write_str("}\r\n").unwrap();
 
-   
+fn write_ubo_uniform<W:Write>(info:&UBOInfo, writer:&mut W) {
+    writer.write_str(&format!("layout(set = {}, binding = 0) uniform {} {{\r\n",info.index,&info.name)).unwrap();
+    for prop in info.props.infos.iter() {
+        write_ubo_uniform_prop(prop, writer);
+    }
+    writer.write_str(&format!("}} _{};\r\n",&info.name)).unwrap();
+}
+
+fn write_ubo_uniform_prop<W:Write>(prop:&UniformInfo,writer:&mut W) {
+    let typ_name = match prop.typ {
+       UniformType::BOOL(_)   => "bool",
+       UniformType::FLOAT(_)  => "float",
+       UniformType::FLOAT3(_) => "vec3",
+       UniformType::FLOAT4(_) => "vec4",
+       UniformType::INT(_)    => "int",
+       UniformType::UINT(_)   => "uint",
+       UniformType::MAT3(_)   => "mat3",
+       UniformType::MAT4(_)   => "mat4"
+    };
+    let full_type_name:String;
+    if prop.size > 1 {
+        full_type_name = format!("{}[{}]",typ_name,prop.size);
+    } else {
+        full_type_name = typ_name.to_string();
+    }
+    writer.write_str(&format!("  {} {};\r\n",full_type_name,prop.name)).unwrap();
 }

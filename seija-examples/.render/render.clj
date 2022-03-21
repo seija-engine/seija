@@ -1,6 +1,7 @@
 (def-ubo {
     :type :PerCamera
     :name "CameraBuffer"
+    :index 1
     :props [
         {:name "cameraView"       :type "mat4"  }
         {:name "cameraProj"       :type "mat4"  }
@@ -13,6 +14,7 @@
 (def-ubo {
   :type :PerObject
   :name "ObjectBuffer"
+  :index 2
   :props [
      {:name "transform" :type "mat4"}
   ]
@@ -22,6 +24,7 @@
 (def-ubo {
   :type :PerObject
   :name "LightBuffer"
+  :index 3
   :props [
      {:name "positionFalloff" :type "float4"}
      {:name "direction"       :type "float3"}

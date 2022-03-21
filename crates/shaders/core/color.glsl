@@ -4,6 +4,8 @@ struct VSOutput {
 
 VSOutput vs_main() {
   VSOutput o;
+  vec4 pos = getTransform() * vec4(vert_position, 1.0);
+  gl_Position = getCameraProjView() * pos;
   return o;
 }
 
