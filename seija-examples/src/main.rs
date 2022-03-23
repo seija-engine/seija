@@ -5,6 +5,8 @@ mod light_test;
 mod async_asset;
 mod pbr;
 
+use std::sync::Arc;
+
 use async_asset::AsyncAsset;
 use bevy_ecs::prelude::{IntoSystem};
 
@@ -34,7 +36,7 @@ fn main() {
     app.add_module(AssetModule);
     let mut render_config = RenderConfig::default();
     render_config.set_config_path(".render");
-    app.add_module(RenderModule(render_config));
+    app.add_module(RenderModule(Arc::new(render_config)));
     
     app.add_system2(CoreStage::Startup, StartupStage::PreStartup, pre_start.system());
     

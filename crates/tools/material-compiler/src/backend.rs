@@ -55,8 +55,10 @@ impl IShaderBackend for SeijaShaderBackend {
         }
         let mut ubo_list = ubos.values().collect::<Vec<_>>();
         ubo_list.sort_by(|a,b| a.index.cmp(&b.index));
+        let mut index:usize = 2;
         for ubo in ubo_list.iter() {
-            write_ubo_uniform(&ubo,writer);
+            write_ubo_uniform(&ubo,writer,index);
+            index += 1;
         }
     }
 
@@ -88,8 +90,8 @@ impl SeijaShaderBackend {
 }
 
 
-fn write_ubo_uniform<W:Write>(info:&UBOInfo, writer:&mut W) {
-    writer.write_str(&format!("layout(set = {}, binding = 0) uniform {} {{\r\n",info.index,&info.name)).unwrap();
+fn write_ubo_uniform<W:Write>(info:&UBOInfo, writer:&mut W,index:usize) {
+    writer.write_str(&format!("layout(set = {}, binding = 0) uniform {} {{\r\n",index,&info.name)).unwrap();
     for prop in info.props.infos.iter() {
         write_ubo_uniform_prop(prop, writer);
     }

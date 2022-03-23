@@ -51,6 +51,7 @@ pub struct ShaderInfoDef {
     pub macros:Arc<Vec<String>>
 }
 
+
 pub fn read_material_def(vm:&mut EvalRT,file_string:&str) -> Result<MaterialDef,MaterialDefReadError>  {
     let mut is_light = false;
     let value:Value = vm.eval_string(String::default(), file_string).ok_or(MaterialDefReadError::LanguageError)?.into();

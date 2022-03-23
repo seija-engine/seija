@@ -3,14 +3,17 @@ use core::slice;
 use std::io;
 use std::hash::{Hash, Hasher};
 use std::fs;
-use std::sync::{ RwLockReadGuard};
+use std::path::Path;
+use std::sync::{ RwLockReadGuard, Arc};
 use fnv::{FnvHashMap, FnvHasher};
+use glsl_pack_rtbase::MacroGroup;
 use wgpu::{BindGroupLayout, DepthStencilState, Device, 
           FragmentState, MultisampleState, PipelineLayout, 
           PipelineLayoutDescriptor, PrimitiveState, RenderPipeline, 
           RenderPipelineDescriptor, ShaderModule, 
           ShaderModuleDescriptor, ShaderStage, StencilState, VertexState};
-use crate::RenderContext;
+use crate::{RenderContext, RenderConfig};
+use crate::material::ShaderInfoDef;
 use crate::{material::{MaterialDef, PassDef}, resource::Mesh};
 
 
@@ -30,7 +33,14 @@ impl RenderPipelines {
 
 #[derive(Default)]
 pub struct PipelineCache {
+    cfg:Arc<RenderConfig>,
     cache_pipelines:FnvHashMap<u64,RenderPipelines>
+}
+
+impl PipelineCache {
+    pub fn new(cfg:Arc<RenderConfig>) -> Self {
+        PipelineCache { cache_pipelines: Default::default(),cfg }
+    }
 }
 
 
@@ -61,7 +71,7 @@ impl PipelineCache {
         let mut pipes:Vec<RenderPipeline> = Vec::new();
       
         for pass in  mat_def.pass_list.iter() {
-           if let Some(pipe) = self.compile_pipeline(mesh,pass, &prim_state,ctx,mat_def) {
+           if let Some(pipe) = self.compile_pipeline(mesh,pass,ctx,mat_def) {
                pipes.push(pipe);
            } else {
                log::error!("material compile pipeline fail {}",&mat_def.name);
@@ -72,10 +82,9 @@ impl PipelineCache {
 
     fn compile_pipeline(&mut self,
                         mesh:&Mesh,pass:&PassDef,
-                        mesh_prim_state:&PrimitiveState,
                         ctx:&RenderContext,
                         mat_def:&MaterialDef) -> Option<RenderPipeline> {
-        let mut cur_primstate = mesh_prim_state.clone();
+        let mut cur_primstate = mesh.primitive_state().clone();
         cur_primstate.cull_mode = (&pass.cull).into();
         cur_primstate.front_face = pass.front_face.0;
         cur_primstate.clamp_depth = pass.clamp_depth;
@@ -98,10 +107,13 @@ impl PipelineCache {
             clamp: 0.0,
         }
        });
-       //TODO替换这里
-       let vert_shader = Self::read_shader_module("",&ctx.device)?;
-       let frag_shader = Self::read_shader_module("",&ctx.device)?;
 
+       let shader_name_prefix = get_shader_name_prefix(mesh, &pass.shader_info);
+       let vs_path = self.cfg.config_path.join(".render").join("shaders").join(&format!("{}.vert.spv",shader_name_prefix));
+       let fs_path = self.cfg.config_path.join(".render").join("shaders").join(&format!("{}.frag.spv",shader_name_prefix));
+
+       let vert_shader = Self::read_shader_module(&vs_path,&ctx.device)?;
+       let frag_shader = Self::read_shader_module(fs_path,&ctx.device)?;
        
       let pipeline_layout = self.create_pipeline_layout(ctx,pass,mat_def);
 
@@ -165,15 +177,17 @@ impl PipelineCache {
         ctx.device.create_pipeline_layout(&layout_desc)
     }
 
-    fn read_shader_module(path:&str,device:&Device) -> Option<ShaderModule> {
-       let code_bytes = fs::read(path).ok()?;
+    fn read_shader_module<P:AsRef<Path>>(path:P,device:&Device) -> Option<ShaderModule> {
+       let code_bytes = fs::read(path.as_ref()).ok()?;
+       log::warn!("code_bytes:{:?}",code_bytes.len());
        let bytes = read_spirv(std::io::Cursor::new(&code_bytes)).unwrap();
-       
+       log::warn!("code_bytes2:{:?}",bytes.len());
        let shader_module = device.create_shader_module(&ShaderModuleDescriptor {
         label:None,
         source:wgpu::ShaderSource::SpirV(bytes.into()),
         flags:Default::default()
        });
+       log::warn!("create shader module");
        Some(shader_module)
     }
 
@@ -216,4 +230,16 @@ pub fn read_spirv<R: io::Read + io::Seek>(mut x: R) -> io::Result<Vec<u32>> {
         ));
     }
     Ok(result)
+}
+
+
+fn get_shader_name_prefix(mesh:&Mesh,shader:&ShaderInfoDef) -> String {
+    let mut macros:Vec<String> = mesh.mesh_attr_types().iter().map(|v| format!("VERTEX_{}",v.name()) ).collect();
+    for s in shader.macros.iter() {
+        macros.push(s.to_string());
+    }
+    let macro_group = MacroGroup::new(macros);
+    let macro_string = macro_group.hash_base64();
+    let sname = shader.name.clone().replace('.', "#");
+    format!("{}_{}",&sname,&macro_string)
 }

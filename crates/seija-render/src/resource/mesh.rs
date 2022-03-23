@@ -25,6 +25,20 @@ bitflags! {
 }
 
 
+impl MeshAttributeType {
+    pub fn name(&self) -> &'static str {
+        match self.bits() {
+           0 => {"POSITION"},
+           1 => {"UV0"},
+           2 => {"UV1"},
+           3 => {"NORMAL"},
+           4 => {"TANGENT"},
+           5 => {"COLOR"},
+            _ => ""
+        }
+    }
+}
+
 #[derive(Debug, Clone)]
 pub enum Indices {
     U16(Vec<u16>),
@@ -335,6 +349,17 @@ impl Mesh {
             }   
         }
         buffer
+    }
+
+    pub fn mesh_attr_types(&self) -> Vec<MeshAttributeType> {
+        let mut attr_types = vec![];
+        for idx in 0..self.values.len() {
+            if self.values[idx].is_some() {
+                let mesh_attr_type:MeshAttributeType = MeshAttributeType::from_bits(idx).unwrap();
+                attr_types.push(mesh_attr_type);
+            }
+        }
+        attr_types
     }
 }
 

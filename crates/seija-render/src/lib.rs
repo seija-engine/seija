@@ -1,4 +1,5 @@
 use std::path::{PathBuf, Path};
+use std::sync::Arc;
 use camera::{view_list::view_list_system};
 use pipeline::{PipelineCache, update_pipeline_cache};
 use render::{AppRender, Config };
@@ -50,7 +51,7 @@ impl RenderConfig {
 }
 
 #[derive(Default)]
-pub struct RenderModule(pub RenderConfig);
+pub struct RenderModule(pub Arc<RenderConfig>);
 
 impl IModule for RenderModule {
     fn init(&mut self,app:&mut App) {

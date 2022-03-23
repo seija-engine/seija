@@ -16,9 +16,9 @@ impl INode for PassNode {
     
     fn update(&mut self,world: &mut World,ctx:&mut RenderContext,inputs:&Vec<Option<RenderResourceId>>,_outputs:&mut Vec<Option<RenderResourceId>>) {
             let mut command = ctx.command_encoder.take().unwrap();
-            if let Err(err) = self.draw(world,&mut command,inputs,ctx) {
-                log::error!("pass node error:{:?}",err);
-            }
+            //if let Err(err) = self.draw(world,&mut command,inputs,ctx) {
+            //    log::error!("pass node error:{:?}",err);
+            //}
             ctx.command_encoder = Some(command);
 
         /* 

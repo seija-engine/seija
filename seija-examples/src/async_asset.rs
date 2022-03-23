@@ -4,7 +4,7 @@ use bevy_ecs::prelude::{Commands, Entity, IntoSystem, Query, Res, ResMut};
 use seija_asset::{Assets};
 use seija_core::{CoreStage, StartupStage, window::AppWindow};
 
-use seija_render::{camera::camera::Camera, material::MaterialStorage, resource::{Mesh, Texture, shape::Sphere}};
+use seija_render::{camera::camera::Camera, material::MaterialStorage, resource::{Mesh, Texture, shape::{Sphere, Cube}}};
 use seija_transform::Transform;
 
 pub struct AsyncAsset;
@@ -22,7 +22,7 @@ fn on_start(mut commands:Commands,
     mut textures:ResMut<Assets<Texture>>,
     window:Res<AppWindow>,
     materials:Res<MaterialStorage>) {
-      let mesh = Sphere::new(2f32);
+      let mesh = Cube::new(2f32);
       let hmesh = meshs.add(mesh.into());
       let hmat = materials.create_material("purecolor").unwrap();
       let mut t = Transform::default();

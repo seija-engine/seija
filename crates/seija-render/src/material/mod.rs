@@ -7,7 +7,7 @@ mod texture_prop_def;
 pub mod errors;
 pub use material::{Material};
 pub use storage::MaterialStorage;
-pub use material_def::{MaterialDef,read_material_def,PassDef};
+pub use material_def::{MaterialDef,read_material_def,PassDef,ShaderInfoDef};
 use seija_app::App;
 use bevy_ecs::prelude::{IntoSystem};
 use seija_asset::{AssetServer, AssetStage};
