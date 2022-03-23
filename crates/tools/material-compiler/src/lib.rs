@@ -91,7 +91,7 @@ fn test_fn() {
    builder.filter_level(log::LevelFilter::Info);
    builder.init();
 
-
+   
    let mut mc = MaterialCompiler::new();
    mc.add_shader_dir("../../shaders");
    mc.set_shader_out("../../../seija-examples/.render/shaders");

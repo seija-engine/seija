@@ -1,5 +1,6 @@
 use core::slice;
 
+use std::collections::HashSet;
 use std::io;
 use std::hash::{Hash, Hasher};
 use std::fs;
@@ -12,6 +13,7 @@ use wgpu::{BindGroupLayout, DepthStencilState, Device,
           PipelineLayoutDescriptor, PrimitiveState, RenderPipeline, 
           RenderPipelineDescriptor, ShaderModule, 
           ShaderModuleDescriptor, ShaderStage, StencilState, VertexState};
+use crate::rt_shaders::RuntimeShaderInfo;
 use crate::{RenderContext, RenderConfig};
 use crate::material::ShaderInfoDef;
 use crate::{material::{MaterialDef, PassDef}, resource::Mesh};
@@ -67,7 +69,6 @@ impl PipelineCache {
     
 
     fn compile_pipelines<'m>(&mut self,mesh:&Mesh,mat_def:&'m MaterialDef,ctx:&RenderContext) -> RenderPipelines {
-        let prim_state = mesh.primitive_state();
         let mut pipes:Vec<RenderPipeline> = Vec::new();
       
         for pass in  mat_def.pass_list.iter() {
@@ -108,7 +109,13 @@ impl PipelineCache {
         }
        });
 
-       let shader_name_prefix = get_shader_name_prefix(mesh, &pass.shader_info);
+       let eshader_name_prefix = get_shader_name_prefix(mesh, &pass.shader_info,&ctx.shaders);
+       if eshader_name_prefix.is_none() {
+          log::error!("gen shader name prefix err:{}",&pass.shader_info.name);
+          return None;
+       }
+       let shader_name_prefix = eshader_name_prefix?;
+       
        let vs_path = self.cfg.config_path.join(".render").join("shaders").join(&format!("{}.vert.spv",shader_name_prefix));
        let fs_path = self.cfg.config_path.join(".render").join("shaders").join(&format!("{}.frag.spv",shader_name_prefix));
 
@@ -179,15 +186,13 @@ impl PipelineCache {
 
     fn read_shader_module<P:AsRef<Path>>(path:P,device:&Device) -> Option<ShaderModule> {
        let code_bytes = fs::read(path.as_ref()).ok()?;
-       log::warn!("code_bytes:{:?}",code_bytes.len());
        let bytes = read_spirv(std::io::Cursor::new(&code_bytes)).unwrap();
-       log::warn!("code_bytes2:{:?}",bytes.len());
        let shader_module = device.create_shader_module(&ShaderModuleDescriptor {
         label:None,
         source:wgpu::ShaderSource::SpirV(bytes.into()),
         flags:Default::default()
        });
-       log::warn!("create shader module");
+       log::info!("create shader module {:?}",path.as_ref());
        Some(shader_module)
     }
 
@@ -233,13 +238,28 @@ pub fn read_spirv<R: io::Read + io::Seek>(mut x: R) -> io::Result<Vec<u32>> {
 }
 
 
-fn get_shader_name_prefix(mesh:&Mesh,shader:&ShaderInfoDef) -> String {
-    let mut macros:Vec<String> = mesh.mesh_attr_types().iter().map(|v| format!("VERTEX_{}",v.name()) ).collect();
-    for s in shader.macros.iter() {
-        macros.push(s.to_string());
+fn get_shader_name_prefix(mesh:&Mesh,shader:&ShaderInfoDef,shaders:&RuntimeShaderInfo) -> Option<String> {
+    if let Some(shader_info) = shaders.find_shader(&shader.name) {
+        let mesh_types = mesh.mesh_attr_types().iter().map(|v| v.name()).collect::<HashSet<_>>();
+    
+        let mut macros:Vec<String> = vec![];
+        for (s,is_require) in shader_info.verts.iter() {
+            if mesh_types.contains(s.as_str()) {
+                macros.push(format!("VERTEX_{}",s.clone()) );
+            } else if *is_require {
+               
+                return None;
+            }
+        }
+    
+        let macro_group = MacroGroup::new(macros);
+        let macro_string = macro_group.hash_base64();
+        let sname = shader.name.clone().replace('.', "#");
+        Some(format!("{}_{}",&sname,&macro_string))
+    } else {
+        log::error!("not found rt shader:{}",&shader.name);
+        None
     }
-    let macro_group = MacroGroup::new(macros);
-    let macro_string = macro_group.hash_base64();
-    let sname = shader.name.clone().replace('.', "#");
-    format!("{}_{}",&sname,&macro_string)
+
+    
 }

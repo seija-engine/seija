@@ -26,7 +26,7 @@ use seija_transform::{TransformModule};
 const TEST_NAME:&'static str = "async_asset";
 
 fn main() {
-     env_logger::Builder::new().filter_level(log::LevelFilter::Warn).try_init().unwrap();
+     env_logger::Builder::new().filter_level(log::LevelFilter::Info).try_init().unwrap();
     
     
     let mut app = App::new();
