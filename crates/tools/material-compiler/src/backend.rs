@@ -55,7 +55,7 @@ impl IShaderBackend for SeijaShaderBackend {
         }
         let mut ubo_list = ubos.values().collect::<Vec<_>>();
         ubo_list.sort_by(|a,b| a.index.cmp(&b.index));
-        let mut index:usize = 2;
+        let mut index:usize = 0;
         for ubo in ubo_list.iter() {
             write_ubo_uniform(&ubo,writer,index);
             index += 1;

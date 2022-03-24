@@ -5,6 +5,6 @@ mod buffer;
 mod array_buffer;
 pub mod backends;
 pub use buffer::{UBObject};
-pub use ubo_context::{UBOContext,BufferIndex,BufferArrayIndex};
+pub use ubo_context::{UBOContext,BufferIndex,BufferArrayIndex,UBONameIndex};
 pub use ubo_info_set::{UBOInfoSet};
-pub use ubo_info::{UBOInfo};
+pub use ubo_info::{UBOInfo,UBOType,UBOApplyType};

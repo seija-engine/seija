@@ -5,15 +5,17 @@ use std::io;
 use std::hash::{Hash, Hasher};
 use std::fs;
 use std::path::Path;
+use seija_core::{LogOption,LogResult};
 use std::sync::{ RwLockReadGuard, Arc};
 use fnv::{FnvHashMap, FnvHasher};
 use glsl_pack_rtbase::MacroGroup;
 use wgpu::{BindGroupLayout, DepthStencilState, Device, 
           FragmentState, MultisampleState, PipelineLayout, 
-          PipelineLayoutDescriptor, PrimitiveState, RenderPipeline, 
+          PipelineLayoutDescriptor, PrimitiveState,  
           RenderPipelineDescriptor, ShaderModule, 
           ShaderModuleDescriptor, ShaderStage, StencilState, VertexState};
 use crate::rt_shaders::RuntimeShaderInfo;
+use crate::uniforms::UBONameIndex;
 use crate::{RenderContext, RenderConfig};
 use crate::material::ShaderInfoDef;
 use crate::{material::{MaterialDef, PassDef}, resource::Mesh};
@@ -31,6 +33,11 @@ impl RenderPipelines {
     pub fn new(pipelines:Vec<RenderPipeline>) -> RenderPipelines {
         RenderPipelines { pipelines }
     }
+}
+
+pub struct RenderPipeline {
+    pub ubos:Vec<UBONameIndex>,
+    pub pipeline:wgpu::RenderPipeline
 }
 
 #[derive(Default)]
@@ -62,6 +69,7 @@ impl PipelineCache {
         let key = hasher.finish();
         if !self.cache_pipelines.contains_key(&key) {
             let pipes = self.compile_pipelines(mesh, mat_def,ctx);
+            log::info!("create pipeline success {}",&mat_def.name);
             self.cache_pipelines.insert(key, pipes);
         }
     }
@@ -109,20 +117,15 @@ impl PipelineCache {
         }
        });
 
-       let eshader_name_prefix = get_shader_name_prefix(mesh, &pass.shader_info,&ctx.shaders);
-       if eshader_name_prefix.is_none() {
-          log::error!("gen shader name prefix err:{}",&pass.shader_info.name);
-          return None;
-       }
-       let shader_name_prefix = eshader_name_prefix?;
-       
+       let shader_name_prefix = get_shader_name_prefix(mesh, &pass.shader_info,&ctx.shaders)
+                                         .log_err(&format!("gen shader name prefix err:{}",&pass.shader_info.name))?;
        let vs_path = self.cfg.config_path.join(".render").join("shaders").join(&format!("{}.vert.spv",shader_name_prefix));
        let fs_path = self.cfg.config_path.join(".render").join("shaders").join(&format!("{}.frag.spv",shader_name_prefix));
 
        let vert_shader = Self::read_shader_module(&vs_path,&ctx.device)?;
        let frag_shader = Self::read_shader_module(fs_path,&ctx.device)?;
        
-      let pipeline_layout = self.create_pipeline_layout(ctx,pass,mat_def);
+      let pipeline_layout = self.create_pipeline_layout(ctx,pass,mat_def).log_err("create pipeline layout fail")?;
 
       let targets = vec![wgpu::ColorTargetState {
         format: wgpu::TextureFormat::Bgra8UnormSrgb,
@@ -154,34 +157,40 @@ impl PipelineCache {
         },
            fragment:Some(FragmentState { module:&frag_shader, entry_point:"main", targets:&targets })
        };
-       let render_pipeline = ctx.device.create_render_pipeline(&render_pipeline_desc);
+       let gpu_pipeline = ctx.device.create_render_pipeline(&render_pipeline_desc);
+
+       let rt_shader = ctx.shaders.find_shader(&pass.shader_info.name)?;
+       let ubo_names = ctx.ubo_ctx.info.get_ubos_by_backends(&rt_shader.backends);
+       let mut ubos:Vec<UBONameIndex> = vec![];
+       for (ubo_name,_) in ubo_names.iter() {
+           let name_index = ctx.ubo_ctx.buffers.get_name_index(ubo_name).log_err(&format!("not found ubo: {}",ubo_name))?;
+           ubos.push(name_index);
+       }
+
+       let render_pipeline = RenderPipeline {
+           ubos,
+           pipeline:gpu_pipeline
+       };
        Some(render_pipeline)
     }
 
-    fn create_pipeline_layout(&mut self,ctx:&RenderContext,pass_def:&PassDef,mat_def:&MaterialDef) -> PipelineLayout {
-        /* 
-        let camera_layout:&wgpu::BindGroupLayout = &ctx.camera_state.camera_layout;
-        let trans_layout = &ctx.transform_buffer.trans_layout;
-        let material_layout = &ctx.material_sys.layout;
-        let mut layouts = vec![camera_layout,trans_layout,material_layout];
+    fn create_pipeline_layout(&mut self,ctx:&RenderContext,pass_def:&PassDef,mat_def:&MaterialDef) -> Option<PipelineLayout> {
+       
+        let mut layouts = ctx.create_bind_group_layouts(pass_def)?;
+        //TODO 材质的layout还有问题
+        //layouts.insert(0, &ctx.material_sys.layout);
+        //if mat_def.tex_prop_def.indexs.len() > 0 {
+        //    if let Some(layout) = ctx.material_sys.texture_layouts.get(&mat_def.name) {
+        //        layouts.insert(0,layout);
+        //    }
+        //}
 
-        if mat_def.tex_prop_def.indexs.len() > 0 {
-            if let Some(layout) = ctx.material_sys.texture_layouts.get(&mat_def.name) {
-                layouts.push(layout);
-            }
-        }
-        
-        if mat_def.is_light {
-            layouts.push(&ctx.light_state.layout);
-        }
-        */
-        let layouts = ctx.create_bind_group_layouts(pass_def);
         let layout_desc = PipelineLayoutDescriptor {
             label:None,
             bind_group_layouts:&layouts,
             push_constant_ranges:&[],
         };
-        ctx.device.create_pipeline_layout(&layout_desc)
+        Some(ctx.device.create_pipeline_layout(&layout_desc)) 
     }
 
     fn read_shader_module<P:AsRef<Path>>(path:P,device:&Device) -> Option<ShaderModule> {
@@ -239,27 +248,20 @@ pub fn read_spirv<R: io::Read + io::Seek>(mut x: R) -> io::Result<Vec<u32>> {
 
 
 fn get_shader_name_prefix(mesh:&Mesh,shader:&ShaderInfoDef,shaders:&RuntimeShaderInfo) -> Option<String> {
-    if let Some(shader_info) = shaders.find_shader(&shader.name) {
-        let mesh_types = mesh.mesh_attr_types().iter().map(|v| v.name()).collect::<HashSet<_>>();
+    let shader_info = shaders.find_shader(&shader.name).log_err(&format!("not find shader in rt.json:{}",&shader.name))?;
+    let mesh_types = mesh.mesh_attr_types().iter().map(|v| v.name()).collect::<HashSet<_>>();
     
-        let mut macros:Vec<String> = vec![];
-        for (s,is_require) in shader_info.verts.iter() {
-            if mesh_types.contains(s.as_str()) {
-                macros.push(format!("VERTEX_{}",s.clone()) );
-            } else if *is_require {
-               
-                return None;
-            }
+    let mut macros:Vec<String> = vec![];
+    for (s,is_require) in shader_info.verts.iter() {
+        if mesh_types.contains(s.as_str()) {
+            macros.push(format!("VERTEX_{}",s.clone()) );
+        } else if *is_require {   
+            return None;
         }
-    
-        let macro_group = MacroGroup::new(macros);
-        let macro_string = macro_group.hash_base64();
-        let sname = shader.name.clone().replace('.', "#");
-        Some(format!("{}_{}",&sname,&macro_string))
-    } else {
-        log::error!("not found rt shader:{}",&shader.name);
-        None
     }
-
     
+    let macro_group = MacroGroup::new(macros);
+    let macro_string = macro_group.hash_base64();
+    let sname = shader.name.clone().replace('.', "#");
+    Some(format!("{}_{}",&sname,&macro_string))
 }

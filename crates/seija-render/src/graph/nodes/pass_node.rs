@@ -1,4 +1,4 @@
-use crate::{RenderContext, camera::camera::Camera, graph::node::INode, material::{Material, MaterialStorage}, pipeline::{PipelineCache}, resource::Mesh};
+use crate::{RenderContext, camera::camera::Camera, graph::node::INode, material::{Material, MaterialStorage}, pipeline::{PipelineCache}, resource::Mesh, uniforms::UBOApplyType};
 use bevy_ecs::prelude::*;
 
 use seija_asset::{Assets, Handle};
@@ -16,9 +16,9 @@ impl INode for PassNode {
     
     fn update(&mut self,world: &mut World,ctx:&mut RenderContext,inputs:&Vec<Option<RenderResourceId>>,_outputs:&mut Vec<Option<RenderResourceId>>) {
             let mut command = ctx.command_encoder.take().unwrap();
-            //if let Err(err) = self.draw(world,&mut command,inputs,ctx) {
-            //    log::error!("pass node error:{:?}",err);
-            //}
+            if let Err(err) = self.draw(world,&mut command,inputs,ctx) {
+                log::error!("pass node error:{:?}",err);
+            }
             ctx.command_encoder = Some(command);
 
         /* 
@@ -157,7 +157,7 @@ impl PassNode {
         let mat_storages = world.get_resource::<MaterialStorage>().unwrap();
         let mats = mat_storages.mateials.read();
         
-        for (_,_,camera) in camera_query.iter(world) {
+        for (camera_e,_,camera) in camera_query.iter(world) {
             for ves in camera.view_list.values.iter() {
                 for view_entity in ves.value.iter() {
                     if let Ok((_,hmesh,hmat))  = render_query.get(world, view_entity.entity) {
@@ -168,17 +168,34 @@ impl PassNode {
                          if let Some(mesh_buffer_id)  = ctx.resources.get_render_resource(&hmesh.id, 0) {
                             for pipeline in pipelines.pipelines.iter() {
                                 let vert_buffer = ctx.resources.get_buffer_by_resid(&mesh_buffer_id).unwrap();
-                                //这里设置uniform
+                               
+                                for (index,ubo_name_index) in pipeline.ubos.iter().enumerate() {
+                                    match ubo_name_index.2 {
+                                        UBOApplyType::Camera => {
+                                            let bind_group = ctx.ubo_ctx.buffers.get_bind_group(ubo_name_index, Some(camera_e.id())).ok_or(PassError::ErrUBOIndex)?;
+                                            render_pass.set_bind_group(index as u32, bind_group, &[]);
+                                        },
+                                        UBOApplyType::RenderObject => {
+                                            let bind_group = ctx.ubo_ctx.buffers.get_bind_group(ubo_name_index, Some(view_entity.entity.id())).ok_or(PassError::ErrUBOIndex)?;
+                                            render_pass.set_bind_group(index as u32, bind_group, &[]);
+                                        },
+                                        UBOApplyType::Frame => {
+
+                                        }    
+                                    };
+                                    
+                                   
+                                }
 
                                 render_pass.set_vertex_buffer(0, vert_buffer.slice(0..));
                                 if let Some(idx_id) = ctx.resources.get_render_resource(&hmesh.id, 1) {
                                     let idx_buffer = ctx.resources.get_buffer_by_resid(&idx_id).unwrap();
                                     render_pass.set_index_buffer(idx_buffer.slice(0..), mesh.index_format().unwrap());
-                                    render_pass.set_pipeline(pipeline);
+                                    render_pass.set_pipeline(&pipeline.pipeline);
                     
                                     render_pass.draw_indexed(mesh.indices_range().unwrap(),0, 0..1);
                                 } else {
-                                    render_pass.set_pipeline(pipeline);
+                                    render_pass.set_pipeline(&pipeline.pipeline);
                                     render_pass.draw(0..mesh.count_vertices() as u32, 0..1);
                                 }
                             }
@@ -204,5 +221,6 @@ enum PassError {
     ErrInput(usize),
     ErrTargetView,
     MissMesh,
-    MissMaterial
+    MissMaterial,
+    ErrUBOIndex
 }

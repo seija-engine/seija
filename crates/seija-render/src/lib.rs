@@ -99,7 +99,7 @@ impl RenderModule {
             }
         }
         app_render.graph.build();
-        ctx.ubo_ctx.init();
+        ctx.ubo_ctx.init(&ctx.device);
         for node in app_render.graph.graph.iter_mut_nodes() {
             node.node.init(w, &mut ctx);
         }

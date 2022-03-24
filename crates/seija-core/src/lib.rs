@@ -4,6 +4,7 @@ use bevy_ecs::schedule::{StageLabel};
 use event::Events;
 use seija_app::{IModule,App};
 use time::{Time};
+use std::fmt::Debug;
 use std::sync::atomic::{AtomicU64,Ordering};
 
 pub mod bytes;
@@ -85,5 +86,60 @@ impl IDGenU64 {
 
     pub fn next(&self) -> u64 {
         self.atom.fetch_add(1, Ordering::Relaxed)
+    }
+}
+
+
+pub trait LogOption<T> {
+    fn log_err (self,msg:&str) -> Option<T>;
+    fn log_warn(self,msg:&str) -> Option<T>;
+}
+
+impl<T> LogOption<T> for Option<T> {
+    fn log_err (self,msg:&str) -> Option<T> {
+        match self {
+            Some(t) => Some(t),
+            None => {
+                log::error!("{}",msg);
+                None
+            }
+        }
+    }
+
+    fn log_warn(self,msg:&str) -> Option<T> {
+        match self {
+            Some(t) => Some(t),
+            None => {
+                log::warn!("{}",msg);
+                None
+            }
+        }
+    }
+}
+
+pub trait LogResult<T,E:Debug> {
+    fn log_err (self) -> Result<T,E>;
+    fn log_warn(self) -> Result<T,E>;
+}
+
+impl<T,E:Debug> LogResult<T,E> for Result<T,E> {
+    fn log_err(self) -> Result<T,E> {
+       match self {
+           Ok(v) => Ok(v),
+           Err(err) => {
+               log::error!("{:?}",err);
+               Err(err)
+           }
+       }
+    }
+
+    fn log_warn(self) -> Result<T,E> {
+        match self {
+            Ok(v) => Ok(v),
+            Err(err) => {
+                log::warn!("{:?}",err);
+                Err(err)
+            }
+        }
     }
 }

@@ -1,12 +1,13 @@
 use std::sync::Arc;
 
-use crate::{resource::{BufferId, RenderResources}, memory::{TypedUniformBuffer, UniformBufferDef, align_num_to}};
+use crate::{resource::{BufferId, RenderResources}, memory::{TypedUniformBuffer, UniformBufferDef, align_num_to}, pipeline::render_bindings::BindGroupBuilder};
 use fnv::FnvHashMap;
 use wgpu::CommandEncoder;
-
-struct ArrayItem {
+ 
+pub struct ArrayItem {
     index:usize,
-    buffer:TypedUniformBuffer
+    buffer:TypedUniformBuffer,
+    pub bind_group:wgpu::BindGroup
 }
 
 pub struct UBOArrayBuffer {
@@ -34,22 +35,31 @@ impl UBOArrayBuffer {
         }
     }
 
-    pub fn add_item(&mut self,eid:u32,res:&mut RenderResources) {
+    pub fn add_item(&mut self,eid:u32,res:&mut RenderResources,layout:&wgpu::BindGroupLayout) {
         if !self.infos.contains_key(&eid) {
-            let array_item = ArrayItem {
-                index : self.len,
-                buffer: TypedUniformBuffer::from_def(self.buffer_def.clone())
-            };
-            self.infos.insert(eid, array_item);
             self.len += 1;
             if self.cap < self.len {
                 self.alloc_buffer(self.len, res);
             }
+
+            let index = self.len - 1;
+            let mut build_group_builder = BindGroupBuilder::new();
+            let start:u64 = index as u64 * self.item_size;
+            build_group_builder.add_buffer_addr(self.buffer.unwrap(), start, self.item_size);
+            self.infos.insert(eid, ArrayItem {
+                index : index,
+                buffer: TypedUniformBuffer::from_def(self.buffer_def.clone()),
+                bind_group:build_group_builder.build(layout, &res.device, res)
+            });
         }
     }
 
     pub fn get_item_buffer_mut(&mut self,eid:u32) -> Option<&mut TypedUniformBuffer> {
         self.infos.get_mut(&eid).map(|v| &mut v.buffer)
+    }
+
+    pub fn get_item(&self,eid:u32) -> Option<&ArrayItem> {
+        self.infos.get(&eid)
     }
 
     pub fn alloc_buffer(&mut self,count:usize,res:&mut RenderResources) {

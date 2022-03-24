@@ -1,12 +1,11 @@
-use std::{convert::{TryFrom, TryInto}, sync::Arc, borrow::Cow};
+use std::{convert::{TryFrom, TryInto}, sync::Arc};
 
 use serde_json::{Value};
-use crate::memory::{PropInfo, PropInfoList, UniformBufferDef};
+use crate::memory::{PropInfoList, UniformBufferDef};
 #[derive(Debug,Clone, Copy)]
 pub enum UBOType {
-    PerCamera,
-    PerObject,
-    PerFrame
+    ComponentBuffer,
+    GlobalBuffer
 }
 
 impl TryFrom<&Value> for UBOType {
@@ -14,9 +13,28 @@ impl TryFrom<&Value> for UBOType {
     fn try_from(value: &Value) -> Result<Self, Self::Error> {
        let str = value.as_str().ok_or(format!("{:?}",value))?;
        match str {
-           ":PerCamera" => Ok(UBOType::PerCamera),
-           ":PerObject" => Ok(UBOType::PerObject),
-           ":PerFrame" => Ok(UBOType::PerFrame),
+           ":ComponentBuffer" => Ok(UBOType::ComponentBuffer),
+           ":GlobalBuffer" => Ok(UBOType::GlobalBuffer),
+           _ => Err(str.to_string())
+       }
+    }
+}
+
+#[derive(Debug,Clone, Copy)]
+pub enum UBOApplyType {
+    Camera,
+    RenderObject,
+    Frame
+}
+
+impl TryFrom<&Value> for UBOApplyType {
+    type Error = String;
+    fn try_from(value: &Value) -> Result<Self, Self::Error> {
+       let str = value.as_str().ok_or(format!("{:?}",value))?;
+       match str {
+           ":Camera" => Ok(UBOApplyType::Camera),
+           ":RenderObject" => Ok(UBOApplyType::RenderObject),
+           ":Frame" => Ok(UBOApplyType::Frame),
            _ => Err(str.to_string())
        }
     }
@@ -25,6 +43,7 @@ impl TryFrom<&Value> for UBOType {
 #[derive(Debug)]
 pub struct UBOInfo {
     pub typ:UBOType,
+    pub apply:UBOApplyType,
     pub name:Arc<String>,
     pub index:usize,
     pub props:Arc<UniformBufferDef>,
@@ -37,6 +56,7 @@ impl TryFrom<&Value> for UBOInfo {
     fn try_from(value: &Value) -> Result<Self, Self::Error> {
         let object = value.as_object().ok_or("root".to_string())?;
         let typ:UBOType = object.get(":type").ok_or(":type".to_string())?.try_into()?;
+        let apply:UBOApplyType = object.get(":apply").ok_or(":apply".to_string())?.try_into()?;
         let name = object.get(":name").and_then(Value::as_str).ok_or(":name".to_string())?;
         let backends = object.get(":backends")
                                         .and_then(|v| v.as_array())
@@ -48,6 +68,7 @@ impl TryFrom<&Value> for UBOInfo {
         let udf = UniformBufferDef::try_from(&props).map_err(|_| ":props".to_string() )?;
         Ok(UBOInfo {
             typ,
+            apply,
             name:Arc::new(name.to_string()),
             props:Arc::new(udf),
             backends,

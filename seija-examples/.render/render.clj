@@ -1,5 +1,6 @@
 (def-ubo {
-    :type :PerCamera
+    :type :ComponentBuffer
+    :apply :Camera
     :name "CameraBuffer"
     :index 1
     :props [
@@ -12,7 +13,8 @@
 })
 
 (def-ubo {
-  :type :PerObject
+  :type :ComponentBuffer
+  :apply :RenderObject
   :name "ObjectBuffer"
   :index 2
   :props [
@@ -22,7 +24,8 @@
 })
 
 (def-ubo {
-  :type :PerObject
+  :type :GlobalBuffer
+  :apply :Frame
   :name "LightBuffer"
   :index 3
   :props [

@@ -2263,6 +2263,7 @@ dependencies = [
  "bevy_ecs",
  "bytemuck",
  "core-derive",
+ "log",
  "raw-window-handle 0.3.4",
  "seija-app",
  "uuid",

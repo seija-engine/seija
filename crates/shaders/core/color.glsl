@@ -8,10 +8,7 @@ void vs_main() {
 }
 
 vec4 fs_main() {
-    vec4 color = vec4(1,0,0,1);
-    color.a = 0.5;
-    #ifdef VERTEX_UV0
-    float fk = 123;
-    #endif
+    vec4 color = vec4(1,0.5,0,1);
+   
     return color;
 }

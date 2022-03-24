@@ -18,14 +18,15 @@ pub struct RenderContext {
 }
 
 impl RenderContext {
-    //TODO
-    pub fn create_bind_group_layouts(&self,pass_def:&PassDef) -> Vec<&wgpu::BindGroupLayout> {
-        if let Some(shader_info) = self.shaders.find_shader(&pass_def.shader_info.name) {
-            vec![]
-        } else {
-            log::error!("not found shader:{}",pass_def.shader_info.name);
-            vec![]
+    pub fn create_bind_group_layouts(&self,pass_def:&PassDef) -> Option<Vec<&wgpu::BindGroupLayout>>  {
+        let mut ret = vec![];
+        let rt_shader = self.shaders.find_shader(&pass_def.shader_info.name)?;
+        let ubos = self.ubo_ctx.info.get_ubos_by_backends(&rt_shader.backends);
+        for (ubo_name,_) in ubos.iter() {
+           let layout = self.ubo_ctx.info_layouts.get(ubo_name)?;
+           ret.push(layout);
         }
+        Some(ret)
     }
 
     pub fn new<P:AsRef<Path>>(device:Arc<Device>,config_path:P) -> Self {

@@ -1,12 +1,14 @@
 use std::collections::HashMap;
-use std::sync::Arc;
-use wgpu::CommandEncoder;
+use seija_core::LogOption;
+use wgpu::{CommandEncoder, Device};
 
 use crate::memory::TypedUniformBuffer;
+use crate::pipeline::render_bindings::BindGroupLayoutBuilder;
 use crate::resource::RenderResources;
 use crate::{UBOInfoSet, UBOInfo};
+use super::UBOType;
 use super::array_buffer::UBOArrayBuffer;
-use super::buffer::UBObject;
+use super::ubo_info::UBOApplyType;
 
 #[derive(Clone, Copy,Debug)]
 pub struct BufferIndex(usize);
@@ -14,32 +16,43 @@ pub struct BufferIndex(usize);
 #[derive(Clone, Copy,Debug)]
 pub struct BufferArrayIndex(usize,u32);
 
+pub type UBONameIndex = (UBOType,usize,UBOApplyType);
 
 
 #[derive(Default)]
 pub struct UBOContext {
     pub info:UBOInfoSet,
-    pub buffers:BufferContext
+    pub buffers:BufferContext,
+    pub info_layouts:HashMap<String,wgpu::BindGroupLayout>
 }
 
 impl UBOContext {
   
-  pub fn init(&mut self) {
+  pub fn init(&mut self,device:&wgpu::Device) {
        self.buffers.init(&self.info);
-  }
-  
-  pub fn add_camera_buffer(&mut self,name:&str,eid:u32,res:&mut RenderResources) -> Option<BufferIndex> {
-    if let Some(info) = self.info.get_info(name) {
-      return Some(self.buffers.add_camera_buffer(info, res, eid))
-    }
-    None
+
+       for (name,_) in self.info.component_buffers.iter() {
+          Self::create_layout(&mut self.info_layouts,name, device);
+       }
+       for (name,_) in self.info.global_buffers.iter() {
+          Self::create_layout(&mut self.info_layouts,name, device);
+       }
   }
 
-  pub fn add_object_buffer(&mut self,name:&str,eid:u32,res:&mut RenderResources) -> Option<BufferArrayIndex> {
+  fn create_layout(layouts:&mut HashMap<String,wgpu::BindGroupLayout>,name:&str,device:&Device) {
+     let mut builder = BindGroupLayoutBuilder::new();
+     builder.add_uniform(wgpu::ShaderStage::VERTEX);
+     let layout = builder.build(device);
+     layouts.insert(name.to_string(), layout);
+  }
+
+  pub fn add_buffer(&mut self,name:&str,res:&mut RenderResources,eid:Option<u32>)  {
     if let Some(info) = self.info.get_info(name) {
-       return Some(self.buffers.add_object_buffer(info, res, eid))
+       if let Some(layout) = self.info_layouts.get(name) {
+        self.buffers.add_buffer(info,eid ,res,layout);
+       }
+      
     }
-    None
   }
  
   pub fn update(&mut self,res:&mut RenderResources,cmd:&mut CommandEncoder) {
@@ -49,49 +62,69 @@ impl UBOContext {
 
 #[derive(Default)]
 pub struct BufferContext {
-  cameras:Vec<UBObject>,
-
-  object_nameidxs:HashMap<Arc<String>,usize>,
-  objects:Vec<UBOArrayBuffer>
+  comp_nameidxs:HashMap<String,UBONameIndex>,
+  //Name + EntityId -> Buffer
+  components:Vec<UBOArrayBuffer>
 }
 
 impl BufferContext {
 
   pub fn init(&mut self,info_set:&UBOInfoSet) {
-    for (_,info) in info_set.per_objects.iter() {
-        self.objects.push(UBOArrayBuffer::new(info.props.clone()));
-        self.object_nameidxs.insert(info.name.clone(), self.objects.len() - 1);
+    for (_,info) in info_set.component_buffers.iter() {
+        self.components.push(UBOArrayBuffer::new(info.props.clone()));
+        self.comp_nameidxs.insert(info.name.to_string(), (UBOType::ComponentBuffer,self.components.len() - 1,info.apply));
     }
   }
 
-  pub fn add_camera_buffer(&mut self,info:&UBOInfo,res:&mut RenderResources,eid:u32) -> BufferIndex {
-      let object = UBObject::create(info, res);
-      self.cameras.push(object);
-      BufferIndex(self.cameras.len() - 1)
+  pub fn add_buffer(&mut self,info:&UBOInfo,m_eid:Option<u32>,res:&mut RenderResources,layout:&wgpu::BindGroupLayout) -> Option<()> {
+      match info.typ {
+        UBOType::ComponentBuffer => {
+          let eid = m_eid.log_err(&format!("ComponentBuffer {} need eid",info.name.as_str()))?;
+          let arr_idx = *self.comp_nameidxs.get(info.name.as_str()).log_err(&format!("not found {}",info.name.as_str()))?;
+          self.components[arr_idx.1].add_item(eid, res,layout);
+          Some(())
+        },
+        UBOType::GlobalBuffer => {
+          Some(())
+        }
+      }
   }
 
-  pub fn add_object_buffer(&mut self,info:&UBOInfo,res:&mut RenderResources,eid:u32) -> BufferArrayIndex {
-      let array_index = self.object_nameidxs.get(&info.name).map(Clone::clone).unwrap_or_default();      
-      self.objects[array_index].add_item(eid, res);
-      BufferArrayIndex(array_index,eid)
+  pub fn get_name_index(&self,name:&str) -> Option<UBONameIndex> {
+      self.comp_nameidxs.get(name).map(|v|*v)
   }
 
-  pub fn get_camera_mut(&mut self,index:&BufferIndex) -> Option<&mut UBObject> {
-      self.cameras.get_mut(index.0)
+  pub fn get_buffer_mut(&mut self,name_index:&UBONameIndex,eid:Option<u32>) -> Option<&mut TypedUniformBuffer> {
+    match name_index.0 {
+        UBOType::ComponentBuffer => {
+          let array = &mut self.components[name_index.1];
+          array.get_item_buffer_mut(eid.log_err("not found eid in buffer")?)
+        },
+        UBOType::GlobalBuffer => { None }
+    }
   }
 
-  pub fn get_object_mut(&mut self,index:&BufferArrayIndex) -> Option<&mut TypedUniformBuffer> {
-    self.objects.get_mut(index.0)
-                .and_then(|buffer| buffer.get_item_buffer_mut(index.1))
+  pub fn get_bind_group(&self,name_index:&UBONameIndex,m_eid:Option<u32>) -> Option<&wgpu::BindGroup> {
+    match name_index.0 {
+      UBOType::ComponentBuffer => {
+        let array = &self.components[name_index.1];
+        let eid = m_eid.log_err("not found eid in buffer")?;
+        let bind_group = array.get_item(eid).map(|v| &v.bind_group);
+        if bind_group.is_none() {
+          log::error!("{:?}",m_eid);
+        }
+        bind_group
+      },
+      UBOType::GlobalBuffer => { None }
+  }
   }
 
   pub fn update(&mut self,res:&mut RenderResources,cmd:&mut CommandEncoder) {
-    for camera in self.cameras.iter_mut() {
+    for camera in self.components.iter_mut() {
       camera.update(res,cmd);
     }
-    for array in self.objects.iter_mut() {
-       array.update(res,cmd);
-    }
+    
   }
 
 }
+
