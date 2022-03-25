@@ -1,6 +1,6 @@
 use std::{path::{PathBuf}, fs, sync::Arc};
 use lite_clojure_eval::EvalRT;
-use seija_render::material::{read_material_def};
+use seija_render::{material::{read_material_def, TexturePropDef}, UniformBufferDef};
 use glsl_pkg::PackageManager;
 use crate::backend::SeijaShaderBackend;
 use anyhow::{Result, bail};
@@ -50,7 +50,7 @@ impl MaterialCompiler {
       }
 
       for task in tasks.iter() {
-        if self.pkg_mgr.compile(&task.pkg_name, &task.shader_name, &task.macros, &self.backend) {
+        if self.pkg_mgr.compile(&task.pkg_name, &task.shader_name, &task.macros, &self.backend,&task) {
             log::info!("compile material success {}.{}",&task.pkg_name,&task.shader_name);
         }
       }
@@ -61,7 +61,7 @@ impl MaterialCompiler {
       let mut rt = EvalRT::new();
       let code = fs::read_to_string(path)?;
       let mat_def = read_material_def(&mut rt, &code)?;
-      
+     
       for pass in mat_def.pass_list.iter() {
          let names:Vec<_> = pass.shader_info.name.split('.').collect();
          if names.len() != 2 {
@@ -70,7 +70,9 @@ impl MaterialCompiler {
          tasks.push(ShaderTask { 
             pkg_name: names[0].to_string(),
             shader_name: names[1].to_string(), 
-            macros: pass.shader_info.macros.clone()  
+            macros: pass.shader_info.macros.clone(),
+            prop_def:mat_def.prop_def.clone(),
+            tex_prop_def:mat_def.tex_prop_def.clone()
          } );
       }
 
@@ -79,10 +81,12 @@ impl MaterialCompiler {
 }
 
 #[derive(Debug)]
-struct ShaderTask {
+pub struct ShaderTask {
    pkg_name:String,
    shader_name:String,
-   macros:Arc<Vec<String>>
+   macros:Arc<Vec<String>>,
+   pub prop_def:Arc<UniformBufferDef>,
+   pub tex_prop_def:Arc<TexturePropDef>
 }
 
 #[test]

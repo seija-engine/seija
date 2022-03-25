@@ -5,5 +5,12 @@ use crate::pipeline::render_bindings::BindGroupLayoutBuilder;
 #[derive(Default,Debug)]
 pub struct TexturePropDef {
     pub layout_builder:BindGroupLayoutBuilder,
-    pub indexs:HashMap<String,(usize,usize)>,
+    pub indexs:HashMap<String,TexturePropInfo>,
+}
+#[derive(Default,Debug)]
+pub struct TexturePropInfo {
+    pub name:String,
+    pub index:usize,
+    pub def_index:usize,
+    pub is_cube_map:bool
 }

@@ -177,14 +177,15 @@ impl PipelineCache {
     fn create_pipeline_layout(&mut self,ctx:&RenderContext,pass_def:&PassDef,mat_def:&MaterialDef) -> Option<PipelineLayout> {
        
         let mut layouts = ctx.create_bind_group_layouts(pass_def)?;
-        //TODO 材质的layout还有问题
-        //layouts.insert(0, &ctx.material_sys.layout);
-        //if mat_def.tex_prop_def.indexs.len() > 0 {
-        //    if let Some(layout) = ctx.material_sys.texture_layouts.get(&mat_def.name) {
-        //        layouts.insert(0,layout);
-        //    }
-        //}
-
+        if mat_def.prop_def.infos.len() > 0 {
+            layouts.push(&ctx.material_sys.layout);
+        }
+        if mat_def.tex_prop_def.indexs.len() > 0 {
+            if let Some(texture_layout) = ctx.material_sys.texture_layouts.get(&mat_def.name) {
+                layouts.push(texture_layout);
+            }
+        }
+       
         let layout_desc = PipelineLayoutDescriptor {
             label:None,
             bind_group_layouts:&layouts,

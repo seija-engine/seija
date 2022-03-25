@@ -1,7 +1,7 @@
 use std::{convert::{TryFrom}, sync::{Arc}, cell::Ref};
 use seija_core::{TypeUuid};
 use wgpu::{FrontFace, PolygonMode};
-use super::{RenderOrder, errors::MaterialDefReadError, storage::DEFAULT_TEXTURES, texture_prop_def::TexturePropDef, types::{Cull, SFrontFace, SPolygonMode, ZTest}};
+use super::{RenderOrder, errors::MaterialDefReadError, storage::DEFAULT_TEXTURES, texture_prop_def::TexturePropDef, types::{Cull, SFrontFace, SPolygonMode, ZTest}, TexturePropInfo};
 use lite_clojure_eval::EvalRT;
 use serde_json::{Value};
 use uuid::Uuid;
@@ -12,7 +12,6 @@ use crate::{memory::UniformBufferDef};
 pub struct MaterialDef {
     pub name:String,
     pub order:RenderOrder,
-    pub is_light:bool,
     pub pass_list:Vec<PassDef>,
     pub prop_def:Arc<UniformBufferDef>,
     pub tex_prop_def:Arc<TexturePropDef>,
@@ -53,7 +52,6 @@ pub struct ShaderInfoDef {
 
 
 pub fn read_material_def(vm:&mut EvalRT,file_string:&str) -> Result<MaterialDef,MaterialDefReadError>  {
-    let mut is_light = false;
     let value:Value = vm.eval_string(String::default(), file_string).ok_or(MaterialDefReadError::LanguageError)?.into();
     let value_object = value.as_object().ok_or(MaterialDefReadError::FormatError)?;
     
@@ -62,10 +60,7 @@ pub fn read_material_def(vm:&mut EvalRT,file_string:&str) -> Result<MaterialDef,
     //order
     let order_str = value.get(":order").and_then(|v| v.as_str()).unwrap_or(&"Opaque");
     let order = RenderOrder::try_from(order_str).map_err(|s| MaterialDefReadError::InvalidOrder(s))?;
-    //light
-    if let Some(light) = value.get(":light").and_then(|v| v.as_bool()) {
-        is_light = light;
-    }
+   
     
     //pass
     let json_pass = value.get(":pass").ok_or(MaterialDefReadError::InvalidPass)?;
@@ -88,8 +83,7 @@ pub fn read_material_def(vm:&mut EvalRT,file_string:&str) -> Result<MaterialDef,
         order,
         pass_list,
         prop_def:Arc::new(buffer_def),
-        tex_prop_def:Arc::new(texture_prop_def),
-        is_light
+        tex_prop_def:Arc::new(texture_prop_def)
     })
 }
 
@@ -108,18 +102,26 @@ fn read_texture_prop(json_value:&Value) -> Result<TexturePropDef,()> {
                 let idx = DEFAULT_TEXTURES.get(def_name).map(|s| *s).unwrap_or(0);
                 def_index = idx;
             }
+            let mut texture_prop = TexturePropInfo {
+                name:prop_name.to_string(),
+                index:texture_index,
+                def_index:def_index,
+                is_cube_map:false
+            };
             match prop_type {
                 "Texture" => {
                     texture_props.layout_builder.add_texture(false);
                     texture_props.layout_builder.add_sampler();
-                    texture_props.indexs.insert(prop_name.to_string(), (texture_index,def_index));
+                    texture_prop.is_cube_map = false;
+                    texture_props.indexs.insert(prop_name.to_string(), texture_prop);
                    
                     texture_index += 1;
                 },
                 "CubeMap" => {
                     texture_props.layout_builder.add_texture(true);
                     texture_props.layout_builder.add_sampler();
-                    texture_props.indexs.insert(prop_name.to_string(), (texture_index,def_index));
+                    texture_prop.is_cube_map = true;
+                    texture_props.indexs.insert(prop_name.to_string(), texture_prop);
                     texture_index += 1;
                 },
                 _ => {}

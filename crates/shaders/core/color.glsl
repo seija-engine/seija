@@ -1,14 +1,17 @@
 struct VSOutput {
-  vec3 color;
+  vec4 color;
 };
 
-void vs_main() {
+VSOutput vs_main() {
+  VSOutput o;
+  o.color = material.color; 
   vec4 pos = getTransform() * vec4(vert_position, 1.0);
   gl_Position = getCameraProjView() * pos;
+  slot_vert_process();
+  return o;
 }
 
-vec4 fs_main() {
-    vec4 color = vec4(1,0.5,0,1);
-   
-    return color;
+vec4 fs_main(VSOutput ino) {
+   vec4 outColor = texture(sampler2D(tex_mainTexture,tex_mainTextureSampler),vec2(0,0));
+    return outColor;
 }

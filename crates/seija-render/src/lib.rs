@@ -29,7 +29,7 @@ mod memory;
 
 pub use render_context::{RenderContext};
 pub use uniforms::{UBOInfoSet,UBOInfo,};
-pub use memory::{UniformInfo,UniformType};
+pub use memory::{UniformInfo,UniformType,UniformBufferDef};
 
 
 #[derive(Debug, Hash, PartialEq, Eq, Clone,StageLabel )]

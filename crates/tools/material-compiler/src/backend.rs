@@ -4,7 +4,7 @@ use glsl_pkg::{IShaderBackend, backends::BackendItem};
 
 use seija_render::{UBOInfo, UniformInfo,UniformType};
 
-use crate::render_info::RenderInfo;
+use crate::{render_info::RenderInfo, ShaderTask};
 
 pub struct SeijaShaderBackend {
     pub render_info:RenderInfo,
@@ -30,6 +30,7 @@ impl SeijaShaderBackend {
 
 
 impl IShaderBackend for SeijaShaderBackend {
+    type ExData = ShaderTask;
     fn write_common_head<W:Write>(&self, writer:&mut W) {
         writer.write_str("#version 450\r\n").unwrap();
     }
@@ -44,7 +45,7 @@ impl IShaderBackend for SeijaShaderBackend {
     }
 
 
-    fn write_uniforms<W:Write>(&self, writer:&mut W,shader:&Shader) {
+    fn write_uniforms<W:Write>(&self, writer:&mut W,shader:&Shader,ex_data:&ShaderTask) {
         let mut ubos:HashMap<&String,Arc<UBOInfo>> = Default::default();
         for backend_name in shader.backend.iter() {
             if let Some(ubo_info) = self.render_info.backend2ubo.get(backend_name) {
@@ -60,6 +61,28 @@ impl IShaderBackend for SeijaShaderBackend {
             write_ubo_uniform(&ubo,writer,index);
             index += 1;
         }
+
+        if ex_data.prop_def.infos.len() > 0 {
+            writer.write_str(&format!("layout(set = {}, binding = 0) uniform Material {{\r\n",index)).unwrap();
+            for prop in ex_data.prop_def.infos.iter() {
+                write_ubo_uniform_prop(prop, writer);
+            }
+            writer.write_str("} material;\r\n").unwrap();
+            index += 1;
+        }
+        
+        if ex_data.tex_prop_def.indexs.len() > 0 {
+            for (name,info) in ex_data.tex_prop_def.indexs.iter() {
+                if !info.is_cube_map {
+                    writer.write_str(&format!("layout(set = {}, binding = {}) uniform texture2D tex_{};\r\n",index,info.index * 2,name)).unwrap();
+                    writer.write_str(&format!("layout(set = {}, binding = {}) uniform sampler tex_{}Sampler;\r\n",index,info.index * 2 + 1,name)).unwrap();
+                } else {
+                    writer.write_str(&format!("layout(set = {}, binding = {}) uniform textureCube tex_{};\r\n",index,info.index * 2,name)).unwrap();
+                    writer.write_str(&format!("layout(set = {}, binding = {}) uniform sampler tex_{}Sampler;\r\n",index,info.index * 2 + 1,name)).unwrap();
+                }
+            }
+        }
+
     }
 
     fn write_backend_trait<W:Write>(&self, write:&mut W, shader:&Shader, backends:&glsl_pkg::backends::Backends) {

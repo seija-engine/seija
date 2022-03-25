@@ -63,8 +63,8 @@ pub struct TextureProps {
 impl TextureProps {
     pub fn from_def(def:&Arc<MaterialDef>,default_textures:&Vec<Handle<Texture>>) -> TextureProps {
         let mut textures:Vec<Handle<Texture>> = Vec::with_capacity(def.tex_prop_def.indexs.len());
-        for (_,(_,def_index)) in def.tex_prop_def.indexs.iter() {
-            textures.push(default_textures[*def_index].clone_weak());
+        for (_,info) in def.tex_prop_def.indexs.iter() {
+            textures.push(default_textures[info.def_index].clone_weak());
         }
         TextureProps {
             is_dirty:true,
@@ -77,12 +77,12 @@ impl TextureProps {
     pub fn is_dirty(&self) -> bool { self.is_dirty }
 
     pub fn set(&mut self,name:&str,texture:Handle<Texture>) {
-        if let Some((index,_)) = self.def.tex_prop_def.indexs.get(name) {
-            let old_texture = &self.textures[*index];
+        if let Some(v) = self.def.tex_prop_def.indexs.get(name) {
+            let old_texture = &self.textures[v.index];
             if !self.is_dirty && old_texture.id != texture.id {
                 self.is_dirty = true;
             }
-            self.textures[*index] = texture;
+            self.textures[v.index] = texture;
         }
     }
 

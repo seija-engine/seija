@@ -12,6 +12,7 @@ use seija_app::App;
 use bevy_ecs::prelude::{IntoSystem};
 use seija_asset::{AssetServer, AssetStage};
 pub use types::{RenderOrder,Cull,ZTest};
+pub use texture_prop_def::{TexturePropDef,TexturePropInfo};
 
 use self::storage::{material_storage_event};
 pub use system::{MaterialSystem};

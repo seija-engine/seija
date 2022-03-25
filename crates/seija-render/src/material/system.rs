@@ -19,7 +19,7 @@ impl MaterialSystem {
 
     pub fn new(device:&Device) -> MaterialSystem {
         let mut material_layout_builder = BindGroupLayoutBuilder::new();
-        material_layout_builder.add_uniform(wgpu::ShaderStage::VERTEX);
+        material_layout_builder.add_uniform(wgpu::ShaderStage::VERTEX_FRAGMENT);
         MaterialSystem {
             buffers:fnv::FnvHashMap::default(),
             layout:material_layout_builder.build(device),
@@ -136,6 +136,7 @@ impl BufferInfo {
     pub fn update(&mut self,mat:&Material,e:&Entity,resources:&mut RenderResources,commands:&mut CommandEncoder) {
         let idx = self.get_or_insert_idx(e.id());
         let buffer_id = self.buffer.as_ref().unwrap();
+        log::info!("set:{:?}",&mat.props.get_buffer());
         let start = idx * self.item_size;
         let end = start + self.item_size;
         resources.map_buffer(buffer_id, wgpu::MapMode::Write);
