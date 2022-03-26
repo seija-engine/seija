@@ -19,7 +19,7 @@ impl MaterialSystem {
 
     pub fn new(device:&Device) -> MaterialSystem {
         let mut material_layout_builder = BindGroupLayoutBuilder::new();
-        material_layout_builder.add_uniform(wgpu::ShaderStage::VERTEX_FRAGMENT);
+        material_layout_builder.add_uniform(wgpu::ShaderStage::VERTEX);
         MaterialSystem {
             buffers:fnv::FnvHashMap::default(),
             layout:material_layout_builder.build(device),

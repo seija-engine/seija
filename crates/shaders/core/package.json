@@ -11,6 +11,16 @@
         "slots": ["slot_fs_offset_color"],
         "vs": "pure.color_vs_main",
         "fs": "pure.color_fs_main"
+      },
+      {
+        "name": "texture",
+        "vertex": {
+          "POSITION": "require",
+          "UV0":"require"
+        },
+        "backend": [ "Camera3D", "Transform" ],
+        "vs": "pure.texture_vs_main",
+        "fs": "pure.texture_fs_main"
       }
     ]
 }
