@@ -39,7 +39,7 @@ impl UBOArrayBuffer {
         if !self.infos.contains_key(&eid) {
             self.len += 1;
             if self.cap < self.len {
-                self.alloc_buffer(self.len, res);
+                self.alloc_buffer(self.len,layout, res);
             }
 
             let index = self.len - 1;
@@ -62,7 +62,7 @@ impl UBOArrayBuffer {
         self.infos.get(&eid)
     }
 
-    pub fn alloc_buffer(&mut self,count:usize,res:&mut RenderResources) {
+    pub fn alloc_buffer(&mut self,count:usize,layout:&wgpu::BindGroupLayout,res:&mut RenderResources) {
         if self.cap == 0 {
             self.cap = 4;
         }
@@ -84,7 +84,17 @@ impl UBOArrayBuffer {
             usage: wgpu::BufferUsage::COPY_DST | wgpu::BufferUsage::UNIFORM,
             mapped_at_creation:false
         });
-        self.buffer = Some(uniform_buffer)
+        self.buffer = Some(uniform_buffer);
+        self.re_bind_group(layout,res);
+    }
+
+    fn re_bind_group(&mut self,layout:&wgpu::BindGroupLayout,res:&mut RenderResources) {
+        for item in self.infos.values_mut() {
+            let mut build_group_builder = BindGroupBuilder::new();
+            let start:u64 = item.index as u64 * self.item_size;
+            build_group_builder.add_buffer_addr(self.buffer.unwrap(), start, self.item_size);
+            item.bind_group = build_group_builder.build(layout, &res.device, res);
+        }
     }
 
    
