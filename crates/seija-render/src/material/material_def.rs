@@ -1,4 +1,4 @@
-use std::{convert::{TryFrom}, sync::{Arc}, cell::Ref};
+use std::{convert::{TryFrom}, sync::{Arc}, cell::Ref, collections::HashMap};
 use seija_core::{TypeUuid};
 use wgpu::{FrontFace, PolygonMode};
 use super::{RenderOrder, errors::MaterialDefReadError, storage::DEFAULT_TEXTURES, texture_prop_def::TexturePropDef, types::{Cull, SFrontFace, SPolygonMode, ZTest}, TexturePropInfo};
@@ -47,7 +47,8 @@ impl Default for PassDef {
 #[derive(Debug,Default)]
 pub struct ShaderInfoDef {
     pub name:String,
-    pub macros:Arc<Vec<String>>
+    pub macros:Arc<Vec<String>>,
+    pub slots:HashMap<String,String>
 }
 
 
@@ -164,16 +165,25 @@ fn read_pass(json_value:&Value) -> Result<PassDef,MaterialDefReadError> {
 impl TryFrom<&Value> for ShaderInfoDef  {
     type Error = MaterialDefReadError;
     fn try_from(value: &Value) -> Result<Self, Self::Error> {
-        let name = value.get(":name").and_then(|v| v.as_str()).ok_or(MaterialDefReadError::InvalidPassProp("shader".into()))?;
+        let object_value = value.as_object().ok_or(MaterialDefReadError::InvalidPassProp("shader".into()))?;
+        let name = object_value.get(":name").and_then(|v| v.as_str()).ok_or(MaterialDefReadError::InvalidPassProp("shader".into()))?;
         let mut macro_arr = vec![];
-        if let Some(macros) = value.get(":macros") {
+        if let Some(macros) = object_value.get(":macros") {
             macro_arr = macros.as_array().map(|arr| {
                arr.iter().filter_map(|v| v.as_str()).map(|v| v.to_string()).collect()
            }).unwrap_or(vec![]);
         }
+        let mut slots:HashMap<String,String> = HashMap::default();
+        for (k,v) in object_value.iter() {
+            if let Some(s_value) = v.as_str() {
+                let string:String = k.chars().skip(1).collect();
+                slots.insert(string, s_value.to_string());
+            }
+        }
         Ok(ShaderInfoDef {
             name:name.to_string(),
-            macros:Arc::new(macro_arr)
+            macros:Arc::new(macro_arr),
+            slots
         })
     }
 }

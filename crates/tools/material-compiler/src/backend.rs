@@ -96,6 +96,26 @@ impl IShaderBackend for SeijaShaderBackend {
             }
         }
     }
+
+    fn write_vs_slots<W:Write>(&self,write:&mut W,shader:&Shader,ex_data:&ShaderTask) {
+        for slot in shader.slots.iter() {
+            if slot.starts_with("slot_vs") {
+                if let Some(slot_fn) = ex_data.slots.get(slot) {
+                    write.write_str(&format!("\r\n{}\r\n",slot_fn)).unwrap();
+                }
+            }
+        }
+    }
+
+    fn write_fs_slots<W:Write>(&self,write:&mut W,shader:&Shader,ex_data:&ShaderTask) {
+        for slot in shader.slots.iter() {
+            if slot.starts_with("slot_fs") {
+                if let Some(slot_fn) = ex_data.slots.get(slot) {
+                    write.write_str(&format!("\r\n{}\r\n",slot_fn)).unwrap();
+                }
+            }
+        }
+    }
 }
 
 impl SeijaShaderBackend {

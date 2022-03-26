@@ -10,8 +10,10 @@
         :shader {
             :name "core.color"
             :macros []
-            :vert-process "void process() {
-
+            :slot_fs_offset_color "void slot_fs_offset_color(inout vec4 outColor) {
+                outColor.r = 1;
+                outColor.g = 0;
+                outColor.b = 0;
             }"
         }
     }

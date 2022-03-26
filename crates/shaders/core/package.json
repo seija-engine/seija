@@ -8,9 +8,9 @@
           "POSITION": "require"
         },
         "backend": [ "Camera3D", "Transform" ],
-        "slots": [],
-        "vs": "color.vs_main",
-        "fs": "color.fs_main"
+        "slots": ["slot_fs_offset_color"],
+        "vs": "pure.color_vs_main",
+        "fs": "pure.color_fs_main"
       }
     ]
 }

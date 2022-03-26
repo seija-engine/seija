@@ -1,4 +1,4 @@
-use std::{path::{PathBuf}, fs, sync::Arc};
+use std::{path::{PathBuf}, fs, sync::Arc, collections::HashMap};
 use lite_clojure_eval::EvalRT;
 use seija_render::{material::{read_material_def, TexturePropDef}, UniformBufferDef};
 use glsl_pkg::PackageManager;
@@ -63,6 +63,7 @@ impl MaterialCompiler {
       let mat_def = read_material_def(&mut rt, &code)?;
      
       for pass in mat_def.pass_list.iter() {
+         let slots:HashMap<String,String> = HashMap::default();
          let names:Vec<_> = pass.shader_info.name.split('.').collect();
          if names.len() != 2 {
             bail!("shader name err:{}",pass.shader_info.name)
@@ -72,7 +73,8 @@ impl MaterialCompiler {
             shader_name: names[1].to_string(), 
             macros: pass.shader_info.macros.clone(),
             prop_def:mat_def.prop_def.clone(),
-            tex_prop_def:mat_def.tex_prop_def.clone()
+            tex_prop_def:mat_def.tex_prop_def.clone(),
+            slots:pass.shader_info.slots.clone()
          } );
       }
 
@@ -86,7 +88,8 @@ pub struct ShaderTask {
    shader_name:String,
    macros:Arc<Vec<String>>,
    pub prop_def:Arc<UniformBufferDef>,
-   pub tex_prop_def:Arc<TexturePropDef>
+   pub tex_prop_def:Arc<TexturePropDef>,
+   pub slots:HashMap<String,String>
 }
 
 #[test]
