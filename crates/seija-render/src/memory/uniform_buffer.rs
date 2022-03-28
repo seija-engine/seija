@@ -3,7 +3,9 @@ use seija_core::bytes::AsBytes;
 use glam::{Mat3, Mat4, Vec3, Vec4};
 use serde_json::Value;
 
-use super::uniform_buffer_def::{UniformBufferDef, UniformType};
+use crate::RawUniformInfo;
+
+use super::uniform_buffer_def::{UniformBufferDef, UniformType, UniformInfo};
 
 #[derive(Debug)]
 pub struct UniformBuffer {
@@ -64,50 +66,71 @@ impl TypedUniformBuffer {
     pub fn get_buffer(&self) -> &[u8] {
         &self.buffer.bytes
     }
-
+    
+    fn set_default_raw(&mut self,arr_offset:usize,info:&RawUniformInfo) {
+        match &info.typ {
+            UniformType::INT(arr) => {
+                for idx in 0..info.size {
+                    let v = arr.get(idx).map(|v|v.clone()).unwrap_or(0i32);
+                    self.buffer.write_bytes(arr_offset + info.get_buffer_offset(idx), v);
+                }
+            },
+            UniformType::FLOAT(arr) => {
+                for idx in 0..info.size {
+                    let v = arr.get(idx).map(|v|v.clone()).unwrap_or(0f32);
+                    self.buffer.write_bytes(arr_offset +  info.get_buffer_offset(idx), v);
+                }
+            },
+            UniformType::UINT(arr) => {
+                for idx in 0..info.size {
+                    let v = arr.get(idx).map(|v|v.clone()).unwrap_or(0u32);
+                    
+                    self.buffer.write_bytes(arr_offset +  info.get_buffer_offset(idx), v);
+                }
+            },
+            UniformType::BOOL(arr) => {
+                for idx in 0..info.size {
+                    let v = arr.get(idx).map(|v|v.clone()).unwrap_or(false);
+                    let u:u32 = if v {1u32 } else {0u32 };
+                    self.buffer.write_bytes(arr_offset +  info.get_buffer_offset(idx), u);
+                }
+            },
+            UniformType::FLOAT3(arr) => {
+                for idx in 0..info.size {
+                    let v = arr.get(idx).map(|v|v.clone()).unwrap_or([0f32,0f32,0f32]);  
+                    self.buffer.write_bytes(arr_offset +  info.get_buffer_offset(idx), v);
+                }
+            }
+            ,UniformType::FLOAT4(arr) => {
+                for idx in 0..info.size {
+                    let v = arr.get(idx).map(|v|v.clone()).unwrap_or([0f32,0f32,0f32,0f32]);  
+                    self.buffer.write_bytes(arr_offset +  info.get_buffer_offset(idx), v);
+                }
+            },
+            _ => {}
+        }
+    }
     pub fn set_default(&mut self) {
-        for info in self.def.infos.iter() {
-            match &info.typ {
-                UniformType::INT(arr) => {
-                    for idx in 0..info.size {
-                        let v = arr.get(idx).map(|v|v.clone()).unwrap_or(0i32);
-                        self.buffer.write_bytes(info.get_buffer_offset(idx), v);
-                    }
+        let clone_def = self.def.clone();
+        for info in clone_def.infos.iter() {
+            match info {
+                UniformInfo::Raw(raw) => {
+                    self.set_default_raw(0,raw);
                 },
-                UniformType::FLOAT(arr) => {
-                    for idx in 0..info.size {
-                        let v = arr.get(idx).map(|v|v.clone()).unwrap_or(0f32);
-                        self.buffer.write_bytes(info.get_buffer_offset(idx), v);
-                    }
-                },
-                UniformType::UINT(arr) => {
-                    for idx in 0..info.size {
-                        let v = arr.get(idx).map(|v|v.clone()).unwrap_or(0u32);
-                        self.buffer.write_bytes(info.get_buffer_offset(idx), v);
-                    }
-                },
-                UniformType::BOOL(arr) => {
-                    for idx in 0..info.size {
-                        let v = arr.get(idx).map(|v|v.clone()).unwrap_or(false);
-                        let u:u32 = if v {1u32 } else {0u32 };
-                        self.buffer.write_bytes(info.get_buffer_offset(idx), u);
-                    }
-                },
-                UniformType::FLOAT3(arr) => {
-                    for idx in 0..info.size {
-                        let v = arr.get(idx).map(|v|v.clone()).unwrap_or([0f32,0f32,0f32]);  
-                        self.buffer.write_bytes(info.get_buffer_offset(idx), v);
+                UniformInfo::Array(arr) => {
+                    for uinfo in arr.elem_def.infos.iter() {
+                        if let UniformInfo::Raw(raw_info) = uinfo {
+                           
+                            for idx in 0..arr.array_size {
+                                let offset = arr.offset + idx * arr.stride;
+                                self.set_default_raw(offset * 4,raw_info);
+                            }
+                        }
                     }
                 }
-                ,UniformType::FLOAT4(arr) => {
-                    for idx in 0..info.size {
-                        let v = arr.get(idx).map(|v|v.clone()).unwrap_or([0f32,0f32,0f32,0f32]);  
-                        self.buffer.write_bytes(info.get_buffer_offset(idx), v);
-                    }
-                },
-                _ => {}
             }
         }
+        
     }
 
     pub fn set_f32(&mut self,name:&str,v:f32,idx:usize) {
@@ -215,6 +238,14 @@ impl TypedUniformBuffer {
         Mat3::IDENTITY
     }
 
+    pub fn get_array_uint(&self,name:&str,sname:&str,idx:usize,sidx:usize) -> u32 {
+        if let Some(offset) = self.def.get_array_offset(name,sname, idx,sidx) {
+           
+            return self.buffer.read_bytes(offset, 4);
+        }
+        0
+    }
+
     pub fn is_dirty(&self) -> bool {
         self.buffer.dirty
     }
@@ -231,14 +262,16 @@ fn test() {
       [
           {":name": "radius", ":type": "float", ":default": 6 },
           {":name": "intNumber", ":type": "int[2]",":default":[123,-456] },
-          {":name": "uValue", ":type": "uint", ":default": 777 },
+          
           {":name": "bValue", ":type": "bool", ":default": true },
 
           {":name": "matValue", ":type": "mat4" },
           {":name": "mat3Value", ":type": "mat3" },
 
           {":name": "pos", ":type": "float3",":default":[100.1,2,44.44] },
-          {":name": "pos2", ":type": "float3[2]",":default":[[500.1,12,144.44],[6,5,3]] }
+          {":name": "pos2", ":type": "float3[2]",":default":[[500.1,12,144.44],[6,5,3]] },
+
+          {":name": "arrayValue", ":type":[{":name": "inner0", ":type":"uint", ":default":114 },{":name": "inner1", ":type":"uint", ":default":119 }],":size": 3 }
       ]
     "#;
     let v:Value = serde_json::from_str(&json_string).unwrap();
@@ -249,6 +282,7 @@ fn test() {
     //typed_buffer.set_f32("radius", 3.1415926f32,0);
     let v0 = typed_buffer.get_f32("radius",0);
     println!("radius:{}",v0);
+    assert!(v0 == 6f32);
 
     //typed_buffer.set_i32("intNumber", 667,1);
     //typed_buffer.set_i32("intNumber", -123,0);
@@ -280,6 +314,8 @@ fn test() {
     let v6_1 = typed_buffer.get_float3("pos2", 1);
     println!("pos2:{:?} {:?}",v6_0,v6_1);
 
-    println!("bytes:{:?}",&typed_buffer.buffer.bytes);
+    let av = typed_buffer.get_array_uint("arrayValue", "inner1", 2, 0);
+    assert!(av == 119)
+    
 }
 

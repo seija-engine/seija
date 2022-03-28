@@ -29,8 +29,11 @@
   :name "LightBuffer"
   :index 3
   :props [
-     {:name "positionFalloff" :type "float4"}
-     {:name "direction"       :type "float3"}
+     {:name "ambile" :type "float4"}
+     {:name "lights" :type [
+        {:name "type" :type "int"}
+        {:name "position" :type "int"}
+     ] :size 4}
   ]
   :backends ["Light"]
 })

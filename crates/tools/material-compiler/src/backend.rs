@@ -2,7 +2,7 @@ use std::{collections::{HashMap}, fmt::Write, sync::Arc};
 use glsl_pack_rtbase::shader::Shader;
 use glsl_pkg::{IShaderBackend, backends::BackendItem};
 
-use seija_render::{UBOInfo, UniformInfo,UniformType};
+use seija_render::{UBOInfo, RawUniformInfo,UniformInfo,UniformType};
 
 use crate::{render_info::RenderInfo, ShaderTask};
 
@@ -141,22 +141,25 @@ fn write_ubo_uniform<W:Write>(info:&UBOInfo, writer:&mut W,index:usize) {
     writer.write_str(&format!("}} _{};\r\n",&info.name)).unwrap();
 }
 
-fn write_ubo_uniform_prop<W:Write>(prop:&UniformInfo,writer:&mut W) {
-    let typ_name = match prop.typ {
-       UniformType::BOOL(_)   => "bool",
-       UniformType::FLOAT(_)  => "float",
-       UniformType::FLOAT3(_) => "vec3",
-       UniformType::FLOAT4(_) => "vec4",
-       UniformType::INT(_)    => "int",
-       UniformType::UINT(_)   => "uint",
-       UniformType::MAT3(_)   => "mat3",
-       UniformType::MAT4(_)   => "mat4"
-    };
-    let full_type_name:String;
-    if prop.size > 1 {
-        full_type_name = format!("{}[{}]",typ_name,prop.size);
-    } else {
-        full_type_name = typ_name.to_string();
-    }
-    writer.write_str(&format!("  {} {};\r\n",full_type_name,prop.name)).unwrap();
+fn write_ubo_uniform_prop<W:Write>(uinfo:&UniformInfo,writer:&mut W) {
+    if let UniformInfo::Raw(prop) = uinfo {
+        let typ_name = match prop.typ {
+            UniformType::BOOL(_)   => "bool",
+            UniformType::FLOAT(_)  => "float",
+            UniformType::FLOAT3(_) => "vec3",
+            UniformType::FLOAT4(_) => "vec4",
+            UniformType::INT(_)    => "int",
+            UniformType::UINT(_)   => "uint",
+            UniformType::MAT3(_)   => "mat3",
+            UniformType::MAT4(_)   => "mat4"
+         };
+         let full_type_name:String;
+         if prop.size > 1 {
+             full_type_name = format!("{}[{}]",typ_name,prop.size);
+         } else {
+             full_type_name = typ_name.to_string();
+         }
+         writer.write_str(&format!("  {} {};\r\n",full_type_name,prop.name)).unwrap();
+    }//TODO 处理Array情况
+   
 }
