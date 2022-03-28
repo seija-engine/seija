@@ -29,7 +29,8 @@
   :name "LightBuffer"
   :index 3
   :props [
-     {:name "ambile" :type "float4"}
+     {:name "ambile"     :type "float4"}
+     {:name "lightCount" :type "int"}
      {:name "lights" :type [
         {:name "type" :type "int"}
         {:name "position" :type "int"}

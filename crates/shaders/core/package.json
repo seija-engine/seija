@@ -18,7 +18,7 @@
           "POSITION": "require",
           "UV0":"require"
         },
-        "backend": [ "Camera3D", "Transform" ],
+        "backend": [ "Camera3D", "Transform","Light" ],
         "vs": "pure.texture_vs_main",
         "fs": "pure.texture_fs_main"
       }
