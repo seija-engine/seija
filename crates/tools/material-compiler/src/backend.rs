@@ -126,11 +126,23 @@ impl SeijaShaderBackend {
         if let Some(r) = new_name.get_mut(0..1) {
             r.make_ascii_uppercase();
         }
-        writer.write_str(&format!("{} get{}() {{ \r\n",fn_info.typ,new_name)).unwrap();
-        if let Some(ubo_info) = self.render_info.backend2ubo.get(backend_name) {
-            writer.write_str(&format!("  return _{}.{};\r\n",&ubo_info.name,fn_info.name)).unwrap();
+        if let Some(array_name) = fn_info.array_name.as_ref() {
+            if let Some(ubo_info) = self.render_info.backend2ubo.get(backend_name) {
+                let mut new_array_name = array_name.clone();
+                if let Some(r) = new_array_name.get_mut(0..1) {
+                    r.make_ascii_uppercase();
+                }
+                writer.write_str(&format!("{} get{}{}(int index) {{ \r\n",fn_info.typ,new_array_name,new_name)).unwrap();
+                writer.write_str(&format!("  return _{}.{}[index].{};\r\n",&ubo_info.name,array_name,fn_info.name)).unwrap();
+                writer.write_str("}\r\n").unwrap();
+            }
+        } else {
+            writer.write_str(&format!("{} get{}() {{ \r\n",fn_info.typ,new_name)).unwrap();
+            if let Some(ubo_info) = self.render_info.backend2ubo.get(backend_name) {
+                writer.write_str(&format!("  return _{}.{};\r\n",&ubo_info.name,fn_info.name)).unwrap();
+            }
+            writer.write_str("}\r\n").unwrap();
         }
-        writer.write_str("}\r\n").unwrap();
     }
 }
 

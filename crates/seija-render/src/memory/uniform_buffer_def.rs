@@ -179,7 +179,6 @@ impl Default for BuildPropContext {
 }
 
 fn  build_props(props:&Vec<PropInfo>) -> UniformBufferDef {
-    println!("ente build");
     let mut info_list:Vec<UniformInfo> = Vec::new();
     let mut prop_ctx = BuildPropContext::default();
     for prop in props {
