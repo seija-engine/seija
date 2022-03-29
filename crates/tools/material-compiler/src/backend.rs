@@ -122,6 +122,7 @@ impl IShaderBackend for SeijaShaderBackend {
 
 impl SeijaShaderBackend {
     fn write_backend_trait_fn<W:Write>(&self,writer:&mut W,fn_info:&BackendItem,backend_name:&String) {
+        writer.write_str("\r\n").unwrap();
         let mut new_name = fn_info.name.clone();
         if let Some(r) = new_name.get_mut(0..1) {
             r.make_ascii_uppercase();
@@ -132,14 +133,14 @@ impl SeijaShaderBackend {
                 if let Some(r) = new_array_name.get_mut(0..1) {
                     r.make_ascii_uppercase();
                 }
-                writer.write_str(&format!("{} get{}{}(int index) {{ \r\n",fn_info.typ,new_array_name,new_name)).unwrap();
-                writer.write_str(&format!("  return _{}.{}[index].{};\r\n",&ubo_info.name,array_name,fn_info.name)).unwrap();
+                writer.write_str(&format!("{} get{}{}(int index){{",fn_info.typ,new_array_name,new_name)).unwrap();
+                writer.write_str(&format!("return _{}.{}[index].{};",&ubo_info.name,array_name,fn_info.name)).unwrap();
                 writer.write_str("}\r\n").unwrap();
             }
         } else {
-            writer.write_str(&format!("{} get{}() {{ \r\n",fn_info.typ,new_name)).unwrap();
+            writer.write_str(&format!("{} get{}(){{",fn_info.typ,new_name)).unwrap();
             if let Some(ubo_info) = self.render_info.backend2ubo.get(backend_name) {
-                writer.write_str(&format!("  return _{}.{};\r\n",&ubo_info.name,fn_info.name)).unwrap();
+                writer.write_str(&format!("return _{}.{};",&ubo_info.name,fn_info.name)).unwrap();
             }
             writer.write_str("}\r\n").unwrap();
         }

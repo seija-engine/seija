@@ -27,20 +27,21 @@ fn on_start(
     window: Res<AppWindow>,
     materials: Res<MaterialStorage>,
 ) {
+    {
+        let mesh = Cube::new(2f32);
+        let hmesh = meshs.add(mesh.into());
+        let hmat = materials
+            .create_material_with("bplight", |mat| {
+                //mat.props.set_float4("color", Vec4::new(0f32, 1f32, 0f32, 1f32), 0);
+            })
+            .unwrap();
+        let mut t = Transform::default();
+        t.local.scale = Vec3::new(1f32, 1f32, 1f32);
+        t.local.position = Vec3::new(2f32, 0f32, -10f32);
+        commands.spawn().insert(hmesh).insert(hmat).insert(t);
+      };
     /*
-       {
-         let mesh = Cube::new(2f32);
-         let hmesh = meshs.add(mesh.into());
-         let hmat = materials
-             .create_material_with("purecolor", |mat| {
-                 mat.props.set_float4("color", Vec4::new(0f32, 1f32, 0f32, 1f32), 0);
-             })
-             .unwrap();
-         let mut t = Transform::default();
-         t.local.scale = Vec3::new(1f32, 1f32, 1f32);
-         t.local.position = Vec3::new(2f32, 0f32, -10f32);
-         commands.spawn().insert(hmesh).insert(hmat).insert(t);
-       };
+       
        let h_texture = load_texture(&mut textures, "res/texture/b.jpg",Some(wgpu::TextureFormat::Rgba8UnormSrgb));
        {
 
@@ -58,6 +59,7 @@ fn on_start(
          commands.spawn().insert(hmesh).insert(hmat).insert(t);
        };
     */
+    /* 
     let gltf_asset = load_gltf(
         "res/gltf/Apple/apple.glb",
         &mut meshs,
@@ -82,7 +84,7 @@ fn on_start(
         "puretexture",
         Vec3::new(0f32, -0.05f32, -0.15f32),
         &materials,
-    );
+    );*/
 }
 
 fn on_update(mut query: Query<(Entity, &Camera, &mut Transform)>) {}

@@ -33,7 +33,7 @@
      {:name "lightCount" :type "int"}
      {:name "lights" :type [
         {:name "type" :type "int"}
-        {:name "position" :type "int"}
+        {:name "position" :type "float3"}
      ] :size 4}
   ]
   :backends ["Light"]
@@ -44,7 +44,9 @@
 (def swapchain (node SWAP_CHAIN))
 (def pass (node PASS))
 (def depth-texture (node WINDOW_TEXTURE))
+(def light (node LIGHT {:ubo "LightBuffer"}))
 
+(link-> light          pass)
 (link-> transform      pass)
 (link-> camera         pass)
 (link-> swapchain      pass {0 0})

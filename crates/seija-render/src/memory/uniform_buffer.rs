@@ -238,8 +238,8 @@ impl TypedUniformBuffer {
         Mat3::IDENTITY
     }
 
-    pub fn get_array_uint(&self,name:&str,sname:&str,idx:usize,sidx:usize) -> u32 {
-        if let Some(offset) = self.def.get_array_offset(name,sname, idx,sidx) {
+    pub fn get_array_uint(&self,name:&str,sname:&str,idx:usize) -> u32 {
+        if let Some(offset) = self.def.get_array_offset(name,sname, idx) {
            
             return self.buffer.read_bytes(offset, 4);
         }
@@ -314,7 +314,7 @@ fn test() {
     let v6_1 = typed_buffer.get_float3("pos2", 1);
     println!("pos2:{:?} {:?}",v6_0,v6_1);
 
-    let av = typed_buffer.get_array_uint("arrayValue", "inner1", 2, 0);
+    let av = typed_buffer.get_array_uint("arrayValue", "inner1", 2);
     assert!(av == 119)
     
 }

@@ -87,7 +87,8 @@ impl PassNode {
                                             render_pass.set_bind_group(index as u32, bind_group, &[]);
                                         },
                                         UBOApplyType::Frame => {
-
+                                            let bind_group = ctx.ubo_ctx.buffers.get_bind_group(ubo_name_index, None).ok_or(PassError::ErrUBOIndex)?;
+                                            render_pass.set_bind_group(index as u32, bind_group, &[]);
                                         }    
                                     };
                                     set_index += 1;

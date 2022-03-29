@@ -26,7 +26,7 @@ impl INode for CameraCollect {
                   self.backend = Some(backend)
               },
               Err(err) => {
-                  log::error!("camera3d backend error :{}",err);
+                  log::error!("Camera3DBackend backend error :{}",err);
               }
           }
           self.name_index = Some(ctx.ubo_ctx.buffers.get_name_index(self.ubo_name.as_str()).unwrap())

@@ -6,7 +6,7 @@ use crate::memory::TypedUniformBuffer;
 use crate::pipeline::render_bindings::BindGroupLayoutBuilder;
 use crate::resource::RenderResources;
 use crate::{UBOInfoSet, UBOInfo};
-use super::UBOType;
+use super::{UBOType, UBObject};
 use super::array_buffer::UBOArrayBuffer;
 use super::ubo_info::UBOApplyType;
 
@@ -28,15 +28,16 @@ pub struct UBOContext {
 
 impl UBOContext {
   
-  pub fn init(&mut self,device:&wgpu::Device) {
-       self.buffers.init(&self.info);
+  pub fn init(&mut self,device:&wgpu::Device,res:&mut RenderResources) {
+      
 
        for (name,_) in self.info.component_buffers.iter() {
           Self::create_layout(&mut self.info_layouts,name, device);
        }
        for (name,_) in self.info.global_buffers.iter() {
-          Self::create_layout(&mut self.info_layouts,name, device);
-       }
+        Self::create_layout(&mut self.info_layouts,name, device);
+      }
+      self.buffers.init(&self.info,res,&self.info_layouts);
   }
 
   fn create_layout(layouts:&mut HashMap<String,wgpu::BindGroupLayout>,name:&str,device:&Device) {
@@ -64,15 +65,26 @@ impl UBOContext {
 pub struct BufferContext {
   comp_nameidxs:HashMap<String,UBONameIndex>,
   //Name + EntityId -> Buffer
-  components:Vec<UBOArrayBuffer>
+  components:Vec<UBOArrayBuffer>,
+
+  global_nameidxs:HashMap<String,UBONameIndex>,
+  //Name -> Buffer
+  globals:Vec<UBObject>
 }
 
 impl BufferContext {
 
-  pub fn init(&mut self,info_set:&UBOInfoSet) {
+  pub fn init(&mut self,info_set:&UBOInfoSet,res:&mut RenderResources,layouts:&HashMap<String,wgpu::BindGroupLayout>) {
     for (_,info) in info_set.component_buffers.iter() {
         self.components.push(UBOArrayBuffer::new(info.props.clone()));
         self.comp_nameidxs.insert(info.name.to_string(), (UBOType::ComponentBuffer,self.components.len() - 1,info.apply));
+    }
+
+    for (_,info) in info_set.global_buffers.iter() {
+      if let Some(layout) = layouts.get(info.name.as_str()) {
+        self.globals.push(UBObject::create(info, res,layout));
+        self.global_nameidxs.insert(info.name.to_string(), (UBOType::GlobalBuffer,self.globals.len() - 1,info.apply));
+      }
     }
   }
 
@@ -91,7 +103,12 @@ impl BufferContext {
   }
 
   pub fn get_name_index(&self,name:&str) -> Option<UBONameIndex> {
-      self.comp_nameidxs.get(name).map(|v|*v)
+      if self.comp_nameidxs.contains_key(name) {
+         return self.comp_nameidxs.get(name).map(|v|*v);
+      } else {
+        return self.global_nameidxs.get(name).map(|v|*v);
+      }
+      
   }
 
   pub fn get_buffer_mut(&mut self,name_index:&UBONameIndex,eid:Option<u32>) -> Option<&mut TypedUniformBuffer> {
@@ -100,7 +117,10 @@ impl BufferContext {
           let array = &mut self.components[name_index.1];
           array.get_item_buffer_mut(eid.log_err("not found eid in buffer")?)
         },
-        UBOType::GlobalBuffer => { None }
+        UBOType::GlobalBuffer => {
+          let ubo = &mut self.globals[name_index.1]; 
+          Some(&mut ubo.local) 
+        }
     }
   }
 
@@ -115,15 +135,20 @@ impl BufferContext {
         }
         bind_group
       },
-      UBOType::GlobalBuffer => { None }
+      UBOType::GlobalBuffer => { 
+        let ubo = &self.globals[name_index.1];
+        Some(&ubo.bind_group)
+      }
   }
   }
 
   pub fn update(&mut self,res:&mut RenderResources,cmd:&mut CommandEncoder) {
-    for camera in self.components.iter_mut() {
-      camera.update(res,cmd);
+    for arr in self.components.iter_mut() {
+      arr.update(res,cmd);
     }
-    
+    for global in self.globals.iter_mut() {
+      global.update(res,cmd);
+    }
   }
 
 }

@@ -20,7 +20,7 @@ impl INode for TransformCollect {
                     self.backend = Some(backend)
                 },
                 Err(err) => {
-                    log::error!("camera3d backend error :{}",err);
+                    log::error!("TransformBackend backend error :{}",err);
                 }
             }
             if let Some(index) = ctx.ubo_ctx.buffers.get_name_index(self.ubo_name.as_str()) {
@@ -39,8 +39,8 @@ impl INode for TransformCollect {
     }
 
     fn update(&mut self,world: &mut World,ctx:&mut RenderContext,_:&Vec<Option<RenderResourceId>>,_:&mut Vec<Option<RenderResourceId>>) {
-        let mut cameras = world.query_filtered::<(Entity,&Transform),Changed<Transform>>();
-        for (e,t) in cameras.iter(world) { 
+        let mut trans = world.query_filtered::<(Entity,&Transform),Changed<Transform>>();
+        for (e,t) in trans.iter(world) { 
             if let Some(key) = self.name_index {
                 if let Some(buffer) = ctx.ubo_ctx.buffers.get_buffer_mut(&key,Some(e.id())) {
                     if let Some(backend) = self.backend.as_ref() {

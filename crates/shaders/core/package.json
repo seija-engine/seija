@@ -18,9 +18,20 @@
           "POSITION": "require",
           "UV0":"require"
         },
-        "backend": [ "Camera3D", "Transform","Light" ],
+        "backend": [ "Camera3D", "Transform"],
         "vs": "pure.texture_vs_main",
         "fs": "pure.texture_fs_main"
+      },
+      {
+        "name": "bplight",
+        "vertex": {
+          "POSITION": "require",
+         
+          "NORMAL":"require"
+        },
+        "backend": [ "Camera3D", "Transform","Light"],
+        "vs": "bplight.vs_main",
+        "fs": "bplight.fs_main"
       }
     ]
 }

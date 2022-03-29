@@ -101,21 +101,25 @@ impl UniformBufferDef {
         None
     }
 
-    pub fn get_array_offset(&self,name:&str,sname:&str,index:usize,sindex:usize) -> Option<usize> {
+    pub fn get_array_offset(&self,name:&str,sname:&str,index:usize) -> Option<usize> {
         if let Some(idx) = self.names.get(name) {
            if let UniformInfo::Array(arr) = &self.infos[*idx] {
-               dbg!(&arr.elem_def);
-               dbg!(sname);
                if let Some(soffset) = arr.elem_def.get_offset(sname, 0) {
-                dbg!(4);
                 let offset = (arr.offset + index * arr.stride) * 4;
-                dbg!(soffset + offset);
                 return Some(soffset + offset)
               }
            }
          }
-
          None
+    }
+
+    pub fn get_array_info(&self,name:&str) -> Option<&ArrayUniformInfo> {
+        if let Some(idx) = self.names.get(name) {
+            if let UniformInfo::Array(arr) = &self.infos[*idx] {
+               return Some(arr)
+            }
+        }
+        None
     }
 
     pub fn size(&self) -> usize {

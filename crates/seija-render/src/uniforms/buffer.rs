@@ -1,15 +1,16 @@
 use wgpu::CommandEncoder;
-use crate::{memory::TypedUniformBuffer, resource::{BufferId, RenderResources}, UBOInfo};
+use crate::{memory::TypedUniformBuffer, resource::{BufferId, RenderResources}, UBOInfo, pipeline::render_bindings::{BindGroupLayoutBuilder, BindGroupBuilder}};
 
 
 pub struct UBObject {
     pub local:TypedUniformBuffer,
     cache:Option<BufferId>,
-    pub buffer:BufferId
+    pub buffer:BufferId,
+    pub bind_group:wgpu::BindGroup
 }
 
 impl UBObject {
-    pub fn create(info:&UBOInfo,res:&mut RenderResources) -> Self {
+    pub fn create(info:&UBOInfo,res:&mut RenderResources,layout:&wgpu::BindGroupLayout) -> Self {
         let local = TypedUniformBuffer::from_def(info.props.clone());
         let buffer = res.create_buffer(&wgpu::BufferDescriptor {
             label:None,
@@ -17,7 +18,11 @@ impl UBObject {
             usage:wgpu::BufferUsage::COPY_DST | wgpu::BufferUsage::UNIFORM,
             mapped_at_creation:false
         });
-        UBObject {local, cache:None,buffer }
+
+        let mut group_builder = BindGroupBuilder::new();
+        group_builder.add_buffer(buffer);
+        let bind_group = group_builder.build(&layout, &res.device, res);
+        UBObject {local, cache:None,buffer,bind_group }
     }
 
     pub fn update(&mut self,res:&mut RenderResources,cmd:&mut CommandEncoder) {
