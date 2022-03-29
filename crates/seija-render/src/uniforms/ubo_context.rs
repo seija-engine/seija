@@ -42,7 +42,7 @@ impl UBOContext {
 
   fn create_layout(layouts:&mut HashMap<String,wgpu::BindGroupLayout>,name:&str,device:&Device) {
      let mut builder = BindGroupLayoutBuilder::new();
-     builder.add_uniform(wgpu::ShaderStage::VERTEX);
+     builder.add_uniform(wgpu::ShaderStage::VERTEX_FRAGMENT);
      let layout = builder.build(device);
      layouts.insert(name.to_string(), layout);
   }

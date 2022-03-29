@@ -1,49 +1,54 @@
-use glam::Vec3;
-use seija_core::bytes::{ Byteable};
-
-unsafe impl Byteable for LightEnvInner {}
+use glam::{Vec4};
 
 pub struct LightEnv {
-    pub is_dirty:bool,
-    pub inner:LightEnvInner
+    pub is_dirty: bool,
+    pub(crate) ambient_color: Vec4
 }
 
 impl Default for LightEnv {
     fn default() -> Self {
-        Self { 
-            is_dirty: true, 
-            inner: Default::default() 
+        Self {
+            is_dirty: true,
+            ambient_color: Vec4::ONE
         }
     }
 }
 
 impl LightEnv {
-    pub fn inner(&self) -> &LightEnvInner {
-        &self.inner
+    pub fn set_ambient_color(&mut self, color: Vec4) {
+        self.ambient_color = color;
+        self.is_dirty = true;
     }
 
-    pub fn set_directional(&mut self,dir:Vec3) {
-        self.inner.directional_dir[0] = dir.x;
-        self.inner.directional_dir[1] = dir.y;
-        self.inner.directional_dir[2] = dir.z;
-        self.is_dirty = true;
-    }   
+    pub fn clear_dirty(&mut self) {
+        self.is_dirty = false;
+    }
 }
 
-#[repr(C)]
-pub struct LightEnvInner {
-    ambient_color:[f32;4],
-    pub directional_dir:[f32;4],
-    directional_color:[f32;4]
+
+pub enum LightType {
+    Directional,
+    Spot,
+    Point
 }
 
-impl Default for LightEnvInner {
-    fn default() -> Self {
-       
-        Self { 
-            ambient_color: [0.05f32, 0.05f32, 0.05f32, 1f32],
-            directional_dir:[0.5f32, 0.5f32, 0f32,1f32],
-            directional_color:[1f32,1f32,1f32,1f32]
+
+pub struct Light {
+   type_light:LightType,
+   color:Vec4,
+   intensity:f32,
+   angle:f32,
+   range:f32
+}
+
+impl Light {
+    pub fn directional(color:Vec4,intensity:f32) -> Self {
+        Light {
+            type_light:LightType::Directional,
+            color,
+            intensity,
+            angle:0f32,
+            range:0f32
         }
     }
 }

@@ -49,7 +49,7 @@ fn on_update(mut light:ResMut<LightEnv>,mut query:Query<(Entity,&Handle<Mesh>,&m
         let r = Quat::from_euler(glam::EulerRot::XYZ  , 0f32, r, 0f32);
         //light.set_directional(Vec3::new(0.12013617f32, 0f32,  -0.99275744f32));
         //println!("dir:{:?}",r * Vec3::new(1f32, 0f32, 0f32));
-        light.set_directional(r * Vec3::new(1f32, 0f32,  0f32));
+        
         //t.local.rotation = Quat::from_euler(glam::EulerRot::XYZ  , 0f32, r, 0f32)
         t.local.rotation = Quat::from_euler(glam::EulerRot::XYZ  , 0f32, 45f32 * 0.0174533f32, 0f32);
     }

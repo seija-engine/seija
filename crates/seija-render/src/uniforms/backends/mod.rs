@@ -68,7 +68,7 @@ pub struct LightBackend {
 
 impl LightBackend {
     pub fn from_def(def:&UniformBufferDef) -> Result<LightBackend,String> {
-        let ambile_idx = def.get_offset("ambile", 0).ok_or("ambile".to_string())?;
+        let ambile_idx = def.get_offset("ambileColor", 0).ok_or("ambileColor".to_string())?;
         let light_count_idx = def.get_offset("lightCount", 0).ok_or("lightCount".to_string())?;
 
         let lights_type_idx = def.get_array_offset("lights","type", 0).ok_or("lights.type".to_string())?;

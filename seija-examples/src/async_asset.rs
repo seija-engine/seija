@@ -1,9 +1,10 @@
 use bevy_ecs::prelude::{Commands, Entity, IntoSystem, Query, Res, ResMut};
-use glam::{Vec3, Vec4};
+use glam::{Vec3, Vec4, Quat};
 use seija_asset::Assets;
 use seija_core::{window::AppWindow, CoreStage, StartupStage};
 use seija_examples::{add_render_mesh, load_texture, IExamples};
 use seija_gltf::{create_gltf, create_node, load_gltf};
+use seija_render::light::Light;
 use seija_render::wgpu;
 use seija_render::{
     camera::camera::Camera,
@@ -27,6 +28,13 @@ fn on_start(
     window: Res<AppWindow>,
     materials: Res<MaterialStorage>,
 ) {
+    {
+        let mut t = Transform::default();
+        let r = Quat::from_euler(glam::EulerRot::XYZ  , 0f32, 45f32, 0f32);
+        t.local.rotation = r;
+        let light = Light::directional(Vec4::ONE, 1f32);
+        commands.spawn().insert(light).insert(t);
+    };
     {
         let mesh = Cube::new(2f32);
         let hmesh = meshs.add(mesh.into());

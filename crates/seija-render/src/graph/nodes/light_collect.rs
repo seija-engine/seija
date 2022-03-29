@@ -1,6 +1,7 @@
 use bevy_ecs::prelude::World;
-
-use crate::{uniforms::{UBONameIndex, backends::LightBackend}, graph::node::INode, RenderContext, resource::RenderResourceId};
+use glam::Vec4;
+use crate::light::{LightEnv};
+use crate::{uniforms::{UBONameIndex, backends::LightBackend}, graph::node::INode, RenderContext, resource::RenderResourceId, memory::TypedUniformBuffer};
 
 #[derive(Default)]
 pub struct LightCollect {
@@ -25,15 +26,28 @@ impl INode for LightCollect {
          }
     }
 
-    fn prepare(&mut self, _world: &mut World, ctx:&mut RenderContext) {
-        if let Some(type_ubo) = self.name_index.and_then(|index| ctx.ubo_ctx.buffers.get_buffer_mut(&index, None) ) {
-            if let Some(backend) = self.backend.as_ref() {
-               // backend.set_lights_type(&mut type_ubo.buffer, 0, 6);
-            }
-        }
+    fn prepare(&mut self, world: &mut World, ctx:&mut RenderContext) {
+        
     }
 
-    fn update(&mut self,world: &mut World,render_ctx:&mut RenderContext,inputs:&Vec<Option<RenderResourceId>>,outputs:&mut Vec<Option<RenderResourceId>>) {
-      
+    fn update(&mut self,world: &mut World,ctx:&mut RenderContext,inputs:&Vec<Option<RenderResourceId>>,outputs:&mut Vec<Option<RenderResourceId>>) {
+        self._update(world,  ctx);
+    }
+}
+
+
+impl LightCollect {
+    pub fn _update(&mut self,world:&mut World,ctx:&mut RenderContext) -> Option<()> {
+        let type_ubo = self.name_index.and_then(|index| ctx.ubo_ctx.buffers.get_buffer_mut(&index, None))?;
+        let backend = self.backend.as_ref()?;
+        if let Some(mut light_env) = world.get_resource_mut::<LightEnv>() {
+            if light_env.is_dirty {
+                backend.set_ambile_color(&mut type_ubo.buffer, light_env.ambient_color);
+                light_env.clear_dirty();
+            }
+        }
+
+        
+        None
     }
 }
