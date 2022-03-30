@@ -1,6 +1,7 @@
-use crate::{graph::node::INode, RenderContext, resource::RenderResourceId, uniforms::{backends::TransformBackend, BufferArrayIndex, UBONameIndex}};
+use crate::{graph::node::INode, RenderContext, resource::{RenderResourceId, Mesh}, uniforms::{backends::TransformBackend, BufferArrayIndex, UBONameIndex}, material::Material};
 use bevy_ecs::prelude::*;
 use fnv::FnvHashMap;
+use seija_asset::Handle;
 use seija_core::LogOption;
 use seija_transform::Transform;
 //TODO 没有实现移除逻辑
@@ -32,14 +33,14 @@ impl INode for TransformCollect {
     }
 
     fn prepare(&mut self, world: &mut World,ctx:&mut RenderContext) {
-        let mut added_transform = world.query_filtered::<Entity,Added<Transform>>();
+        let mut added_transform = world.query_filtered::<Entity,(Added<Transform>,With<Handle<Mesh>>,With<Handle<Material>>)>();
         for v in added_transform.iter(&world) {
             ctx.ubo_ctx.add_buffer(&self.ubo_name,&mut ctx.resources,Some(v.id()))
         }
     }
 
     fn update(&mut self,world: &mut World,ctx:&mut RenderContext,_:&Vec<Option<RenderResourceId>>,_:&mut Vec<Option<RenderResourceId>>) {
-        let mut trans = world.query_filtered::<(Entity,&Transform),Changed<Transform>>();
+        let mut trans = world.query_filtered::<(Entity,&Transform),(Changed<Transform>,With<Handle<Mesh>>,With<Handle<Material>>)>();
         for (e,t) in trans.iter(world) { 
             if let Some(key) = self.name_index {
                 if let Some(buffer) = ctx.ubo_ctx.buffers.get_buffer_mut(&key,Some(e.id())) {

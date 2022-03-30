@@ -2308,6 +2308,7 @@ dependencies = [
  "bitflags",
  "crossbeam-channel",
  "env_logger 0.9.0",
+ "fixedbitset 0.4.1",
  "fnv",
  "futures-lite",
  "glam 0.17.3",

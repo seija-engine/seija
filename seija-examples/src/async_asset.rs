@@ -5,6 +5,7 @@ use seija_core::{window::AppWindow, CoreStage, StartupStage};
 use seija_examples::{add_render_mesh, load_texture, IExamples};
 use seija_gltf::{create_gltf, create_node, load_gltf};
 use seija_render::light::Light;
+use seija_render::resource::shape::Sphere;
 use seija_render::wgpu;
 use seija_render::{
     camera::camera::Camera,
@@ -32,67 +33,48 @@ fn on_start(
         let mut t = Transform::default();
         let r = Quat::from_euler(glam::EulerRot::XYZ  , 0f32, 45f32, 0f32);
         t.local.rotation = r;
-        let light = Light::directional(Vec4::ONE, 1f32);
+        let mut light = Light::spot(Vec3::new(1f32, 1f32, 1f32), 1f32,10f32,30f32);
+        light.color = Vec3::new(1f32, 1f32, 1f32);
+        light.intensity = 0.5f32;
         commands.spawn().insert(light).insert(t);
+        
     };
+    
     {
-        let mesh = Cube::new(2f32);
+        let mesh = Sphere::new(2f32);
         let hmesh = meshs.add(mesh.into());
-        let hmat = materials
-            .create_material_with("bplight", |mat| {
-                //mat.props.set_float4("color", Vec4::new(0f32, 1f32, 0f32, 1f32), 0);
-            })
-            .unwrap();
+        let hmat = materials.create_material_with("bplight", |mat| {
+                                                                        //mat.props.set_float4("color", Vec4::new(0f32, 1f32, 0f32, 1f32), 0);
+                                                                }).unwrap();
         let mut t = Transform::default();
         t.local.scale = Vec3::new(1f32, 1f32, 1f32);
-        t.local.position = Vec3::new(2f32, 0f32, -10f32);
+        t.local.position = Vec3::new(0f32, 0f32, -15f32);
         commands.spawn().insert(hmesh).insert(hmat).insert(t);
       };
-    /*
-       
-       let h_texture = load_texture(&mut textures, "res/texture/b.jpg",Some(wgpu::TextureFormat::Rgba8UnormSrgb));
-       {
-
-         let mesh = Cube::new(2f32);
-         let hmesh = meshs.add(mesh.into());
-         let hmat = materials
-             .create_material_with("puretexture", move|mat| {
-                mat.texture_props.set("mainTexture", h_texture.clone());
-                //mat.props.set_float4("color", Vec4::new(0.1f32, 0f32, 0f32, 1f32), 0);
-             })
-             .unwrap();
-         let mut t = Transform::default();
-         t.local.scale = Vec3::new(1f32, 1f32, 1f32);
-         t.local.position = Vec3::new(-2f32, 0f32, -10f32);
-         commands.spawn().insert(hmesh).insert(hmat).insert(t);
-       };
-    */
+     /**/
     /* 
-    let gltf_asset = load_gltf(
-        "res/gltf/Apple/apple.glb",
-        &mut meshs,
-        &mut textures,
-    )
-    .unwrap();
-    let first_primtives = &gltf_asset.first_mesh().primitives[0];
-    let gltf_mesh = first_primtives.mesh.clone();
-    let gltf_texture = first_primtives
-        .material
-        .as_ref()
-        .unwrap()
-        .base_color_texture
-        .as_ref()
-        .unwrap()
-        .clone();
-
-    let mode_id = add_render_mesh(
-        &mut commands,
-        gltf_mesh,
-        gltf_texture,
-        "puretexture",
-        Vec3::new(0f32, -0.05f32, -0.15f32),
-        &materials,
-    );*/
+    let asset = load_gltf("res/gltf/barrel/barrel_03_1k.gltf",&mut meshs,&mut textures).unwrap();
+   create_gltf(
+  Vec3::new(0f32, -0.5f32, -2f32),
+      &asset, &mut commands,&|gltf_material| {
+      if let Some(texture) = gltf_material.base_color_texture.as_ref() {
+         materials.create_material_with("puretexture",|mat| {
+            mat.texture_props.set("mainTexture", texture.clone());
+         })
+      } else {
+         materials.create_material_with("puretexture",|mat| {
+            mat.props.set_float4("color", Vec4::from(gltf_material.base_color), 0);
+         }) 
+      }
+   });*/
+   
 }
 
-fn on_update(mut query: Query<(Entity, &Camera, &mut Transform)>) {}
+fn on_update(mut query: Query<(Entity, &mut Light, &mut Transform)>) {
+    let v:f32 = (std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_millis() % 3600) as f32;
+    let r = v * 0.1f32 * 0.0174533f32;
+    for (_,_,mut t) in query.iter_mut() {
+        let r = Quat::from_euler(glam::EulerRot::XYZ  , 0f32, r, 0f32);
+        t.local.rotation = r;
+    }
+}

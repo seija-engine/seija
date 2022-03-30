@@ -9,8 +9,8 @@
         },
         "backend": [ "Camera3D", "Transform" ],
         "slots": ["slot_fs_offset_color"],
-        "vs": "pure.color_vs_main",
-        "fs": "pure.color_fs_main"
+        "vs": "pures.color_vs_main",
+        "fs": "pures.color_fs_main"
       },
       {
         "name": "texture",
@@ -19,8 +19,8 @@
           "UV0":"require"
         },
         "backend": [ "Camera3D", "Transform"],
-        "vs": "pure.texture_vs_main",
-        "fs": "pure.texture_fs_main"
+        "vs": "pures.texture_vs_main",
+        "fs": "pures.texture_fs_main"
       },
       {
         "name": "bplight",
@@ -30,8 +30,8 @@
           "NORMAL":"require"
         },
         "backend": [ "Camera3D", "Transform","Light"],
-        "vs": "bplight.vs_main",
-        "fs": "bplight.fs_main"
+        "vs": "lights.vs_main",
+        "fs": "lights.fs_main"
       }
     ]
 }

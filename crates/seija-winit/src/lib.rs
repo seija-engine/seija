@@ -7,7 +7,7 @@ use window::WinitWindow;
 use winit::{event::{Event,WindowEvent}, event_loop::{ControlFlow, EventLoop, EventLoopWindowTarget}};
 
 #[derive(Default)]
-pub struct WinitModule(WindowConfig);
+pub struct WinitModule(pub WindowConfig);
 
 impl IModule for WinitModule {
     fn init(&mut self,app:&mut App) {

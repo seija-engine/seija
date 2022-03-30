@@ -1,4 +1,4 @@
-use glam::{Vec4};
+use glam::{Vec4, Vec3};
 
 pub struct LightEnv {
     pub is_dirty: bool,
@@ -9,7 +9,7 @@ impl Default for LightEnv {
     fn default() -> Self {
         Self {
             is_dirty: true,
-            ambient_color: Vec4::ONE
+            ambient_color: Vec4::new(0.05f32, 0.05f32, 0.05f32, 1f32)
         }
     }
 }
@@ -32,23 +32,42 @@ pub enum LightType {
     Point
 }
 
+impl LightType {
+    pub fn type_id(&self) -> usize {
+        match self {
+            LightType::Directional => 0,
+            LightType::Spot        => 1,
+            LightType::Point       => 2,
+        }
+    }
+}
 
 pub struct Light {
-   type_light:LightType,
-   color:Vec4,
-   intensity:f32,
-   angle:f32,
-   range:f32
+   pub typ:LightType,
+   pub color:Vec3,
+   pub intensity:f32,
+   pub angle:f32,
+   pub range:f32
 }
 
 impl Light {
-    pub fn directional(color:Vec4,intensity:f32) -> Self {
+    pub fn directional(color:Vec3,intensity:f32) -> Self {
         Light {
-            type_light:LightType::Directional,
+            typ:LightType::Directional,
             color,
             intensity,
             angle:0f32,
             range:0f32
+        }
+    }
+
+    pub fn spot(color:Vec3,intensity:f32,range:f32,angle:f32) -> Self {
+        Light {
+            typ:LightType::Spot,
+            color,
+            intensity,
+            angle,
+            range
         }
     }
 }

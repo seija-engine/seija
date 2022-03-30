@@ -31,7 +31,10 @@ fn main() {
     
     let mut app = App::new();
     app.add_module(CoreModule);
-    app.add_module(WinitModule::default());
+    let mut win = WinitModule::default();
+    win.0.width = 320f32;
+    win.0.height = 240f32;
+    app.add_module(win);
     app.add_module(TransformModule);
     app.add_module(AssetModule);
     let mut render_config = RenderConfig::default();

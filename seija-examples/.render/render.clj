@@ -32,9 +32,12 @@
      {:name "ambileColor"     :type "float4"}
      {:name "lightCount"      :type "int"}
      {:name "lights" :type [
-        {:name "type" :type "int"}
-        {:name "position" :type "float3"}
-     ] :size 4}
+        {:name "position"     :type "float3"}
+        {:name "type"         :type "int"}
+        {:name "direction"    :type "float3"}
+        {:name "color"        :type "float3"}
+        {:name "intensity"    :type "float"}
+     ] :size 10}
   ]
   :backends ["Light"]
 })
