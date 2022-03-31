@@ -14,6 +14,11 @@ pub struct PassNode {
 impl INode for PassNode {
     fn input_count(&self) -> usize { 2 }
     
+    fn prepare(&mut self, _world: &mut World, ctx:&mut RenderContext) {
+        let mut texture_desc = wgpu::TextureViewDescriptor::default();
+    
+    }
+
     fn update(&mut self,world: &mut World,ctx:&mut RenderContext,inputs:&Vec<Option<RenderResourceId>>,_outputs:&mut Vec<Option<RenderResourceId>>) {
             let mut command = ctx.command_encoder.take().unwrap();
             if let Err(err) = self.draw(world,&mut command,inputs,ctx) {

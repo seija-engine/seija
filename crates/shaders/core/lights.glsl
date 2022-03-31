@@ -9,13 +9,14 @@ struct VSOutput {
 
 VSOutput vs_main() {
   VSOutput vsOutput;
-  vsOutput.normal = vert_normal; 
+  mat4 trans = getTransform();
+  vec3 normal = transpose(inverse(mat3x3(trans)))  *  vert_normal;
+  vsOutput.normal = normal; 
   vsOutput.outCameraPos = getCameraPosition();
-  vec4 pos = getTransform() * vec4(vert_position, 1.0);
-  
-  gl_Position = getCameraProjView() * pos;
+  vec4 pos = trans * vec4(vert_position, 1.0);
   vsOutput.outPos = pos;
- 
+  pos = getCameraProjView() * pos;
+  gl_Position =  pos;
   return vsOutput;
 }
 
@@ -25,6 +26,7 @@ vec4 fs_main(VSOutput ino) {
     vec3 pixelColor = getAmbileColor().rgb;
     for(int i = 0; i < getLightCount();i++) {
       Light light = getLight(i,ino.normal,ino.outPos.xyz);
+      light = processLight(light,ino.outPos.xyz);
       pixelColor = pixelColor + evalLight(light,ino.normal,v);
     }
     return vec4(pixelColor,1.0);

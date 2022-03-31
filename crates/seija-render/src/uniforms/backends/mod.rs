@@ -67,7 +67,8 @@ pub struct LightBackend {
     lights_direction_idx:usize,
     lights_color_idx:usize,
     lights_intensity_idx:usize,
-
+    lights_ex1_idx:usize,
+    lights_ex2_idx:usize,
 }
 
 impl LightBackend {
@@ -81,6 +82,10 @@ impl LightBackend {
         let lights_direction_idx = def.get_array_offset("lights","direction", 0).ok_or("lights.direction".to_string())?;
         let lights_color_idx = def.get_array_offset("lights","color", 0).ok_or("lights.color".to_string())?;
         let lights_intensity_idx = def.get_array_offset("lights","intensity", 0).ok_or("lights.intensity".to_string())?;
+        let lights_ex1_idx = def.get_array_offset("lights","ex1", 0).ok_or("lights.ex1".to_string())?;
+        let lights_ex2_idx = def.get_array_offset("lights","ex2", 0).ok_or("lights.ex2".to_string())?;
+       
+
 
         let arr_info = def.get_array_info("lights").ok_or("ok_or".to_string())?;
         Ok(LightBackend {
@@ -92,6 +97,8 @@ impl LightBackend {
             lights_direction_idx,
             lights_color_idx,
             lights_intensity_idx,
+            lights_ex1_idx,
+            lights_ex2_idx
         })
     }
 
@@ -127,6 +134,16 @@ impl LightBackend {
 
     pub fn set_lights_intensity(&self,buffer:&mut UniformBuffer,index:usize,num:f32) {
         let offset = self.lights_intensity_idx + (self.lights_item_size * index * 4);
+        buffer.write_bytes(offset, num);
+    }
+
+    pub fn set_lights_ex1(&self,buffer:&mut UniformBuffer,index:usize,num:f32) {
+        let offset = self.lights_ex1_idx + (self.lights_item_size * index * 4);
+        buffer.write_bytes(offset, num);
+    }
+
+    pub fn set_lights_ex2(&self,buffer:&mut UniformBuffer,index:usize,num:f32) {
+        let offset = self.lights_ex2_idx + (self.lights_item_size * index * 4);
         buffer.write_bytes(offset, num);
     }
 }

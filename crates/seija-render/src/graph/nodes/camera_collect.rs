@@ -57,10 +57,10 @@ impl CameraCollect {
     fn update_camera_buffer(&self,buffer:&mut TypedUniformBuffer,t:&Transform,camera:&Camera) {
         if let Some(backend) = self.backend.as_ref() {
             let proj = camera.projection.matrix();
-            let proj_view = t.global().matrix().inverse() * proj;
+            let proj_view = proj * t.global().matrix().inverse();
             let view = t.global().matrix().inverse();
             let v3 = t.global().position;
-            let pos = Vec4::new(v3.x,v3.y,v3.z,0f32);
+            let pos = Vec4::new(v3.x,v3.y,v3.z,1f32);
             let buffer = &mut buffer.buffer;
 
             backend.set_view(buffer, &view);

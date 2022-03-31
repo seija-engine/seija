@@ -1126,12 +1126,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e01732b97afd8508eee3333a541b9f7610f454bb818669e66e90f5f57c93a776"
 
 [[package]]
-name = "glam"
-version = "0.20.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e4fa84eead97d5412b2a20aed4d66612a97a9e41e08eababdb9ae2bf88667490"
-
-[[package]]
 name = "glob"
 version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1290,16 +1284,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "62b467343b94ba476dcb2500d242dadbb39557df889310ac77c5d99100aaac33"
 dependencies = [
  "libc",
-]
-
-[[package]]
-name = "hexasphere"
-version = "6.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2b219bdb56b14905fa5429636bfc4df0043626642d4586d069a82019130846f5"
-dependencies = [
- "glam 0.20.2",
- "lazy_static",
 ]
 
 [[package]]
@@ -2275,7 +2259,7 @@ version = "0.1.0"
 dependencies = [
  "bevy_ecs",
  "env_logger 0.9.0",
- "glam 0.17.3",
+ "glam",
  "lite-clojure-eval",
  "log",
  "material-compiler",
@@ -2293,7 +2277,7 @@ name = "seija-gltf"
 version = "0.1.0"
 dependencies = [
  "bevy_ecs",
- "glam 0.17.3",
+ "glam",
  "gltf",
  "seija-asset",
  "seija-render",
@@ -2311,9 +2295,8 @@ dependencies = [
  "fixedbitset 0.4.1",
  "fnv",
  "futures-lite",
- "glam 0.17.3",
+ "glam",
  "glsl-pack-rtbase",
- "hexasphere",
  "image",
  "lite-clojure-eval",
  "log",
@@ -2339,7 +2322,7 @@ name = "seija-transform"
 version = "0.1.0"
 dependencies = [
  "bevy_ecs",
- "glam 0.17.3",
+ "glam",
  "seija-app",
  "seija-core",
  "smallvec",

@@ -37,6 +37,8 @@
         {:name "direction"    :type "float3"}
         {:name "color"        :type "float3"}
         {:name "intensity"    :type "float"}
+        {:name "ex1"          :type "float"}
+        {:name "ex2"          :type "float"}
      ] :size 10}
   ]
   :backends ["Light"]

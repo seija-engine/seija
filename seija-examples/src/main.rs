@@ -2,16 +2,14 @@ mod lib;
 mod sample_gltf;
 mod cube_map;
 mod light_test;
-mod async_asset;
 mod pbr;
 
 use std::sync::Arc;
 
-use async_asset::AsyncAsset;
+use light_test::LightTest;
 use bevy_ecs::prelude::{IntoSystem};
 
 use cube_map::CubeMapTest;
-use light_test::LightTest;
 use sample_gltf::SampleGltf;
 use seija_app::App;
 use seija_asset::{AssetModule};
@@ -23,7 +21,7 @@ use seija_render::{RenderModule, RenderConfig};
 use seija_winit::WinitModule;
 use seija_transform::{TransformModule};
 
-const TEST_NAME:&'static str = "async_asset";
+const TEST_NAME:&'static str = "light_test";
 
 fn main() {
      env_logger::Builder::new().filter_level(log::LevelFilter::Info).try_init().unwrap();
@@ -32,8 +30,8 @@ fn main() {
     let mut app = App::new();
     app.add_module(CoreModule);
     let mut win = WinitModule::default();
-    win.0.width = 320f32;
-    win.0.height = 240f32;
+     win.0.width = 480f32;
+    win.0.height = 320f32;
     app.add_module(win);
     app.add_module(TransformModule);
     app.add_module(AssetModule);
@@ -50,9 +48,7 @@ fn main() {
         "cube_map" => {
             CubeMapTest::run(&mut app)
         }
-        "async_asset" => {
-            AsyncAsset::run(&mut app);
-        }
+        
         "light_test" => {
             LightTest::run(&mut app);
         },

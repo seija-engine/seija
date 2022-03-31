@@ -70,4 +70,14 @@ impl Light {
             range
         }
     }
+
+    pub fn point(color:Vec3,intensity:f32,range:f32) -> Self {
+        Light {
+            typ:LightType::Point,
+            color,
+            intensity,
+            angle:0f32,
+            range
+        }
+    }
 }

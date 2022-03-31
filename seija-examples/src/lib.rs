@@ -28,8 +28,8 @@ pub fn pre_start(mut commands:Commands,window:Res<AppWindow>,mats:Res<MaterialSt
 pub fn add_camera_3d(mut commands:&mut Commands,window:&AppWindow) -> Entity {
     let mut root = commands.spawn();
     let mut t = Transform::default();
-    //t.local.position = Vec3::new(0f32, 0f32, f32);
-    //t.local.rotation = Quat::from_euler(glam::EulerRot::XYZ , 0f32, 20f32, 0f32); 
+    t.local.position = Vec3::new(0f32, 20f32, 70f32);
+    t.local.rotation = Quat::from_euler(glam::EulerRot::XYZ , -15f32 *  0.0174533f32, 0f32, 0f32); 
     root.insert(t);
     
     let mut per = Perspective::default();

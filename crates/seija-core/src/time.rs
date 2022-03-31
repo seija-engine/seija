@@ -6,6 +6,7 @@ pub struct Time {
     delta: Duration,
     delta_seconds: f32,
     startup: Instant,
+    frame:u64,
 }
 
 impl Default for Time {
@@ -16,6 +17,7 @@ impl Default for Time {
             delta: Duration::from_secs(0),
             startup: now,
             delta_seconds: 0f32,
+            frame:0u64
         }
     }
 }
@@ -30,6 +32,10 @@ impl Time {
     pub fn startup(&self) -> Instant {
         self.startup
     }
+    #[inline]
+    pub fn frame(&self) -> u64 {
+        self.frame
+    }
 
     #[inline]
     pub fn delta_seconds(&self) -> f32 {
@@ -40,7 +46,7 @@ impl Time {
         let now = Instant::now();
         self.delta = now - self.last_update;
         self.delta_seconds = self.delta.as_secs_f32();
-
+        self.frame += 1;
         self.last_update = now;
     }
 }

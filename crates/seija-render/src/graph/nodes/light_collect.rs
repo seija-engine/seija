@@ -4,7 +4,7 @@ use fnv::FnvHashMap;
 use glam::{Quat, Vec3};
 use seija_core::LogOption;
 use seija_transform::Transform;
-use crate::light::{LightEnv, Light};
+use crate::light::{LightEnv, Light, LightType};
 use crate::memory::UniformBuffer;
 use crate::{uniforms::{UBONameIndex, backends::LightBackend}, graph::node::INode, RenderContext, resource::RenderResourceId, memory::TypedUniformBuffer};
 
@@ -92,6 +92,12 @@ impl LightCollect {
         backend.set_lights_direction(buffer, index, t.global().rotation * Vec3::Z);
         backend.set_lights_color(buffer, index, light.color);
         backend.set_lights_intensity(buffer, index, light.intensity);
+        match light.typ {
+            LightType::Point => {
+                backend.set_lights_ex1(buffer, index, light.range);
+            },
+            _ => {}
+        }
     }
 
     fn add_light(&mut self,eid:u32) {
