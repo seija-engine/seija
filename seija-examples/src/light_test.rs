@@ -49,9 +49,11 @@ fn on_start(
     };
     {
         let mut t = Transform::default();
-        let r = Quat::from_euler(glam::EulerRot::XYZ  , 0f32, 45f32 * 0.0174533f32, 0f32);
+        let r = Quat::from_euler(glam::EulerRot::XYZ  , 60f32.to_radians(), 0f32, 0f32);
         t.local.rotation = r;
-        let mut light = Light::point(Vec3::new(1f32, 1f32, 1f32), 1f32,5f32);
+        t.local.position = Vec3::new(0f32, 5f32, 0f32);
+        let mut light = Light::spot(Vec3::new(1f32, 1f32, 1f32), 1f32,20f32,40f32);
+        light.outer_angle = 50f32;
         light.color = Vec3::new(1f32, 1f32, 1f32);
         light.intensity = 0.2f32;
         commands.spawn().insert(light).insert(t);
@@ -95,9 +97,9 @@ fn on_start(
 }
 
 fn on_update(mut query: QuerySet<(Query<(Entity, &mut Light, &mut Transform)>,Query<(Entity,&Camera,&mut Transform)>)>,mut numbers:ResMut<PingPongNumbers>) {
-    let mut v:f32 = (std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_millis() % 36000) as f32;
+    let mut v:f32 = (std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_millis() % 3600) as f32;
     let half = v / 2f32;
-    let num = half * 0.01f32 * 0.0174533f32;
+    let num = v * 0.1f32 * 0.0174533f32;
     if numbers.light_pos > 70f32 {
         numbers.light_pos_dir = -1f32;
     }
@@ -110,7 +112,7 @@ fn on_update(mut query: QuerySet<(Query<(Entity, &mut Light, &mut Transform)>,Qu
     for (_,mut light,mut t) in query.q0_mut().iter_mut() {
         let r = Quat::from_euler(glam::EulerRot::XYZ  , -num , 0f32 , 0f32);
         t.local.rotation = r;
-        t.local.position = new_pos;
+        //t.local.position = new_pos;
     }
     
 }

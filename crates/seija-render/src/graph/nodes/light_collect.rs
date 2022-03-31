@@ -96,6 +96,11 @@ impl LightCollect {
             LightType::Point => {
                 backend.set_lights_ex1(buffer, index, light.range);
             },
+            LightType::Spot => {
+                backend.set_lights_ex1(buffer, index, light.range);
+                backend.set_lights_ex2(buffer, index, light.angle.to_radians().cos());
+                backend.set_lights_ex3(buffer, index, light.outer_angle.to_radians().cos());
+            },
             _ => {}
         }
     }

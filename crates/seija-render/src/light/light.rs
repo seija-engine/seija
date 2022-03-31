@@ -47,6 +47,7 @@ pub struct Light {
    pub color:Vec3,
    pub intensity:f32,
    pub angle:f32,
+   pub outer_angle:f32,
    pub range:f32
 }
 
@@ -57,7 +58,8 @@ impl Light {
             color,
             intensity,
             angle:0f32,
-            range:0f32
+            range:0f32,
+            outer_angle:0f32,
         }
     }
 
@@ -67,7 +69,8 @@ impl Light {
             color,
             intensity,
             angle,
-            range
+            range,
+            outer_angle:0f32,
         }
     }
 
@@ -77,6 +80,7 @@ impl Light {
             color,
             intensity,
             angle:0f32,
+            outer_angle:0f32,
             range
         }
     }
