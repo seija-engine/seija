@@ -45,6 +45,7 @@ fn on_start(
 ) {
     {
         light_env.set_ambient_color(Vec4::ZERO);
+        
     };
     {
         let mut t = Transform::default();

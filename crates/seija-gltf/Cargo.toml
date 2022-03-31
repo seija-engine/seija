@@ -9,5 +9,5 @@ gltf = "0.16.0"
 seija-render = {path = "../seija-render"}
 seija-asset = {path = "../seija-asset"}
 seija-transform = {path = "../seija-transform"}
-glam = "0.17.1"
+glam = "0.20.2"
 bevy_ecs = "0.5.0"

@@ -18,6 +18,6 @@ seija-render = {path = "../crates/seija-render"}
 seija-transform = {path = "../crates/seija-transform"}
 lite-clojure-eval = {git = "https://github.com/seija-engine/lite-clojure.git"}
 bevy_ecs = "0.5.0"
-glam = "0.17.1"
+glam = "0.20.3"
 env_logger = "*"
 log = "*"

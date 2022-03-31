@@ -1,3 +1,4 @@
+const int eLIGHT_TYPE_DIR   = 0;
 const int eLIGHT_TYPE_SPOT  = 1;
 const int eLIGHT_TYPE_POINT = 2;
 
@@ -21,7 +22,7 @@ Light getLight(const int index,vec3 normal,vec3 vPos) {
     light.worldPosition      = getLightsPosition(index);
     light.ex1 = getLightsEx1(index);
     light.ex2 = getLightsEx2(index);
-    if(light.typ == 0)  {
+    if(light.typ == eLIGHT_TYPE_DIR) {
         light.l = normalize(getLightsDirection(index));
     } else {
         light.l =  normalize(light.worldPosition - vPos);
