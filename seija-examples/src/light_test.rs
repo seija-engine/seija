@@ -5,7 +5,7 @@ use seija_core::time::Time;
 use seija_core::{window::AppWindow, CoreStage, StartupStage};
 use seija_examples::{add_render_mesh, load_texture, IExamples};
 use seija_gltf::{create_gltf, create_node, load_gltf};
-use seija_render::light::{Light, LightEnv};
+use seija_render::light::{Light, LightEnv, LightType};
 use seija_render::resource::shape::{Sphere, Plane};
 use seija_render::wgpu::{self};
 use seija_render::{
@@ -52,10 +52,31 @@ fn on_start(
         let r = Quat::from_euler(glam::EulerRot::XYZ  , 60f32.to_radians(), 0f32, 0f32);
         t.local.rotation = r;
         t.local.position = Vec3::new(0f32, 5f32, 0f32);
-        let mut light = Light::spot(Vec3::new(1f32, 1f32, 1f32), 1f32,20f32,40f32);
+        let mut light = Light::spot(Vec3::new(0f32, 0f32, 1f32), 1f32,20f32,40f32);
         light.outer_angle = 50f32;
-        light.color = Vec3::new(1f32, 1f32, 1f32);
-        light.intensity = 0.2f32;
+       
+        commands.spawn().insert(light).insert(t);
+        
+    };
+
+    {
+        let mut t = Transform::default();
+        let r = Quat::from_euler(glam::EulerRot::XYZ  , -15f32.to_radians(), 0f32, 0f32);
+        t.local.rotation = r;
+        let  light = Light::directional(Vec3::new(1f32, 1f32, 1f32), 0.1f32);
+        commands.spawn().insert(light).insert(t);
+        
+    };
+
+    {
+        let mut t = Transform::default();
+        let r = Quat::from_euler(glam::EulerRot::XYZ  , 60f32.to_radians(), 0f32, 0f32);
+        t.local.rotation = r;
+        t.local.position = Vec3::new(0f32, 5f32, 0f32);
+        let mut light = Light::point(Vec3::new(0f32, 1f32, 0f32), 0.3f32,4f32);
+       
+        
+       
         commands.spawn().insert(light).insert(t);
         
     };
@@ -110,8 +131,14 @@ fn on_update(mut query: QuerySet<(Query<(Entity, &mut Light, &mut Transform)>,Qu
     let new_pos = Vec3::new(0f32, 0f32, numbers.light_pos);
 
     for (_,mut light,mut t) in query.q0_mut().iter_mut() {
-        let r = Quat::from_euler(glam::EulerRot::XYZ  , -num , 0f32 , 0f32);
-        t.local.rotation = r;
+        match light.typ {
+            LightType::Spot => {
+                let r = Quat::from_euler(glam::EulerRot::XYZ  , -num , 0f32 , 0f32);
+                t.local.rotation = r;
+            }
+            _ => {}
+        }
+        
         //t.local.position = new_pos;
     }
     

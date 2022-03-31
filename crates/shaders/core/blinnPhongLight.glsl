@@ -13,7 +13,7 @@ vec3 evalLight(Light light,vec3 normal,vec3 v) {
       if(light.typ == eLIGHT_TYPE_SPOT) 
       {
           float theta = dot(light.l, normalize(light.dir));
-          if(theta <= light.ex1) 
+          if(theta <= light.ex3) 
           {   
               return vec3(0,0,0);
           }
@@ -26,6 +26,6 @@ vec3 evalLight(Light light,vec3 normal,vec3 v) {
       vec3 specular = blinnPhongSpecular(normal,light.l,v);
       vec3 outColor = specular + diffuse;
       outColor = outColor * light.colorIntensity.w * attenuation;
-      
+      outColor = outColor * light.colorIntensity.rgb;
       return outColor;
 }

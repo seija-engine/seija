@@ -98,7 +98,7 @@ impl IShaderBackend for SeijaShaderBackend {
             }
         }
     }
-
+ 
     fn write_vs_slots<W:Write>(&self,write:&mut W,shader:&Shader,ex_data:&ShaderTask) {
         for slot in shader.slots.iter() {
             if slot.starts_with("slot_vs") {
