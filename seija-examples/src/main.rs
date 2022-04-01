@@ -17,7 +17,7 @@ use seija_core::{CoreModule, CoreStage, StartupStage};
 
 use seija_examples::{IExamples, pre_start};
 
-use seija_render::{RenderModule, RenderConfig};
+use seija_render::{RenderModule, RenderConfig, GraphSetting,};
 use seija_winit::WinitModule;
 use seija_transform::{TransformModule};
 
@@ -35,7 +35,12 @@ fn main() {
     app.add_module(win);
     app.add_module(TransformModule);
     app.add_module(AssetModule);
-    let mut render_config = RenderConfig::default();
+    let mut render_config = RenderConfig {
+        config_path:".render".into(),
+        setting:Arc::new(GraphSetting {
+            msaa_samples:4
+        }), 
+    };
     render_config.set_config_path(".render");
     app.add_module(RenderModule(Arc::new(render_config)));
     

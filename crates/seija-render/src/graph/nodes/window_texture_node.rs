@@ -46,6 +46,11 @@ impl INode for WindowTextureNode {
            if app_window.width() > 0 && app_window.height() > 0 {
             self.desc.size.width = app_window.width();
             self.desc.size.height = app_window.height();
+            if ctx.setting.msaa_samples > 1 {
+                self.desc.sample_count = ctx.setting.msaa_samples;
+            } else {
+                self.desc.sample_count = 1;
+            }
             let texture_id = ctx.resources.create_texture(&self.desc, &wgpu::TextureViewDescriptor::default());
             self.texture_res_id = Some(RenderResourceId::Texture(texture_id));
            }

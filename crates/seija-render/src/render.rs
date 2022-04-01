@@ -117,7 +117,7 @@ impl AppRender {
             for parent_edge in cur_node.edges.input_edges.iter() {
                 let parent_node = self.graph.graph.get_node(&parent_edge.output_node).unwrap();
                 for i in 0..parent_edge.output_idxs.len() {
-                    let out_value = &parent_node.outputs[i];
+                    let out_value = &parent_node.outputs[parent_edge.output_idxs[i]];
                     new_inputs[parent_edge.input_idxs[i]] = out_value.clone();
                 }
             }

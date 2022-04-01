@@ -55,5 +55,5 @@
 (link-> light          pass)
 (link-> transform      pass)
 (link-> camera         pass)
-(link-> swapchain      pass {0 0})
+(link-> swapchain      pass {0 0 1 2})
 (link-> depth-texture  pass {0 1})

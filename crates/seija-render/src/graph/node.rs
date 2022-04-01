@@ -49,11 +49,21 @@ pub struct Edges {
 
 impl Edges {
     pub fn has_input_edge(&self, edge: &Edge) -> bool {
-        self.input_edges.contains(edge)
+        for in_edge in self.input_edges.iter() {
+            if in_edge.input_node == edge.input_node && in_edge.output_node == edge.output_node {
+                return true;
+            }
+        }
+        return false;
     }
 
     pub fn has_output_edge(&self, edge: &Edge) -> bool {
-        self.output_edges.contains(edge)
+        for out_edge in self.output_edges.iter() {
+            if out_edge.input_node == edge.input_node && out_edge.output_node == edge.output_node {
+                return true;
+            }
+        }
+        return false;
     }
 
     pub(crate) fn add_input_edge(&mut self, edge: Edge) -> Result<(), RenderGraphError> {

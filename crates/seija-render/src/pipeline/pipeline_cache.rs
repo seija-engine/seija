@@ -11,12 +11,12 @@ use fnv::{FnvHashMap, FnvHasher};
 use glsl_pack_rtbase::MacroGroup;
 use wgpu::{BindGroupLayout, DepthStencilState, Device, 
           FragmentState, MultisampleState, PipelineLayout, 
-          PipelineLayoutDescriptor, PrimitiveState,  
+          PipelineLayoutDescriptor, 
           RenderPipelineDescriptor, ShaderModule, 
-          ShaderModuleDescriptor, ShaderStage, StencilState, VertexState};
+          ShaderModuleDescriptor, StencilState, VertexState};
 use crate::rt_shaders::RuntimeShaderInfo;
 use crate::uniforms::UBONameIndex;
-use crate::{RenderContext, RenderConfig};
+use crate::{RenderContext, RenderConfig, GraphSetting};
 use crate::material::ShaderInfoDef;
 use crate::{material::{MaterialDef, PassDef}, resource::Mesh};
 
@@ -150,11 +150,7 @@ impl PipelineCache {
            vertex:VertexState {  module:&vert_shader, entry_point:"main", buffers:&[mesh.vert_layout()] },
            primitive:cur_primstate,
            depth_stencil,
-           multisample: MultisampleState {
-            count: 1,
-            mask: !0,
-            alpha_to_coverage_enabled: false,
-        },
+           multisample: Self::get_multisample_state(&ctx.setting),
            fragment:Some(FragmentState { module:&frag_shader, entry_point:"main", targets:&targets })
        };
        let gpu_pipeline = ctx.device.create_render_pipeline(&render_pipeline_desc);
@@ -172,6 +168,22 @@ impl PipelineCache {
            pipeline:gpu_pipeline
        };
        Some(render_pipeline)
+    }
+
+    fn get_multisample_state(setting:&GraphSetting) -> MultisampleState {
+        if setting.msaa_samples > 1 {
+            MultisampleState {
+                count: setting.msaa_samples,
+                mask: !0,
+                alpha_to_coverage_enabled: false,
+            }
+        } else {
+            MultisampleState {
+                count: 1,
+                mask: !0,
+                alpha_to_coverage_enabled: false,
+            }
+        }
     }
 
     fn create_pipeline_layout(&mut self,ctx:&RenderContext,pass_def:&PassDef,mat_def:&MaterialDef) -> Option<PipelineLayout> {

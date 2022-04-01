@@ -3,7 +3,7 @@ use bevy_ecs::prelude::*;
 
 use seija_asset::{Assets, Handle};
 use seija_transform::Transform;
-use wgpu::{Color, Operations, CommandEncoder, RenderPass};
+use wgpu::{Color, Operations, CommandEncoder, TextureView};
 use crate::resource::RenderResourceId;
 pub struct PassNode {
     operations:Operations<Color>,
@@ -12,7 +12,7 @@ pub struct PassNode {
 
 
 impl INode for PassNode {
-    fn input_count(&self) -> usize { 2 }
+    fn input_count(&self) -> usize { 3 }
     
     fn prepare(&mut self, _world: &mut World, ctx:&mut RenderContext) {
         let mut texture_desc = wgpu::TextureViewDescriptor::default();
@@ -38,25 +38,26 @@ impl PassNode {
     fn draw(&mut self,world:&mut World,command:&mut CommandEncoder,inputs:&Vec<Option<RenderResourceId>>,ctx:&mut RenderContext) -> Result<(),PassError> {
         let target_resid= inputs[0].as_ref().ok_or(PassError::ErrInput(0))?;
         let depth_resid =  inputs[1].as_ref().ok_or(PassError::ErrInput(1))?;
+       
         let target_view = ctx.resources.get_texture_view_by_resid(target_resid).ok_or(PassError::ErrTargetView)?;
         let depth_view = ctx.resources.get_texture_view_by_resid( depth_resid).ok_or(PassError::ErrTargetView)?;
-
+        let msaa_view =  inputs[2].as_ref().and_then(|id| ctx.resources.get_texture_view_by_resid(id));
        
-
         let mut render_query = world.query::<(Entity,&Handle<Mesh>,&Handle<Material>)>();
         let mut camera_query = world.query::<(Entity,&Transform,&Camera)>();
         let pipeline_cahce = world.get_resource::<PipelineCache>().unwrap();
-
+      
 
         let meshs = world.get_resource::<Assets<Mesh>>().unwrap();
         let mat_storages = world.get_resource::<MaterialStorage>().unwrap();
         let mats = mat_storages.mateials.read();
         
+        
         let mut render_pass = command.begin_render_pass(&wgpu::RenderPassDescriptor {
             label:None,
             color_attachments:&[wgpu::RenderPassColorAttachment {
-                view:target_view,
-                resolve_target:None,
+                view:if let Some(msaa) = msaa_view {msaa } else { target_view },
+                resolve_target:if msaa_view.is_some() { Some(target_view) } else { None },
                 ops:self.operations
             }],
             depth_stencil_attachment:Some(wgpu::RenderPassDepthStencilAttachment {
@@ -128,7 +129,6 @@ impl PassNode {
         Ok(())
     }
 
-  
 
     
     
