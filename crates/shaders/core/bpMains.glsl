@@ -22,11 +22,9 @@ VSOutput vs_main() {
 
 vec4 fs_main(VSOutput ino) {
     vec3 v = normalize(ino.outCameraPos.xyz - ino.outPos.xyz);
-    
     vec3 pixelColor = getAmbileColor().rgb;
     for(int i = 0; i < getLightCount();i++) {
       Light light = getLight(i,ino.normal,ino.outPos.xyz);
-     
       pixelColor = pixelColor + evalLight(light,ino.normal,v);
     }
     return vec4(pixelColor,1.0);

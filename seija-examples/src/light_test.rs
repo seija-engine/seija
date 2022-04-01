@@ -74,17 +74,13 @@ fn on_start(
         t.local.rotation = r;
         t.local.position = Vec3::new(0f32, 5f32, 0f32);
         let mut light = Light::point(Vec3::new(0f32, 1f32, 0f32), 0.3f32,4f32);
-       
-        
-       
         commands.spawn().insert(light).insert(t);
-        
     };
     
     {
         let mesh = Sphere::new(8f32);
         let hmesh = meshs.add(mesh.into());
-        let hmat = materials.create_material_with("bplight", |mat| {}).unwrap();
+        let hmat = materials.create_material_with("bpColor", |mat| {}).unwrap();
         let mut t = Transform::default();
       
         t.local.position = Vec3::new(20f32, 4f32, 30f32);
@@ -95,7 +91,7 @@ fn on_start(
     {
         let mesh =  Cube::new(8f32);
         let hmesh = meshs.add(mesh.into());
-        let hmat = materials.create_material_with("bplight", |mat| {}).unwrap();
+        let hmat = materials.create_material_with("bpColor", |mat| {}).unwrap();
         let mut t = Transform::default();
       
         t.local.position = Vec3::new(-20f32, 4f32, 30f32);
@@ -106,7 +102,7 @@ fn on_start(
     {
         let mesh = Plane::new(100f32,10);
         let hmesh = meshs.add(mesh.into());
-        let hmat = materials.create_material_with("bplight", |mat| {}).unwrap();
+        let hmat = materials.create_material_with("bpColor", |mat| {}).unwrap();
         let mut t = Transform::default();
        
         t.local.position = Vec3::new(-50f32, -1f32, -50f32);

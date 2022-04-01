@@ -18,7 +18,8 @@ pub fn pre_start(mut commands:Commands,window:Res<AppWindow>,mats:Res<MaterialSt
     add_camera_3d(&mut commands, &window);
     load_material("res/new_material/color.mat.clj", &mats);
     load_material("res/new_material/texture.mat.clj", &mats);
-    load_material("res/new_material/bplight.mat.clj", &mats);
+    load_material("res/new_material/bpColor.mat.clj", &mats);
+    load_material("res/new_material/pbrColor.mat.clj", &mats);
     //load_material("res/material/color/model_color.clj", &mats);
     //load_material("res/material/skybox/sky.clj", &mats);
     //load_material("res/material/light/light.clj", &mats);

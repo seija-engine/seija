@@ -2,11 +2,14 @@ mod lib;
 mod sample_gltf;
 mod cube_map;
 mod light_test;
+mod pbr_light_test;
 mod pbr;
 
 use std::sync::Arc;
 
+
 use light_test::LightTest;
+use pbr_light_test::{PBRLightTest};
 use bevy_ecs::prelude::{IntoSystem};
 
 use cube_map::CubeMapTest;
@@ -21,7 +24,7 @@ use seija_render::{RenderModule, RenderConfig, GraphSetting,};
 use seija_winit::WinitModule;
 use seija_transform::{TransformModule};
 
-const TEST_NAME:&'static str = "light_test";
+const TEST_NAME:&'static str = "pbr_light_test";
 
 fn main() {
      env_logger::Builder::new().filter_level(log::LevelFilter::Info).try_init().unwrap();
@@ -47,16 +50,10 @@ fn main() {
     app.add_system2(CoreStage::Startup, StartupStage::PreStartup, pre_start.system());
     
     match TEST_NAME {
-        "sample_gltf" => {
-            SampleGltf::run(&mut app);
-        },
-        "cube_map" => {
-            CubeMapTest::run(&mut app)
-        }
-        
-        "light_test" => {
-            LightTest::run(&mut app);
-        },
+        "sample_gltf"    =>  { SampleGltf::run(&mut app); },
+        "cube_map"       =>  { CubeMapTest::run(&mut app) },
+        "light_test"     =>  { LightTest::run(&mut app);  },
+        "pbr_light_test" =>  { PBRLightTest::run(&mut app); },
         "pbr_test" => {
             pbr::PbrTest::run(&mut app);
         }

@@ -1,13 +1,13 @@
 {
-    :name "bplight"
+    :name "bpColor"
     :order "Opaque"
     :props [
-        {:name "color" :type "float4" :default [1,1,1,1]}
+        {:name "basecolor" :type "float4" :default [1,1,1,1]}
     ]
     :pass {
         :cull "Off"
         :shader {
-            :name "core.bplight"
+            :name "core.bpColor"
             :macros []
         }
     }

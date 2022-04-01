@@ -23,15 +23,26 @@
         "fs": "pures.texture_fs_main"
       },
       {
-        "name": "bplight",
+        "name": "bpColor",
         "vertex": {
           "POSITION": "require",
          
           "NORMAL":"require"
         },
         "backend": [ "Camera3D", "Transform","Light"],
-        "vs": "lights.vs_main",
-        "fs": "lights.fs_main"
+        "vs": "bpMains.vs_main",
+        "fs": "bpMains.fs_main"
+      },
+      {
+        "name": "pbrColor",
+        "vertex": {
+          "POSITION": "require",
+         
+          "NORMAL":"require"
+        },
+        "backend": [ "Camera3D", "Transform","Light"],
+        "vs": "pbrMains.vs_main",
+        "fs": "pbrMains.fs_main"
       }
     ]
 }

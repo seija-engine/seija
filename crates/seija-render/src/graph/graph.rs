@@ -77,7 +77,6 @@ impl RenderGraph {
     }
 
     pub fn add_link(&mut self,from:NodeId,to:NodeId,from_idxs:Vec<usize>,to_idxs:Vec<usize>) -> Result<(),RenderGraphError> {
-        println!("{:?} to {:?}",&from_idxs,&to_idxs);
         let edge = Edge {
             output_node: from,
             input_node: to,
