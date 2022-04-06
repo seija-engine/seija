@@ -24,7 +24,7 @@ use seija_render::{RenderModule, RenderConfig, GraphSetting,};
 use seija_winit::WinitModule;
 use seija_transform::{TransformModule};
 
-const TEST_NAME:&'static str = "pbr_light_test";
+const TEST_NAME:&'static str = "light_test";
 
 fn main() {
      env_logger::Builder::new().filter_level(log::LevelFilter::Info).try_init().unwrap();

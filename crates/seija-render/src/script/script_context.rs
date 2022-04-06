@@ -23,7 +23,7 @@ impl RenderScriptContext {
     }
 
     fn add_fns(&mut self) {
-       self.rt.push_native_fn("def-ubo", def_ubo);
+       self.rt.push_native_fn("add-ubo", def_ubo);
        self.rt.push_native_fn("node", node);
        self.rt.push_native_fn("link->", link_node);
        
@@ -40,7 +40,7 @@ impl RenderScriptContext {
         }
     }
 
-    pub fn run(&mut self,code:&str,info:&mut UBOInfoSet,graph_ctx:&mut RenderGraphContext) {
+    pub fn run(&mut self,code:&str,info:&mut UBOInfoSet,graph_ctx:&mut RenderGraphContext,is_create_graph:bool) {
        let info_ptr = info as *mut UBOInfoSet as *mut u8;
        self.rt.push_var("UBO_SET", Variable::UserData(info_ptr));
        
@@ -51,6 +51,11 @@ impl RenderScriptContext {
        self.rt.push_var("GRAPH_CTX", Variable::UserData(graph_ptr));
 
        self.rt.eval_string("render".into(), code);
+       if is_create_graph {
+         if let Err(err) = self.rt.invoke_func("create-graph",vec![]) {
+            log::error!("render.clj error:{:?}",err);
+         }
+       }
     }
 }
 
@@ -147,5 +152,5 @@ fn test_fn() {
     (def camera-node  (node CAMERA {:ubo "CameraBuffer"}))
     (def camera-node2 (node CAMERA {:ubo "CameraBuffer"}))
     (link-> camera-node camera-node2 {0 1})
-    "#,&mut info_set,&mut RenderGraphContext::default());
+    "#,&mut info_set,&mut RenderGraphContext::default(),true);
 }

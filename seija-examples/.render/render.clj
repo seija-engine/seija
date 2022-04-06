@@ -1,4 +1,4 @@
-(def-ubo {
+(add-ubo {
     :type :ComponentBuffer
     :apply :Camera
     :name "CameraBuffer"
@@ -12,7 +12,7 @@
     :backends ["Camera3D"]
 })
 
-(def-ubo {
+(add-ubo {
   :type :ComponentBuffer
   :apply :RenderObject
   :name "ObjectBuffer"
@@ -23,7 +23,7 @@
   :backends ["Transform"]
 })
 
-(def-ubo {
+(add-ubo {
   :type :GlobalBuffer
   :apply :Frame
   :name "LightBuffer"
@@ -45,15 +45,19 @@
   :backends ["Light"]
 })
 
-(def camera    (node CAMERA    {:ubo "CameraBuffer" }))
-(def transform (node TRANSFORM {:ubo "ObjectBuffer"}))
-(def swapchain (node SWAP_CHAIN))
-(def pass (node PASS))
-(def depth-texture (node WINDOW_TEXTURE))
-(def light (node LIGHT {:ubo "LightBuffer"}))
-
-(link-> light          pass)
-(link-> transform      pass)
-(link-> camera         pass)
-(link-> swapchain      pass {0 0 1 2})
-(link-> depth-texture  pass {0 1})
+(defn create-graph []
+   (let [
+            camera (node CAMERA    {:ubo "CameraBuffer" })
+            transform (node TRANSFORM {:ubo "ObjectBuffer"})
+            swapchain (node SWAP_CHAIN)
+            pass (node PASS)
+            depth-texture (node WINDOW_TEXTURE)
+            light  (node LIGHT {:ubo "LightBuffer"})
+        ]
+        (link-> light          pass)
+        (link-> transform      pass)
+        (link-> camera         pass)
+        (link-> swapchain      pass {0 0 1 2})
+        (link-> depth-texture  pass {0 1})
+   )
+)

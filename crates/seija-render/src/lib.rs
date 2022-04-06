@@ -3,12 +3,14 @@ use std::sync::Arc;
 use camera::{view_list::view_list_system};
 use pipeline::{PipelineCache, update_pipeline_cache};
 use render::{AppRender, Config };
-use script::{RenderScriptContext, builtin_node_creators};
+use script::{ builtin_node_creators};
+pub use script::{RenderScriptContext};
 use seija_app::IModule;
 use seija_app::{App};
 use bevy_ecs::prelude::*;
+pub use render::{RenderGraphContext};
 use seija_core::{CoreStage};
-#[macro_use]
+
 extern crate serde_derive;
 
 pub use wgpu;
@@ -31,6 +33,7 @@ pub use graph_setting::{GraphSetting};
 pub use render_context::{RenderContext};
 pub use uniforms::{UBOInfoSet,UBOInfo,};
 pub use memory::{RawUniformInfo,UniformType,UniformBufferDef,UniformInfo,ArrayPropInfo};
+
 
 
 #[derive(Debug, Hash, PartialEq, Eq, Clone,StageLabel )]
@@ -94,7 +97,7 @@ impl RenderModule {
         let script_path = self.0.config_path.join("render.clj");
         match std::fs::read_to_string(script_path) {
             Ok(code_string) => {
-                rsc.run(code_string.as_str(), &mut ctx.ubo_ctx.info,&mut app_render.graph);
+                rsc.run(code_string.as_str(), &mut ctx.ubo_ctx.info,&mut app_render.graph,true);
             },
             Err(err) => {
                 log::error!("load render.clj error:{:?}",err);

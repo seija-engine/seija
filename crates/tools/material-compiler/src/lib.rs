@@ -63,7 +63,6 @@ impl MaterialCompiler {
       let mat_def = read_material_def(&mut rt, &code)?;
      
       for pass in mat_def.pass_list.iter() {
-         let slots:HashMap<String,String> = HashMap::default();
          let names:Vec<_> = pass.shader_info.name.split('.').collect();
          if names.len() != 2 {
             bail!("shader name err:{}",pass.shader_info.name)

@@ -13,7 +13,6 @@ pub struct SeijaShaderBackend {
 
 impl SeijaShaderBackend {
     pub fn init(&mut self,config_path:&str) {
-        self.render_info.init();
         self.render_info.run(config_path);
     }
     pub fn new() -> Self {
