@@ -1,7 +1,6 @@
-use glam::{EulerRot, Mat4, Quat};
-use seija_transform::Transform;
-use super::view_list::ViewList;
+use glam::Mat4;
 
+use super::view_list::ViewList;
 pub struct Camera {
     pub projection:Projection,
     pub view_list:ViewList,
