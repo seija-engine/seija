@@ -1,8 +1,10 @@
-#[cfg(test)]
-mod tests {
-    #[test]
-    fn it_works() {
-        let result = 2 + 2;
-        assert_eq!(result, 4);
-    }
+mod camera_info;
+mod exposure;
+mod lights;
+
+pub use camera_info::{PBRCameraInfo};
+pub use exposure::{Exposure};
+
+pub struct CameraInfo {
+    ev100:f32
 }
