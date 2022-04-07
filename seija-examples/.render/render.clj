@@ -1,3 +1,5 @@
+(require "pbr")
+
 (add-ubo {
     :type :ComponentBuffer
     :apply :Camera
@@ -62,3 +64,6 @@
         (link-> depth-texture  pass {0 1})
    )
 )
+
+
+(println pbr/version)

@@ -10,7 +10,7 @@ mod render_info;
 pub struct MaterialCompiler {
    folders:Vec<String>,
    pkg_mgr:PackageManager,
-   backend:SeijaShaderBackend
+   pub backend:SeijaShaderBackend
 }
 
 
@@ -100,7 +100,9 @@ fn test_fn() {
    
    let mut mc = MaterialCompiler::new();
    mc.add_shader_dir("../../shaders");
+   mc.backend.render_info.rsc.rt.add_search_path("../../seija-pbr/res");
    mc.set_shader_out("../../../seija-examples/.render/shaders");
    mc.add_mat_search_path("../../../seija-examples/res/new_material");
    mc.run("../../../seija-examples/.render/render.clj");
+
 }

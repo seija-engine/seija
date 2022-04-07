@@ -43,11 +43,8 @@ fn main() {
         setting:Arc::new(GraphSetting {
             msaa_samples:4
         }),
-        plugins:vec![RenderScriptPlugin::new(NodeCreatorSet::default(),Some("pbr".into()),Some(r#"
-         (defn hello [from]
-            (println "Hello")
-         )
-        "#.into())) ]
+        plugins:vec![RenderScriptPlugin::new(NodeCreatorSet::default()) ],
+        render_lib_paths:vec!["../crates/seija-pbr/res".into()],
     };
     render_config.set_config_path(".render");
     app.add_module(RenderModule(Arc::new(render_config)));

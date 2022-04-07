@@ -46,7 +46,8 @@ pub enum RenderStage {
 pub struct RenderConfig {
     pub config_path:PathBuf,
     pub setting:Arc<GraphSetting>,
-    pub plugins:Vec<RenderScriptPlugin>
+    pub plugins:Vec<RenderScriptPlugin>,
+    pub render_lib_paths:Vec<PathBuf>
 }
 
 impl RenderConfig {
@@ -92,6 +93,9 @@ impl RenderModule {
 
     fn init_render(&self,w:&mut World,mut ctx:RenderContext,app_render:&mut AppRender,config:&RenderConfig) {
         let mut rsc = RenderScriptContext::new();
+        for lib_path in config.render_lib_paths.iter() {
+            rsc.rt.add_search_path(lib_path);
+        }
         let creator_set = builtin_node_creators();
         rsc.add_node_creator_set(&creator_set);
         for p in config.plugins.iter() {
@@ -100,14 +104,6 @@ impl RenderModule {
         let script_path = self.0.config_path.join("render.clj");
         match std::fs::read_to_string(script_path) {
             Ok(code_string) => {
-                for p in config.plugins.iter() {
-                    match (p.script_mod_name.as_ref(),p.script_mod_code.as_ref()) {
-                        (Some(name),Some(code)) => {
-                            rsc.rt.add_module(name.as_str(), code.as_str());
-                        },
-                        _ => {}
-                    }
-                }
                 rsc.run(code_string.as_str(), &mut ctx.ubo_ctx.info,&mut app_render.graph,true);
             },
             Err(err) => {
