@@ -1470,9 +1470,9 @@ checksum = "e2abad23fbc42b3700f2f279844dc832adb2b2eb069b2df918f455c4e18cc646"
 
 [[package]]
 name = "libc"
-version = "0.2.121"
+version = "0.2.122"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "efaa7b300f3b5fe8eb6bf21ce3895e1751d9665086af2d64b42f19701015ff4f"
+checksum = "ec647867e2bf0772e28c8bcde4f0d19a9216916e890543b5a03ed8ef27b8f259"
 
 [[package]]
 name = "libloading"
@@ -1503,8 +1503,8 @@ checksum = "806de604a37f6d73a83c850af7b3ba33a44f330d12fd5e4ac216645b54da912b"
 [[package]]
 name = "lite-clojure-eval"
 version = "0.1.0"
-source = "git+https://github.com/seija-engine/lite-clojure.git#aa2bacd00ba00d4ec18259963cac866cc2d42e32"
 dependencies = [
+ "env_logger 0.9.0",
  "gc",
  "lite-clojure-parser",
  "log",
@@ -1514,7 +1514,6 @@ dependencies = [
 [[package]]
 name = "lite-clojure-parser"
 version = "0.1.0"
-source = "git+https://github.com/seija-engine/lite-clojure.git#aa2bacd00ba00d4ec18259963cac866cc2d42e32"
 
 [[package]]
 name = "lock_api"
@@ -1578,7 +1577,6 @@ dependencies = [
  "glsl-pack-rtbase",
  "glsl-pkg",
  "lite-clojure-eval",
- "lite-clojure-parser",
  "log",
  "seija-render",
  "serde_json",

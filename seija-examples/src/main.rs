@@ -20,7 +20,7 @@ use seija_core::{CoreModule, CoreStage, StartupStage};
 
 use seija_examples::{IExamples, pre_start};
 
-use seija_render::{RenderModule, RenderConfig, GraphSetting,};
+use seija_render::{RenderModule, RenderConfig, GraphSetting, RenderScriptPlugin, NodeCreatorSet,};
 use seija_winit::WinitModule;
 use seija_transform::{TransformModule};
 
@@ -42,7 +42,12 @@ fn main() {
         config_path:".render".into(),
         setting:Arc::new(GraphSetting {
             msaa_samples:4
-        }), 
+        }),
+        plugins:vec![RenderScriptPlugin::new(NodeCreatorSet::default(),Some("pbr".into()),Some(r#"
+         (defn hello [from]
+            (println "Hello")
+         )
+        "#.into())) ]
     };
     render_config.set_config_path(".render");
     app.add_module(RenderModule(Arc::new(render_config)));

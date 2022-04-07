@@ -25,4 +25,5 @@ impl NodeCreatorContext {
     }
 }
 
+#[derive(Default)]
 pub struct NodeCreatorSet(pub HashMap<String,NodeCreatorFn>);

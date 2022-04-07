@@ -9,7 +9,7 @@ seija-app = {path = "../seija-app"}
 seija-core = {path = "../seija-core"}
 seija-winit = {path = "../seija-winit"}
 seija-transform = {path = "../seija-transform"}
-lite-clojure-eval = {git = "https://github.com/seija-engine/lite-clojure.git"}
+lite-clojure-eval = {path = "../../../lite-clojure/lite-clojure-eval"}#{git = "https://github.com/seija-engine/lite-clojure.git"}
 serde_json = "1.0.64"
 serde_derive = "1.0.136"
 serde = "1.0.136"

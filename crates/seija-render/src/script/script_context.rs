@@ -1,15 +1,15 @@
-use std::{convert::{TryInto, TryFrom}, f32::consts::E};
+use std::{convert::{TryFrom}};
 
-use lite_clojure_eval::{EvalRT, Variable};
+use lite_clojure_eval::{EvalRT, Variable, ExecScope};
 use serde_json::Value;
 
-use crate::{UBOInfoSet, UBOInfo, graph::{NodeId, self}, render::RenderGraphContext};
+use crate::{UBOInfoSet, UBOInfo, graph::{NodeId}, render::RenderGraphContext};
 
-use super::{NodeCreatorContext, NodeCreatorSet, NodeCreatorFn};
+use super::{NodeCreatorContext, NodeCreatorSet, NodeCreatorFn,RenderScriptPlugin};
 
 
 pub struct RenderScriptContext {
-    rt:EvalRT,
+    pub rt:EvalRT,
     node_creators:NodeCreatorContext
 }
 
@@ -23,15 +23,15 @@ impl RenderScriptContext {
     }
 
     fn add_fns(&mut self) {
-       self.rt.push_native_fn("add-ubo", def_ubo);
-       self.rt.push_native_fn("node", node);
-       self.rt.push_native_fn("link->", link_node);
+       self.rt.global_context().push_native_fn("add-ubo", def_ubo);
+       self.rt.global_context().push_native_fn("node", node);
+       self.rt.global_context().push_native_fn("link->", link_node);
        
     }
 
     pub fn add_node_creator(&mut self,name:&str,f:NodeCreatorFn) {
         let index = self.node_creators.add_creator(f);
-        self.rt.push_var(name, Variable::Int(index as i64));
+        self.rt.global_context().push_var(name, Variable::Int(index as i64));
     }
 
     pub fn add_node_creator_set(&mut self,set:&NodeCreatorSet) {
@@ -42,13 +42,13 @@ impl RenderScriptContext {
 
     pub fn run(&mut self,code:&str,info:&mut UBOInfoSet,graph_ctx:&mut RenderGraphContext,is_create_graph:bool) {
        let info_ptr = info as *mut UBOInfoSet as *mut u8;
-       self.rt.push_var("UBO_SET", Variable::UserData(info_ptr));
+       self.rt.global_context().push_var("UBO_SET", Variable::UserData(info_ptr));
        
        let creator_ptr = (&mut self.node_creators) as *mut NodeCreatorContext as *mut u8;
-       self.rt.push_var("NODE_CREATORS", Variable::UserData(creator_ptr));
+       self.rt.global_context().push_var("NODE_CREATORS", Variable::UserData(creator_ptr));
 
        let graph_ptr = graph_ctx as *mut RenderGraphContext as *mut u8;
-       self.rt.push_var("GRAPH_CTX", Variable::UserData(graph_ptr));
+       self.rt.global_context().push_var("GRAPH_CTX", Variable::UserData(graph_ptr));
 
        self.rt.eval_string("render".into(), code);
        if is_create_graph {
@@ -59,8 +59,8 @@ impl RenderScriptContext {
     }
 }
 
-fn find_userdata<'a,T>(rt:&'a EvalRT,name:&str) -> Option<&'a mut T> {
-    let ptr = rt.find_symbol(name).and_then(|v| v.cast_userdata());
+fn find_userdata<'a,T>(rt:&'a ExecScope,name:&str) -> Option<&'a mut T> {
+    let ptr = rt.context.find_symbol(None, name, &rt.modules).and_then(|v| v.cast_userdata());
     if ptr.is_none() {
         log::error!("not found {}",name);
         return None;
@@ -69,8 +69,8 @@ fn find_userdata<'a,T>(rt:&'a EvalRT,name:&str) -> Option<&'a mut T> {
 }
 
 
-fn def_ubo(rt:&mut EvalRT,args:Vec<Variable>) -> Variable {
-    (|rt:&mut EvalRT,mut args:Vec<Variable>| {
+fn def_ubo(rt:&mut ExecScope,args:Vec<Variable>) -> Variable {
+    (|rt:&mut ExecScope,mut args:Vec<Variable>| {
         let info_set = find_userdata::<UBOInfoSet>(rt, "UBO_SET")?;
         let json:Value =  args.remove(0).into();
         match UBOInfo::try_from(&json) {
@@ -83,12 +83,12 @@ fn def_ubo(rt:&mut EvalRT,args:Vec<Variable>) -> Variable {
     })(rt,args).unwrap_or(Variable::Nil)
 }
 
-fn node(rt:&mut EvalRT,args:Vec<Variable>) -> Variable {
+fn node(rt:&mut ExecScope,args:Vec<Variable>) -> Variable {
     if args.len() < 1 {
         log::error!("node args < 2");
         return Variable::Nil;
     }
-    (|rt:&mut EvalRT,mut args:Vec<Variable>| {
+    (|rt:&mut ExecScope,mut args:Vec<Variable>| {
         let node_index = args[0].cast_int()?;
         let node_params = if args.len() > 1 { args.remove(1) } else {Variable::Nil };
         let node_creator = find_userdata::<NodeCreatorContext>(rt, "NODE_CREATORS")?;
@@ -99,12 +99,12 @@ fn node(rt:&mut EvalRT,args:Vec<Variable>) -> Variable {
 }
 
 
-fn link_node(rt:&mut EvalRT,args:Vec<Variable>) -> Variable {
+fn link_node(rt:&mut ExecScope,args:Vec<Variable>) -> Variable {
     if args.len() < 2 {
         log::error!("node args < 3");
         return Variable::Nil;
     }
-    (|rt:&mut EvalRT,args:Vec<Variable>| {
+    (|rt:&mut ExecScope,args:Vec<Variable>| {
         let graph_ctx = find_userdata::<RenderGraphContext>(rt, "GRAPH_CTX")?;
         let snode_1 = args[0].cast_string()?;
         let snode_2 = args[1].cast_string()?;
