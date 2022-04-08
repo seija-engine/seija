@@ -1,11 +1,12 @@
 use bevy_ecs::prelude::{Commands, Entity, IntoSystem, Query, QuerySet, Res, ResMut};
-use glam::{Vec3, Vec4, Quat};
+use glam::{Vec3, Quat, Vec4};
 use seija_asset::Assets;
-use seija_core::time::Time;
 use seija_core::{window::AppWindow, CoreStage, StartupStage};
-use seija_examples::{add_render_mesh, load_texture, IExamples};
-use seija_gltf::{create_gltf, create_node, load_gltf};
-use seija_render::light::{Light, LightEnv, LightType};
+use seija_examples::{IExamples};
+use seija_pbr::PBRCameraInfo;
+use seija_pbr::lights::PBRLight;
+use seija_render::camera::camera::Perspective;
+use seija_render::light::{Light};
 use seija_render::resource::shape::{Sphere, Plane};
 use seija_render::wgpu::{self};
 use seija_render::{
@@ -35,47 +36,37 @@ impl IExamples for PBRLightTest {
     }
 }
 
+fn add_pbr_camera(window:&AppWindow,commands: &mut Commands) {
+    let pbr_camera = PBRCameraInfo::default();
+    let mut root = commands.spawn();
+    let mut t = Transform::default();
+    t.local.position = Vec3::new(0f32, 20f32, 70f32);
+    t.local.rotation = Quat::from_euler(glam::EulerRot::XYZ , -15f32 *  0.0174533f32, 0f32, 0f32); 
+    root.insert(t);
+    let mut per = Perspective::default();
+    per.aspect_ratio = window.width() as f32 / window.height() as f32;
+    let camera = Camera::from_3d(per);
+    root.insert(camera);
+    root.insert(pbr_camera);
+}
+
 fn on_start(
     mut commands: Commands,
     mut meshs: ResMut<Assets<Mesh>>,
     mut textures: ResMut<Assets<Texture>>,
     window: Res<AppWindow>,
-    mut light_env:ResMut<LightEnv>,
     materials: Res<MaterialStorage>,
 ) {
+    add_pbr_camera(&window, &mut commands);
     {
-        light_env.set_ambient_color(Vec4::ZERO);
-        
-    };
-
-    {
+        let point_light = PBRLight::point(Vec4::new(1f32, 1f32, 1f32, 1f32)  , 9000f32, 10f32);
         let mut t = Transform::default();
-        let r = Quat::from_euler(glam::EulerRot::XYZ  , -15f32.to_radians(), 0f32, 0f32);
-        t.local.rotation = r;
-        let  light = Light::directional(Vec3::new(1f32, 1f32, 1f32), 0.5f32);
-        commands.spawn().insert(light).insert(t);
-        
-    };
-
-    {
-        let mesh = Sphere::new(8f32);
-        let hmesh = meshs.add(mesh.into());
-        let hmat = materials.create_material_with("pbrColor", |mat| {}).unwrap();
-        let mut t = Transform::default();
-      
-        t.local.position = Vec3::new(0f32, 6f32, 30f32);
-        t.local.rotation = Quat::from_rotation_y(90f32 * 0.0174533f32);
-        commands.spawn().insert(hmesh).insert(hmat).insert(t);
-    };
-   
+        let mut l = commands.spawn();
+        l.insert(point_light);
+        l.insert(t);
+    }
 }
 
 fn on_update(mut query: QuerySet<(Query<(Entity, &mut Light, &mut Transform)>,Query<(Entity,&Camera,&mut Transform)>)>,mut numbers:ResMut<PingPongNumbers>) {
-    let mut v:f32 = (std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_millis() % 3600) as f32;
-    let half = v / 2f32;
-    let num = v * 0.1f32 * 0.0174533f32;
-    for (_,mut _light,mut t) in query.q0_mut().iter_mut() {
-        let r = Quat::from_euler(glam::EulerRot::XYZ  , 0f32 , num , 0f32);
-        t.local.rotation = r;
-    }
+   
 }

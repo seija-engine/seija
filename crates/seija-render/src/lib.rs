@@ -30,9 +30,8 @@ mod render;
 mod memory;
 pub use graph_setting::{GraphSetting};
 pub use render_context::{RenderContext};
-pub use uniforms::{UBOInfoSet,UBOInfo,};
+pub use uniforms::{UBOInfoSet,UBOInfo,UBONameIndex};
 pub use memory::{RawUniformInfo,UniformType,UniformBufferDef,UniformInfo,ArrayPropInfo};
-
 
 
 #[derive(Debug, Hash, PartialEq, Eq, Clone,StageLabel )]

@@ -1503,6 +1503,7 @@ checksum = "806de604a37f6d73a83c850af7b3ba33a44f330d12fd5e4ac216645b54da912b"
 [[package]]
 name = "lite-clojure-eval"
 version = "0.1.0"
+source = "git+https://github.com/seija-engine/lite-clojure.git#4526b3e6dc2fa881be60b746a51985834d457bf2"
 dependencies = [
  "env_logger 0.9.0",
  "gc",
@@ -1514,6 +1515,7 @@ dependencies = [
 [[package]]
 name = "lite-clojure-parser"
 version = "0.1.0"
+source = "git+https://github.com/seija-engine/lite-clojure.git#4526b3e6dc2fa881be60b746a51985834d457bf2"
 
 [[package]]
 name = "lock_api"
@@ -2290,6 +2292,7 @@ dependencies = [
  "seija-asset",
  "seija-core",
  "seija-gltf",
+ "seija-pbr",
  "seija-render",
  "seija-transform",
  "seija-winit",
@@ -2311,7 +2314,12 @@ dependencies = [
 name = "seija-pbr"
 version = "0.1.0"
 dependencies = [
+ "bevy_ecs",
  "glam",
+ "lite-clojure-eval",
+ "log",
+ "seija-render",
+ "seija-transform",
 ]
 
 [[package]]

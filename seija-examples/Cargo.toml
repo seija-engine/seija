@@ -14,9 +14,10 @@ seija-app = {path = "../crates/seija-app"}
 seija-core = {path = "../crates/seija-core"}
 seija-winit = {path = "../crates/seija-winit"}
 seija-gltf = {path = "../crates/seija-gltf"}
+seija-pbr = {path = "../crates/seija-pbr"}
 seija-render = {path = "../crates/seija-render"}
 seija-transform = {path = "../crates/seija-transform"}
-lite-clojure-eval = {path = "../../lite-clojure/lite-clojure-eval"}#{git = "https://github.com/seija-engine/lite-clojure.git"}
+lite-clojure-eval = {git = "https://github.com/seija-engine/lite-clojure.git"}
 bevy_ecs = "0.5.0"
 glam = "0.20.3"
 env_logger = "*"

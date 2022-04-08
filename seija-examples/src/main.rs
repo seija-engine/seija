@@ -20,11 +20,12 @@ use seija_core::{CoreModule, CoreStage, StartupStage};
 
 use seija_examples::{IExamples, pre_start};
 
+use seija_pbr::create_pbr_plugin;
 use seija_render::{RenderModule, RenderConfig, GraphSetting, RenderScriptPlugin, NodeCreatorSet,};
 use seija_winit::WinitModule;
 use seija_transform::{TransformModule};
 
-const TEST_NAME:&'static str = "light_test";
+const TEST_NAME:&'static str = "pbr_light_test";
 
 fn main() {
      env_logger::Builder::new().filter_level(log::LevelFilter::Info).try_init().unwrap();
@@ -43,8 +44,8 @@ fn main() {
         setting:Arc::new(GraphSetting {
             msaa_samples:4
         }),
-        plugins:vec![RenderScriptPlugin::new(NodeCreatorSet::default()) ],
-        render_lib_paths:vec!["../crates/seija-pbr/res".into()],
+        plugins:vec![create_pbr_plugin()],
+        render_lib_paths:vec!["../crates/seija-pbr/res".into(),"../crates/seija-render/res".into()],
     };
     render_config.set_config_path(".render");
     app.add_module(RenderModule(Arc::new(render_config)));

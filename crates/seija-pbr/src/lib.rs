@@ -1,10 +1,9 @@
 mod camera_info;
 mod exposure;
-mod lights;
-
+pub mod lights;
+mod nodes;
+mod plugin;
 pub use camera_info::{PBRCameraInfo};
 pub use exposure::{Exposure};
+pub use plugin::{create_pbr_plugin};
 
-pub struct CameraInfo {
-    ev100:f32
-}
