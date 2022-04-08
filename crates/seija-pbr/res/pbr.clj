@@ -6,6 +6,29 @@
     )
 )
 
+(def add-pbr-light-ubo [index]
+    (add-ubo {
+        :type :GlobalBuffer
+        :apply :Frame
+        :name "LightBuffer"
+        :index index
+        :props [
+           {:name "ambileColor"     :type "float4"}
+           {:name "lightCount"      :type "int"}
+           {:name "lights" :type [
+              {:name "position"         :type "float3"}
+              {:name "type"             :type "int"}
+              {:name "direction"        :type "float3"}
+              {:name "color"            :type "float3"}
+              {:name "intensity"        :type "float"}
+              {:name "falloff"          :type "float"}
+              {:name "spotScaleOffset"  :type "float2"}
+           ] :size 10}
+        ]
+        :backends ["PBRLight"]
+    })
+)
+
 (defn create-pbr-graph []
     (let [
              camera        (node CAMERA           {:ubo "CameraBuffer" })
