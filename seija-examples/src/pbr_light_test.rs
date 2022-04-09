@@ -59,8 +59,8 @@ fn on_start(
 ) {
     add_pbr_camera(&window, &mut commands);
     {
-        let point_light = PBRLight::point(Vec4::new(1f32, 1f32, 1f32, 1f32)  , 9000f32, 10f32);
-        let mut t = Transform::default();
+        let point_light = PBRLight::point(Vec3::new(1f32, 1f32, 1f32)  , 9000f32, 10f32);
+        let t = Transform::default();
         let mut l = commands.spawn();
         l.insert(point_light);
         l.insert(t);

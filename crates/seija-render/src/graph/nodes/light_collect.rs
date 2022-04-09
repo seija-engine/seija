@@ -1,12 +1,12 @@
 use bevy_ecs::prelude::{World, Entity, Changed, With, Or};
 use fixedbitset::FixedBitSet;
 use fnv::FnvHashMap;
-use glam::{Quat, Vec3};
+use glam::{Vec3};
 use seija_core::LogOption;
 use seija_transform::Transform;
 use crate::light::{LightEnv, Light, LightType};
 use crate::memory::UniformBuffer;
-use crate::{uniforms::{UBONameIndex, backends::LightBackend}, graph::node::INode, RenderContext, resource::RenderResourceId, memory::TypedUniformBuffer};
+use crate::{uniforms::{UBONameIndex, backends::LightBackend}, graph::node::INode, RenderContext, resource::RenderResourceId};
 
 const MAX_LIGHT:usize = 10;
 

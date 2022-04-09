@@ -31,6 +31,7 @@ mod memory;
 pub use graph_setting::{GraphSetting};
 pub use render_context::{RenderContext};
 pub use uniforms::{UBOInfoSet,UBOInfo,UBONameIndex};
+pub use uniforms::backends::{IShaderBackend};
 pub use memory::{RawUniformInfo,UniformType,UniformBufferDef,UniformBuffer,UniformInfo,ArrayPropInfo};
 
 

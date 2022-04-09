@@ -6,7 +6,7 @@
     )
 )
 
-(def add-pbr-light-ubo [index]
+(defn add-pbr-light-ubo [index]
     (add-ubo {
         :type :GlobalBuffer
         :apply :Frame
@@ -22,7 +22,8 @@
               {:name "color"            :type "float3"}
               {:name "intensity"        :type "float"}
               {:name "falloff"          :type "float"}
-              {:name "spotScaleOffset"  :type "float2"}
+              {:name "spotScale"        :type "float"}
+              {:name "spotOffset"       :type "float"}
            ] :size 10}
         ]
         :backends ["PBRLight"]
@@ -33,8 +34,17 @@
     (let [
              camera        (node CAMERA           {:ubo "CameraBuffer" })
              pbr-camera-ex (node PBR_CAMERA_EX    {:ubo "CameraBuffer" })
+             light         (node PBRLIGHT         {:ubo "LightBuffer"  })
              transform     (node TRANSFORM        {:ubo "ObjectBuffer" })
+             swapchain     (node SWAP_CHAIN)
+             pass          (node PASS)
+             depth-texture (node WINDOW_TEXTURE)
          ]
          (link-> camera pbr-camera-ex)
+         (link-> light          pass)
+         (link-> transform      pass)
+         (link-> pbr-camera-ex  pass)
+         (link-> swapchain      pass {0 0 1 2})
+         (link-> depth-texture  pass {0 1})
     )
  )

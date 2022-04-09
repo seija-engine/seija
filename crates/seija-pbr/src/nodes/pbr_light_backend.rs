@@ -1,8 +1,17 @@
-use glam::{Vec4, Vec3};
-use seija_render::{UniformBufferDef, UniformBuffer};
+use glam::{Vec4, Vec3, Vec2};
+use seija_render::{UniformBufferDef, UniformBuffer, IShaderBackend};
 
+impl IShaderBackend for PBRLightBackend {
+    fn from_def(def:&UniformBufferDef) -> Result<Self,String> where Self: Sized {
+        PBRLightBackend::from_def(def)
+    }
 
-pub struct LightBackend {
+    fn set_count(&self,buffer:&mut UniformBuffer,count:i32) {
+        self.set_light_count(buffer, count)
+    }
+}
+
+pub struct PBRLightBackend {
     ambile_idx:usize,
     light_count_idx:usize,
     lights_type_idx:usize,
@@ -12,11 +21,12 @@ pub struct LightBackend {
     lights_color_idx:usize,
     lights_intensity_idx:usize,
     lights_falloff_idx:usize,
-    lights_spot_scale_offset_idx:usize,
+    lights_spot_scale_idx:usize,
+    lights_spot_offset_idx:usize,
 }
 
-impl LightBackend {
-    pub fn from_def(def:&UniformBufferDef) -> Result<LightBackend,String> {
+impl PBRLightBackend {
+    pub fn from_def(def:&UniformBufferDef) -> Result<PBRLightBackend,String> {
         let ambile_idx = def.get_offset("ambileColor", 0).ok_or("ambileColor".to_string())?;
         let light_count_idx = def.get_offset("lightCount", 0).ok_or("lightCount".to_string())?;
 
@@ -27,12 +37,13 @@ impl LightBackend {
         let lights_color_idx = def.get_array_offset("lights","color", 0).ok_or("lights.color".to_string())?;
         let lights_intensity_idx = def.get_array_offset("lights","intensity", 0).ok_or("lights.intensity".to_string())?;
         let lights_falloff_idx = def.get_array_offset("lights","falloff", 0).ok_or("lights.falloff".to_string())?;
-        let lights_spot_scale_offset_idx = def.get_array_offset("lights","spotScaleOffset", 0).ok_or("lights.spotScaleOffset".to_string())?;
-       
+      
+        let lights_spot_scale_idx = def.get_array_offset("lights","spotScale", 0).ok_or("lights.spotScale".to_string())?;
+        let lights_spot_offset_idx = def.get_array_offset("lights","spotOffset", 0).ok_or("lights.spotOffset".to_string())?;
 
 
         let arr_info = def.get_array_info("lights").ok_or("ok_or".to_string())?;
-        Ok(LightBackend {
+        Ok(PBRLightBackend {
             ambile_idx,
             light_count_idx,
             lights_type_idx,
@@ -42,7 +53,8 @@ impl LightBackend {
             lights_color_idx,
             lights_intensity_idx,
             lights_falloff_idx,
-            lights_spot_scale_offset_idx
+            lights_spot_scale_idx,
+            lights_spot_offset_idx
         })
     }
 
@@ -84,8 +96,13 @@ impl LightBackend {
         buffer.write_bytes(offset, num);
     }
 
-    pub fn set_lights_spot_scale_offset(&self,buffer:&mut UniformBuffer,index:usize,num:f32) {
-        let offset = self.lights_spot_scale_offset_idx + (self.lights_item_size * index * 4);
-        buffer.write_bytes(offset, num);
+    pub fn set_lights_spot_scale(&self,buffer:&mut UniformBuffer,index:usize,value:f32) {
+        let offset = self.lights_spot_scale_idx + (self.lights_item_size * index * 4);
+        buffer.write_bytes(offset, value);
+    }
+
+    pub fn set_lights_spot_offset(&self,buffer:&mut UniformBuffer,index:usize,value:f32) {
+        let offset = self.lights_spot_offset_idx + (self.lights_item_size * index * 4);
+        buffer.write_bytes(offset, value);
     }
 }

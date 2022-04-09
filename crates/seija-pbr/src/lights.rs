@@ -1,4 +1,4 @@
-use glam::{f32, Vec2, Vec4};
+use glam::{f32, Vec2, Vec4, Vec3};
 
 #[derive(PartialEq, Eq)]
 pub enum PBRLightType {
@@ -8,6 +8,17 @@ pub enum PBRLightType {
     FocusedSpot,
 }
 
+impl PBRLightType {
+    pub fn type_id(&self) -> usize {
+        match self {
+            PBRLightType::Directional => { 0 },
+            PBRLightType::Point => { 1 },
+            PBRLightType::Spot => { 2 },
+            PBRLightType::FocusedSpot => { 3 },
+        }
+    }
+}
+
 impl Default for PBRLightType {
     fn default() -> Self { PBRLightType::Directional }
 }
@@ -15,7 +26,7 @@ impl Default for PBRLightType {
 #[derive(Default)]
 pub struct PBRLight {
     typ: PBRLightType,
-    pub color: Vec4,
+    pub color: Vec3,
     //点光源聚光灯是辐射通量/光通量,平行光是辐射照度/光照度，
     intensity: f32,
     //发光强度，坎德拉
@@ -30,7 +41,27 @@ pub struct PBRLight {
 }
 
 impl PBRLight {
-    pub fn directional(color: Vec4, intensity: f32) -> Self {
+
+    pub fn get_type(&self) -> &PBRLightType {
+        &self.typ
+    }
+
+    pub fn get_luminous_intensity(&self) -> f32 {
+        self._luminous_intensity
+    }
+
+    pub fn get_falloff(&self) -> f32 {
+        self.falloff_radius
+    }
+    pub fn get_squared_fall_offinv(&self) -> f32 {
+        self._squared_fall_offinv
+    }
+
+    pub fn get_scale_offset(&self) -> Vec2 {
+        self._scale_offset
+    }
+    
+    pub fn directional(color: Vec3, intensity: f32) -> Self {
         let mut light = PBRLight::default();
         light.typ = PBRLightType::Directional;
         light.color = color;
@@ -38,7 +69,7 @@ impl PBRLight {
         light
     }
 
-    pub fn point(color: Vec4, intensity: f32, falloff: f32) -> Self {
+    pub fn point(color: Vec3, intensity: f32, falloff: f32) -> Self {
         let mut light = PBRLight::default();
         light.typ = PBRLightType::Point;
         light.color = color;
@@ -47,7 +78,7 @@ impl PBRLight {
         light
     }
 
-    pub fn spot(color: Vec4, intensity: f32, falloff: f32, inner: f32, outer: f32,is_focused:bool) -> Self {
+    pub fn spot(color: Vec3, intensity: f32, falloff: f32, inner: f32, outer: f32,is_focused:bool) -> Self {
         let mut light = PBRLight::default();
         light.typ = if is_focused { PBRLightType::FocusedSpot } else { PBRLightType::Spot };
         light.color = color;

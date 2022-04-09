@@ -5,7 +5,9 @@ mod camera_collect;
 mod transform_collect;
 mod window_texture_node;
 mod light_collect;
+mod ubo_array_collect;
 
+pub use ubo_array_collect::{UBOArrayCollect};
 pub use log_node::LogNode;
 pub use pass_node::PassNode;
 pub use swapchain_node::SwapchainNode;
