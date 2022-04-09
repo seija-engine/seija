@@ -12,9 +12,10 @@ impl PBRLightType {
     pub fn type_id(&self) -> usize {
         match self {
             PBRLightType::Directional => { 0 },
-            PBRLightType::Point => { 1 },
-            PBRLightType::Spot => { 2 },
-            PBRLightType::FocusedSpot => { 3 },
+            PBRLightType::Spot => { 1 },
+            PBRLightType::Point => { 2 },
+          
+            PBRLightType::FocusedSpot => { 1 },
         }
     }
 }
