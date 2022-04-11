@@ -27,7 +27,7 @@ vec4 fs_main(VSOutput ino) {
     MaterialInputs inputs;
     initMaterial(inputs);
 
-    inputs.normal = ino.normal;
+    inputs.normal = normalize(ino.normal);
     inputs.baseColor = vec4(1.0);
     inputs.metallic = 0.7;
     inputs.glossiness = 0.7;

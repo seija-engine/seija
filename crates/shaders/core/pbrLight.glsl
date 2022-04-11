@@ -123,7 +123,7 @@ vec3 surfaceShading(const PixelParams pixel,const Light light,float occlusion,ve
     vec3 fr = specularLobe(pixel, light, h, noV, noL, noH, loH);
     vec3 fd = diffuseLobe(pixel, noV, noL, loH);
 
-    vec3 color = fr;//fd + fr * pixel.energyCompensation;
+    vec3 color = fd + fr * pixel.energyCompensation;
 
     return (color * light.colorIntensity.rgb) * (light.colorIntensity.w * light.attenuation * noL * occlusion);
 }
