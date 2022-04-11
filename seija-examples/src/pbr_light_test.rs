@@ -68,16 +68,24 @@ fn on_start(
         l.insert(point_light);
         l.insert(t);
     }
-    {
-        let mesh = Sphere::new(8f32);
-        let hmesh = meshs.add(mesh.into());
-        let hmat = materials.create_material_with("pbrColor", |mat| {}).unwrap();
-        let mut t = Transform::default();
-      
-        t.local.position = Vec3::new(0f32, 4f32, 30f32);
-        t.local.rotation = Quat::from_rotation_y(90f32 * 0.0174533f32);
-        commands.spawn().insert(hmesh).insert(hmat).insert(t);
-    };
+    for x in 0..5 {
+        for y in 0..5 {
+        {
+            let mesh = Sphere::new(2f32);
+            let hmesh = meshs.add(mesh.into());
+            let hmat = materials.create_material_with("pbrColor", |mat| {
+                mat.props.set_f32("metallic",  (1f32 / 5f32)  * x as f32, 0);
+                mat.props.set_f32("glossiness", (1f32 / 5f32) * y as f32, 0);
+            }).unwrap();
+            let mut t = Transform::default();
+          
+            t.local.position = Vec3::new(x as f32 * 5f32 - 10f32, y as f32 * 5f32, 30f32);
+            t.local.rotation = Quat::from_rotation_y(90f32 * 0.0174533f32);
+            commands.spawn().insert(hmesh).insert(hmat).insert(t);
+        };
+      }
+    }
+    
 }
 
 fn on_update(mut query: QuerySet<(Query<(Entity, &mut PBRLight, &mut Transform)>,Query<(Entity,&Camera,&mut Transform)>)>,mut numbers:ResMut<PingPongNumbers>) {

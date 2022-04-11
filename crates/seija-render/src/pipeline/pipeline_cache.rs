@@ -190,6 +190,7 @@ impl PipelineCache {
        
         let mut layouts = ctx.create_bind_group_layouts(pass_def)?;
         if mat_def.prop_def.infos.len() > 0 {
+            dbg!(layouts.len());
             layouts.push(&ctx.material_sys.layout);
         }
         if mat_def.tex_prop_def.indexs.len() > 0 {

@@ -100,6 +100,7 @@ impl PassNode {
                                     set_index += 1;
                                 }
                                 if material.props.def.infos.len() > 0 {
+                                   
                                     render_pass.set_bind_group(set_index, material.bind_group.as_ref().unwrap(), &[]);
                                     set_index += 1;
                                 }

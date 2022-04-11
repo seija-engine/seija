@@ -29,12 +29,12 @@ struct MaterialInputs {
     vec3  normal;
 };
 
-void initMaterial(out MaterialInputs material) {
-    material.baseColor = vec4(1.0);
-    material.metallic = 0.0;
-    material.normal = vec3(0.0, 0.0, 1.0);
-    material.glossiness = 0.0;
-    material.specularColor = vec3(0.0);
+void initMaterial(out MaterialInputs inputs) {
+    inputs.baseColor = vec4(1.0);
+    inputs.metallic = 0.0;
+    inputs.normal = vec3(0.0, 0.0, 1.0);
+    inputs.glossiness = 0.0;
+    inputs.specularColor = vec3(0.0);
 }
 
 float computePreExposedIntensity(const  float intensity, const  float exposure) {
@@ -91,11 +91,11 @@ Light getLight(const int index,vec3 vertPos,vec3 normal) {
 
 
 
-void getPixelParams(const MaterialInputs material, out PixelParams pixel) {
-   vec4 baseColor = material.baseColor;
-   pixel.diffuseColor = baseColor.rgb * (1.0 - material.metallic);
-   pixel.f0 = material.specularColor;
-   float perceptualRoughness = 1.0 - material.glossiness;
+void getPixelParams(const MaterialInputs inputs, out PixelParams pixel) {
+   vec4 baseColor = inputs.baseColor;
+   pixel.diffuseColor = baseColor.rgb * (1.0 - inputs.metallic);
+   pixel.f0 = inputs.specularColor;
+   float perceptualRoughness = 1.0 - inputs.glossiness;
    pixel.perceptualRoughness = clamp(perceptualRoughness, 0.045, 1.0);
    pixel.roughness = pixel.perceptualRoughness * pixel.perceptualRoughness;
    pixel.energyCompensation = vec3(1.0);
@@ -128,22 +128,22 @@ vec3 surfaceShading(const PixelParams pixel,const Light light,float occlusion,ve
     return (color * light.colorIntensity.rgb) * (light.colorIntensity.w * light.attenuation * noL * occlusion);
 }
 
-vec4 evaluateLights(const MaterialInputs material,vec3 vertPos,vec3 viewDir) {
+vec4 evaluateLights(const MaterialInputs inputs,vec3 vertPos,vec3 viewDir) {
    PixelParams pixel;
-   getPixelParams(material, pixel);
+   getPixelParams(inputs, pixel);
    vec3 color = vec3(0.0);
    for(int i = 0; i < getLightCount();i++) {
-      Light light = getLight(i,vertPos,material.normal);
+      Light light = getLight(i,vertPos,inputs.normal);
       if (light.noL <= 0.0 || light.attenuation <= 0.0) {
             continue;
       }
       float visibility = 1.0;
-      color.rgb += surfaceShading(pixel, light, visibility,viewDir,material.normal);
+      color.rgb += surfaceShading(pixel, light, visibility,viewDir,inputs.normal);
    }
    return vec4(color,1.0);
 }
 
-vec4 evaluateMaterial(const MaterialInputs material,vec3 vertPos,vec3 viewDir) {
-    vec4 color = evaluateLights(material,vertPos,viewDir);
+vec4 evaluateMaterial(const MaterialInputs inputs,vec3 vertPos,vec3 viewDir) {
+    vec4 color = evaluateLights(inputs,vertPos,viewDir);
     return color;
 }
