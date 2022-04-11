@@ -34,13 +34,13 @@
         "fs": "bpMains.fs_main"
       },
       {
-        "name": "pbrColor",
+        "name": "pbr",
         "vertex": {
           "POSITION": "require",
          
           "NORMAL":"require"
         },
-        "backend": [ "Camera3D", "Transform","Light"],
+        "backend": [ "Camera3D", "Transform","PBRLight","PBRCameraEx"],
         "vs": "pbrMains.vs_main",
         "fs": "pbrMains.fs_main"
       }

@@ -101,6 +101,10 @@ impl UniformBufferDef {
         None
     }
 
+    pub fn names(&self) -> &HashMap<String,usize> {
+        &self.names
+    }
+
     pub fn get_array_offset(&self,name:&str,sname:&str,index:usize) -> Option<usize> {
         if let Some(idx) = self.names.get(name) {
            if let UniformInfo::Array(arr) = &self.infos[*idx] {

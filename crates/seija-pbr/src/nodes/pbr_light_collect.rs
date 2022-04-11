@@ -19,6 +19,8 @@ impl PBRLightCollect {
 }
 
 fn set_pbr_light(backend:&PBRLightBackend,index:usize,light:&PBRLight,buffer:&mut UniformBuffer,t:&Transform) {
+    backend.set_light_count(buffer, 1);
+    backend.set_ambile_color(buffer, Vec3::ONE);
     backend.set_lights_position(buffer,index,t.global().position);
     backend.set_lights_type(buffer, index, light.get_type().type_id() as i32);
     backend.set_lights_direction(buffer, index, t.global().rotation * Vec3::Z);
@@ -32,7 +34,7 @@ fn set_pbr_light(backend:&PBRLightBackend,index:usize,light:&PBRLight,buffer:&mu
             backend.set_lights_falloff(buffer, index, light.get_squared_fall_offinv());
             let scale_offset = light.get_scale_offset();
             backend.set_lights_spot_scale(buffer, index,scale_offset.x);
-            backend.set_lights_spot_scale(buffer, index, scale_offset.y);
+            backend.set_lights_spot_offset(buffer, index, scale_offset.y);
         },
         _ => {}
     }

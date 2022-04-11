@@ -45,11 +45,11 @@ impl IShaderBackend for SeijaShaderBackend {
 
 
     fn write_uniforms<W:Write>(&self, writer:&mut W,shader:&Shader,ex_data:&ShaderTask) {
-        let mut ubos:HashMap<&String,Arc<UBOInfo>> = Default::default();
+        let mut ubos:HashMap<String,Arc<UBOInfo>> = Default::default();
         for backend_name in shader.backend.iter() {
             if let Some(ubo_info) = self.render_info.backend2ubo.get(backend_name) {
-                if !ubos.contains_key(&backend_name) {
-                    ubos.insert(backend_name,ubo_info.clone());
+                if !ubos.contains_key(ubo_info.name.as_str()) {
+                    ubos.insert(ubo_info.name.to_string(),ubo_info.clone());
                 }
             }
         }

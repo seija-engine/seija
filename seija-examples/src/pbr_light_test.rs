@@ -2,7 +2,7 @@ use bevy_ecs::prelude::{Commands, Entity, IntoSystem, Query, QuerySet, Res, ResM
 use glam::{Vec3, Quat, Vec4};
 use seija_asset::Assets;
 use seija_core::{window::AppWindow, CoreStage, StartupStage};
-use seija_examples::{IExamples};
+use seija_examples::{IExamples, load_material};
 use seija_pbr::PBRCameraInfo;
 use seija_pbr::lights::PBRLight;
 use seija_render::camera::camera::Perspective;
@@ -57,16 +57,34 @@ fn on_start(
     window: Res<AppWindow>,
     materials: Res<MaterialStorage>,
 ) {
+    load_material("res/pbr_material/pbrColor.mat.clj", &materials);
     add_pbr_camera(&window, &mut commands);
     {
-        let point_light = PBRLight::point(Vec3::new(1f32, 1f32, 1f32)  , 9000f32, 10f32);
-        let t = Transform::default();
+        let point_light = PBRLight::directional(Vec3::new(1f32, 1f32, 1f32)  , 9000f32);
+        let mut t = Transform::default();
+        let r = Quat::from_euler(glam::EulerRot::XYZ  , 0f32, 0f32, 45f32.to_radians());
+        t.local.rotation = r;
         let mut l = commands.spawn();
         l.insert(point_light);
         l.insert(t);
     }
+    {
+        let mesh = Sphere::new(8f32);
+        let hmesh = meshs.add(mesh.into());
+        let hmat = materials.create_material_with("pbrColor", |mat| {}).unwrap();
+        let mut t = Transform::default();
+      
+        t.local.position = Vec3::new(0f32, 4f32, 30f32);
+        t.local.rotation = Quat::from_rotation_y(90f32 * 0.0174533f32);
+        commands.spawn().insert(hmesh).insert(hmat).insert(t);
+    };
 }
 
-fn on_update(mut query: QuerySet<(Query<(Entity, &mut Light, &mut Transform)>,Query<(Entity,&Camera,&mut Transform)>)>,mut numbers:ResMut<PingPongNumbers>) {
-   
+fn on_update(mut query: QuerySet<(Query<(Entity, &mut PBRLight, &mut Transform)>,Query<(Entity,&Camera,&mut Transform)>)>,mut numbers:ResMut<PingPongNumbers>) {
+    let mut v:f32 = (std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_millis() % 3600) as f32;
+    let num = v * 0.1f32 * 0.0174533f32;
+    for (_,mut light,mut t) in query.q0_mut().iter_mut() {
+        let r = Quat::from_euler(glam::EulerRot::XYZ  , 0f32 , -num , 0f32);
+        t.local.rotation = r;
+    }
 }

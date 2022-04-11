@@ -14,3 +14,7 @@
   1.  Camera + PBRCameraInfo -> camera_collect + pbr_camera_collect
   2.  Camera
          Box<dyn CameraDesc>  -> camera_collect + pbr_camera_collect | camera_collect + IDesc_writer
+
+## 问题  
+shader多变的参数化问题例如
+ 1.

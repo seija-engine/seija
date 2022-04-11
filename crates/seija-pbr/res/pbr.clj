@@ -13,7 +13,7 @@
         :name "LightBuffer"
         :index index
         :props [
-           {:name "ambileColor"     :type "float4"}
+           {:name "ambileColor"     :type "float3"}
            {:name "lightCount"      :type "int"}
            {:name "lights" :type [
               {:name "position"         :type "float3"}

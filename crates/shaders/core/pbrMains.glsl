@@ -19,12 +19,20 @@ VSOutput vs_main() {
   return vsOutput;
 }
 
+
+
 vec4 fs_main(VSOutput ino) {
     vec3 viewDir = normalize(ino.outCameraPos.xyz - ino.outPos.xyz);
     
     MaterialInputs inputs;
-
     initMaterial(inputs);
 
-    return evaluateMaterial(inputs);
+    inputs.normal = ino.normal;
+    inputs.baseColor = vec4(1.0);
+    inputs.metallic = 0.7;
+    inputs.glossiness = 0.7;
+    inputs.specularColor = vec3(1.0);
+    
+    vec4 evalColor = evaluateMaterial(inputs,ino.outPos.xyz,viewDir);
+    return evalColor;
 }

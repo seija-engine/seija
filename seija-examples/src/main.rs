@@ -21,7 +21,7 @@ use seija_core::{CoreModule, CoreStage, StartupStage};
 use seija_examples::{IExamples, pre_start};
 
 use seija_pbr::create_pbr_plugin;
-use seija_render::{RenderModule, RenderConfig, GraphSetting, RenderScriptPlugin, NodeCreatorSet,};
+use seija_render::{RenderModule, RenderConfig, GraphSetting};
 use seija_winit::WinitModule;
 use seija_transform::{TransformModule};
 

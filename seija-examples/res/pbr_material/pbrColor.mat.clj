@@ -10,9 +10,9 @@
         {:name "ambientOcclusion"  :type "float" }
     ]
     :pass {
-        :cull "Off"
+       
         :shader {
-            :name "core.pbrColor"
+            :name "core.pbr"
             :macros []
         }
     }

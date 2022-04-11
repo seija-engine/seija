@@ -42,8 +42,8 @@ impl UBOInfoSet {
         let mut ubo_names:Vec<(String,usize)> = vec![];
         for backend_name in backends.iter() {
             if let Some((name,index)) = self.backend2ubo.get(backend_name) {
-                if !ubos.contains(backend_name) {
-                    ubos.insert(backend_name.clone());
+                if !ubos.contains(name) {
+                    ubos.insert(name.clone());
                     ubo_names.push((name.to_string(),*index));
                 }
             }

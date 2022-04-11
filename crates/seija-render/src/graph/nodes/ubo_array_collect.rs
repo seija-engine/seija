@@ -51,6 +51,7 @@ impl<T,ET> UBOArrayCollect<T,ET> where T:IShaderBackend,ET:'static + Send + Sync
 
     pub fn update(&mut self,world:&mut World,ctx:&mut RenderContext,setter:fn(&T,usize,&ET,&mut UniformBuffer,&Transform)) -> Option<()> {
         //add
+        let mut frame_size = 0;
         let mut frame_eids:FixedBitSet = FixedBitSet::with_capacity(self.max_size);
         {
            let mut elems = world.query_filtered::<Entity,(With<ET>,With<Transform>)>();
@@ -59,6 +60,7 @@ impl<T,ET> UBOArrayCollect<T,ET> where T:IShaderBackend,ET:'static + Send + Sync
                    self.add_element(e.id());
                }
                frame_eids.insert(e.id() as usize);
+               frame_size += 1;
            }
        };
        let type_ubo = self.name_index.and_then(|index| ctx.ubo_ctx.buffers.get_buffer_mut(&index, None)).log_err("get buffer error")?;
@@ -70,9 +72,10 @@ impl<T,ET> UBOArrayCollect<T,ET> where T:IShaderBackend,ET:'static + Send + Sync
             setter(backend,index,elem,&mut type_ubo.buffer,t);
         }
 
-        if self.cache_len != frame_eids.len() {
-            backend.set_count(&mut type_ubo.buffer, frame_eids.len() as i32);
-            self.cache_len = frame_eids.len();
+        if self.cache_len != frame_size {
+            
+            backend.set_count(&mut type_ubo.buffer, frame_size as i32);
+            self.cache_len = frame_size;
         }
        Some(())
     }

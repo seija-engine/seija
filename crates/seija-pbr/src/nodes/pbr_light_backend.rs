@@ -7,7 +7,7 @@ impl IShaderBackend for PBRLightBackend {
     }
 
     fn set_count(&self,buffer:&mut UniformBuffer,count:i32) {
-        self.set_light_count(buffer, count)
+        self.set_light_count(buffer, count);
     }
 }
 
@@ -58,7 +58,7 @@ impl PBRLightBackend {
         })
     }
 
-    pub fn set_ambile_color(&self,buffer:&mut UniformBuffer,color:Vec4) {
+    pub fn set_ambile_color(&self,buffer:&mut UniformBuffer,color:Vec3) {
         buffer.write_bytes(self.ambile_idx, color.to_array());
     }
 

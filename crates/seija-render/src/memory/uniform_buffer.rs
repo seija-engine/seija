@@ -26,6 +26,10 @@ impl UniformBuffer {
         self.dirty
     }
 
+    pub fn bytes(&self) -> &Vec<u8> {
+        &self.bytes
+    }
+
     pub fn clear_dirty(&mut self) {
         self.dirty = false;
     }
