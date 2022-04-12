@@ -1,0 +1,9 @@
+[package]
+name = "seija-skeleton3d"
+version = "0.1.0"
+edition = "2021"
+
+
+[dependencies]
+glam = "0.20.3"
+seija-transform = {path = "../seija-transform"}

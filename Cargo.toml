@@ -8,6 +8,7 @@ members = [
     "crates/seija-transform",
     "crates/seija-gltf",
     "crates/seija-pbr",
+    "crates/seija-skeleton3d",
     #"crates/tools/material-compiler",
     "seija-examples"
 ]

@@ -2356,6 +2356,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "seija-skeleton3d"
+version = "0.1.0"
+dependencies = [
+ "glam",
+ "seija-transform",
+]
+
+[[package]]
 name = "seija-transform"
 version = "0.1.0"
 dependencies = [
