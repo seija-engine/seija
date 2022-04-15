@@ -1,4 +1,4 @@
-mod raw_animation;
-mod raw_skeleton;
-mod skeleton_builder;
-mod animation_builder;
+pub mod raw_animation;
+pub mod raw_skeleton;
+pub mod skeleton_builder;
+pub mod animation_builder;

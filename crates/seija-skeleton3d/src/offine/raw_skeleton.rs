@@ -1,10 +1,10 @@
-use seija_transform::Transform;
+use seija_transform::{ TransformMatrix};
 
 #[derive(Default,PartialEq)]
 pub struct RawJoint {
     pub name:Option<String>,
     pub children:Vec<RawJoint>,
-    pub transform:Transform
+    pub transform:TransformMatrix
 }
 
 pub struct RawSkeleton {

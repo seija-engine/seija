@@ -7,3 +7,4 @@ edition = "2021"
 [dependencies]
 glam = "0.20.3"
 seija-transform = {path = "../seija-transform"}
+lazy_static = "1.4.0"

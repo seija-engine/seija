@@ -1,8 +1,8 @@
-use std::cmp::Ordering;
+use std::{cmp::Ordering, process::id};
 
-use glam::Vec3;
+use glam::{Vec3, Quat, Vec4};
 
-use crate::animation::Animation;
+use crate::animation::{Animation, Float3Key, QuaternionKey};
 
 use super::raw_animation::{RawAnimation, RawTranslationKey, RawRotationKey, RawScaleKey};
 
@@ -24,8 +24,8 @@ impl AnimationBuilder {
             scales += track.scales.len() + 2;
         }
         let mut sorting_translations:Vec<SortingTranslationKey> = Vec::with_capacity(translations);
-        let mut sorting_rotations:Vec<SortingRotationKey> = Vec::with_capacity(translations);
-        let mut sorting_scales:Vec<SortingScaleKey> = Vec::with_capacity(translations);
+        let mut sorting_rotations:Vec<SortingRotationKey> = Vec::with_capacity(rotations);
+        let mut sorting_scales:Vec<SortingScaleKey> = Vec::with_capacity(scales);
         
         for (index,track) in raw_animation.tracks.iter().enumerate() {
             Self::copy_to_sort(&track.translations, index, raw_animation.duration, &mut sorting_translations);
@@ -34,7 +34,10 @@ impl AnimationBuilder {
         }
 
         let inv_duration:f32 = 1f32 / raw_animation.duration;
-        
+        Self::copy_to_animation_v3(&mut sorting_translations,&mut animation.translations_,inv_duration);
+        Self::copy_to_animation_v3(&mut sorting_scales,&mut animation.scales_,inv_duration);
+        Self::copy_to_animation_quat(&mut sorting_rotations,&mut animation.rotations_,inv_duration);
+
         animation
     }
 
@@ -74,15 +77,64 @@ impl AnimationBuilder {
         }
     }
 
-    fn copy_to_animation_v3<ST>(src:&mut Vec<ST>,dst:&mut Vec<Vec3>,inv_duration:f32) where ST:ISortKey {
-        src.sort_by(|a,b| {
-            let time_diff = a.get_prev_key_time() - b.get_prev_key_time();
-            if time_diff == 0f32 {
-                return a.track().cmp(&b.track());
-            } else {
-                a.get_prev_key_time().partial_cmp(&b.get_prev_key_time()).unwrap_or( Ordering::Equal)
+    fn copy_to_animation_v3<ST>(src:&mut Vec<ST>,dst:&mut Vec<Float3Key>,inv_duration:f32) where ST:ISortKey {
+        src.sort_by(Self::sort_fn);
+        for item in src.iter() {
+            let mut key = Float3Key::default();
+            key.ratio = ST::key_time(item.key()) * inv_duration;
+            key.track = item.track() as usize;
+            if let Ok(v3) = item.value() {
+                key.value = v3.clone();
             }
-        });
+            dst.push(key);
+        }
+    }
+
+    fn sort_fn<ST>(a:&ST,b:&ST) -> Ordering where ST:ISortKey {
+        let time_diff = a.get_prev_key_time() - b.get_prev_key_time();
+        if time_diff == 0f32 {
+            return a.track().cmp(&b.track());
+        } else {
+            a.get_prev_key_time().partial_cmp(&b.get_prev_key_time()).unwrap_or( Ordering::Equal)
+        }
+    }
+
+    fn copy_to_animation_quat(src:&mut Vec<SortingRotationKey>,dst:&mut Vec<QuaternionKey>,inv_duration:f32) {
+        let mut ident:Quat = Quat::IDENTITY;
+        let mut track:u16 = u16::MAX;
+        for idx in 0..src.len() {
+            let mut normalized = Self::safe_normal_quat(&src[idx].key.value,&ident);
+            if track != src[idx].track {
+                if normalized.w < 0f32 {
+                    normalized = -normalized;
+                }
+            } else {
+                let prev_k = &src[idx - 1];
+                let prev = Vec4::new(prev_k.key.value.x, prev_k.key.value.y, prev_k.key.value.z, prev_k.key.value.w);
+                let now_k = &src[idx];
+                let now = Vec4::new(now_k.key.value.x, now_k.key.value.y, now_k.key.value.z, now_k.key.value.w);
+                if prev.dot(now) < 0f32 {
+                    normalized = -normalized;
+                }
+            }
+            src[idx].key.value = normalized;
+            track = src[idx].track;
+        }
+        src.sort_by(Self::sort_fn);
+        for item in src.iter() {
+            let mut dst_key = QuaternionKey::default();
+            dst_key.ratio = item.key.time * inv_duration;
+            dst_key.track = item.track as usize;
+            dst_key.value = item.key.value;
+            dst.push(dst_key);
+        }
+    }
+
+    fn safe_normal_quat(q:&Quat,safer:&Quat) -> Quat {
+        let sq_len:f32 = q.x * q.x + q.y * q.y + q.z * q.z + q.w * q.w;
+        if sq_len == 0f32 {return safer.clone() }
+        let inv_len:f32 = 1f32 / sq_len.sqrt();
+        Quat::from_array([q.x * inv_len,q.y * inv_len,q.z * inv_len,q.w * inv_len])
     }
 
     fn push_back_identity_key<ST>(track:usize,duration:f32,dst_list:&mut Vec<ST>) where ST:ISortKey {
@@ -106,7 +158,9 @@ trait ISortKey {
     fn key(&self) -> &Self::AssocType;
     fn key_time(assoc:&Self::AssocType) -> f32;
     fn set_key_time(&mut self,t:f32);
+    fn value(&self) -> Result<&Vec3,&Quat>;
     fn get_prev_key_time(&self) -> f32;
+
 }
 
 struct SortingTranslationKey {
@@ -122,6 +176,7 @@ impl ISortKey for SortingTranslationKey {
     fn key(&self) -> &Self::AssocType { &self.key }
     fn set_key_time(&mut self,t:f32) {self.key.time = t; }
     fn get_prev_key_time(&self) -> f32 {self.prev_key_time }
+    fn value(&self) -> Result<&Vec3,&Quat> { Ok(&self.key.value)  }
     fn create(track:u16,prev_key_time:f32,key:Self::AssocType) -> Self {
         Self {track,prev_key_time,key }
     }
@@ -140,6 +195,7 @@ impl ISortKey for SortingRotationKey {
     fn track(&self) -> u16 { self.track }
     fn key_time(assoc:&Self::AssocType) -> f32 { assoc.time }
     fn set_key_time(&mut self,t:f32) {self.key.time = t; }
+    fn value(&self) -> Result<&Vec3,&Quat> { Err(&self.key.value)  }
     fn key(&self) -> &Self::AssocType { &self.key }
     fn get_prev_key_time(&self) -> f32 {self.prev_key_time }
     fn create(track:u16,prev_key_time:f32,key:Self::AssocType) -> Self {
@@ -158,6 +214,7 @@ impl ISortKey for SortingScaleKey {
     fn track(&self) -> u16 { self.track }
     fn key_time(assoc:&Self::AssocType) -> f32 { assoc.time }
     fn set_key_time(&mut self,t:f32) {self.key.time = t; }
+    fn value(&self) -> Result<&Vec3,&Quat> { Ok(&self.key.value)  }
     fn key(&self) -> &Self::AssocType { &self.key }
     fn get_prev_key_time(&self) -> f32 {self.prev_key_time }
     fn create(track:u16,prev_key_time:f32,key:Self::AssocType) -> Self {

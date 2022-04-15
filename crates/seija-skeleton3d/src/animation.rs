@@ -1,11 +1,25 @@
 use glam::{Vec3, Quat};
 
 #[derive(Default)]
+pub struct Float3Key {
+   pub ratio:f32,
+   pub track:usize,
+   pub value:Vec3
+}
+
+#[derive(Default)]
+pub struct QuaternionKey {
+  pub ratio:f32,
+  pub track:usize,
+  pub value:Quat
+}
+
+#[derive(Default)]
 pub struct Animation {
    pub(crate) name:String,
    pub(crate) duration:f32,
    pub(crate) num_tracks:usize,
-   translations_:Vec<Vec3>,
-   rotations_:Vec<Quat>,
-   scales_:Vec<Vec3>
+   pub(crate) translations_:Vec<Float3Key>,
+   pub(crate) rotations_:Vec<QuaternionKey>,
+   pub(crate) scales_:Vec<Float3Key>
 }
