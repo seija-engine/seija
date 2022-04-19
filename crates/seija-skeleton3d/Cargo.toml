@@ -8,3 +8,4 @@ edition = "2021"
 glam = "0.20.3"
 seija-transform = {path = "../seija-transform"}
 lazy_static = "1.4.0"
+gltf = "0.16.0"

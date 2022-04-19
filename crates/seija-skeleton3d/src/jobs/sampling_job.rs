@@ -1,4 +1,4 @@
-use crate::{Animation, Float3Key};
+use crate::{Animation, Float3Key, offine::raw_animation::RawScaleKey};
 use glam::{Quat, Vec3};
 use seija_transform::TransformMatrix;
 
@@ -25,7 +25,7 @@ struct TrackKeyIndex {
 impl SamplingJob {
     fn create(anim: &Animation) -> Self {
         let mut job = SamplingJob {
-            last_ratio: 0f32,
+            last_ratio: -1f32,
             cache_tracks: vec![],
             track_cur_indexs: vec![],
         };
@@ -51,12 +51,15 @@ impl SamplingJob {
         self.track_cur_indexs = vec![TrackKeyIndex::default(); anim.num_tracks];
     }
 
-    pub fn run(&mut self, animation: &Animation, output: &mut Vec<TransformMatrix>, ratio: f32) {
-        if animation.num_tracks == 0 {
-            return;
+    pub fn run(&mut self, animation: &Animation, output: &mut Vec<TransformMatrix>, ratio: f32) -> bool {
+        if animation.num_tracks == 0 || animation.num_tracks != output.len() {
+            return false;
         }
+       
         let anim_ratio = ratio.clamp(0f32, 1f32);
-        self.search_cur_keys(animation, anim_ratio);
+        if self.last_ratio < 0f32 || anim_ratio < self.last_ratio {
+            self.search_cur_keys(animation, anim_ratio);
+        }
        
         for (track_index,key_index) in self.track_cur_indexs.iter().enumerate() {
             let cur_cache_track = &self.cache_tracks[track_index];
@@ -66,17 +69,31 @@ impl SamplingJob {
                 let next_key_index = cur_cache_track.translations[cur_t_index + 1];
                 let cur_key = &animation.translations_[cur_key_index];
                 let next_key = &animation.translations_[next_key_index];
-                
-                let mut interp_t_ratio = (ratio - cur_key.ratio) * (1f32 / (next_key.ratio - cur_key.ratio));
+                let interp_t_ratio = (ratio - cur_key.ratio) * (1f32 / (next_key.ratio - cur_key.ratio));
                 let lerp_postion = cur_key.value.lerp(next_key.value, interp_t_ratio);
-                println!("{} {} {} = {}",&cur_key.value,&next_key.value,interp_t_ratio,&lerp_postion);
-
+                output[cur_key.track].position = lerp_postion;
             }
-        }
 
-       
-      
+            let cur_s_index = key_index.scale_index;
+            if cur_cache_track.scales.len() >= cur_s_index + 1 {
+                let cur_key = &animation.scales_[cur_cache_track.scales[cur_s_index]];
+                let next_key = &animation.scales_[cur_cache_track.scales[cur_s_index + 1]];
+                let interp_s_ratio = (ratio - cur_key.ratio) * (1f32 / (next_key.ratio - cur_key.ratio));
+                let lerp_scale = cur_key.value.lerp(next_key.value, interp_s_ratio);
+                output[cur_key.track].scale = lerp_scale;
+            }
+
+            let cur_r_index = key_index.rotation_index;
+            if cur_cache_track.rotations.len() >= cur_r_index + 1 {
+                let cur_key = &animation.rotations_[cur_cache_track.rotations[cur_r_index]];
+                let next_key = &animation.rotations_[cur_cache_track.rotations[cur_r_index + 1]];
+                let interp_r_ratio = (ratio - cur_key.ratio) * (1f32 / (next_key.ratio - cur_key.ratio));
+                let lerp_rotation = cur_key.value.lerp(next_key.value, interp_r_ratio);
+                output[cur_key.track].rotation = lerp_rotation;
+            }
+        }       
         self.last_ratio = ratio;
+        true
     }
 
     fn search_cur_keys(&mut self, anim: &Animation, ratio: f32) {
@@ -122,39 +139,57 @@ fn aaa() {
     raw_anim.duration = 1f32;
 
     let mut new_track = RawJointTrack::default();
-    new_track.rotations.push(RawRotationKey {
-        time: 0.3f32,
-        value: Quat::from_axis_angle(Vec3::X, 30f32.to_radians()),
+    new_track.translations.push(RawTranslationKey {
+        time: 0.0f32,
+        value: Vec3::new(10f32, 0f32, 0f32),
     });
     new_track.translations.push(RawTranslationKey {
         time: 0.5f32,
-        value: Vec3::new(10f32, 0f32, 0f32),
+        value: Vec3::new(20f32, 0f32, 0f32),
     });
     new_track.translations.push(RawTranslationKey {
-        time: 0.8f32,
-        value: Vec3::new(20f32, 0f32, 0f32),
+        time: 1f32,
+        value: Vec3::new(30f32, 0f32, 0f32),
+    });
+
+    new_track.scales.push(RawScaleKey {
+        time: 0f32,
+        value: Vec3::new(0f32, 0f32, 0f32),
+    });
+    new_track.scales.push(RawScaleKey {
+        time: 1f32,
+        value: Vec3::new(10f32, 0f32, 0f32),
+    });
+
+    new_track.rotations.push(RawRotationKey {
+        time: 0f32,
+        value: Quat::from_rotation_x(0f32),
+    });
+    new_track.rotations.push(RawRotationKey {
+        time: 1f32,
+        value: Quat::from_rotation_x(90f32.to_radians()),
     });
     raw_anim.tracks.push(new_track);
 
-    new_track = RawJointTrack::default();
-    new_track.rotations.push(RawRotationKey {
-        time: 0.25f32,
-        value: Quat::from_axis_angle(Vec3::X, 30f32.to_radians()),
-    });
-    new_track.translations.push(RawTranslationKey {
-        time: 0.6f32,
-        value: Vec3::new(10f32, 0f32, 0f32),
-    });
-    new_track.translations.push(RawTranslationKey {
-        time: 0.9f32,
-        value: Vec3::new(20f32, 0f32, 0f32),
-    });
-    raw_anim.tracks.push(new_track);
+    
 
     let anim = AnimationBuilder::build(&raw_anim);
     let mut outs: Vec<TransformMatrix> = vec![];
-
+    outs.push(TransformMatrix::default());
+    println!("{:?}",outs);
+    println!("===================");
     let mut job = SamplingJob::create(&anim);
-    job.run(&anim, &mut outs, 0.1f32);
-    job.run(&anim, &mut outs, 0.2f32);
+    job.run(&anim, &mut outs, 0f32);
+    println!("{:?}",outs);
+    job.run(&anim, &mut outs, 0.25f32);
+    println!("{:?}",outs);
+    job.run(&anim, &mut outs, 0.5f32);
+    println!("{:?}",outs);
+    job.run(&anim, &mut outs, 0.75f32);
+    println!("{:?}",outs);
+    job.run(&anim, &mut outs, 1f32);
+    println!("{:?}",outs);
+    println!("===================");
+    job.run(&anim, &mut outs, 0.75f32);
+    println!("{:?}",outs);
 }

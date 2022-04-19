@@ -2360,6 +2360,7 @@ name = "seija-skeleton3d"
 version = "0.1.0"
 dependencies = [
  "glam",
+ "gltf",
  "lazy_static",
  "seija-transform",
 ]
