@@ -233,7 +233,10 @@ impl MillipedeAnimation {
                 let tkey = RawTranslationKey {time:self.duration,value:Self::lerp(&first.value, &last.value, lerp_time) };
                 track.translations.push(tkey);
             }
+            raw_animation.tracks.push(track);
         }
+
+        
         raw_animation
     }
 

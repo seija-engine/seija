@@ -47,7 +47,8 @@ impl AnimationBuilder {
             Self::push_back_identity_key(track, duration, dst_list);
         } else if src_list.len() == 1 {
             let raw_key = src_list.first().unwrap();
-            let first = ST::create(track as u16, -1f32, raw_key.clone());
+            let mut first = ST::create(track as u16, -1f32, raw_key.clone());
+            first.set_key_time(0f32);
             dst_list.push(first);
             let mut last = ST::create(track as u16, 0f32, raw_key.clone());
             last.set_key_time(duration);
@@ -57,13 +58,15 @@ impl AnimationBuilder {
             let mut prev_time = -1f32;
             if let Some(fst) = src_list.first() {
                 if ST::key_time(fst) != 0f32 {
-                    let first = ST::create(track as u16, prev_time, fst.clone());
+                    let mut first = ST::create(track as u16, prev_time, fst.clone());
+                    first.set_key_time(0f32);
                     dst_list.push(first);
                     prev_time = 0f32;
                 }
             }
             for raw_key in src_list.iter() {
-                let key = ST::create(track as u16, prev_time, raw_key.clone());
+                let mut key = ST::create(track as u16, prev_time, raw_key.clone());
+                key.set_key_time(ST::key_time(raw_key));
                 dst_list.push(key);
                 prev_time = ST::key_time(raw_key);
             }
@@ -100,7 +103,7 @@ impl AnimationBuilder {
     }
 
     fn copy_to_animation_quat(src:&mut Vec<SortingRotationKey>,dst:&mut Vec<QuaternionKey>,inv_duration:f32) {
-        let mut ident:Quat = Quat::IDENTITY;
+        let ident:Quat = Quat::IDENTITY;
         let mut track:u16 = u16::MAX;
         for idx in 0..src.len() {
             let mut normalized = Self::safe_normal_quat(&src[idx].key.value,&ident);

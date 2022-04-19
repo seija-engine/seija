@@ -1,13 +1,13 @@
 use glam::{Vec3, Quat};
 
-#[derive(Default)]
+#[derive(Default,Debug)]
 pub struct Float3Key {
    pub ratio:f32,
    pub track:usize,
    pub value:Vec3
 }
 
-#[derive(Default)]
+#[derive(Default,Debug)]
 pub struct QuaternionKey {
   pub ratio:f32,
   pub track:usize,
