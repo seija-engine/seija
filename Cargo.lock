@@ -2307,6 +2307,7 @@ dependencies = [
  "gltf",
  "seija-asset",
  "seija-render",
+ "seija-skeleton3d",
  "seija-transform",
 ]
 
