@@ -1,11 +1,12 @@
 use std::{path::Path, sync::Arc};
-
+use crate::anim_loader::load_animation;
+use crate::{ImportData};
 use crate::{GltfError, asset::{GltfAsset, GltfCamera, GltfMaterial, GltfMesh, GltfNode, GltfPrimitive, GltfScene, NodeIndex}};
 use seija_asset::{Assets, Handle};
 use seija_render::{camera::camera::{Orthographic, Perspective, Projection}, resource::{Indices, Mesh,Texture, MeshAttributeType, VertexAttributeValues}, wgpu, wgpu::{PrimitiveTopology}};
 use seija_transform::{Transform, TransformMatrix};
 
-type ImportData = (gltf::Document, Vec<gltf::buffer::Data>, Vec<gltf::image::Data>);
+
 
 pub fn load_gltf<P>(path:P,mesh_assets:&mut Assets<Mesh>,texture_assets:&mut Assets<Texture>) -> Result<GltfAsset,GltfError> where P:AsRef<Path> {
     let path:&Path = path.as_ref();
@@ -15,7 +16,7 @@ pub fn load_gltf<P>(path:P,mesh_assets:&mut Assets<Mesh>,texture_assets:&mut Ass
     let meshs = load_meshs(&import_data,mesh_assets,&materials)?;
     let mut nodes = load_nodes(&import_data)?;
     let scenes = load_scenes(&import_data,&mut nodes)?;
-
+    let a = load_animation(&import_data);
     Ok(GltfAsset {
         scenes,
         meshs,

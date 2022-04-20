@@ -2,6 +2,7 @@
 pub mod asset;
 pub mod loader;
 mod errors;
+mod anim_loader;
 use asset::{GltfAsset, GltfNode,GltfMaterial};
 use bevy_ecs::prelude::{Commands, Entity};
 pub use errors::GltfError;
@@ -12,6 +13,8 @@ pub use loader::{load_gltf};
 use seija_asset::Handle;
 use seija_render::material::{Material};
 use seija_transform::{BuildChildren, Transform};
+
+type ImportData = (gltf::Document, Vec<gltf::buffer::Data>, Vec<gltf::image::Data>);
 
 pub fn create_gltf<T>(pos:Vec3,asset:&GltfAsset,commands:&mut Commands,mat_fn:&T) -> Entity  where T: Fn(&GltfMaterial) -> Option<Handle<Material>> {
     let mut scene_entitys:Vec<Entity> = vec![];
