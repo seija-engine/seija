@@ -6,6 +6,7 @@ edition = "2018"
 
 [dependencies]
 gltf = "0.16.0"
+log = "0.4.16"
 seija-render = {path = "../seija-render"}
 seija-asset = {path = "../seija-asset"}
 seija-transform = {path = "../seija-transform"}

@@ -1,12 +1,13 @@
 use seija_transform::{ TransformMatrix};
 
-#[derive(Default,PartialEq)]
+#[derive(Default,PartialEq,Debug)]
 pub struct RawJoint {
     pub name:Option<String>,
     pub children:Vec<RawJoint>,
     pub transform:TransformMatrix
 }
 
+#[derive(Default,Debug)]
 pub struct RawSkeleton {
    pub roots:Vec<RawJoint>
 }

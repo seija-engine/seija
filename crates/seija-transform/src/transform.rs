@@ -16,6 +16,13 @@ impl TransformMatrix {
     }
 }
 
+impl Into<TransformMatrix> for Mat4 {
+    fn into(self) -> TransformMatrix {
+        let (scale, rotation, translation) = self.to_scale_rotation_translation();
+        TransformMatrix {scale,rotation,position:translation }
+    }
+}
+
 impl TransformMatrix {
     
     #[inline]

@@ -2305,6 +2305,7 @@ dependencies = [
  "bevy_ecs",
  "glam",
  "gltf",
+ "log",
  "seija-asset",
  "seija-render",
  "seija-skeleton3d",
