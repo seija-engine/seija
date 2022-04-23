@@ -1,5 +1,5 @@
 use std::{path::Path, sync::Arc};
-use crate::anim_loader::load_skeleton;
+use crate::anim_loader::{load_skeleton, load_animations};
 use crate::{ImportData};
 use crate::{GltfError, asset::{GltfAsset, GltfCamera, GltfMaterial, GltfMesh, GltfNode, GltfPrimitive, GltfScene, NodeIndex}};
 use seija_asset::{Assets, Handle};
@@ -16,13 +16,19 @@ pub fn load_gltf<P>(path:P,mesh_assets:&mut Assets<Mesh>,texture_assets:&mut Ass
     let meshs = load_meshs(&import_data,mesh_assets,&materials)?;
     let mut nodes = load_nodes(&import_data)?;
     let scenes = load_scenes(&import_data,&mut nodes)?;
-    let a = load_skeleton(&import_data);
+    let skeleton = load_skeleton(&import_data)?;
+    let anims = if let Some(s) = skeleton.as_ref() {
+        Some(load_animations(&import_data, s)?)
+    } else { None };
+    
     Ok(GltfAsset {
         scenes,
         meshs,
         textures,
         materials,
-        nodes
+        nodes,
+        skeleton,
+        anims
     })
 }
 

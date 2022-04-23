@@ -1,16 +1,30 @@
-use glam::{Vec3, Quat};
+use glam::{Vec3, Quat, Vec4};
 
-#[derive(Default,Clone)]
+#[derive(Default,Clone,Debug)]
+#[repr(C)]
 pub struct RawTranslationKey {
     pub time:f32,
     pub value:Vec3
 }
 
+impl RawTranslationKey {
+    pub fn new(time:f32,value:Vec3) -> RawTranslationKey {
+        RawTranslationKey { time, value }
+    }
+}
 
-#[derive(Clone)]
+
+#[derive(Clone,Debug)]
+#[repr(C)]
 pub struct RawRotationKey {
     pub time:f32,
     pub value:Quat
+}
+
+impl RawRotationKey {
+    pub fn new(time:f32,value:[f32;4]) -> RawRotationKey {
+        RawRotationKey { time, value:Quat::from_array(value) }
+    }
 }
 
 impl Default for RawRotationKey {
@@ -19,10 +33,17 @@ impl Default for RawRotationKey {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone,Debug)]
+#[repr(C)]
 pub struct RawScaleKey {
     pub time:f32,
     pub value:Vec3
+}
+
+impl RawScaleKey {
+    pub fn new(time:f32,value:Vec3) -> RawScaleKey {
+        RawScaleKey { time, value }
+    }
 }
 
 impl Default for RawScaleKey {

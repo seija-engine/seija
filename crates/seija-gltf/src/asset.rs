@@ -1,4 +1,5 @@
-use std::{rc::Rc, sync::Arc};
+use std::{sync::Arc};
+use seija_skeleton3d::{Skeleton, AnimationSet};
 use seija_transform::{Transform};
 use seija_asset::Handle;
 use seija_render::{camera::camera::Projection, resource::{Mesh, Texture}};
@@ -13,6 +14,8 @@ pub struct GltfAsset {
     pub textures:Vec<Handle<Texture>>,
     pub materials:Vec<Arc<GltfMaterial>>,
     pub nodes:Vec<GltfNode>,
+    pub skeleton:Option<Skeleton>,
+    pub anims:Option<AnimationSet>
 }
 
 impl GltfAsset {

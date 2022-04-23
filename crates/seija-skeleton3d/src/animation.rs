@@ -14,7 +14,7 @@ pub struct QuaternionKey {
   pub value:Quat
 }
 
-#[derive(Default)]
+#[derive(Default,Debug)]
 pub struct Animation {
    pub(crate) name:String,
    pub(crate) duration:f32,
@@ -22,4 +22,10 @@ pub struct Animation {
    pub(crate) translations_:Vec<Float3Key>,
    pub(crate) rotations_:Vec<QuaternionKey>,
    pub(crate) scales_:Vec<Float3Key>
+}
+
+impl Animation {
+   pub fn name(&self) -> &str {
+      self.name.as_str()
+   }
 }

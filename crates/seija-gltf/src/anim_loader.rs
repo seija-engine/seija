@@ -1,13 +1,13 @@
-use std::{collections::{ HashMap}};
+use std::{collections::HashMap, fmt::Debug};
 
-use gltf::{Skin, Node, Document, animation::{Channel, Sampler, Property, Interpolation}, Accessor};
-use seija_skeleton3d::{offine::{raw_skeleton::{RawSkeleton, RawJoint}, skeleton_builder::SkeletonBuilder, raw_animation::{RawAnimation, RawJointTrack}}, Skeleton};
-use seija_transform::{Transform, TransformMatrix};
+use glam::Vec3;
+use gltf::{Skin, Node, Document, animation::{Channel, Property, Interpolation},};
+use seija_skeleton3d::{offine::{raw_skeleton::{RawSkeleton, RawJoint}, skeleton_builder::SkeletonBuilder, raw_animation::{RawAnimation, RawJointTrack, RawTranslationKey, RawScaleKey, RawRotationKey}, animation_builder::AnimationBuilder}, Skeleton, AnimationSet, Animation};
+use seija_transform::TransformMatrix;
 
 use crate::{ImportData, GltfError};
 
-pub fn load_skeleton(gltf:&ImportData) -> Result<Option<RawSkeleton>,GltfError> {
-    
+pub fn load_skeleton(gltf:&ImportData) -> Result<Option<Skeleton>,GltfError> {
     let cur_scene = if let Some(scene) = gltf.0.default_scene() {
         scene
     } else { 
@@ -23,33 +23,38 @@ pub fn load_skeleton(gltf:&ImportData) -> Result<Option<RawSkeleton>,GltfError> 
     roots.sort_by(|a,b|a.index().cmp(&b.index()));
     roots.dedup_by(|a,b|a.index() == b.index());
 
-    let mut skeleton:RawSkeleton = RawSkeleton::default();
+    let mut raw_skeleton:RawSkeleton = RawSkeleton::default();
     for root_node in roots {
         let joint =import_node_to_joint(&root_node);
-        skeleton.roots.push(joint);
+        raw_skeleton.roots.push(joint);
     }
+
+    let skeleton = SkeletonBuilder::build(&raw_skeleton);
     Ok(Some(skeleton))
 }
 
-pub fn load_animations(data:&ImportData,skeleton:&Skeleton) {
-    for anim in data.0.animations() {
-        import_animation(data,&anim, skeleton);
+pub fn load_animations(data:&ImportData,skeleton:&Skeleton) -> Result<AnimationSet,GltfError> {
+    let mut anim_set = AnimationSet::default();
+    for gltf_anim in data.0.animations() {
+       let animation = import_animation(data,&gltf_anim, skeleton)?;
+       anim_set.add(animation);
     }
+    Ok(anim_set)
 }
 
 
-fn import_animation(data:&ImportData,animation:&gltf::Animation,skeleton:&Skeleton) {
+fn import_animation(data:&ImportData,animation:&gltf::Animation,skeleton:&Skeleton) -> Result<Animation,GltfError> {
     let mut raw_animation = RawAnimation::default();
     raw_animation.name = animation.name().unwrap_or("none").to_string();
     raw_animation.duration = 0f32;
-    let mut channels_per_joint:HashMap<&str,(Node,Vec<Channel>)> = HashMap::default();
+    let mut channels_per_joint:HashMap<&str,Vec<Channel>> = HashMap::default();
     for channel in animation.channels() {
         let target = channel.target();
         if let Some(node_name) = target.node().name() {
             if let Some(lst) = channels_per_joint.get_mut(node_name) {
-                lst.1.push(channel);
+                lst.push(channel);
             } else {
-                channels_per_joint.insert(node_name, (target.node().clone(),vec![(channel)]));
+                channels_per_joint.insert(node_name, vec![(channel)]);
             }
         }
     }
@@ -57,55 +62,117 @@ fn import_animation(data:&ImportData,animation:&gltf::Animation,skeleton:&Skelet
     for index in 0..skeleton.joint_names.len() {
         let mut new_track = RawJointTrack::default();
         if let Some(name)  = skeleton.joint_names[index].as_ref() {
-            if let Some((node,channels)) = channels_per_joint.get(name.as_str()) {
+            if let Some(channels) = channels_per_joint.get(name.as_str()) {
                 for channel in channels {
-                    sample_animation_channel(data,&mut raw_animation.duration, channel,&mut new_track,30f32);
+                    sample_animation_channel(data,&mut raw_animation.duration, channel,&mut new_track,30f32)?;
                 }
             }
-            
         }
+
+       
+
+        let rest_pos = &skeleton.joint_rest_poses[index];
+        if new_track.translations.is_empty() {
+            new_track.translations.push(RawTranslationKey { time: 0f32, value: rest_pos.position });           
+        }
+        if new_track.scales.is_empty() {
+            new_track.scales.push(RawScaleKey { time: 0f32, value: rest_pos.scale });
+        }
+        if new_track.rotations.is_empty() {
+            new_track.rotations.push(RawRotationKey { time: 0f32, value: rest_pos.rotation });
+        }
+        raw_animation.tracks.push(new_track);
     }
+    let animation = AnimationBuilder::build(&raw_animation);
+    Ok(animation)
 }
 
-fn sample_animation_channel(data:&ImportData,duration:&mut f32,channel:&Channel,track:&mut RawJointTrack,rate:f32) {
+fn sample_animation_channel(data:&ImportData,duration:&mut f32,channel:&Channel,track:&mut RawJointTrack,rate:f32) -> Result<(),GltfError> {
     let sampler = channel.sampler();
-    
     let input = sampler.input();
-    
+    let output = sampler.output();
     let max_value = input.max();
-    let max_duration:f32 = max_value.as_ref().and_then(|v| v.as_array()).map(|v| &v[0]).and_then(|v| v.as_f64()).unwrap_or(0f64) as f32;
+    let max_duration:f32 = max_value.as_ref()
+                                    .and_then(|v| v.as_array())
+                                    .map(|v| &v[0])
+                                    .and_then(|v| v.as_f64()).unwrap_or(0f64) as f32;
     if max_duration > *duration {
         *duration = max_duration;
     }
-    if let Some(buffer_view) = input.view() {
-        let start = buffer_view.offset() as usize;
-        let end = (buffer_view.offset() + buffer_view.length()) as usize;
-        let buffer = &data.1[buffer_view.buffer().index()][start..end];
-        let timestamps:&[f32] =  unsafe { std::slice::from_raw_parts(buffer.as_ptr() as * const f32, buffer_view.length()) };
-        match channel.target().property() {
-            Property::Translation => {
-               sample_channel(data, sampler.interpolation(), &sampler.output(),&timestamps,rate,*duration);
-            },
-            Property::Scale => {},
-            Property::Rotation => {},
-            _ => {}
-        }   
+    let buffer_view = input.view().ok_or(GltfError::LoadAnimError)?;
+    let istride = buffer_view.stride().unwrap_or(0);
+    
+    let start = buffer_view.offset() + input.offset() as usize ;
+    let end = start + (istride * input.count());
+    let buffer = &data.1[buffer_view.buffer().index()][start..end];
+    let timestamps:&[f32] =  unsafe { std::slice::from_raw_parts(buffer.as_ptr() as * const f32, input.count()) };
+   
+    let out_buffer_view = output.view().ok_or(GltfError::LoadImageError)?;
+    let ostride = out_buffer_view.stride().unwrap_or(0);
+    let out_buffer_start:usize = out_buffer_view.offset() + output.offset()  as usize;
+    let out_buffer_end:usize = out_buffer_start + (ostride * output.count());
+    let out_buffer:&[u8] = &data.1[out_buffer_view.buffer().index()][out_buffer_start..out_buffer_end];
+
+    match channel.target().property() {
+        Property::Translation => {
+            sample_channel::<RawTranslationKey,Vec3>(sampler.interpolation(),
+                    out_buffer,output.count(),
+                          &timestamps,rate,*duration,
+                      &mut track.translations,RawTranslationKey::new);
+        },
+        Property::Scale => {
+            
+            sample_channel::<RawScaleKey,Vec3>(sampler.interpolation(),
+                    out_buffer,output.count(),
+                          &timestamps,rate,*duration,
+                      &mut track.scales,RawScaleKey::new);
+        },
+        Property::Rotation => {
+            sample_channel::<RawRotationKey,[f32;4]>(sampler.interpolation(),
+                    out_buffer,output.count(),
+                          &timestamps,rate,*duration,
+                      &mut track.rotations,RawRotationKey::new);
+            for key in track.rotations.iter_mut() {
+                key.value = key.value.normalize();
+            }
+        },
+         _ => {}
     }
+    Ok(())
 }
 
-fn sample_channel(data:&ImportData,interpolation:Interpolation,output:&Accessor,timestamps:&[f32],rate:f32,duration:f32) {
+
+fn sample_channel<T,E:Clone>(interpolation:Interpolation,output:&[u8],
+                          len:usize,timestamps:&[f32],
+                          _rate:f32,_duration:f32,keys:&mut Vec<T>,f:fn(t:f32,v:E) -> T) where T:Debug {
     match interpolation {
         Interpolation::Linear => {
-
+            sample_line_channel::<T,E>(output,len,timestamps,keys,f);
         },
         Interpolation::Step => {
-            
+            //sample_step_channel::<T,E>(data,output,len,timestamps,keys,f);
         },
         Interpolation::CubicSpline => {
-
+            //sample_cubicspline_channel::<T,E>(data,output,len,timestamps,keys,f);
         },
     }
 }
+
+fn sample_line_channel<T,E:Clone>(output:&[u8],len:usize,timestamps:&[f32],keys:&mut Vec<T>,f:fn(t:f32,e:E) -> T) {
+    if output.len() == 0 { keys.clear(); return; }
+    let key_values:&[E] =  unsafe { std::slice::from_raw_parts(output.as_ptr() as * const E, len) };
+    for index in 0..key_values.len() {
+        keys.push(f(timestamps[index],key_values[index].clone()));
+    }
+}
+/* 
+fn sample_step_channel<T,E:Clone>(data:&ImportData,output:&[u8],len:usize,timestamps:&[f32],keys:&mut Vec<T>,f:fn(t:f32,e:E) -> T) {
+    todo!()
+}
+
+fn sample_cubicspline_channel<T,E:Clone>(data:&ImportData,output:&[u8],len:usize,timestamps:&[f32],keys:&mut Vec<T>,f:fn(t:f32,e:E) -> T) {
+    todo!()
+}*/
 
 fn import_node_to_joint(node:&Node) -> RawJoint {
     let mut raw_joint= RawJoint::default();
@@ -194,15 +261,4 @@ fn find_skin_root_joint<'a>(skins:&Vec<Skin<'a>>,doc:&'a Document) -> Vec<Node<'
         }
     }
     roots
-}
-
-#[test]
-fn test_load() {
-
-    let import_data:ImportData = gltf::import("res/Fox.gltf").unwrap();
-    let raw_skeleton = load_skeleton(&import_data).unwrap().unwrap();
-    let out_string = format!("{:?}",&raw_skeleton);
-    let skeleton = SkeletonBuilder::build(&raw_skeleton);
-    load_animations(&import_data,&skeleton);
-   
 }
