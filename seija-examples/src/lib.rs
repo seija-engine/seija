@@ -4,6 +4,7 @@ use lite_clojure_eval::EvalRT;
 use seija_app::App;
 use seija_asset::{Assets, Handle};
 use seija_core::{CoreStage, window::AppWindow};
+use seija_pbr::PBRCameraInfo;
 use seija_render::{camera::{camera::Perspective,camera::Camera}, material::{MaterialStorage, read_material_def}, resource::{Mesh, Texture}};
 use seija_transform::{Transform, hierarchy::Parent};
 use bevy_ecs::prelude::*;
@@ -40,6 +41,20 @@ pub fn add_camera_3d(mut commands:&mut Commands,window:&AppWindow) -> Entity {
 
     root.id()
     
+}
+
+pub fn add_pbr_camera(window:&AppWindow,commands: &mut Commands) {
+    let pbr_camera = PBRCameraInfo::default();
+    let mut root = commands.spawn();
+    let mut t = Transform::default();
+    t.local.position = Vec3::new(0f32, 20f32, 70f32);
+    t.local.rotation = Quat::from_euler(glam::EulerRot::XYZ , -15f32 *  0.0174533f32, 0f32, 0f32); 
+    root.insert(t);
+    let mut per = Perspective::default();
+    per.aspect_ratio = window.width() as f32 / window.height() as f32;
+    let camera = Camera::from_3d(per);
+    root.insert(camera);
+    root.insert(pbr_camera);
 }
 
 pub fn load_material(path:&str,mats:&MaterialStorage) {

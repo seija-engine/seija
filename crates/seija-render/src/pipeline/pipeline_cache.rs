@@ -190,7 +190,6 @@ impl PipelineCache {
        
         let mut layouts = ctx.create_bind_group_layouts(pass_def)?;
         if mat_def.prop_def.infos.len() > 0 {
-            dbg!(layouts.len());
             layouts.push(&ctx.material_sys.layout);
         }
         if mat_def.tex_prop_def.indexs.len() > 0 {
@@ -269,7 +268,8 @@ fn get_shader_name_prefix(mesh:&Mesh,shader:&ShaderInfoDef,shaders:&RuntimeShade
     for (s,is_require) in shader_info.verts.iter() {
         if mesh_types.contains(s.as_str()) {
             macros.push(format!("VERTEX_{}",s.clone()) );
-        } else if *is_require {   
+        } else if *is_require {
+            log::error!("mesh attrs:{:?}",&mesh_types);
             return None;
         }
     }

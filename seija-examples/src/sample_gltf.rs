@@ -1,6 +1,6 @@
 use std::path::Path;
 
-use glam::{Vec3, Vec4};
+use glam::{Vec3, Vec4, Quat};
 use seija_asset::{Assets, Handle};
 use seija_core::{CoreStage, StartupStage, bytes::FromBytes, window::AppWindow};
 use seija_examples::{IExamples, add_render_mesh, load_material};
@@ -8,8 +8,8 @@ use bevy_ecs::{prelude::{Commands, Entity, Query, Res, ResMut}, system::{IntoSys
 use seija_gltf::{create_gltf, load_gltf};
 use seija_render::{camera::camera::{Camera, Perspective}, material::{Material, MaterialStorage}, resource::{CubeMapBuilder, Mesh, Texture}};
 use seija_skeleton3d::{Skeleton, AnimationSet};
-use seija_transform::{Transform, hierarchy::Parent};
-use crate::lib::{add_camera_3d};
+use seija_transform::{Transform, hierarchy::Parent, BuildChildren};
+use crate::lib::{add_camera_3d, add_pbr_camera};
 pub struct SampleGltf;
 
 impl IExamples for SampleGltf {
@@ -29,14 +29,33 @@ fn on_start(mut commands:Commands,
             mut animations:ResMut<Assets<AnimationSet>>,
             window:Res<AppWindow>,
             materials:Res<MaterialStorage>) {
-    
+    add_pbr_camera(&window, &mut commands);
+    load_material("res/pbr_material/pbrColor.mat.clj", &materials);
+    load_material("res/pbr_material/texture.mat.clj", &materials);
     let gltf_asset = load_gltf("res/gltf/Fox/glTF-Binary/Fox.glb",
                                    &mut meshs,
                                  &mut textures,
                                 &mut skeletons,
                             &mut animations).unwrap();
+    let fox_mesh_id = {
+        let first_mesh = gltf_asset.first_mesh().unwrap();
+        let mut fox = commands.spawn();
+        let fox_mesh = fox.insert(Transform::default());
+        fox_mesh.insert(first_mesh.primitives[0].mesh.clone());
+        let h_material = materials.create_material_with("pureTexture", |mat| {
+            mat.texture_props.set("mainTexture", gltf_asset.textures[0].clone());
+            mat.props.set_float4("color", Vec4::new(0.6f32, 0.6f32, 0.6f32, 1f32), 0);
+        }).unwrap();
+        fox_mesh.insert(h_material);
+        fox_mesh.id()
+    };
     
-
-   
+    
+    let mut root_t:Transform = Transform::default();
+    root_t.local.position = Vec3::new(0f32, -80f32, -200f32);
+    root_t.local.rotation = Quat::from_euler(glam::EulerRot::XYZ, 0f32, 45f32.to_radians(), 0f32);
+    let mut fox_root = commands.spawn();
+    fox_root.insert(root_t);
+    fox_root.add_children(&vec![fox_mesh_id]);
    
 }

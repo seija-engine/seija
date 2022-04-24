@@ -12,7 +12,6 @@ VSOutput color_vs_main() {
 
 vec4 color_fs_main(VSOutput ino) {
     vec4 outColor = ino.color;
-    //slot_fs_offset_color(outColor);
     return outColor;
 }
 

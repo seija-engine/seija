@@ -16,7 +16,9 @@
         "name": "texture",
         "vertex": {
           "POSITION": "require",
-          "UV0":"require"
+          "UV0":"require",
+          "JOINTS":"option",
+          "WEIGHTS":"option"
         },
         "backend": [ "Camera3D", "Transform"],
         "vs": "pures.texture_vs_main",
@@ -37,8 +39,8 @@
         "name": "pbr",
         "vertex": {
           "POSITION": "require",
-         
           "NORMAL":"require"
+
         },
         "backend": [ "Camera3D", "Transform","PBRLight","PBRCameraEx"],
         "vs": "pbrMains.vs_main",

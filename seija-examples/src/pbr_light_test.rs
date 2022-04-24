@@ -15,6 +15,8 @@ use seija_render::{
     resource::{shape::Cube, Mesh, Texture},
 };
 use seija_transform::Transform;
+
+use crate::lib::add_pbr_camera;
 pub struct PBRLightTest;
 
 pub struct PingPongNumbers {
@@ -36,19 +38,7 @@ impl IExamples for PBRLightTest {
     }
 }
 
-fn add_pbr_camera(window:&AppWindow,commands: &mut Commands) {
-    let pbr_camera = PBRCameraInfo::default();
-    let mut root = commands.spawn();
-    let mut t = Transform::default();
-    t.local.position = Vec3::new(0f32, 20f32, 70f32);
-    t.local.rotation = Quat::from_euler(glam::EulerRot::XYZ , -15f32 *  0.0174533f32, 0f32, 0f32); 
-    root.insert(t);
-    let mut per = Perspective::default();
-    per.aspect_ratio = window.width() as f32 / window.height() as f32;
-    let camera = Camera::from_3d(per);
-    root.insert(camera);
-    root.insert(pbr_camera);
-}
+
 
 fn on_start(
     mut commands: Commands,

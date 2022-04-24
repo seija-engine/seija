@@ -19,9 +19,10 @@ pub struct GltfAsset {
 }
 
 impl GltfAsset {
-    pub fn first_mesh(&self) -> &GltfMesh {
-        self.meshs.first().unwrap()
+    pub fn first_mesh(&self) -> Option<&GltfMesh> {
+        self.meshs.first()
     }
+
 }
 
 #[derive(Debug)]
