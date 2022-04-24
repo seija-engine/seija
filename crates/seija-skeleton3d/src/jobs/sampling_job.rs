@@ -4,6 +4,7 @@ use crate::{Animation, Float3Key, offine::raw_animation::RawScaleKey};
 use glam::{Quat, Vec3};
 use seija_transform::TransformMatrix;
 
+#[derive(Default)]
 pub struct SamplingJob {
     pub last_ratio: f32,
     cache_tracks: Vec<TrackKeys>,

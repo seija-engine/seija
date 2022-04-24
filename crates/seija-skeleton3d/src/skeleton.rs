@@ -1,6 +1,8 @@
 use seija_transform::{TransformMatrix};
+use seija_core::{TypeUuid,uuid::{Uuid}};
 
-#[derive(Debug,Default)]
+#[derive(Debug,Default,TypeUuid)]
+#[uuid = "527a5d92-f485-4feb-841b-a13839e0fc07"]
 pub struct Skeleton {
     pub joint_rest_poses:Vec<TransformMatrix>,
     pub joint_parents:Vec<Option<usize>>,

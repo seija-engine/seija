@@ -13,6 +13,7 @@ pub mod window;
 pub mod event;
 pub mod type_uuid;
 pub use type_uuid::{TypeUuid,TypeUuidDynamic};
+pub use uuid;
 
 
 #[derive(Debug, Hash, PartialEq, Eq, Clone,StageLabel )]

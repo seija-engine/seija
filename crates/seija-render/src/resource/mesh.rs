@@ -1,8 +1,8 @@
 use std::{collections::HashSet, hash::{Hash, Hasher}, ops::Range};
 use bevy_ecs::prelude::*;
 use fnv::FnvHasher;
-use seija_asset::{AssetEvent, Assets, Handle, HandleId, HandleUntyped};
-use seija_core::{bytes::AsBytes, event::{EventReader, Events, ManualEventReader}};
+use seija_asset::{AssetEvent, Assets, Handle, HandleId};
+use seija_core::{bytes::AsBytes, event::{Events, ManualEventReader}};
 use wgpu::{BufferUsage, IndexFormat, PrimitiveState, PrimitiveTopology, VertexAttribute, VertexBufferLayout, VertexFormat};
 use seija_core::TypeUuid;
 use uuid::Uuid;
@@ -20,7 +20,10 @@ bitflags! {
 
         const COLOR = 5;
 
-        const MAX = 5;
+        const JOINTS = 6;
+        const WEIGHTS = 7;
+
+        const MAX = 8;
     }
 }
 
@@ -34,6 +37,8 @@ impl MeshAttributeType {
            3 => {"NORMAL"},
            4 => {"TANGENT"},
            5 => {"COLOR"},
+           6 => {"JOINTS"},
+           7 => {"WEIGHTS"},
             _ => ""
         }
     }
@@ -50,6 +55,7 @@ pub enum VertexAttributeValues {
     Float(Vec<f32>),
     Int(Vec<i32>),
     UInt(Vec<u32>),
+    UInt16X4(Vec<[u16;4]>),
     Float2(Vec<[f32;2]>),
     Int2(Vec<[i32;2]>),
     UInt2(Vec<[u32;2]>),
@@ -79,6 +85,7 @@ impl VertexAttributeValues {
             VertexAttributeValues::Int4(values) => values.as_slice().as_bytes(),
             VertexAttributeValues::UInt4(values) => values.as_slice().as_bytes(),
             VertexAttributeValues::U84(values) => values.as_slice().as_bytes(),
+            VertexAttributeValues::UInt16X4(values) => values.as_slice().as_bytes()
         }
     }
 
@@ -97,6 +104,7 @@ impl VertexAttributeValues {
             VertexAttributeValues::Int4(ref values) => values.len(),
             VertexAttributeValues::UInt4(ref values) => values.len(),
             VertexAttributeValues::U84(ref values) => values.len(),
+            VertexAttributeValues::UInt16X4(ref values) => values.len()
         }
     }
 }
@@ -117,6 +125,7 @@ impl From<&VertexAttributeValues> for VertexFormat {
             VertexAttributeValues::Int4(_) => VertexFormat::Sint32x4,
             VertexAttributeValues::UInt4(_) => VertexFormat::Uint32x4,
             VertexAttributeValues::U84(_) => VertexFormat::Unorm8x4,
+            VertexAttributeValues::UInt16X4(_) => VertexFormat::Uint16x4
         }
     }
 }

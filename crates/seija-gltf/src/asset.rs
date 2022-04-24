@@ -14,8 +14,8 @@ pub struct GltfAsset {
     pub textures:Vec<Handle<Texture>>,
     pub materials:Vec<Arc<GltfMaterial>>,
     pub nodes:Vec<GltfNode>,
-    pub skeleton:Option<Skeleton>,
-    pub anims:Option<AnimationSet>
+    pub skeleton:Option<Handle<Skeleton>>,
+    pub anims:Option<Handle<AnimationSet>>
 }
 
 impl GltfAsset {

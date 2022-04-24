@@ -23,6 +23,8 @@ impl SeijaShaderBackend {
         vertexs.insert("NORMAL".into(), (3,"vec3".into()));
         vertexs.insert("TANGENT".into(), (4,"vec3".into()));
         vertexs.insert("COLOR".into(), (5,"vec4".into()));
+        vertexs.insert("JOINTS".into(), (6,"uvec4".into()));
+        vertexs.insert("WEIGHTS".into(), (7,"vec4".into()));
         SeijaShaderBackend { vertexs,render_info:RenderInfo::new() }
     }
 }

@@ -22,10 +22,11 @@ use seija_examples::{IExamples, pre_start};
 
 use seija_pbr::create_pbr_plugin;
 use seija_render::{RenderModule, RenderConfig, GraphSetting};
+use seija_skeleton3d::Skeleton3dModule;
 use seija_winit::WinitModule;
 use seija_transform::{TransformModule};
 
-const TEST_NAME:&'static str = "pbr_light_test";
+const TEST_NAME:&'static str = "sample_gltf";
 
 fn main() {
      env_logger::Builder::new().filter_level(log::LevelFilter::Info).try_init().unwrap();
@@ -39,6 +40,7 @@ fn main() {
     app.add_module(win);
     app.add_module(TransformModule);
     app.add_module(AssetModule);
+    app.add_module(Skeleton3dModule);
     let mut render_config = RenderConfig {
         config_path:".render".into(),
         setting:Arc::new(GraphSetting {

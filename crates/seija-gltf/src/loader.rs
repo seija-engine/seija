@@ -4,11 +4,16 @@ use crate::{ImportData};
 use crate::{GltfError, asset::{GltfAsset, GltfCamera, GltfMaterial, GltfMesh, GltfNode, GltfPrimitive, GltfScene, NodeIndex}};
 use seija_asset::{Assets, Handle};
 use seija_render::{camera::camera::{Orthographic, Perspective, Projection}, resource::{Indices, Mesh,Texture, MeshAttributeType, VertexAttributeValues}, wgpu, wgpu::{PrimitiveTopology}};
+use seija_skeleton3d::{Skeleton, AnimationSet};
 use seija_transform::{Transform, TransformMatrix};
 
 
 
-pub fn load_gltf<P>(path:P,mesh_assets:&mut Assets<Mesh>,texture_assets:&mut Assets<Texture>) -> Result<GltfAsset,GltfError> where P:AsRef<Path> {
+pub fn load_gltf<P>(path:P,
+                    mesh_assets:&mut Assets<Mesh>,
+                    texture_assets:&mut Assets<Texture>,
+                    skeleton_assets:&mut Assets<Skeleton>,
+                    animation_set_assets:&mut Assets<AnimationSet>) -> Result<GltfAsset,GltfError> where P:AsRef<Path> {
     let path:&Path = path.as_ref();
     let import_data:ImportData = gltf::import(path).map_err(GltfError::LoadGltfError)?;
     let textures = load_textures(&import_data,path,texture_assets)?;
@@ -16,10 +21,17 @@ pub fn load_gltf<P>(path:P,mesh_assets:&mut Assets<Mesh>,texture_assets:&mut Ass
     let meshs = load_meshs(&import_data,mesh_assets,&materials)?;
     let mut nodes = load_nodes(&import_data)?;
     let scenes = load_scenes(&import_data,&mut nodes)?;
-    let skeleton = load_skeleton(&import_data)?;
-    let anims = if let Some(s) = skeleton.as_ref() {
-        Some(load_animations(&import_data, s)?)
-    } else { None };
+    
+    let mut h_skeleton:Option<Handle<Skeleton>> = None;
+    let mut h_animation:Option<Handle<AnimationSet>> = None;
+    if let Some(skeleton)  = load_skeleton(&import_data)? {
+
+        if let Ok(anim_set) = load_animations(&import_data, &skeleton) {
+            h_animation = Some(animation_set_assets.add(anim_set));
+        }
+        h_skeleton = Some(skeleton_assets.add(skeleton));
+    }
+    
     
     Ok(GltfAsset {
         scenes,
@@ -27,8 +39,8 @@ pub fn load_gltf<P>(path:P,mesh_assets:&mut Assets<Mesh>,texture_assets:&mut Ass
         textures,
         materials,
         nodes,
-        skeleton,
-        anims
+        skeleton:h_skeleton,
+        anims:h_animation
     })
 }
 
@@ -176,6 +188,14 @@ fn load_meshs(gltf:&ImportData,mesh_assets:&mut Assets<Mesh>,materials:&Vec<Arc<
             if let Some(colors) = reader.read_colors(0).map(|iter| VertexAttributeValues::Float4(iter.into_rgba_f32().collect())) {
                 mesh.set(MeshAttributeType::COLOR, colors);
             }
+            
+            if let Some(joint0) = reader.read_joints(0).map(|iter|VertexAttributeValues::UInt16X4(iter.into_u16().collect())) {
+                mesh.set(MeshAttributeType::JOINTS, joint0);
+            }
+
+            if let Some(weights) = reader.read_weights(0).map(|iter|VertexAttributeValues::Float4(iter.into_f32().collect())) {
+                mesh.set(MeshAttributeType::WEIGHTS, weights);
+            }
 
 
             if let Some(indices) = reader.read_indices() {
@@ -251,3 +271,4 @@ fn texture_address_mode(gltf_address_mode: &gltf::texture::WrappingMode) -> wgpu
         gltf::texture::WrappingMode::MirroredRepeat => wgpu::AddressMode::MirrorRepeat,
     }
 }
+
