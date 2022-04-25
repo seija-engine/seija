@@ -28,3 +28,17 @@
         :backends (concat ["Camera3D"] backends)
    })    
 )
+
+
+(defn add-anim-skin-ubo [index]
+    (add-ubo {
+        :type :ComponentBuffer
+        :name "SkinBuffer"
+        :index index
+        :apply :RenderObject
+        :props [
+            {:name "jointMats" :type "mat4[256]" }
+        ]
+        :backends ["SkinMat"]
+    })
+)

@@ -7,9 +7,9 @@ use seija_examples::{IExamples, add_render_mesh, load_material};
 use bevy_ecs::{prelude::{Commands, Entity, Query, Res, ResMut}, system::{IntoSystem,SystemParam}};
 use seija_gltf::{create_gltf, load_gltf};
 use seija_render::{camera::camera::{Camera, Perspective}, material::{Material, MaterialStorage}, resource::{CubeMapBuilder, Mesh, Texture}};
-use seija_skeleton3d::{Skeleton, AnimationSet, RuntimeSkeleton, AnimationControl};
+use seija_skeleton3d::{Skeleton, AnimationSet, RuntimeSkeleton, AnimationControl, Skin};
 use seija_transform::{Transform, hierarchy::Parent, BuildChildren};
-use crate::lib::{add_camera_3d, add_pbr_camera};
+use crate::lib::{add_pbr_camera};
 pub struct SampleGltf;
 
 impl IExamples for SampleGltf {
@@ -28,6 +28,7 @@ fn on_start(mut commands:Commands,
             mut skeletons:ResMut<Assets<Skeleton>>,
             mut animations:ResMut<Assets<AnimationSet>>,
             mut rtskeletons:ResMut<Assets<RuntimeSkeleton>>,
+            mut skins:ResMut<Assets<Skin>>,
             window:Res<AppWindow>,
             materials:Res<MaterialStorage>) {
     add_pbr_camera(&window, &mut commands);
@@ -37,7 +38,8 @@ fn on_start(mut commands:Commands,
                                    &mut meshs,
                                  &mut textures,
                                 &mut skeletons,
-                            &mut animations).unwrap();
+                            &mut animations,
+                                               &mut skins).unwrap();
     let h_skeleton = gltf_asset.skeleton.clone().unwrap();
     let count = skeletons.get(&h_skeleton.id).unwrap().num_joints();
     let mut animation_control = AnimationControl::new(count,
@@ -56,6 +58,7 @@ fn on_start(mut commands:Commands,
             mat.props.set_float4("color", Vec4::new(0.6f32, 0.6f32, 0.6f32, 1f32), 0);
         }).unwrap();
         fox_mesh.insert(h_material);
+        fox_mesh.insert(gltf_asset.skins.unwrap().clone());
         fox_mesh.id()
     };
     

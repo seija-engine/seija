@@ -73,7 +73,7 @@ impl AnimationControl {
         ltw.run(&rt_skeleton.values, &mut rt_skeleton.mat4s);
 
         self.ratio += dt / anim.duration;
-        println!("{:?}",rt_skeleton.mat4s);
+        //println!("{:?}",rt_skeleton.mat4s);
         if self.ratio > 1f32 {
             self.stop();
         }

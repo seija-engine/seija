@@ -1,10 +1,10 @@
 use std::{path::Path, sync::Arc};
-use crate::anim_loader::{load_skeleton, load_animations};
+use crate::anim_loader::{load_skeleton, load_animations, load_skin};
 use crate::{ImportData};
 use crate::{GltfError, asset::{GltfAsset, GltfCamera, GltfMaterial, GltfMesh, GltfNode, GltfPrimitive, GltfScene, NodeIndex}};
 use seija_asset::{Assets, Handle};
 use seija_render::{camera::camera::{Orthographic, Perspective, Projection}, resource::{Indices, Mesh,Texture, MeshAttributeType, VertexAttributeValues}, wgpu, wgpu::{PrimitiveTopology}};
-use seija_skeleton3d::{Skeleton, AnimationSet};
+use seija_skeleton3d::{Skeleton, AnimationSet, Skin};
 use seija_transform::{Transform, TransformMatrix};
 
 
@@ -13,7 +13,8 @@ pub fn load_gltf<P>(path:P,
                     mesh_assets:&mut Assets<Mesh>,
                     texture_assets:&mut Assets<Texture>,
                     skeleton_assets:&mut Assets<Skeleton>,
-                    animation_set_assets:&mut Assets<AnimationSet>) -> Result<GltfAsset,GltfError> where P:AsRef<Path> {
+                    animation_set_assets:&mut Assets<AnimationSet>,
+                    skins:&mut Assets<Skin>) -> Result<GltfAsset,GltfError> where P:AsRef<Path> {
     let path:&Path = path.as_ref();
     let import_data:ImportData = gltf::import(path).map_err(GltfError::LoadGltfError)?;
     let textures = load_textures(&import_data,path,texture_assets)?;
@@ -24,8 +25,9 @@ pub fn load_gltf<P>(path:P,
     
     let mut h_skeleton:Option<Handle<Skeleton>> = None;
     let mut h_animation:Option<Handle<AnimationSet>> = None;
+    let mut h_skin:Option<Handle<Skin>> = None;
     if let Some(skeleton)  = load_skeleton(&import_data)? {
-
+        h_skin = load_skin(&import_data,&skeleton).map(|s | skins.add(s));
         if let Ok(anim_set) = load_animations(&import_data, &skeleton) {
             h_animation = Some(animation_set_assets.add(anim_set));
         }
@@ -40,7 +42,8 @@ pub fn load_gltf<P>(path:P,
         materials,
         nodes,
         skeleton:h_skeleton,
-        anims:h_animation
+        anims:h_animation,
+        skins:h_skin
     })
 }
 

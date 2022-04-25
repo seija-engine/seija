@@ -1,8 +1,8 @@
 use std::{collections::HashMap, fmt::Debug};
 
-use glam::Vec3;
-use gltf::{Skin, Node, Document, animation::{Channel, Property, Interpolation},};
-use seija_skeleton3d::{offine::{raw_skeleton::{RawSkeleton, RawJoint}, skeleton_builder::SkeletonBuilder, raw_animation::{RawAnimation, RawJointTrack, RawTranslationKey, RawScaleKey, RawRotationKey}, animation_builder::AnimationBuilder}, Skeleton, AnimationSet, Animation};
+use glam::{Vec3, Mat4};
+use gltf::{Node, Document, animation::{Channel, Property, Interpolation},};
+use seija_skeleton3d::{offine::{raw_skeleton::{RawSkeleton, RawJoint}, skeleton_builder::SkeletonBuilder, raw_animation::{RawAnimation, RawJointTrack, RawTranslationKey, RawScaleKey, RawRotationKey}, animation_builder::AnimationBuilder}, Skeleton, AnimationSet, Animation, Skin};
 use seija_transform::TransformMatrix;
 
 use crate::{ImportData, GltfError};
@@ -25,12 +25,38 @@ pub fn load_skeleton(gltf:&ImportData) -> Result<Option<Skeleton>,GltfError> {
 
     let mut raw_skeleton:RawSkeleton = RawSkeleton::default();
     for root_node in roots {
-        let joint =import_node_to_joint(&root_node);
+        let joint = import_node_to_joint(&root_node);
         raw_skeleton.roots.push(joint);
     }
 
     let skeleton = SkeletonBuilder::build(&raw_skeleton);
     Ok(Some(skeleton))
+}
+
+pub fn load_skin(gltf:&ImportData,skeleton:&Skeleton) -> Option<Skin> {
+    let fst_skin = gltf.0.skins().next()?;
+    let joint_count = fst_skin.joints().count();
+    let mat4s = if let Some(inverse_mats) = fst_skin.inverse_bind_matrices() {
+        let view = inverse_mats.view()?;
+        let start = view.offset() + inverse_mats.offset();
+        let end = start + (view.stride().unwrap_or(0) * inverse_mats.count());
+        let buffer = &gltf.1[view.buffer().index()][start..end];
+        let key_values:&[[f32;16]] =  unsafe { std::slice::from_raw_parts(buffer.as_ptr() as * const [f32;16], inverse_mats.count()) };
+        let mats  = key_values.iter().map(Mat4::from_cols_array).collect::<Vec<_>>();
+        mats
+    } else {
+        vec![Mat4::IDENTITY;joint_count]
+    };
+    let mut index = 0;
+    for node in fst_skin.joints() {
+        if node.name() != skeleton.joint_names[index].as_ref().map(|v| v.as_str()) {
+            log::error!("skin joint sort error index:{}",index);
+            return None;
+        }
+        index += 1;
+    }
+    
+    Some(Skin::new(mat4s))
 }
 
 pub fn load_animations(data:&ImportData,skeleton:&Skeleton) -> Result<AnimationSet,GltfError> {
@@ -175,6 +201,7 @@ fn sample_cubicspline_channel<T,E:Clone>(data:&ImportData,output:&[u8],len:usize
 }*/
 
 fn import_node_to_joint(node:&Node) -> RawJoint {
+   
     let mut raw_joint= RawJoint::default();
     raw_joint.name = node.name().map(|v| v.to_string());
     
@@ -223,7 +250,7 @@ fn get_skins_for_scene<'a>(scene:&gltf::Scene<'a>,doc:&'a gltf::Document) -> Vec
     skins
 }
 
-fn find_skin_root_joint<'a>(skins:&Vec<Skin<'a>>,doc:&'a Document) -> Vec<Node<'a>> {
+fn find_skin_root_joint<'a>(skins:&Vec<gltf::Skin<'a>>,doc:&'a Document) -> Vec<Node<'a>> {
     let mut roots:Vec<Node> = vec![];
     let mut parents:HashMap<usize,(u8,Option<Node>)> = HashMap::default();
     for node in doc.nodes() {
