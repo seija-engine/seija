@@ -4,7 +4,7 @@
 (pbr/add-pbr-camera-ubo 1)
 (core/add-transform-ubo 2)
 (pbr/add-pbr-light-ubo  3)
-
+(core/add-anim-skin-ubo 4)
 (defn create-graph []
-    (pbr/create-pbr-graph)
+    (pbr/create-pbr-graph true)
 )

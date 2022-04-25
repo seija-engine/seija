@@ -1,5 +1,5 @@
 {
-    :name "pureTexture"
+    :name "skinTexture"
     :order "Opaque"
     :light true
     :props [
@@ -8,7 +8,7 @@
     ]
     :pass {
         :shader {
-            :name "core.texture"
+            :name "core.skinTexture"
             :macros []
         }
     }

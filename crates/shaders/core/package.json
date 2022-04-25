@@ -16,12 +16,22 @@
         "name": "texture",
         "vertex": {
           "POSITION": "require",
-          "UV0":"require",
-          "JOINTS":"option",
-          "WEIGHTS":"option"
+          "UV0":"require"
         },
         "backend": [ "Camera3D", "Transform"],
         "vs": "pures.texture_vs_main",
+        "fs": "pures.texture_fs_main"
+      },
+      {
+        "name": "skinTexture",
+        "vertex": {
+          "POSITION": "require",
+          "UV0":"require",
+          "JOINTS":"require",
+          "WEIGHTS":"require"
+        },
+        "backend": [ "Camera3D", "Transform","SkinUniform"],
+        "vs": "pures.texture_skin_vs_main",
         "fs": "pures.texture_fs_main"
       },
       {

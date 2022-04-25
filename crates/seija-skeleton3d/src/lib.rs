@@ -14,7 +14,8 @@ use seija_core::{CoreStage};
 use bevy_ecs::{prelude::IntoSystem};
 pub use skeleton::{Skeleton};
 pub use animation_set::{AnimationSet};
-pub use render::{runtime_skeleton::RuntimeSkeleton,animation_control::{AnimationControl}};
+pub use render::{render_plugin::{create_skeleton_plugin},
+                 runtime_skeleton::RuntimeSkeleton,animation_control::{AnimationControl}};
 pub use skin::{Skin};
 
 

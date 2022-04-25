@@ -30,7 +30,7 @@
     })
 )
 
-(defn create-pbr-graph []
+(defn create-pbr-graph [is-skeleton]
     (let [
              camera        (node CAMERA           {:ubo "CameraBuffer" })
              pbr-camera-ex (node PBR_CAMERA_EX    {:ubo "CameraBuffer" })
@@ -46,5 +46,10 @@
          (link-> pbr-camera-ex  pass)
          (link-> swapchain      pass {0 0 1 2})
          (link-> depth-texture  pass {0 1})
+         (if is-skeleton
+            (let [skeleton-skin (node SKELETON_SKIN {:ubo "SkinBuffer"})]
+                (link-> skeleton-skin pass)
+            )
+         )
     )
  )

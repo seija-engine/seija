@@ -39,6 +39,6 @@
         :props [
             {:name "jointMats" :type "mat4[256]" }
         ]
-        :backends ["SkinMat"]
+        :backends ["SkinUniform"]
     })
 )

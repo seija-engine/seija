@@ -22,6 +22,7 @@ pub struct AnimationControl {
     pub(crate) last_anim_index:i32,
     pub(crate) ratio:f32,
     pub(crate) play:bool,
+    pub(crate) is_loop:bool,
 
     pub(crate) sample_job:SamplingJob
 }
@@ -37,6 +38,7 @@ impl AnimationControl {
             last_anim_index:-1 as i32,
             ratio:0f32,
             play:false,
+            is_loop:true,
             sample_job:SamplingJob::default()
         }
     }
@@ -75,7 +77,12 @@ impl AnimationControl {
         self.ratio += dt / anim.duration;
         //println!("{:?}",rt_skeleton.mat4s);
         if self.ratio > 1f32 {
-            self.stop();
+            if self.is_loop {
+                self.play_index(self.anim_index);
+            } else {
+                self.stop();
+            }
+            
         }
         Ok(())
     }

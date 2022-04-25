@@ -45,7 +45,7 @@ fn on_start(mut commands:Commands,
     let mut animation_control = AnimationControl::new(count,
         h_skeleton,
      gltf_asset.anims.clone().unwrap(), &mut rtskeletons);
-    animation_control.play_index(0);
+    animation_control.play_index(1);
     let clone_runtime_skeleton = animation_control.get_runtime_skeleton().clone();
     let fox_mesh_id = {
         let first_mesh = gltf_asset.first_mesh().unwrap();
@@ -53,7 +53,7 @@ fn on_start(mut commands:Commands,
         fox.insert(clone_runtime_skeleton);
         let fox_mesh = fox.insert(Transform::default());
         fox_mesh.insert(first_mesh.primitives[0].mesh.clone());
-        let h_material = materials.create_material_with("pureTexture", |mat| {
+        let h_material = materials.create_material_with("skinTexture", |mat| {
             mat.texture_props.set("mainTexture", gltf_asset.textures[0].clone());
             mat.props.set_float4("color", Vec4::new(0.6f32, 0.6f32, 0.6f32, 1f32), 0);
         }).unwrap();

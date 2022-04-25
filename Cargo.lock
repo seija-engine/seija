@@ -2366,6 +2366,7 @@ dependencies = [
  "glam",
  "gltf",
  "lazy_static",
+ "lite-clojure-eval",
  "log",
  "seija-app",
  "seija-asset",

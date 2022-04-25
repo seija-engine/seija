@@ -22,7 +22,7 @@ use seija_examples::{IExamples, pre_start};
 
 use seija_pbr::create_pbr_plugin;
 use seija_render::{RenderModule, RenderConfig, GraphSetting};
-use seija_skeleton3d::Skeleton3dModule;
+use seija_skeleton3d::{Skeleton3dModule, create_skeleton_plugin};
 use seija_winit::WinitModule;
 use seija_transform::{TransformModule};
 
@@ -46,7 +46,7 @@ fn main() {
         setting:Arc::new(GraphSetting {
             msaa_samples:4
         }),
-        plugins:vec![create_pbr_plugin()],
+        plugins:vec![create_pbr_plugin(),create_skeleton_plugin()],
         render_lib_paths:vec!["../crates/seija-pbr/res".into(),"../crates/seija-render/res".into()],
     };
     render_config.set_config_path(".render");
