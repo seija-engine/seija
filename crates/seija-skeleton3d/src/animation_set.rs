@@ -15,4 +15,8 @@ impl AnimationSet {
         self.names.insert(anim.name.clone(), self.animations.len());
         self.animations.push(anim);
     }
+
+    pub fn get_index(&self,index:usize) -> Option<&Animation> {
+        self.animations.get(index)
+    }
 }

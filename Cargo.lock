@@ -2362,12 +2362,15 @@ dependencies = [
 name = "seija-skeleton3d"
 version = "0.1.0"
 dependencies = [
+ "bevy_ecs",
  "glam",
  "gltf",
  "lazy_static",
+ "log",
  "seija-app",
  "seija-asset",
  "seija-core",
+ "seija-render",
  "seija-transform",
 ]
 

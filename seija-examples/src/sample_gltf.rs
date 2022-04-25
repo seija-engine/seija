@@ -7,7 +7,7 @@ use seija_examples::{IExamples, add_render_mesh, load_material};
 use bevy_ecs::{prelude::{Commands, Entity, Query, Res, ResMut}, system::{IntoSystem,SystemParam}};
 use seija_gltf::{create_gltf, load_gltf};
 use seija_render::{camera::camera::{Camera, Perspective}, material::{Material, MaterialStorage}, resource::{CubeMapBuilder, Mesh, Texture}};
-use seija_skeleton3d::{Skeleton, AnimationSet};
+use seija_skeleton3d::{Skeleton, AnimationSet, RuntimeSkeleton, AnimationControl};
 use seija_transform::{Transform, hierarchy::Parent, BuildChildren};
 use crate::lib::{add_camera_3d, add_pbr_camera};
 pub struct SampleGltf;
@@ -27,6 +27,7 @@ fn on_start(mut commands:Commands,
             mut textures:ResMut<Assets<Texture>>,
             mut skeletons:ResMut<Assets<Skeleton>>,
             mut animations:ResMut<Assets<AnimationSet>>,
+            mut rtskeletons:ResMut<Assets<RuntimeSkeleton>>,
             window:Res<AppWindow>,
             materials:Res<MaterialStorage>) {
     add_pbr_camera(&window, &mut commands);
@@ -37,9 +38,17 @@ fn on_start(mut commands:Commands,
                                  &mut textures,
                                 &mut skeletons,
                             &mut animations).unwrap();
+    let h_skeleton = gltf_asset.skeleton.clone().unwrap();
+    let count = skeletons.get(&h_skeleton.id).unwrap().num_joints();
+    let mut animation_control = AnimationControl::new(count,
+        h_skeleton,
+     gltf_asset.anims.clone().unwrap(), &mut rtskeletons);
+    animation_control.play_index(0);
+    let clone_runtime_skeleton = animation_control.get_runtime_skeleton().clone();
     let fox_mesh_id = {
         let first_mesh = gltf_asset.first_mesh().unwrap();
         let mut fox = commands.spawn();
+        fox.insert(clone_runtime_skeleton);
         let fox_mesh = fox.insert(Transform::default());
         fox_mesh.insert(first_mesh.primitives[0].mesh.clone());
         let h_material = materials.create_material_with("pureTexture", |mat| {
@@ -56,6 +65,7 @@ fn on_start(mut commands:Commands,
     root_t.local.rotation = Quat::from_euler(glam::EulerRot::XYZ, 0f32, 45f32.to_radians(), 0f32);
     let mut fox_root = commands.spawn();
     fox_root.insert(root_t);
+    fox_root.insert(animation_control);
     fox_root.add_children(&vec![fox_mesh_id]);
    
 }

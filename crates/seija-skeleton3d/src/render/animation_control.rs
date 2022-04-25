@@ -1,10 +1,17 @@
 use seija_asset::{Handle, Assets};
+use seija_transform::TransformMatrix;
 
 
-use crate::{Skeleton, AnimationSet, jobs::SamplingJob};
+use crate::{Skeleton, AnimationSet, jobs::{SamplingJob, LocalToModelJob}};
 
 use super::runtime_skeleton::RuntimeSkeleton;
 
+#[derive(Debug)]
+pub enum AnimationError {
+    NotFoundAnimSet,
+    NotFoundAnim,
+    NotFoundSkeleton
+}
 
 pub struct AnimationControl {
     skeleton:Handle<Skeleton>,
@@ -20,8 +27,8 @@ pub struct AnimationControl {
 }
 
 impl AnimationControl {
-    pub fn new(skeleton:Handle<Skeleton>,animation_set:Handle<AnimationSet>,rk_assets:&mut Assets<RuntimeSkeleton>) -> Self {
-        let runtime_skeleton = rk_assets.add(RuntimeSkeleton::default());
+    pub fn new(count:usize,skeleton:Handle<Skeleton>,animation_set:Handle<AnimationSet>,rk_assets:&mut Assets<RuntimeSkeleton>) -> Self {
+        let runtime_skeleton = rk_assets.add(RuntimeSkeleton::new(count));
         AnimationControl {
             skeleton,
             animation_set,
@@ -32,6 +39,10 @@ impl AnimationControl {
             play:false,
             sample_job:SamplingJob::default()
         }
+    }
+
+    pub fn get_runtime_skeleton(&self) -> &Handle<RuntimeSkeleton> {
+        &self.runtime_skeleton
     }
 
     pub fn play_index(&mut self,idx:usize) {
@@ -45,5 +56,27 @@ impl AnimationControl {
         self.play = false;
         self.ratio = 0f32;
         self.last_anim_index = -1;
+    }
+
+    pub fn process(&mut self,anims:&Assets<AnimationSet>,skeletons:&Assets<Skeleton>,dt:f32,rt_skeleton:&mut RuntimeSkeleton) -> Result<(),AnimationError> {
+        if self.play == false { return Ok(()) }
+        let anim_set = anims.get(&self.animation_set.id).ok_or(AnimationError::NotFoundAnimSet)?;
+        let anim = anim_set.get_index(self.anim_index).ok_or(AnimationError::NotFoundAnim)?;
+        if self.last_anim_index != self.anim_index as i32 {
+            self.sample_job.init(anim);
+            self.last_anim_index = self.anim_index as i32;
+        }
+        let skeleton = skeletons.get(&self.skeleton.id).ok_or(AnimationError::NotFoundSkeleton)?;
+        
+        self.sample_job.run(anim, &mut rt_skeleton.values, self.ratio);
+        let ltw = LocalToModelJob::new(skeleton);
+        ltw.run(&rt_skeleton.values, &mut rt_skeleton.mat4s);
+
+        self.ratio += dt / anim.duration;
+        println!("{:?}",rt_skeleton.mat4s);
+        if self.ratio > 1f32 {
+            self.stop();
+        }
+        Ok(())
     }
 }

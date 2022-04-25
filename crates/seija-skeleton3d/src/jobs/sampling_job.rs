@@ -36,7 +36,7 @@ impl SamplingJob {
         job
     }
 
-    fn init(&mut self, anim: &Animation) {
+    pub fn init(&mut self, anim: &Animation) {
         for _ in 0..anim.num_tracks {
             let track_keys = TrackKeys::default();
             self.cache_tracks.push(track_keys);
@@ -68,7 +68,7 @@ impl SamplingJob {
                 for index in key_index.trans_index..cache_track.translations.len() {
                    let cur_key = &animation.translations_[cache_track.translations[index]];
                    if cur_key.ratio >= ratio {
-                       key_index.trans_index = index - 1;
+                       key_index.trans_index = if index == 0 { index }  else { index - 1 };
                        break;
                    }
                 }
@@ -76,7 +76,7 @@ impl SamplingJob {
                 for index in key_index.scale_index..cache_track.scales.len() {
                     let cur_key = &animation.scales_[cache_track.scales[index]];
                     if cur_key.ratio >= ratio {
-                        key_index.scale_index = index - 1;
+                        key_index.scale_index = if index == 0 { index }  else { index - 1 };
                         break;
                     }
                  }
@@ -84,7 +84,7 @@ impl SamplingJob {
                  for index in key_index.rotation_index..cache_track.rotations.len() {
                     let cur_key = &animation.rotations_[cache_track.rotations[index]];
                     if cur_key.ratio >= ratio {
-                        key_index.rotation_index = index - 1;
+                        key_index.rotation_index = if index == 0 { index }  else { index - 1 };
                         break;
                     }
                  }
