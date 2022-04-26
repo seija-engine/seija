@@ -43,9 +43,10 @@ TexVSOutput texture_skin_vs_main() {
   TexVSOutput o;
   o.uv = vert_uv0; 
   o.color = material.color;
-  vec4 pos = getTransform() * vec4(vert_position, 1.0);
   mat4 skinMat = calcSkinMat();
-  pos = skinMat * pos;
+  vec4 pos = getTransform() * skinMat * vec4(vert_position, 1.0);
+ 
+ 
   gl_Position = getCameraProjView() * pos;
   return o;
 }

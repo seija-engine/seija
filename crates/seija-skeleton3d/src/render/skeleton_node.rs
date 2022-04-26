@@ -56,7 +56,7 @@ impl INode for SkeletonNode {
             for index in 0..rt_skeleton.mat4s.len() {
                 let world_mat = &rt_skeleton.mat4s[index];
                 let inv_mat = &skin.mats()[index];
-                let mul_mat = inv_mat.mul_mat4(world_mat);
+                let mul_mat = world_mat.mul_mat4(inv_mat);
                 
                 out_f32s.extend_from_slice(&mul_mat.to_cols_array());
             }
