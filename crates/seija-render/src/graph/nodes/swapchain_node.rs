@@ -35,7 +35,10 @@ impl INode for SwapchainNode {
                     let app_window = world.get_resource::<AppWindow>().unwrap();
                     let w = app_window.width();
                     let h = app_window.height();
-                    self.mssa_texture = Some(Self::create_msaa_texture(w, h, &mut ctx.resources, ctx.setting.msaa_samples));
+                    if w > 0 && h > 0 {
+                        self.mssa_texture = Some(Self::create_msaa_texture(w, h, &mut ctx.resources, ctx.setting.msaa_samples));
+                    }
+                    
                }
             }
         }
