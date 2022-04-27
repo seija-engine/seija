@@ -5,7 +5,7 @@ use event::Events;
 use seija_app::{IModule,App};
 use time::{Time};
 use std::fmt::Debug;
-use std::sync::atomic::{AtomicU64,Ordering};
+use std::sync::atomic::{AtomicU64,Ordering, AtomicU32};
 
 pub mod bytes;
 pub mod time;
@@ -74,22 +74,24 @@ impl AddCore for App {
     }
 }
 
-
-
-pub struct IDGenU64 {
-    atom:AtomicU64,
+macro_rules! idgen {
+    ($name:ident,$type:ty,$type2:ty) => {
+        pub struct $name {
+            atom:$type
+        }
+        impl $name {
+            pub fn new() -> $name {
+                $name { atom:<$type>::default() }
+            }
+            pub fn next(&self) -> $type2 {
+                self.atom.fetch_add(1, Ordering::Relaxed)
+            }
+        }
+    }
 }
 
-impl IDGenU64 {
-    pub fn new() -> IDGenU64 {
-        IDGenU64 { atom:AtomicU64::new(0) }
-    }
-
-    pub fn next(&self) -> u64 {
-        self.atom.fetch_add(1, Ordering::Relaxed)
-    }
-}
-
+idgen!(IDGenU32,AtomicU32,u32);
+idgen!(IDGenU64,AtomicU64,u64);
 
 pub trait LogOption<T> {
     fn log_err (self,msg:&str) -> Option<T>;

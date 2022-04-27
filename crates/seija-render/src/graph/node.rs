@@ -6,20 +6,7 @@ use uuid::Uuid;
 
 
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Ord, PartialOrd, Hash)]
-pub struct NodeId(Uuid);
-
-impl NodeId {
-    pub fn new() -> Self { NodeId(Uuid::new_v4()) }
-    pub fn uuid(&self) -> &Uuid { &self.0 }
-}
-
-impl TryFrom<&str> for NodeId {
-    type Error = ();
-    fn try_from(str: &str) -> Result<Self, Self::Error> {
-        let uuid = Uuid::from_str(str).map_err(|_|());
-        uuid.map(NodeId)
-    }
-}
+pub struct NodeId(pub u32);
 
 pub trait INode: Send + Sync + 'static {
     fn input_count(&self)  -> usize { 0 }

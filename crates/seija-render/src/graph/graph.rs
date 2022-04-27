@@ -1,6 +1,7 @@
 use std::collections::{HashSet, VecDeque};
 use std::{borrow::Cow, collections::HashMap, fmt::Debug};
 use bevy_ecs::prelude::World;
+use seija_core::IDGenU32;
 
 use crate::RenderContext;
 
@@ -8,7 +9,8 @@ use super::node::{Edge, GraphNode, INode, NodeId};
 use super::RenderGraphError;
 
 pub struct RenderGraph {
-    nodes: HashMap<NodeId, GraphNode>, //TODO 替换为普通索引
+    id_gen:IDGenU32,
+    nodes: HashMap<NodeId, GraphNode>,
     node_names: HashMap<Cow<'static, str>, NodeId>,
     pub iter:LinearGraphIter,
 }
@@ -27,6 +29,7 @@ impl Debug for RenderGraph {
 impl Default for RenderGraph {
     fn default() -> Self {
         Self {
+            id_gen:IDGenU32::new(),
             nodes:Default::default(),
             node_names: Default::default(),
             iter:LinearGraphIter::default(),
@@ -43,7 +46,7 @@ impl RenderGraph {
     }
 
     pub fn add_node<T>(&mut self,name:impl Into<Cow<'static, str>>,node:T) -> NodeId where T:INode {
-        let id = NodeId::new();
+        let id = NodeId(self.id_gen.next());
         let name = name.into();
         let mut graph_node = GraphNode::new(id, node);
         graph_node.name = Some(name.clone());

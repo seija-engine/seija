@@ -94,7 +94,7 @@ fn node(rt:&mut ExecScope,args:Vec<Variable>) -> Variable {
         let node_creator = find_userdata::<NodeCreatorContext>(rt, "NODE_CREATORS")?;
         let graph_ctx = find_userdata::<RenderGraphContext>(rt, "GRAPH_CTX")?;
         let node_id = node_creator.create(node_index as usize, node_params,graph_ctx)?;
-        Some(node_id.uuid().to_string().into())
+        Some(Variable::Int(node_id.0 as i64))
     })(rt,args).unwrap_or(Variable::Nil)
 }
 
@@ -106,10 +106,10 @@ fn link_node(rt:&mut ExecScope,args:Vec<Variable>) -> Variable {
     }
     (|rt:&mut ExecScope,args:Vec<Variable>| {
         let graph_ctx = find_userdata::<RenderGraphContext>(rt, "GRAPH_CTX")?;
-        let snode_1 = args[0].cast_string()?;
-        let snode_2 = args[1].cast_string()?;
-        let node_1 = NodeId::try_from(snode_1.borrow().as_str()).ok()?;
-        let node_2 = NodeId::try_from(snode_2.borrow().as_str()).ok()?;
+        let snode_1 = args[0].cast_int()?;
+        let snode_2 = args[1].cast_int()?;
+        let node_1 = NodeId(snode_1 as u32);
+        let node_2 = NodeId(snode_2 as u32);
         
         let mut from_idxs:Vec<usize> = vec![];
         let mut to_idxs:Vec<usize>   = vec![];
