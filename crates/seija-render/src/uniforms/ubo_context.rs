@@ -52,10 +52,9 @@ impl UBOContext {
        if let Some(layout) = self.info_layouts.get(name) {
         self.buffers.add_buffer(info,eid ,res,layout);
        }
-      
     }
   }
- 
+
   pub fn update(&mut self,res:&mut RenderResources,cmd:&mut CommandEncoder) {
     self.buffers.update(res,cmd);
   }
@@ -100,6 +99,19 @@ impl BufferContext {
           Some(())
         }
       }
+  }
+
+  pub fn remove_buffer_item(&mut self,name:&str,eid:u32) {
+    if let Some(index) = self.comp_nameidxs.get(name).map(|v| v.1) {
+       self.remove_buffer_item_byindex(index, eid);
+    }
+  }
+
+  pub fn remove_buffer_item_byindex(&mut self,index:usize,eid:u32) {
+    if self.components.len() > index {
+      let arr_buffer = &mut self.components[index];
+      arr_buffer.remove_item(eid);
+    }
   }
 
   pub fn get_name_index(&self,name:&str) -> Option<UBONameIndex> {

@@ -1,6 +1,5 @@
 use glam::{Mat4, Vec4, Vec3};
 use seija_core::bytes::AsBytes;
-use seija_transform::Transform;
 use crate::memory::{UniformBufferDef, UniformBuffer};
 
 pub trait IShaderBackend {
@@ -8,7 +7,6 @@ pub trait IShaderBackend {
     fn set_count(&self,buffer:&mut UniformBuffer,count:i32);
 }
 
-//TODO 这些Backend后期根据json自动生成
 pub struct Camera3DBackend {
     view_idx:usize,
     proj_idx:usize,

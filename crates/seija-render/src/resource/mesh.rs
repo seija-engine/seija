@@ -221,8 +221,10 @@ pub struct Mesh {
 impl Hash for Mesh {
     fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
         self.typ.hash(state);
-        //TODO Fix
-        core::mem::discriminant(&self.typ).hash(state);
+        self.attrs.len().hash(state);
+        for attr in self.attrs.iter() {
+            core::mem::discriminant(&attr.format).hash(state);
+        }
         if let Some(idxs) = self.indices.as_ref() {
             1.hash(state);
             core::mem::discriminant(idxs).hash(state);

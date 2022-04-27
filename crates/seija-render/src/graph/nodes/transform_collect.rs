@@ -1,10 +1,8 @@
 use crate::{graph::node::INode, RenderContext, resource::{RenderResourceId, Mesh}, uniforms::{backends::TransformBackend, BufferArrayIndex, UBONameIndex}, material::Material};
 use bevy_ecs::prelude::*;
-use fnv::FnvHashMap;
 use seija_asset::Handle;
-use seija_core::LogOption;
 use seija_transform::Transform;
-//TODO 没有实现移除逻辑
+
 #[derive(Default)]
 pub struct TransformCollect {
    pub ubo_name:String,
@@ -37,6 +35,11 @@ impl INode for TransformCollect {
         for v in added_transform.iter(&world) {
             ctx.ubo_ctx.add_buffer(&self.ubo_name,&mut ctx.resources,Some(v.id()))
         }
+
+        for rm_e in world.removed::<Transform>() {
+           ctx.ubo_ctx.buffers.remove_buffer_item_byindex(self.name_index.unwrap().1, rm_e.id());
+        }
+
     }
 
     fn update(&mut self,world: &mut World,ctx:&mut RenderContext,_:&Vec<Option<RenderResourceId>>,_:&mut Vec<Option<RenderResourceId>>) {

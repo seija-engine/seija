@@ -18,6 +18,7 @@ pub struct UBOArrayBuffer {
     cache:Option<BufferId>,
     buffer:Option<BufferId>,
     infos:fnv::FnvHashMap<u32,ArrayItem>,
+    free_items:Vec<ArrayItem>,
 }
 
 impl UBOArrayBuffer {
@@ -31,12 +32,17 @@ impl UBOArrayBuffer {
             len : 0, 
             cache : None, 
             buffer: None, 
-            infos: FnvHashMap::default()
+            infos: FnvHashMap::default(),
+            free_items:Vec::new()
         }
     }
 
     pub fn add_item(&mut self,eid:u32,res:&mut RenderResources,layout:&wgpu::BindGroupLayout) {
         if !self.infos.contains_key(&eid) {
+            if let Some(free_item) = self.free_items.pop() {
+                self.infos.insert(eid, free_item);
+                return;
+            }
             self.len += 1;
             if self.cap < self.len {
                 self.alloc_buffer(self.len,layout, res);
@@ -49,8 +55,16 @@ impl UBOArrayBuffer {
             self.infos.insert(eid, ArrayItem {
                 index : index,
                 buffer: TypedUniformBuffer::from_def(self.buffer_def.clone()),
-                bind_group:build_group_builder.build(layout, &res.device, res)
+                bind_group:build_group_builder.build(layout, &res.device, res),
             });
+        }
+    }
+
+    
+
+    pub fn remove_item(&mut self,eid:u32) {
+        if let Some(rm_item) = self.infos.remove(&eid) {
+            self.free_items.push(rm_item);   
         }
     }
 

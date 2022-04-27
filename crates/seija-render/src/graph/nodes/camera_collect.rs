@@ -1,7 +1,6 @@
-use std::collections::HashMap;
 use crate::camera::camera::{Camera};
 use crate::memory::TypedUniformBuffer;
-use crate::uniforms::{UBONameIndex, UBObject};
+use crate::uniforms::{UBONameIndex};
 use crate::uniforms::backends::Camera3DBackend;
 use crate::{RenderContext, graph::node::INode};
 use bevy_ecs::prelude::*;
@@ -9,7 +8,6 @@ use glam::Vec4;
 use seija_transform::Transform;
 use crate::resource::RenderResourceId;
 
-//TODO 没有实现移除逻辑
 #[derive(Default)]
 pub struct CameraCollect {
    pub ubo_name:String,
@@ -39,6 +37,10 @@ impl INode for CameraCollect {
         for v in added_cameras.iter(&world) {
             ctx.ubo_ctx.add_buffer(self.ubo_name.as_str(), &mut ctx.resources,Some(v.id()));
         }
+
+        for rm_e in world.removed::<Camera>() {
+            ctx.ubo_ctx.buffers.remove_buffer_item_byindex(self.name_index.unwrap().1, rm_e.id());
+         }
     }
 
     fn update(&mut self,world: &mut World,ctx:&mut RenderContext,_:&Vec<Option<RenderResourceId>>,_:&mut Vec<Option<RenderResourceId>>) {
