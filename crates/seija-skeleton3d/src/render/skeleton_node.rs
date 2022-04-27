@@ -39,6 +39,10 @@ impl INode for SkeletonNode {
         for v in added_skins.iter(&world) {
             ctx.ubo_ctx.add_buffer(&self.ubo_name,&mut ctx.resources,Some(v.id()))
         }
+
+        for rm_e in world.removed::<Handle<RuntimeSkeleton>>() {
+            ctx.ubo_ctx.buffers.remove_buffer_item_byindex(self.name_index.unwrap().1, rm_e.id());
+        }
     }
 
     fn update(&mut self,world: &mut World,ctx:&mut RenderContext,_:&Vec<Option<RenderResourceId>>,_:&mut Vec<Option<RenderResourceId>>) {

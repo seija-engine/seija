@@ -40,7 +40,7 @@ impl INode for CameraCollect {
 
         for rm_e in world.removed::<Camera>() {
             ctx.ubo_ctx.buffers.remove_buffer_item_byindex(self.name_index.unwrap().1, rm_e.id());
-         }
+        }
     }
 
     fn update(&mut self,world: &mut World,ctx:&mut RenderContext,_:&Vec<Option<RenderResourceId>>,_:&mut Vec<Option<RenderResourceId>>) {

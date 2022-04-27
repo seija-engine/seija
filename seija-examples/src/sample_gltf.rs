@@ -2,7 +2,7 @@ use std::path::Path;
 
 use glam::{Vec3, Vec4, Quat};
 use seija_asset::{Assets, Handle};
-use seija_core::{CoreStage, StartupStage, bytes::FromBytes, window::AppWindow};
+use seija_core::{CoreStage, StartupStage, bytes::FromBytes, window::AppWindow, time::Time};
 use seija_examples::{IExamples, add_render_mesh, load_material};
 use bevy_ecs::{prelude::{Commands, Entity, Query, Res, ResMut}, system::{IntoSystem,SystemParam}};
 use seija_gltf::{create_gltf, load_gltf};
@@ -15,6 +15,7 @@ pub struct SampleGltf;
 impl IExamples for SampleGltf {
     fn run(app:&mut seija_app::App) {
        app.add_system2(CoreStage::Startup,StartupStage::Startup, on_start.system());
+       app.add_system(CoreStage::Update ,on_update.system());
     }
 }
 
@@ -71,4 +72,13 @@ fn on_start(mut commands:Commands,
     fox_root.insert(animation_control);
     fox_root.add_children(&vec![fox_mesh_id]);
    
+}
+
+
+fn on_update(mut commands:Commands,time:Res<Time>,query:Query<(Entity,&Handle<RuntimeSkeleton>,&Handle<Mesh>)>) {
+    if time.frame() < 200 { return; }
+    for (e,_,_) in query.iter() {
+        commands.entity(e).remove::<Handle<RuntimeSkeleton>>();
+        commands.entity(e).remove::<Handle<Mesh>>();
+    }
 }
