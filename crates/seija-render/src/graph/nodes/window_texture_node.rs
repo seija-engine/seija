@@ -1,7 +1,7 @@
 use bevy_ecs::prelude::World;
-use seija_core::{event::{Events, ManualEventReader}, window::{AppWindow, IWindow}};
+use seija_core::{event::{Events, ManualEventReader}, window::{AppWindow}};
 use seija_winit::event::{WindowCreated,WindowResized};
-use crate::{RenderContext, graph::node::INode, resource::{RenderResourceId,TextureId}};
+use crate::{RenderContext, graph::node::INode, resource::{RenderResourceId}};
 
 pub struct WindowTextureNode {
     texture_res_id:Option<RenderResourceId>,
@@ -42,6 +42,9 @@ impl INode for WindowTextureNode {
         
         
         if is_make_texture {
+           if let Some(tid) = self.texture_res_id.take() {
+                ctx.resources.remove_texture(&tid);
+           }
            let app_window = world.get_resource::<AppWindow>().unwrap();
            if app_window.width() > 0 && app_window.height() > 0 {
             self.desc.size.width = app_window.width();

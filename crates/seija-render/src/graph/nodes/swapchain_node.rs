@@ -28,14 +28,15 @@ impl INode for SwapchainNode {
             self.mssa_texture = Some(Self::create_msaa_texture(w, h, &mut ctx.resources, ctx.setting.msaa_samples));
         }
 
-        if self.mssa_texture.is_some() {
+        if let Some(last_msaa) = self.mssa_texture.as_ref() {
             if let Some(events) =  world.get_resource::<Events<WindowResized>>() {
-               let is_remake_texture = self.window_resized_event_reader.iter(events).count() > 0;
+               let is_remake_texture = self.window_resized_event_reader.iter(events).count() > 0 ;
                if is_remake_texture {
                     let app_window = world.get_resource::<AppWindow>().unwrap();
                     let w = app_window.width();
                     let h = app_window.height();
                     if w > 0 && h > 0 {
+                        ctx.resources.remove_texture(last_msaa);
                         self.mssa_texture = Some(Self::create_msaa_texture(w, h, &mut ctx.resources, ctx.setting.msaa_samples));
                     }
                     

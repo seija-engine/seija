@@ -1,5 +1,4 @@
 use std::{collections::HashMap, num::NonZeroU32, ops::Range, sync::Arc};
-use glam::{Vec3, Vec3A};
 use seija_asset::{HandleId, HandleUntyped};
 use seija_core::IDGenU64;
 use uuid::Uuid;
@@ -223,6 +222,15 @@ impl RenderResources {
             destination_offset,
             size,
         );
+    }
+
+    pub fn remove_texture(&mut self,id:&RenderResourceId) {
+        dbg!(id);
+        if let RenderResourceId::Texture(tex_id) = id {
+            dbg!(id);
+            self.textures.remove(tex_id);
+            self.texture_views.remove(tex_id);
+        }
     }
 
     pub fn create_texture(&mut self,texture_desc:&wgpu::TextureDescriptor,view_desc:&wgpu::TextureViewDescriptor) -> TextureId {

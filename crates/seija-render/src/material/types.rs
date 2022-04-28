@@ -4,6 +4,26 @@ use num_enum::{IntoPrimitive,TryFromPrimitive};
 
 #[derive(IntoPrimitive,Debug,Clone, Copy,Eq,PartialEq,TryFromPrimitive)]
 #[repr(usize)]
+pub enum RenderPath {
+    Forward,
+    Deferred,
+    ForwardPlus
+}
+
+impl TryFrom<&str> for RenderPath {
+    type Error = String;
+    fn try_from(value: &str) -> Result<Self, String> {
+        match value {
+            "Forward" => Ok(RenderPath::Forward),
+            "Deferred" => Ok(RenderPath::Deferred),
+            "ForwardPlus" => Ok(RenderPath::ForwardPlus),
+            _ =>  Err(value.to_string())
+        }
+    }
+}
+
+#[derive(IntoPrimitive,Debug,Clone, Copy,Eq,PartialEq,TryFromPrimitive)]
+#[repr(usize)]
 pub enum RenderOrder {
     BeforeOpaque,
     Opaque,

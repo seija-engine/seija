@@ -2281,6 +2281,13 @@ dependencies = [
 [[package]]
 name = "seija-deferred"
 version = "0.1.0"
+dependencies = [
+ "bevy_ecs",
+ "lite-clojure-eval",
+ "seija-core",
+ "seija-render",
+ "seija-winit",
+]
 
 [[package]]
 name = "seija-examples"
@@ -2295,6 +2302,7 @@ dependencies = [
  "seija-app",
  "seija-asset",
  "seija-core",
+ "seija-deferred",
  "seija-gltf",
  "seija-pbr",
  "seija-render",

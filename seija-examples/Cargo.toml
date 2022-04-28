@@ -16,6 +16,7 @@ seija-winit = {path = "../crates/seija-winit"}
 seija-gltf = {path = "../crates/seija-gltf"}
 seija-pbr = {path = "../crates/seija-pbr"}
 seija-render = {path = "../crates/seija-render"}
+seija-deferred = {path = "../crates/seija-deferred"}
 seija-transform = {path = "../crates/seija-transform"}
 seija-skeleton3d = {path = "../crates/seija-skeleton3d"}
 lite-clojure-eval = {git = "https://github.com/seija-engine/lite-clojure.git"}

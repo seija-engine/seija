@@ -3,6 +3,9 @@ name = "seija-deferred"
 version = "0.1.0"
 edition = "2021"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
 [dependencies]
+seija-render = {path = "../seija-render"}
+seija-core = {path = "../seija-core"}
+seija-winit = {path = "../seija-winit"}
+lite-clojure-eval = {git = "https://github.com/seija-engine/lite-clojure.git"}
+bevy_ecs = "0.5.0"

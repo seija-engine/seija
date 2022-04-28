@@ -1,7 +1,7 @@
 use std::{convert::{TryFrom}, sync::{Arc}, cell::Ref, collections::HashMap};
 use seija_core::{TypeUuid};
 use wgpu::{FrontFace, PolygonMode};
-use super::{RenderOrder, errors::MaterialDefReadError, storage::DEFAULT_TEXTURES, texture_prop_def::TexturePropDef, types::{Cull, SFrontFace, SPolygonMode, ZTest}, TexturePropInfo};
+use super::{RenderOrder, errors::MaterialDefReadError, storage::DEFAULT_TEXTURES, texture_prop_def::TexturePropDef, types::{Cull, SFrontFace, SPolygonMode, ZTest, RenderPath}, TexturePropInfo};
 use lite_clojure_eval::EvalRT;
 use serde_json::{Value};
 use uuid::Uuid;
@@ -11,6 +11,7 @@ use crate::{memory::UniformBufferDef};
 #[uuid = "58ee0320-a01e-4a1b-9d07-ade19767853b"]
 pub struct MaterialDef {
     pub name:String,
+    pub path:RenderPath,
     pub order:RenderOrder,
     pub pass_list:Vec<PassDef>,
     pub prop_def:Arc<UniformBufferDef>,
@@ -61,8 +62,9 @@ pub fn read_material_def(vm:&mut EvalRT,file_string:&str) -> Result<MaterialDef,
     //order
     let order_str = value.get(":order").and_then(|v| v.as_str()).unwrap_or(&"Opaque");
     let order = RenderOrder::try_from(order_str).map_err(|s| MaterialDefReadError::InvalidOrder(s))?;
-   
-    
+    //path
+    let path_str = value.get(":path").and_then(|v| v.as_str()).unwrap_or(&"Forward");
+    let path = RenderPath::try_from(path_str).map_err(|s| MaterialDefReadError::InvalidRenderPath(s))?;
     //pass
     let json_pass = value.get(":pass").ok_or(MaterialDefReadError::InvalidPass)?;
     let mut pass_list:Vec<PassDef> = Vec::new();
@@ -81,6 +83,7 @@ pub fn read_material_def(vm:&mut EvalRT,file_string:&str) -> Result<MaterialDef,
     let texture_prop_def = read_texture_prop(prop_value).map_err(|_| MaterialDefReadError::InvalidProp)?;
     Ok(MaterialDef {
         name:def_name.to_string(),
+        path,
         order,
         pass_list,
         prop_def:Arc::new(buffer_def),

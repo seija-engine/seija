@@ -18,6 +18,7 @@ use seija_app::App;
 use seija_asset::{AssetModule};
 use seija_core::{CoreModule, CoreStage, StartupStage};
 
+use seija_deferred::create_deferred_plugin;
 use seija_examples::{IExamples, pre_start};
 
 use seija_pbr::create_pbr_plugin;
@@ -46,7 +47,9 @@ fn main() {
         setting:Arc::new(GraphSetting {
             msaa_samples:4
         }),
-        plugins:vec![create_pbr_plugin(),create_skeleton_plugin()],
+        plugins:vec![create_pbr_plugin(),
+                     create_skeleton_plugin(),
+                     create_deferred_plugin()],
         render_lib_paths:vec!["../crates/seija-pbr/res".into(),"../crates/seija-render/res".into()],
     };
     render_config.set_config_path(".render");
