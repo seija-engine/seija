@@ -2279,6 +2279,10 @@ dependencies = [
 ]
 
 [[package]]
+name = "seija-deferred"
+version = "0.1.0"
+
+[[package]]
 name = "seija-examples"
 version = "0.1.0"
 dependencies = [
