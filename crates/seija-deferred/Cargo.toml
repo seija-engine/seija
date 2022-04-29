@@ -4,8 +4,11 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+seija-asset = {path = "../seija-asset"}
 seija-render = {path = "../seija-render"}
 seija-core = {path = "../seija-core"}
 seija-winit = {path = "../seija-winit"}
+seija-transform = {path = "../seija-transform"}
 lite-clojure-eval = {git = "https://github.com/seija-engine/lite-clojure.git"}
 bevy_ecs = "0.5.0"
+log = "0.4.16"

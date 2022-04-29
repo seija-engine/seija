@@ -2284,8 +2284,11 @@ version = "0.1.0"
 dependencies = [
  "bevy_ecs",
  "lite-clojure-eval",
+ "log",
+ "seija-asset",
  "seija-core",
  "seija-render",
+ "seija-transform",
  "seija-winit",
 ]
 

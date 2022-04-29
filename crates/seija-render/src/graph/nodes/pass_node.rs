@@ -15,7 +15,6 @@ impl INode for PassNode {
     fn input_count(&self) -> usize { 3 }
     
     fn prepare(&mut self, _world: &mut World, ctx:&mut RenderContext) {
-        let mut texture_desc = wgpu::TextureViewDescriptor::default();
     
     }
 
