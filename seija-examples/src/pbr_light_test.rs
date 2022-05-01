@@ -47,7 +47,7 @@ fn on_start(
     window: Res<AppWindow>,
     materials: Res<MaterialStorage>,
 ) {
-    load_material("res/pbr_material/pbrColor.mat.clj", &materials);
+    load_material("res/materials/pbrColor.mat.clj", &materials);
     add_pbr_camera(&window, &mut commands);
     {
         let point_light = PBRLight::directional(Vec3::new(1f32, 1f32, 1f32)  , 9000f32);

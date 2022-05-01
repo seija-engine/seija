@@ -3,7 +3,7 @@ use core.pbrLight;
 struct VSOutput {
   vec3 normal;
   vec4 outPos;
-  vec4 outCameraPos;
+ 
 };
 
 VSOutput vs_main() {
@@ -11,7 +11,6 @@ VSOutput vs_main() {
   mat4 trans = getTransform();
   vec3 normal = transpose(inverse(mat3x3(trans)))  *  vert_normal;
   vsOutput.normal = normal; 
-  vsOutput.outCameraPos = getCameraPosition();
   vec4 pos = trans * vec4(vert_position, 1.0);
   vsOutput.outPos = pos;
   pos = getCameraProjView() * pos;
@@ -22,7 +21,8 @@ VSOutput vs_main() {
 
 
 vec4 fs_main(VSOutput ino) {
-    vec3 viewDir = normalize(ino.outCameraPos.xyz - ino.outPos.xyz);
+    vec4 cameraPos = getCameraPosition();
+    vec3 viewDir = normalize(cameraPos.xyz - ino.outPos.xyz);
     
     MaterialInputs inputs;
     initMaterial(inputs);

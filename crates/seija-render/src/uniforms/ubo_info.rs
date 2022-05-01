@@ -47,7 +47,8 @@ pub struct UBOInfo {
     pub name:Arc<String>,
     pub index:usize,
     pub props:Arc<UniformBufferDef>,
-    pub backends:Vec<String>
+    pub backends:Vec<String>,
+    pub shader_stage:wgpu::ShaderStage
 }
 
 
@@ -66,13 +67,18 @@ impl TryFrom<&Value> for UBOInfo {
         let props:PropInfoList = prop_json.try_into().map_err(|_| ":props".to_string())?;
         let prop_index = object.get(":index").and_then(|v| v.as_i64()).unwrap_or(0);
         let udf = UniformBufferDef::try_from(&props).map_err(|_| ":props".to_string() )?;
+        let shader_stage = object.get(":shader-stage").and_then(Value::as_i64).unwrap_or(
+            wgpu::ShaderStage::VERTEX_FRAGMENT.bits() as i64
+        ) as u32;
         Ok(UBOInfo {
             typ,
             apply,
             name:Arc::new(name.to_string()),
             props:Arc::new(udf),
             backends,
-            index:prop_index as usize
+            index:prop_index as usize,
+            shader_stage:wgpu::ShaderStage::from_bits(shader_stage)
+                               .unwrap_or(wgpu::ShaderStage::VERTEX_FRAGMENT) 
         })
     }
 }

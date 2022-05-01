@@ -17,7 +17,7 @@ impl IModule for WinitModule {
         app.add_event::<WindowResized>();
         let mut window_created_events = app.world.get_resource_mut::<Events<WindowCreated>>().unwrap();
         window_created_events.send(WindowCreated);
-
+ 
         app.add_resource(app_window);
         app.set_runner(|app| { winit_runner(event_loop,app); });
     }

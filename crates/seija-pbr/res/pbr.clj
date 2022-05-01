@@ -12,6 +12,7 @@
         :apply :Frame
         :name "LightBuffer"
         :index index
+        :shader-stage SS_FRAGMENT
         :props [
            {:name "ambileColor"     :type "float3"}
            {:name "lightCount"      :type "int"}

@@ -6,6 +6,6 @@
 (pbr/add-pbr-light-ubo  3)
 (core/add-anim-skin-ubo 4)
 (defn create-graph []
-    (node GBUFFER  nil)
+  
     (pbr/create-pbr-graph true)
 )

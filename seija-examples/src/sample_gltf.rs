@@ -33,8 +33,8 @@ fn on_start(mut commands:Commands,
             window:Res<AppWindow>,
             materials:Res<MaterialStorage>) {
     add_pbr_camera(&window, &mut commands);
-    load_material("res/pbr_material/pbrColor.mat.clj", &materials);
-    load_material("res/pbr_material/texture.mat.clj", &materials);
+    load_material("res/materials/pbrColor.mat.clj", &materials);
+    load_material("res/materials/texture.mat.clj", &materials);
     let gltf_asset = load_gltf("res/gltf/Fox/glTF-Binary/Fox.glb",
                                    &mut meshs,
                                  &mut textures,
@@ -76,9 +76,9 @@ fn on_start(mut commands:Commands,
 
 
 fn on_update(mut commands:Commands,time:Res<Time>,query:Query<(Entity,&Handle<RuntimeSkeleton>,&Handle<Mesh>)>) {
-    if time.frame() < 200 { return; }
-    for (e,_,_) in query.iter() {
-        commands.entity(e).remove::<Handle<RuntimeSkeleton>>();
-        commands.entity(e).remove::<Handle<Mesh>>();
-    }
+    //if time.frame() < 200 { return; }
+    //for (e,_,_) in query.iter() {
+    //    commands.entity(e).remove::<Handle<RuntimeSkeleton>>();
+    //    commands.entity(e).remove::<Handle<Mesh>>();
+    //}
 }

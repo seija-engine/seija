@@ -23,6 +23,12 @@ impl RenderScriptContext {
     }
 
     fn add_fns(&mut self) {
+       self.rt.global_context().push_var("SS_VERTEX", wgpu::ShaderStage::VERTEX.bits() as i64 );
+       self.rt.global_context().push_var("SS_FRAGMENT", wgpu::ShaderStage::FRAGMENT.bits() as i64 );
+       self.rt.global_context().push_var("SS_VERTEX_FRAGMENT", wgpu::ShaderStage::VERTEX_FRAGMENT.bits() as i64 );
+       self.rt.global_context().push_var("SS_COMPUTE", wgpu::ShaderStage::COMPUTE.bits() as i64 );
+       self.rt.global_context().push_var("SS_ALL", wgpu::ShaderStage::all().bits() as i64 );
+
        self.rt.global_context().push_native_fn("add-ubo", def_ubo);
        self.rt.global_context().push_native_fn("node", node);
        self.rt.global_context().push_native_fn("link->", link_node);

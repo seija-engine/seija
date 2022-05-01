@@ -4,6 +4,7 @@
         :apply :RenderObject
         :name "ObjectBuffer"
         :index index
+        :shader-stage SS_VERTEX
         :props [
            {:name "transform" :type "mat4"}
         ]
@@ -24,6 +25,7 @@
         :apply :Camera
         :name "CameraBuffer"
         :index index
+        :shader-stage SS_VERTEX_FRAGMENT
         :props (if (nil? props) core/core-camera-props props)
         :backends (concat ["Camera3D"] backends)
    })    
@@ -36,6 +38,7 @@
         :name "SkinBuffer"
         :index index
         :apply :RenderObject
+        :shader-stage SS_VERTEX
         :props [
             {:name "jointMats" :type "mat4[256]" }
         ]

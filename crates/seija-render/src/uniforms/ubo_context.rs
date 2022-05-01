@@ -31,18 +31,19 @@ impl UBOContext {
   pub fn init(&mut self,device:&wgpu::Device,res:&mut RenderResources) {
       
 
-       for (name,_) in self.info.component_buffers.iter() {
-          Self::create_layout(&mut self.info_layouts,name, device);
+       for (name,info) in self.info.component_buffers.iter() {
+          Self::create_layout(&mut self.info_layouts,name, device,info);
        }
-       for (name,_) in self.info.global_buffers.iter() {
-        Self::create_layout(&mut self.info_layouts,name, device);
+       for (name,info) in self.info.global_buffers.iter() {
+        Self::create_layout(&mut self.info_layouts,name, device,info);
       }
       self.buffers.init(&self.info,res,&self.info_layouts);
   }
 
-  fn create_layout(layouts:&mut HashMap<String,wgpu::BindGroupLayout>,name:&str,device:&Device) {
+  fn create_layout(layouts:&mut HashMap<String,wgpu::BindGroupLayout>,name:&str,device:&Device,info:&UBOInfo) {
      let mut builder = BindGroupLayoutBuilder::new();
-     builder.add_uniform(wgpu::ShaderStage::VERTEX_FRAGMENT);
+     //builder.add_uniform(wgpu::ShaderStage::VERTEX_FRAGMENT);
+     builder.add_uniform(info.shader_stage);
      let layout = builder.build(device);
      layouts.insert(name.to_string(), layout);
   }

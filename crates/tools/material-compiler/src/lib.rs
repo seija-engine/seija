@@ -103,7 +103,7 @@ fn test_fn() {
    mc.backend.render_info.rsc.rt.add_search_path("../../seija-pbr/res");
    mc.backend.render_info.rsc.rt.add_search_path("../../seija-render/res");
    mc.set_shader_out("../../../seija-examples/.render/shaders");
-   mc.add_mat_search_path("../../../seija-examples/res/pbr_material");
+   mc.add_mat_search_path("../../../seija-examples/res/materials");
    mc.run("../../../seija-examples/.render/render.clj");
 
 }
