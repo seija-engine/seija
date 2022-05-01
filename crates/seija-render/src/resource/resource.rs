@@ -225,9 +225,7 @@ impl RenderResources {
     }
 
     pub fn remove_texture(&mut self,id:&RenderResourceId) {
-        dbg!(id);
         if let RenderResourceId::Texture(tex_id) = id {
-            dbg!(id);
             self.textures.remove(tex_id);
             self.texture_views.remove(tex_id);
         }

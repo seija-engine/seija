@@ -48,8 +48,8 @@ impl Material {
             self.props.clear_dirty();
         }
         self.texture_props.update(resources,device,texture_layout);
-        
     }
+
 }
 
 #[derive(Debug)] 

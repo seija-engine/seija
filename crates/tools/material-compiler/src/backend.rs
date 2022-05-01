@@ -21,7 +21,7 @@ impl SeijaShaderBackend {
         vertexs.insert("UV0".into(), (1,"vec2".into()));
         vertexs.insert("UV1".into(), (2,"vec2".into()));
         vertexs.insert("NORMAL".into(), (3,"vec3".into()));
-        vertexs.insert("TANGENT".into(), (4,"vec3".into()));
+        vertexs.insert("TANGENT".into(), (4,"vec4".into()));
         vertexs.insert("COLOR".into(), (5,"vec4".into()));
         vertexs.insert("JOINTS".into(), (6,"uvec4".into()));
         vertexs.insert("WEIGHTS".into(), (7,"vec4".into()));

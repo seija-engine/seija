@@ -5,6 +5,7 @@ use std::io;
 use std::hash::{Hash, Hasher};
 use std::fs;
 use std::path::Path;
+use bevy_ecs::prelude::Entity;
 use seija_core::{LogOption,LogResult};
 use std::sync::{ RwLockReadGuard, Arc};
 use fnv::{FnvHashMap, FnvHasher};
@@ -15,7 +16,7 @@ use wgpu::{BindGroupLayout, DepthStencilState, Device,
           RenderPipelineDescriptor, ShaderModule, 
           ShaderModuleDescriptor, StencilState, VertexState};
 use crate::rt_shaders::RuntimeShaderInfo;
-use crate::uniforms::UBONameIndex;
+use crate::uniforms::{UBONameIndex, UBOApplyType, UBOContext};
 use crate::{RenderContext, RenderConfig, GraphSetting};
 use crate::material::ShaderInfoDef;
 use crate::{material::{MaterialDef, PassDef}, resource::Mesh};
@@ -38,6 +39,29 @@ impl RenderPipelines {
 pub struct RenderPipeline {
     pub ubos:Vec<UBONameIndex>,
     pub pipeline:wgpu::RenderPipeline
+}
+
+impl RenderPipeline {
+    pub fn set_binds<'b:'a,'a>(&self,camera_e:Entity,ve:&Entity,pass:&'a mut wgpu::RenderPass<'b>,buf_ctx:&'b UBOContext) -> Option<u32> {
+        for (index,ubo_name_index) in self.ubos.iter().enumerate() {
+            match ubo_name_index.2 {
+             UBOApplyType::Camera => {
+                let bind_group = buf_ctx.buffers.get_bind_group(ubo_name_index, Some(camera_e.id()))?;
+                pass.set_bind_group(index as u32, bind_group, &[]);
+             },
+             UBOApplyType::RenderObject => {
+                let bind_group = buf_ctx.buffers.get_bind_group(ubo_name_index, Some(ve.id()))?;
+                pass.set_bind_group(index as u32, bind_group, &[]);
+             },
+             UBOApplyType::Frame => {
+                let bind_group = buf_ctx.buffers.get_bind_group(ubo_name_index, None)?;
+                pass.set_bind_group(index as u32, bind_group, &[]);
+             }
+            }
+        }
+
+        Some(self.ubos.len() as u32)
+    }
 }
 
 #[derive(Default)]

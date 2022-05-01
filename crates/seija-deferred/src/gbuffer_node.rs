@@ -1,7 +1,7 @@
 use bevy_ecs::prelude::{World, Entity};
-use seija_asset::Handle;
+use seija_asset::{Handle, Assets};
 use seija_core::{event::{ManualEventReader, Events}, window::AppWindow};
-use seija_render::{graph::INode, RenderContext, resource::{RenderResourceId, RenderResources, Mesh}, wgpu::{self, Operations}, camera::camera::Camera, material::{Material, MaterialStorage, RenderPath}};
+use seija_render::{graph::INode, RenderContext, resource::{RenderResourceId, RenderResources, Mesh}, wgpu::{self, Operations}, camera::camera::Camera, material::{Material, MaterialStorage, RenderPath}, pipeline::PipelineCache};
 use seija_transform::Transform;
 use seija_winit::event::{WindowCreated, WindowResized};
 
@@ -28,10 +28,11 @@ impl INode for GBufferNode {
               inputs:&Vec<Option<RenderResourceId>>,
               outputs:&mut Vec<Option<RenderResourceId>>) {
         *outputs = self.textures.clone();
-
-        if let Err(err) = self.draw(world,ctx, inputs) {
+        let mut command:wgpu::CommandEncoder = ctx.command_encoder.take().unwrap();
+        if let Err(err) = self.draw(world,ctx, inputs,&mut command) {
             log::error!("{:?}",err);
         }
+        ctx.command_encoder = Some(command)
     }
 }
 
@@ -67,8 +68,8 @@ impl GBufferNode {
         }
     }
 
-    fn draw(&self,world:&mut World,ctx:&mut RenderContext,inputs:&Vec<Option<RenderResourceId>>) -> Result<(),GBfferError> {
-        let mut command = ctx.command_encoder.take().unwrap();
+    fn draw(&self,world:&mut World,ctx:&mut RenderContext,inputs:&Vec<Option<RenderResourceId>>,command:&mut wgpu::CommandEncoder) -> Result<(),GBfferError> {
+       
         let depth_view = inputs[0].as_ref()
                                                      .and_then(|id| ctx.resources.get_texture_view_by_resid(id))
                                                      .ok_or(GBfferError::ErrInput(0))?;
@@ -84,6 +85,12 @@ impl GBufferNode {
             }
         }
 
+        let mut camera_query = world.query::<(Entity,&Transform,&Camera)>();
+        let mut render_query = world.query::<(Entity,&Handle<Mesh>,&Handle<Material>)>();
+
+        let mat_storages = world.get_resource::<MaterialStorage>().unwrap();
+        let materials = mat_storages.mateials.read();
+
         let mut render_pass = command.begin_render_pass(&wgpu::RenderPassDescriptor {
             label:None,
             color_attachments:&color_attachs,
@@ -94,21 +101,49 @@ impl GBufferNode {
             }),
         });
 
-        let mut camera_query = world.query::<(Entity,&Transform,&Camera)>();
-        let mut render_query = world.query::<(Entity,&Handle<Mesh>,&Handle<Material>)>();
-        let mat_storages = world.get_resource::<MaterialStorage>().unwrap();
-        let materials = mat_storages.mateials.read();
+        let pipeline_cahce = world.get_resource::<PipelineCache>().unwrap();
+        let meshs = world.get_resource::<Assets<Mesh>>().unwrap();
 
         for (camera_e,_,camera) in camera_query.iter(world) {
             for ves in camera.view_list.values.iter() {
                 for view_entity in ves.value.iter() {
-                    if let Ok((_,hmesh,hmat))  = render_query.get(world, view_entity.entity) {
+                    if let Ok((ve,hmesh,hmat))  = render_query.get(world, view_entity.entity) {
                         let material = materials.get(&hmat.id).ok_or(GBfferError::MissMaterial)?;
                         if material.def.path != RenderPath::Deferred { continue; }
+                        let mesh = meshs.get(&hmesh.id).ok_or(GBfferError::MissMesh)?;
+                        let fst_pipeline = pipeline_cahce.get_pipeline(&material.def.name, mesh)
+                                                                          .and_then(|pipes| pipes.pipelines.get(0))
+                                                                          .ok_or(GBfferError::MissPipeline)?;
+                        if let Some(mesh_buffer_id)  = ctx.resources.get_render_resource(&hmesh.id, 0) {
+                            let vert_buffer = ctx.resources.get_buffer_by_resid(&mesh_buffer_id).unwrap();
+                            let mut set_index = fst_pipeline.set_binds(camera_e,&ve, &mut render_pass, &ctx.ubo_ctx)
+                                                                               .ok_or(GBfferError::ErrUBOIndex)?;
+                            if material.props.def.infos.len() > 0 {      
+                                render_pass.set_bind_group(set_index, material.bind_group.as_ref().unwrap(), &[]);
+                                set_index += 1;
+                            }
+                            if material.texture_props.textures.len() > 0 {
+                                render_pass.set_bind_group(set_index, material.texture_props.bind_group.as_ref().unwrap(), &[]);
+                            }
+                            render_pass.set_vertex_buffer(0, vert_buffer.slice(0..));
+                            if let Some(idx_id) = ctx.resources.get_render_resource(&hmesh.id, 1) {
+                                let idx_buffer = ctx.resources.get_buffer_by_resid(&idx_id).unwrap();
+                                render_pass.set_index_buffer(idx_buffer.slice(0..), mesh.index_format().unwrap());
+                                render_pass.set_pipeline(&fst_pipeline.pipeline);
+                
+                                render_pass.draw_indexed(mesh.indices_range().unwrap(),0, 0..1);
+                            } else {
+                                render_pass.set_pipeline(&fst_pipeline.pipeline);
+                                render_pass.draw(0..mesh.count_vertices() as u32, 0..1);
+                            }
+                        }
+
                     }
                 }
             }
         }
+
+    
         Ok(())
     }
 
@@ -136,5 +171,8 @@ impl GBufferNode {
 #[derive(Debug)] 
 enum GBfferError {
     ErrInput(usize),
-    MissMaterial
+    MissMaterial,
+    MissMesh,
+    MissPipeline,
+    ErrUBOIndex
 }

@@ -49,6 +49,7 @@ impl INode for WindowTextureNode {
            if app_window.width() > 0 && app_window.height() > 0 {
             self.desc.size.width = app_window.width();
             self.desc.size.height = app_window.height();
+            //TODO 要兼容延迟和前向两条管线
             if ctx.setting.msaa_samples > 1 {
                 self.desc.sample_count = ctx.setting.msaa_samples;
             } else {

@@ -4,6 +4,7 @@ mod cube_map;
 mod light_test;
 mod pbr_light_test;
 mod pbr;
+mod deferred;
 
 use std::sync::Arc;
 
@@ -27,7 +28,7 @@ use seija_skeleton3d::{Skeleton3dModule, create_skeleton_plugin};
 use seija_winit::WinitModule;
 use seija_transform::{TransformModule};
 
-const TEST_NAME:&'static str = "sample_gltf";
+const TEST_NAME:&'static str = "deferred";
 
 fn main() {
      env_logger::Builder::new().filter_level(log::LevelFilter::Info).try_init().unwrap();
@@ -45,7 +46,7 @@ fn main() {
     let mut render_config = RenderConfig {
         config_path:".render".into(),
         setting:Arc::new(GraphSetting {
-            msaa_samples:4
+            msaa_samples:1
         }),
         plugins:vec![create_pbr_plugin(),
                      create_skeleton_plugin(),
@@ -62,9 +63,8 @@ fn main() {
         "cube_map"       =>  { CubeMapTest::run(&mut app) },
         "light_test"     =>  { LightTest::run(&mut app);  },
         "pbr_light_test" =>  { PBRLightTest::run(&mut app); },
-        "pbr_test" => {
-            pbr::PbrTest::run(&mut app);
-        }
+        "pbr_test" => { pbr::PbrTest::run(&mut app); },
+        "deferred" => { deferred::Deferred::run(&mut app); }
         _ => { unimplemented!() }
     }; /**/
 
