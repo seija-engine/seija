@@ -39,7 +39,7 @@ impl Material {
     }
 
     pub fn update(&mut self,resources:&mut RenderResources,device:&Device,mat_layout:&wgpu::BindGroupLayout,texture_layout:Option<&wgpu::BindGroupLayout>) {
-        if self.buffer.is_none() {
+        if self.buffer.is_none() && self.props.def.infos.len() > 0 {
             let buffer = resources.create_buffer_with_data(BufferUsage::COPY_DST | BufferUsage::UNIFORM, self.props.get_buffer());
             self.buffer = Some(buffer.clone());
             let mut bind_group_builder = BindGroupBuilder::new();

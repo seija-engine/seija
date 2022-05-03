@@ -1,7 +1,6 @@
 use std::{collections::HashMap, num::NonZeroU32, ops::Range, sync::Arc};
-use seija_asset::{HandleId, HandleUntyped};
+use seija_asset::{HandleId};
 use seija_core::IDGenU64;
-use uuid::Uuid;
 use wgpu::{Buffer, BufferUsage, Device, SwapChainError, TextureView, util::DeviceExt};
 
 use super::Texture;

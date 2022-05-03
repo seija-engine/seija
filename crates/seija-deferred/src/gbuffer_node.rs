@@ -40,8 +40,8 @@ impl GBufferNode {
     pub fn new() -> Self {
         let mut gbuffer = GBufferNode::default();
         gbuffer.texture_formats.push(wgpu::TextureFormat::Rgba32Float); //position
-        gbuffer.texture_formats.push(wgpu::TextureFormat::Rgba8Unorm); //basecolor
-        gbuffer.texture_formats.push(wgpu::TextureFormat::Rgba8Unorm); //normal
+        gbuffer.texture_formats.push(wgpu::TextureFormat::Rgba32Float); //basecolor
+        //gbuffer.texture_formats.push(wgpu::TextureFormat::Bgra8UnormSrgb); //normal
         gbuffer
     }
 
@@ -109,7 +109,8 @@ impl GBufferNode {
                 for view_entity in ves.value.iter() {
                     if let Ok((ve,hmesh,hmat))  = render_query.get(world, view_entity.entity) {
                         let material = materials.get(&hmat.id).ok_or(GBfferError::MissMaterial)?;
-                        if material.def.path != RenderPath::Deferred { continue; }
+                        if material.def.path != RenderPath::Deferred || !material.is_ready(& ctx.resources) { continue; }
+                        
                         let mesh = meshs.get(&hmesh.id).ok_or(GBfferError::MissMesh)?;
                         let fst_pipeline = pipeline_cahce.get_pipeline(&material.def.name, mesh)
                                                                           .and_then(|pipes| pipes.pipelines.get(0))

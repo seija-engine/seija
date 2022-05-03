@@ -26,7 +26,8 @@ impl BindGroupLayoutBuilder {
         let entry = wgpu::BindGroupLayoutEntry {
             binding:self.layout_entrys.len() as u32,
             visibility:ShaderStage::FRAGMENT,
-            ty:wgpu::BindingType::Sampler {comparison: false, filtering: false },
+            //TODO filtering??
+            ty:wgpu::BindingType::Sampler {comparison: false, filtering: true },
             count:None
         };
         self.layout_entrys.push(entry);
@@ -146,5 +147,6 @@ impl BindGroupBuilder {
             layout,
             entries:&entrys
         })
+        
     }
 }

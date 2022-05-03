@@ -41,7 +41,6 @@ impl MaterialSystem {
             if self.texture_layouts.contains_key(def_name) { 
                 continue; 
             }
-            
             let layout = mat_def_info.def.tex_prop_def.layout_builder.build(device);
             self.texture_layouts.insert(def_name.clone(), layout);
         }
@@ -52,6 +51,7 @@ impl MaterialSystem {
             let rm_list:Vec<Entity> = world.removed::<Handle<Material>>().collect();
             let name_map_ref = storage.name_map.read();
             for (def_name,mat_def) in  name_map_ref.iter() {
+                if mat_def.def.prop_def.infos.len() == 0 { continue; }
                 let buffer = if let Some(buffer) = self.buffers.get_mut(def_name) {
                     buffer.update_size(mat_def.mat_count, resources);
                     buffer
@@ -76,7 +76,7 @@ impl MaterialSystem {
                 continue;
             }
             mat_ref.update(resources,device,&self.layout,self.texture_layouts.get(&mat_ref.def.name));
-            if mat_ref.props.is_dirty() {
+            if mat_ref.props.is_dirty() && mat_ref.props.def.infos.len() > 0  {
                 let buffer_info = self.buffers.get_mut(&mat_ref.def.name).unwrap();  
                 buffer_info.update(mat_ref, &e,resources,commands);
                 mat_ref.props.clear_dirty();

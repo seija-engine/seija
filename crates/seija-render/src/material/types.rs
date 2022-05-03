@@ -1,4 +1,5 @@
-use std::convert::{TryFrom};
+use std::convert::{TryFrom, TryInto};
+use serde_json::Value;
 use wgpu::{CompareFunction, Face, FrontFace, PolygonMode};
 use num_enum::{IntoPrimitive,TryFromPrimitive};
 
@@ -158,4 +159,86 @@ impl TryFrom<&str> for SPolygonMode {
 
 impl Default for Cull {
     fn default() -> Self { Cull::Back }
+}
+
+pub struct STextureFormat(pub wgpu::TextureFormat);
+
+impl TryFrom<&str> for STextureFormat {
+    type Error = ();
+
+    fn try_from(value: &str) -> Result<Self, Self::Error> {
+        let format = match value {
+            "R8Unorm" => wgpu::TextureFormat::R8Unorm,
+            "R8Snorm" => wgpu::TextureFormat::R8Snorm,
+            "R8Uint" => wgpu::TextureFormat::R8Uint,
+            "R8Sint" => wgpu::TextureFormat::R8Sint,
+
+            "R16Uint" => wgpu::TextureFormat::R16Uint,
+            "R16Sint" => wgpu::TextureFormat::R16Sint,
+            "R16Float" => wgpu::TextureFormat::R16Float,
+            "Rg8Unorm" => wgpu::TextureFormat::Rg8Unorm,
+            "Rg8Snorm" => wgpu::TextureFormat::Rg8Snorm,
+            "Rg8Uint" => wgpu::TextureFormat::Rg8Uint,
+            "Rg8Sint" => wgpu::TextureFormat::Rg8Sint,
+
+            "R32Uint" => wgpu::TextureFormat::R32Uint,
+            "R32Sint" => wgpu::TextureFormat::R32Sint,
+            "R32Float" => wgpu::TextureFormat::R32Float,
+            "Rg16Uint" => wgpu::TextureFormat::Rg16Uint,
+            "Rg16Sint" => wgpu::TextureFormat::Rg16Sint,
+            "Rg16Float" => wgpu::TextureFormat::Rg16Float,
+            "Rgba8Unorm" => wgpu::TextureFormat::Rgba8Unorm,
+            "Rgba8UnormSrgb" => wgpu::TextureFormat::Rgba8UnormSrgb,
+            "Rgba8Snorm" => wgpu::TextureFormat::Rgba8Snorm,
+            "Rgba8Uint" => wgpu::TextureFormat::Rgba8Uint,
+            "Rgba8Sint" => wgpu::TextureFormat::Rgba8Sint,
+            "Bgra8Unorm" => wgpu::TextureFormat::Bgra8Unorm,
+            "Bgra8UnormSrgb" => wgpu::TextureFormat::Bgra8UnormSrgb,
+            "Rgb10a2Unorm" => wgpu::TextureFormat::Rgb10a2Unorm,
+            "Rg11b10Float" => wgpu::TextureFormat::Rg11b10Float,
+            
+            "Rg32Uint" => wgpu::TextureFormat::Rg32Uint,
+            "Rg32Sint" => wgpu::TextureFormat::Rg32Sint,
+            "Rg32Float" => wgpu::TextureFormat::Rg32Float,
+            "Rgba16Uint" => wgpu::TextureFormat::Rgba16Uint,
+            "Rgba16Sint" => wgpu::TextureFormat::Rgba16Sint,
+            "Rgba16Float" => wgpu::TextureFormat::Rgba16Float,
+
+            "Rgba32Uint" => wgpu::TextureFormat::Rgba32Uint,
+            "Rgba32Sint" => wgpu::TextureFormat::Rgba32Sint,
+            "Rgba32Float" => wgpu::TextureFormat::Rgba32Float,
+
+            "Depth32Float" => wgpu::TextureFormat::Depth32Float,
+            "Depth24Plus" => wgpu::TextureFormat::Depth24Plus,
+            "Depth24PlusStencil8" => wgpu::TextureFormat::Depth24PlusStencil8,
+
+            _ => return Err(())
+        };
+        Ok(STextureFormat(format))
+    }
+}
+
+pub struct STextureDescriptor(pub wgpu::TextureDescriptor<'static>);
+
+impl TryFrom<&Value> for STextureDescriptor {
+    type Error = ();
+
+    fn try_from(value: &Value) -> Result<Self, Self::Error> {
+        let map_value = value.as_object().ok_or(())?;
+        let json_format = map_value.get(":format").and_then(Value::as_str).ok_or(())?;
+        let format = STextureFormat::try_from(json_format)?;
+        let mut default_value = wgpu::TextureDescriptor { 
+            label: None,
+            size: wgpu::Extent3d::default(),
+            mip_level_count: 1,
+            sample_count: 1, 
+            dimension: wgpu::TextureDimension::D2, 
+            format: format.0, 
+            usage: wgpu::TextureUsage::RENDER_ATTACHMENT 
+        };
+        if let Some(sample_count) = map_value.get(":sample-count").and_then(Value::as_i64) {
+            default_value.sample_count = sample_count as u32;
+        }
+        Ok(STextureDescriptor(default_value))
+    }
 }

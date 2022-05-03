@@ -49,7 +49,7 @@ fn on_start(mut commands:Commands,
     animation_control.play_index(0);
     let clone_runtime_skeleton = animation_control.get_runtime_skeleton().clone();
     let fox_mesh_id = {
-        let first_mesh = gltf_asset.first_mesh().unwrap();
+        let first_mesh = gltf_asset.first_gltf_mesh().unwrap();
         let mut fox = commands.spawn();
         fox.insert(clone_runtime_skeleton);
         let fox_mesh = fox.insert(Transform::default());

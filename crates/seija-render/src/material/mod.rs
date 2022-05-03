@@ -11,7 +11,7 @@ pub use material_def::{MaterialDef,read_material_def,PassDef,ShaderInfoDef};
 use seija_app::App;
 use bevy_ecs::prelude::{IntoSystem};
 use seija_asset::{AssetServer, AssetStage};
-pub use types::{RenderOrder,Cull,ZTest,RenderPath};
+pub use types::{RenderOrder,Cull,ZTest,RenderPath,STextureDescriptor};
 pub use texture_prop_def::{TexturePropDef,TexturePropInfo};
 
 use self::storage::{material_storage_event};

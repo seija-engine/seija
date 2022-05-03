@@ -9,18 +9,22 @@
    (let [
              camera        (node CAMERA           {:ubo "CameraBuffer" })
              pbr-camera-ex (node PBR_CAMERA_EX    {:ubo "CameraBuffer" })
-             light         (node PBRLIGHT         {:ubo "LightBuffer"  })
+             ;light         (node PBRLIGHT         {:ubo "LightBuffer"  })
              transform     (node TRANSFORM        {:ubo "ObjectBuffer" })
-             ;swapchain     (node SWAP_CHAIN)
-             gbuffer          (node GBUFFER)
-             depth-texture (node WINDOW_TEXTURE)
+             
+            
+             pass          (node PASS {:view-count 2 :is-depth true :path "Deferred"})
+             swapchain     (node SWAP_CHAIN)
+             depth-texture (node SCREEN_TEXTURE [{:format "Depth32Float"}])
+             gbuffer-texs  (node SCREEN_TEXTURE [{:format "Bgra8UnormSrgb"} {:format "Bgra8UnormSrgb"}])
          ]
          (link-> camera pbr-camera-ex)
-         (link-> light          gbuffer)
-         (link-> transform      gbuffer)
-         (link-> pbr-camera-ex  gbuffer)
-         ;(link-> swapchain      gbuffer {0 0 1 2})
-         (link-> depth-texture  gbuffer {0 0})
+         ;(link-> light          gbuffer)
+         (link-> transform      pass)
+         (link-> pbr-camera-ex  pass)
+         (link-> swapchain      pass {0 1})
+         (link-> gbuffer-texs   pass {1 0})
+         (link-> depth-texture  pass {0 2})
          
     )
     ;(pbr/create-pbr-graph true)

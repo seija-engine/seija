@@ -20,8 +20,12 @@ pub struct GltfAsset {
 }
 
 impl GltfAsset {
-    pub fn first_mesh(&self) -> Option<&GltfMesh> {
+    pub fn first_gltf_mesh(&self) -> Option<&GltfMesh> {
         self.meshs.first()
+    }
+
+    pub fn first_mesh(&self) -> Option<Handle<Mesh>> {
+        self.first_gltf_mesh().map(|v| v.primitives[0].mesh.clone())
     }
 
 }

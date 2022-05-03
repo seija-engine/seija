@@ -65,7 +65,7 @@
           "UV0":"require"
 
         },
-        "backend": [ "Camera3D", "Transform","PBRLight","PBRCameraEx"],
+        "backend": [ "Camera3D", "Transform"],
         "vs": "pbrGBuffer.pbr_gbuffer_vs_main",
         "fs": "pbrGBuffer.pbr_gbuffer_fs_main"
       }

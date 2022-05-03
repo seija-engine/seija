@@ -1,7 +1,8 @@
 use std::{convert::{TryFrom}, sync::{Arc}, cell::Ref, collections::HashMap};
 use seija_core::{TypeUuid};
+use serde::{Serialize, Deserialize};
 use wgpu::{FrontFace, PolygonMode};
-use super::{RenderOrder, errors::MaterialDefReadError, storage::DEFAULT_TEXTURES, texture_prop_def::TexturePropDef, types::{Cull, SFrontFace, SPolygonMode, ZTest, RenderPath}, TexturePropInfo};
+use super::{RenderOrder, errors::MaterialDefReadError, storage::DEFAULT_TEXTURES, texture_prop_def::TexturePropDef, types::{Cull, SFrontFace, SPolygonMode, ZTest, RenderPath, STextureFormat}, TexturePropInfo};
 use lite_clojure_eval::EvalRT;
 use serde_json::{Value};
 use uuid::Uuid;
@@ -28,7 +29,15 @@ pub struct PassDef {
     pub cull:Cull,
     pub clamp_depth:bool,
     pub shader_info:ShaderInfoDef,
+    pub targets:Vec<TargetInfo>
    
+}
+
+#[derive(Debug)]
+pub struct TargetInfo {
+    format:wgpu::TextureFormat,
+    blend:Option<wgpu::BlendState>,
+    write_mask:wgpu::ColorWrite
 }
 
 impl Default for PassDef {
@@ -41,7 +50,8 @@ impl Default for PassDef {
             z_test:ZTest::Less,
             clamp_depth:false,
             cull: Cull::Back,
-            shader_info:ShaderInfoDef::default()
+            shader_info:ShaderInfoDef::default(),
+            targets:vec![]
         }
     }
 }
@@ -162,6 +172,19 @@ fn read_pass(json_value:&Value) -> Result<PassDef,MaterialDefReadError> {
     }
     let shader_value =  map.get(":shader").ok_or(MaterialDefReadError::InvalidPassProp("shader".into()))?;
     pass_def.shader_info = ShaderInfoDef::try_from(shader_value)?;
+    let mut targets:Vec<TargetInfo> = vec![];
+    if let Some(json_targets) = map.get(":targets").and_then(Value::as_array) {
+        for json_target in json_targets.iter() {
+           if let Ok(target_info) = TargetInfo::try_from(json_target) {
+               targets.push(target_info);
+           } else {
+               log::error!("load :targets error:{:?}",json_target);
+           }
+        }
+    } else {
+        targets.push(TargetInfo::default());
+    }
+    pass_def.targets = targets;
     Ok(pass_def)
 }
 
@@ -188,5 +211,64 @@ impl TryFrom<&Value> for ShaderInfoDef  {
             macros:Arc::new(macro_arr),
             slots
         })
+    }
+}
+
+impl PassDef {
+    pub fn get_color_targets(&self) -> Vec<wgpu::ColorTargetState> {
+        let mut color_targets:Vec<wgpu::ColorTargetState> = vec![];
+        for target in self.targets.iter() {
+            let target = wgpu::ColorTargetState {
+                format: target.format.clone(),
+                blend: target.blend.clone(),
+                write_mask: target.write_mask.clone(),
+            };
+            color_targets.push(target);
+        }
+        color_targets
+    }
+}
+
+impl TryFrom<&Value> for TargetInfo {
+    type Error = ();
+    fn try_from(value: &Value) -> Result<Self, Self::Error> {
+        let mut default_target = TargetInfo::default();
+
+        let value_map = value.as_object().ok_or(())?;
+        let str_format = value_map.get(":format").and_then(Value::as_str).ok_or(())?;
+        let sformat = STextureFormat::try_from(str_format)?;
+        
+        default_target.format = sformat.0;
+        if let Some(blend) = value_map.get(":blend") {
+            if blend.is_null() {
+                default_target.blend = None;
+            } else {
+                //TODO
+                
+                todo!()
+            }
+        }
+        Ok(default_target)
+    }
+}
+
+impl Default for TargetInfo {
+    fn default() -> Self {
+        Self { 
+             format: wgpu::TextureFormat::Bgra8UnormSrgb,
+             blend: Some(wgpu::BlendState {
+                color: wgpu::BlendComponent {
+                    src_factor: wgpu::BlendFactor::SrcAlpha,
+                    dst_factor: wgpu::BlendFactor::OneMinusSrcAlpha,
+                    operation: wgpu::BlendOperation::Add,
+                },
+                alpha: wgpu::BlendComponent {
+                    src_factor: wgpu::BlendFactor::One,
+                    dst_factor: wgpu::BlendFactor::One,
+                    operation: wgpu::BlendOperation::Add,
+                },
+            }), 
+             write_mask: wgpu::ColorWrite::ALL
+        }
     }
 }

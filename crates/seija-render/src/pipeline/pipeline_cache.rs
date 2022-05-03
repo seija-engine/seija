@@ -151,22 +151,7 @@ impl PipelineCache {
        
       let pipeline_layout = self.create_pipeline_layout(ctx,pass,mat_def).log_err("create pipeline layout fail")?;
 
-      let targets = vec![wgpu::ColorTargetState {
-        format: wgpu::TextureFormat::Bgra8UnormSrgb,
-        blend: Some(wgpu::BlendState {
-            color: wgpu::BlendComponent {
-                src_factor: wgpu::BlendFactor::SrcAlpha,
-                dst_factor: wgpu::BlendFactor::OneMinusSrcAlpha,
-                operation: wgpu::BlendOperation::Add,
-            },
-            alpha: wgpu::BlendComponent {
-                src_factor: wgpu::BlendFactor::One,
-                dst_factor: wgpu::BlendFactor::One,
-                operation: wgpu::BlendOperation::Add,
-            },
-        }),
-        write_mask: wgpu::ColorWrite::ALL,
-    }];
+      let targets = pass.get_color_targets();
 
        let render_pipeline_desc = RenderPipelineDescriptor {
            label:None,
