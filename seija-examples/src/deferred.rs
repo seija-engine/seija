@@ -34,7 +34,7 @@ fn on_start(mut commands:Commands,
     add_pbr_camera(&window, &mut commands);
     load_material("res/materials/deferredPBR.mat.clj", &materials);
     load_material("res/materials/light_pass.mat.clj", &materials);
-    let h_texture = load_texture(&mut textures, "res/texture/b.jpg",None);
+    //let h_texture = load_texture(&mut textures, "res/texture/b.jpg",None);
     let gltf_asset = load_gltf("res/gltf/coin/scene.gltf",
                                    &mut meshs,
                                  &mut textures,
@@ -54,9 +54,9 @@ fn on_start(mut commands:Commands,
             mat.texture_props.set("metallicRoughness", gltf_asset.textures[1].clone());
             mat.texture_props.set("normalTexture", gltf_asset.textures[2].clone());
         }).unwrap();
-        //coin_entity.insert(h_material);
+        coin_entity.insert(h_material);
     };
-
+    /* 
     {
         
         let h_mat = materials.create_material_with("DeferredLightPass",|mat| {
@@ -71,7 +71,7 @@ fn on_start(mut commands:Commands,
         t.local.position.z = -0.1f32;
        
         commands.spawn().insert(h_quad).insert(t).insert(h_mat);
-    };
+    };*/
 }
 
 

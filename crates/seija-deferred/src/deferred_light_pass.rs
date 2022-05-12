@@ -19,24 +19,21 @@ impl DeferredLightPass {
 }
 
 impl INode for DeferredLightPass {
-    fn input_count(&self) -> usize { self.tex_count }
+    fn input_count(&self) -> usize { self.tex_count + 1 }
     fn init(&mut self, world: &mut World, ctx:&mut RenderContext) {
-        // {
-        //     let mut vm = EvalRT::new();
-        //     let mat_def = read_material_def(&mut vm, LIGHT_PASS_MAT_STRING).unwrap();
-        //     let mat_storages = world.get_resource::<MaterialStorage>().unwrap();
-        //     mat_storages.add_def(mat_def);
-        //     let h_mat = mat_storages.create_material("DeferredLightPass").unwrap();
+        {
+            let mut vm = EvalRT::new();
+            let mat_def = read_material_def(&mut vm, LIGHT_PASS_MAT_STRING).unwrap();
+            let mat_storages = world.get_resource::<MaterialStorage>().unwrap();
+            mat_storages.add_def(mat_def);
+            let h_mat = mat_storages.create_material("DeferredLightPass").unwrap();
 
-        //     let quad_mesh:Mesh = Sphere::new(1f32).into();
-        //     let mut meshs = world.get_resource_mut::<Assets<Mesh>>().unwrap();
-        //     let h_quad = meshs.add(quad_mesh);
-
-        //     let mut t = Transform::default();
-        //     t.local.position.z = -0.1f32;
-           
-        //     world.spawn().insert(h_quad).insert(t).insert(h_mat);
-        // };
+            let quad_mesh:Mesh = Quad::new(2f32).into();
+            let mut meshs = world.get_resource_mut::<Assets<Mesh>>().unwrap();
+            let h_quad = meshs.add(quad_mesh);
+ 
+            world.spawn().insert(h_quad).insert(Transform::default()).insert(h_mat);
+        };
     }
 
     fn prepare(&mut self, _world: &mut World, ctx:&mut RenderContext) {

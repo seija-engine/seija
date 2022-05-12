@@ -118,7 +118,11 @@ impl AppRender {
                 let parent_node = self.graph.graph.get_node(&parent_edge.output_node).unwrap();
                 for i in 0..parent_edge.output_idxs.len() {
                     let out_value = &parent_node.outputs[parent_edge.output_idxs[i]];
-                    new_inputs[parent_edge.input_idxs[i]] = out_value.clone();
+                    if let Some(id) = new_inputs.get_mut(parent_edge.input_idxs[i]) {
+                        *id = out_value.clone();
+                    } else {
+                        log::error!("input count error:{:?}",cur_node.name);
+                    }
                 }
             }
 

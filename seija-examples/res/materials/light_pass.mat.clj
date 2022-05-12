@@ -4,7 +4,7 @@
     :props [
         {:name "positionTex" :type "Texture" :default "white"}
         {:name "normalTex"   :type "Texture" :default "white"}
-        {:name "mainTexture" :type "Texture" :default "blue"}
+        {:name "mainTexture" :type "Texture" :default "white"}
         {:name "color" :type "float4" :default [1,1,1,1]}
     ]
     :pass {

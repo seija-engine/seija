@@ -8,7 +8,7 @@
         {:name "normalTexture"      :type "Texture" :default "blue"}
     ]
     :pass {
-        :targets [{:format "Bgra8UnormSrgb" :blend nil} {:format "Bgra8UnormSrgb" :blend nil}]
+        :targets [{:format "Bgra8UnormSrgb" :blend nil} {:format "Bgra8UnormSrgb" :blend nil} ]
         :shader {
             :name "core.pbrGBuffer"
             :macros []
