@@ -23,6 +23,16 @@
         "fs": "pures.texture_fs_main"
       },
       {
+        "name": "quadTexture",
+        "vertex": {
+          "POSITION": "require",
+          "UV0":"require"
+        },
+        "backend": [ "Camera3D", "Transform"],
+        "vs": "pures.texture_quadv_main",
+        "fs": "pures.texture_quadf_main"
+      },
+      {
         "name": "skinTexture",
         "vertex": {
           "POSITION": "require",

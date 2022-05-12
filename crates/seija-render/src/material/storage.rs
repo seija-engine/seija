@@ -39,11 +39,11 @@ impl MaterialStorage {
 
     pub fn init(&mut self,world:&mut World) {
         let mut textures = world.get_resource_mut::<Assets<Texture>>().unwrap();
-        let white = color_texture([255,255,255,255], 2);
+        let white = color_texture([255,255,255,255], 32);
         let h_white = textures.add(white);
         self.default_textures.push(h_white);
 
-        let blue = color_texture([0,0,255,255], 2);
+        let blue = color_texture([0,0,255,255], 32);
         let h_blue = textures.add(blue);
         self.default_textures.push(h_blue);
     }

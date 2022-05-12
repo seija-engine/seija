@@ -89,7 +89,7 @@ impl TextureProps {
     pub fn is_ready(&self,resources:&RenderResources) -> bool {
         if self.textures.is_empty() { return  true; }
         for tex in self.textures.iter() {
-            if resources.get_render_resource(&tex.id, 0).is_none() {
+            if resources.get_render_resource(&tex.id, 0).is_none() {      
                 return false;
             }
         }

@@ -12,29 +12,38 @@ pub struct PassNode {
     arg_count:usize,
     path:RenderPath,
     operations:Operations<Color>,
+    is_outinput:bool
 }
 
 
 
 impl INode for PassNode {
     fn input_count(&self) -> usize { self.arg_count }
+
+    fn output_count(&self) -> usize {
+        if self.is_outinput { 0 } else { self.arg_count }
+    }
     
     fn prepare(&mut self, _world: &mut World, _:&mut RenderContext) { }
 
     fn update(&mut self,world: &mut World,ctx:&mut RenderContext,
               inputs:&Vec<Option<RenderResourceId>>,
-              _outputs:&mut Vec<Option<RenderResourceId>>) {
+             outputs:&mut Vec<Option<RenderResourceId>>) {
             
             let mut command = ctx.command_encoder.take().unwrap();
             if let Err(err) = self.draw(world,&mut command,inputs,ctx) {
                 log::error!("pass node error:{:?}",err);
             }
             ctx.command_encoder = Some(command);
+
+            if self.is_outinput {
+                *outputs = inputs.clone();
+            }
     }
 }
 
 impl PassNode {
-    pub fn new(view_count:usize,is_depth:bool,path:RenderPath) -> PassNode {
+    pub fn new(view_count:usize,is_depth:bool,is_outinput:bool,path:RenderPath) -> PassNode {
         let mut arg_count = view_count;
         if is_depth { arg_count += 1; }
         PassNode {
@@ -42,6 +51,7 @@ impl PassNode {
             is_depth,
             arg_count,
             path,
+            is_outinput,
             operations:Operations { load:wgpu::LoadOp::Clear(wgpu::Color{r:0.01,g:0.01,b:0.01,a:0.0}), store:true }
         }
     }
@@ -65,7 +75,9 @@ impl PassNode {
                     if let Ok((_,hmesh,hmat))  = render_query.get(world, view_entity.entity) {
                        let mesh = meshs.get(&hmesh.id).ok_or(PassError::MissMesh)?;
                        let material = mats.get(&hmat.id).ok_or(PassError::MissMaterial)?;
+                      
                        if !material.is_ready(&ctx.resources) || material.def.path != self.path { continue }
+                      
                        if let Some(pipelines)  = pipeline_cahce.get_pipeline(&material.def.name, mesh) {
                          if let Some(mesh_buffer_id)  = ctx.resources.get_render_resource(&hmesh.id, 0) {
                             for pipeline in pipelines.pipelines.iter() {
@@ -87,6 +99,7 @@ impl PassNode {
                                     render_pass.set_index_buffer(idx_buffer.slice(0..), mesh.index_format().unwrap());
                                     render_pass.set_pipeline(&pipeline.pipeline);
                                     render_pass.draw_indexed(mesh.indices_range().unwrap(),0, 0..1);
+                                  
                                 } else {
                                     render_pass.set_pipeline(&pipeline.pipeline);
                                     render_pass.draw(0..mesh.count_vertices() as u32, 0..1);

@@ -1,10 +1,10 @@
 use glam::Vec3;
 use seija_asset::{Assets, Handle};
 use seija_core::{CoreStage, StartupStage, window::AppWindow, time::Time};
-use seija_examples::{IExamples, add_render_mesh, load_material};
+use seija_examples::{IExamples, add_render_mesh, load_material, load_texture};
 use bevy_ecs::{prelude::{Commands, Entity, Query, Res, ResMut}, system::{IntoSystem,SystemParam}};
 use seija_gltf::load_gltf;
-use seija_render::{camera::camera::{Camera, Perspective}, material::{Material, MaterialStorage}, resource::{CubeMapBuilder, Mesh, Texture}};
+use seija_render::{camera::camera::{Camera, Perspective}, material::{Material, MaterialStorage}, resource::{CubeMapBuilder, Mesh, Texture, shape::{Sphere, Cube, Quad}}};
 use seija_skeleton3d::{Skeleton, AnimationSet, RuntimeSkeleton, Skin};
 use seija_transform::Transform;
 
@@ -33,6 +33,8 @@ fn on_start(mut commands:Commands,
             materials:Res<MaterialStorage>) {
     add_pbr_camera(&window, &mut commands);
     load_material("res/materials/deferredPBR.mat.clj", &materials);
+    load_material("res/materials/light_pass.mat.clj", &materials);
+    let h_texture = load_texture(&mut textures, "res/texture/b.jpg",None);
     let gltf_asset = load_gltf("res/gltf/coin/scene.gltf",
                                    &mut meshs,
                                  &mut textures,
@@ -52,7 +54,23 @@ fn on_start(mut commands:Commands,
             mat.texture_props.set("metallicRoughness", gltf_asset.textures[1].clone());
             mat.texture_props.set("normalTexture", gltf_asset.textures[2].clone());
         }).unwrap();
-        coin_entity.insert(h_material);
+        //coin_entity.insert(h_material);
+    };
+
+    {
+        
+        let h_mat = materials.create_material_with("DeferredLightPass",|mat| {
+            mat.texture_props.set("mainTexture",h_texture.clone());
+        }).unwrap();
+
+        let quad_mesh:Mesh = Quad::new(2f32).into();
+        
+        let h_quad = meshs.add(quad_mesh);
+
+        let mut t = Transform::default();
+        t.local.position.z = -0.1f32;
+       
+        commands.spawn().insert(h_quad).insert(t).insert(h_mat);
     };
 }
 

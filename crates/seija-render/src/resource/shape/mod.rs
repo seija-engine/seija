@@ -2,12 +2,14 @@ mod skybox;
 mod sphere;
 mod cube;
 mod plane;
+mod quad;
 
 use glam::{Vec2, Vec3};
 pub use skybox::SkyBox;
 pub use sphere::Sphere;
 pub use cube::{Box,Cube};
 pub use plane::{Plane};
+pub use quad::{Quad};
 
 
 pub fn calc_tangent(verts:&Vec<[f32;3]>,uvs:&Vec<[f32;2]>,indices:&Vec<u32>) -> Vec<[f32;4]> {
@@ -49,11 +51,3 @@ pub fn calc_tangent(verts:&Vec<[f32;3]>,uvs:&Vec<[f32;2]>,indices:&Vec<u32>) -> 
     ret_list
 }
 
-
-#[test]
-fn test_tangent() {
-    use super::Mesh;
-    let cube = Cube::new(2f32);
-    let mesh:Mesh = cube.into();
-
-}

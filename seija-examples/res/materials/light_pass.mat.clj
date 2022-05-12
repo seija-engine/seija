@@ -10,7 +10,7 @@
     :pass {
 
         :shader {
-            :name "core.texture"
+            :name "core.quadTexture"
             :macros []
         }
     }

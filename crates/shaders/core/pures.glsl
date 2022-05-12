@@ -18,17 +18,35 @@ vec4 color_fs_main(VSOutput ino) {
 
 struct TexVSOutput {
   vec2 uv;
-  vec4 color;
 };
 
 TexVSOutput texture_vs_main() {
   TexVSOutput o;
   o.uv = vert_uv0; 
-  o.color = material.color;
   vec4 pos = getTransform() * vec4(vert_position, 1.0);
   gl_Position = getCameraProjView() * pos;
   return o;
 }
+
+vec4 texture_fs_main(TexVSOutput o) {
+  vec4 texColor = texture(sampler2D(tex_mainTexture,tex_mainTextureSampler),o.uv);
+ 
+  return texColor;
+}
+
+TexVSOutput texture_quadv_main() {
+  TexVSOutput o;
+  o.uv = vert_uv0;
+  gl_Position = vec4(vert_position, 1.0);
+  return o;
+}
+
+vec4 texture_quadf_main(TexVSOutput o) {
+  vec4 texColor = texture(sampler2D(tex_mainTexture,tex_mainTextureSampler),o.uv);
+ 
+  return texColor;
+}
+
 
 mat4 calcSkinMat() {
     mat4[256] jointMats = getJointMats();
@@ -42,7 +60,6 @@ mat4 calcSkinMat() {
 TexVSOutput texture_skin_vs_main() {
   TexVSOutput o;
   o.uv = vert_uv0; 
-  o.color = material.color;
   mat4 skinMat = calcSkinMat();
   vec4 pos = getTransform() * skinMat * vec4(vert_position, 1.0);
  
@@ -52,8 +69,3 @@ TexVSOutput texture_skin_vs_main() {
 }
 
 
-vec4 texture_fs_main(TexVSOutput o) {
-  vec4 outColor = texture(sampler2D(tex_mainTexture,tex_mainTextureSampler),o.uv);
-  outColor = outColor * o.color;
-  return outColor;
-}
