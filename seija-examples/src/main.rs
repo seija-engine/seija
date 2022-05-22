@@ -19,7 +19,7 @@ use seija_app::App;
 use seija_asset::{AssetModule};
 use seija_core::{CoreModule, CoreStage, StartupStage};
 
-use seija_deferred::create_deferred_plugin;
+use seija_deferred::{create_deferred_plugin, DeferredRenderModule};
 use seija_examples::{IExamples, pre_start};
 
 use seija_pbr::create_pbr_plugin;
@@ -55,9 +55,10 @@ fn main() {
     };
     render_config.set_config_path(".render");
     app.add_module(RenderModule(Arc::new(render_config)));
-    
+    app.add_module(DeferredRenderModule {mat_path:"res/materials/light_pass.mat.clj".into() });
     app.add_system2(CoreStage::Startup, StartupStage::PreStartup, pre_start.system());
-    
+    app.start();
+
     match TEST_NAME {
         "sample_gltf"    =>  { SampleGltf::run(&mut app); },
         "cube_map"       =>  { CubeMapTest::run(&mut app) },

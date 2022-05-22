@@ -2281,9 +2281,11 @@ dependencies = [
 name = "seija-deferred"
 version = "0.1.0"
 dependencies = [
+ "anyhow",
  "bevy_ecs",
  "lite-clojure-eval",
  "log",
+ "seija-app",
  "seija-asset",
  "seija-core",
  "seija-render",

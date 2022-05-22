@@ -5,7 +5,8 @@ use crate::IModule;
 pub struct App {
     pub world:World,
     pub schedule: Schedule,
-    runner: Option<Box<dyn FnOnce(App)>>
+    runner: Option<Box<dyn FnOnce(App)>>,
+    modules:Vec<Box<dyn IModule>>,
 }
 
 impl App {
@@ -13,12 +14,20 @@ impl App {
         App {
             world:World::default(),
             schedule:Schedule::default(),
-            runner:None
+            runner:None,
+            modules:vec![]
         }
     }
 
-    pub fn add_module<T:IModule>(&mut self,mut module:T) {
+    pub fn add_module<T:IModule + 'static>(&mut self,mut module:T) {
         module.init(self);
+        self.modules.push(Box::new(module));
+    }
+
+    pub fn start(&mut self) {
+        for module in self.modules.iter() {
+            module.start(&mut self.world)   
+        }
     }
 
     pub fn init_resource<T>(&mut self) where T:Default + Send + Sync  + 'static {

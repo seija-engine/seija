@@ -33,7 +33,6 @@ fn on_start(mut commands:Commands,
             materials:Res<MaterialStorage>) {
     add_pbr_camera(&window, &mut commands);
     load_material("res/materials/deferredPBR.mat.clj", &materials);
-    load_material("res/materials/light_pass.mat.clj", &materials);
     //let h_texture = load_texture(&mut textures, "res/texture/b.jpg",None);
     let gltf_asset = load_gltf("res/gltf/coin/scene.gltf",
                                    &mut meshs,

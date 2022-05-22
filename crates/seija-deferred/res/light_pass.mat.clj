@@ -10,7 +10,7 @@
     :pass {
 
         :shader {
-            :name "core.quadTexture"
+            :name "core.pbrDeferred"
             :macros []
         }
     }

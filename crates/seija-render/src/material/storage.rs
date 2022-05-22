@@ -1,6 +1,7 @@
 use std::{collections::HashMap, sync::Arc};
 use bevy_ecs::prelude::{Res, ResMut, World};
 use crossbeam_channel::{Sender, TryRecvError};
+use lite_clojure_eval::EvalRT;
 use parking_lot::RwLock;
 use seija_asset::{ AssetServer, Assets, Handle, LifecycleEvent, RefEvent};
 use seija_core::{TypeUuid};
@@ -8,7 +9,7 @@ use once_cell::sync::Lazy;
 
 
 use crate::{material::Material, resource::{Texture, color_texture}};
-use super::MaterialDef;
+use super::{MaterialDef, read_material_def};
 
 pub(crate) static DEFAULT_TEXTURES:Lazy<HashMap<String,usize>> = Lazy::new(|| {
     let mut m:HashMap<String,usize> = HashMap::new();
@@ -63,9 +64,22 @@ impl MaterialStorage {
         });
     }
 
+    pub fn load_material_def(&self,source:&str) -> bool {
+        let mut vm = EvalRT::new();
+        match read_material_def(&mut vm, source) {
+            Ok(def) => {
+                self.add_def(def);
+                return true;
+            },
+            Err(err) => {
+                log::error!("{}",err);
+                return false;
+             }
+        }
+    }
+
     pub fn create_material(&self,name:&str) -> Option<Handle<Material>> {
         let mut name_map = self.name_map.write();
-       
         if let Some(info) = name_map.get_mut(name) {
            let mat = Material::from_def(info.def.clone(),&self.default_textures);
            let handle = self.mateials.write().add(mat);
