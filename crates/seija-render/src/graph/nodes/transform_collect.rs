@@ -33,6 +33,7 @@ impl INode for TransformCollect {
     fn prepare(&mut self, world: &mut World,ctx:&mut RenderContext) {
         let mut added_transform = world.query_filtered::<Entity,(Added<Transform>,With<Handle<Mesh>>,With<Handle<Material>>)>();
         for v in added_transform.iter(&world) {
+           
             ctx.ubo_ctx.add_buffer(&self.ubo_name,&mut ctx.resources,Some(v.id()))
         }
 
@@ -45,9 +46,13 @@ impl INode for TransformCollect {
     fn update(&mut self,world: &mut World,ctx:&mut RenderContext,_:&Vec<Option<RenderResourceId>>,_:&mut Vec<Option<RenderResourceId>>) {
         let mut trans = world.query_filtered::<(Entity,&Transform),(Changed<Transform>,With<Handle<Mesh>>,With<Handle<Material>>)>();
         for (e,t) in trans.iter(world) { 
+           
             if let Some(key) = self.name_index {
+              
                 if let Some(buffer) = ctx.ubo_ctx.buffers.get_buffer_mut(&key,Some(e.id())) {
+                   
                     if let Some(backend) = self.backend.as_ref() {
+                       
                         backend.set_transform(&mut buffer.buffer,  &t.global().matrix());
                     }
                 }

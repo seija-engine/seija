@@ -11,5 +11,5 @@ VSOutput deferred_vs_main() {
 
 vec4 deferred_fs_main(VSOutput o) {
  
-  return vec4(0.1);
+  return vec4(0.3,0.3,0.3,1);
 }

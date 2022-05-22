@@ -11,13 +11,13 @@ pub struct ArrayItem {
 }
 
 pub struct UBOArrayBuffer {
-    buffer_def:Arc<UniformBufferDef>,
+    pub buffer_def:Arc<UniformBufferDef>,
     item_size:u64,
     cap:usize,
     len:usize,
     cache:Option<BufferId>,
     buffer:Option<BufferId>,
-    infos:fnv::FnvHashMap<u32,ArrayItem>,
+    pub infos:fnv::FnvHashMap<u32,ArrayItem>,
     free_items:Vec<ArrayItem>,
 }
 

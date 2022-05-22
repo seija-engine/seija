@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use bevy_ecs::schedule::GraphNode;
 use seija_core::LogOption;
 use wgpu::{CommandEncoder, Device};
 
@@ -144,7 +145,11 @@ impl BufferContext {
         let eid = m_eid.log_err("not found eid in buffer")?;
         let bind_group = array.get_item(eid).map(|v| &v.bind_group);
         if bind_group.is_none() {
-          log::error!("{:?}",m_eid);
+          if let Some(info) = self.comp_nameidxs.iter().filter(|v| v.1.1 == name_index.1).next() {
+            log::error!("bind_group is none {:?} {}",m_eid,info.0.as_str());
+          } else {
+            log::error!("bind_group is none {:?}",m_eid);
+          }
         }
         bind_group
       },

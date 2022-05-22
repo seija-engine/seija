@@ -3,7 +3,7 @@ use bevy_ecs::prelude::{Res, ResMut, World};
 use crossbeam_channel::{Sender, TryRecvError};
 use lite_clojure_eval::EvalRT;
 use parking_lot::RwLock;
-use seija_asset::{ AssetServer, Assets, Handle, LifecycleEvent, RefEvent};
+use seija_asset::{ AssetServer, Assets, Handle, LifecycleEvent, RefEvent, HandleId};
 use seija_core::{TypeUuid};
 use once_cell::sync::Lazy;
 
@@ -99,6 +99,20 @@ impl MaterialStorage {
             return Some(handle);
         }
         None
+    }
+
+    pub fn material_mut<F>(&self,id:&HandleId,f:F) -> bool where F:FnOnce(&mut Material)  {
+        let mut mats = self.mateials.write();
+        if let Some(mat) = mats.get_mut(id) {
+            f(mat);
+            return true;
+        }
+        false
+    }
+
+    pub fn has_def(&self,name:&str) -> bool {
+        let read_map = self.name_map.read();
+        read_map.contains_key(name)
     }
 
     

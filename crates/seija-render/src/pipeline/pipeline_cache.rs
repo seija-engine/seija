@@ -171,7 +171,7 @@ impl PipelineCache {
            let name_index = ctx.ubo_ctx.buffers.get_name_index(ubo_name).log_err(&format!("not found ubo: {}",ubo_name))?;
            ubos.push(name_index);
        }
-
+      
        let render_pipeline = RenderPipeline {
            ubos,
            pipeline:gpu_pipeline

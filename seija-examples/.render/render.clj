@@ -26,6 +26,7 @@
          (link-> pbr-camera-ex camera)
          (link-> camera gbuffer-pass)
          (link-> light  gbuffer-pass)
+         (link-> transform camera)
          (link-> gbuffer-texs  gbuffer-pass {0 0 1 1 })
          (link-> depth-texture gbuffer-pass {0 2})
         
