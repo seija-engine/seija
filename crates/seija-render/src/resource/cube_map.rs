@@ -1,8 +1,8 @@
-use std::{ops::Range, path::Path};
+use std::{ path::Path};
 
 use image::ImageError;
 
-use super::{ImageInfo, Texture, load_image_info, read_image_info};
+use super::{ImageInfo, Texture, load_image_info, TextureDescInfo};
 
 #[derive(Debug,Default)]
 pub struct CubeMapBuilder {
@@ -59,11 +59,16 @@ impl CubeMapBuilder {
             let data_ref = &self.images[index].as_ref()?.data;
             all_bytes[start..end].clone_from_slice(data_ref);
         }
-    
-        Some(Texture::new(wgpu::Extent3d { 
-            width: fst.width,
-            height: fst.height, 
-            depth_or_array_layers: 6 },
-  wgpu::TextureDimension::D2, all_bytes, fst.format))
+        
+        let info = ImageInfo {
+            width:fst.width,
+            height:fst.height,
+            format:fst.format,
+            data:all_bytes
+        };
+        let mut desc = TextureDescInfo::default();
+        desc.desc.size.depth_or_array_layers = 6;
+        let texture = Texture::create_image(info, desc);
+        Some(texture)
     }
 }

@@ -7,12 +7,13 @@ use seija_pbr::PBRCameraInfo;
 use seija_pbr::lights::PBRLight;
 use seija_render::camera::camera::Perspective;
 use seija_render::light::{Light};
+use seija_render::resource::Texture;
 use seija_render::resource::shape::{Sphere, Plane};
 use seija_render::wgpu::{self};
 use seija_render::{
     camera::camera::Camera,
     material::MaterialStorage,
-    resource::{shape::Cube, Mesh, Texture},
+    resource::{Mesh},
 };
 use seija_transform::Transform;
 

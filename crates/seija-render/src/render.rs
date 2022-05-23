@@ -132,6 +132,7 @@ impl AppRender {
         }
         
         resource::update_mesh_system(world,&mut self.mesh_event_reader,ctx);
+       
         resource::update_texture_system(world, &mut self.texture_event_reader, ctx);
 
         let command_buffer = ctx.command_encoder.take().unwrap().finish();

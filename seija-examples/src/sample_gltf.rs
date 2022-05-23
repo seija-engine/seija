@@ -1,14 +1,12 @@
-use std::path::Path;
-
 use glam::{Vec3, Vec4, Quat};
 use seija_asset::{Assets, Handle};
-use seija_core::{CoreStage, StartupStage, bytes::FromBytes, window::AppWindow, time::Time};
-use seija_examples::{IExamples, add_render_mesh, load_material};
+use seija_core::{CoreStage, StartupStage, window::AppWindow, time::Time};
+use seija_examples::{IExamples, load_material};
 use bevy_ecs::{prelude::{Commands, Entity, Query, Res, ResMut}, system::{IntoSystem,SystemParam}};
-use seija_gltf::{create_gltf, load_gltf};
-use seija_render::{camera::camera::{Camera, Perspective}, material::{Material, MaterialStorage}, resource::{CubeMapBuilder, Mesh, Texture}};
+use seija_gltf::load_gltf;
+use seija_render::{material::{MaterialStorage}, resource::{Mesh, Texture}};
 use seija_skeleton3d::{Skeleton, AnimationSet, RuntimeSkeleton, AnimationControl, Skin};
-use seija_transform::{Transform, hierarchy::Parent, BuildChildren};
+use seija_transform::{Transform, BuildChildren};
 use crate::lib::{add_pbr_camera};
 pub struct SampleGltf;
 

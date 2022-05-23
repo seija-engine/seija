@@ -1,17 +1,17 @@
 use bevy_ecs::prelude::{Commands, Entity, IntoSystem, Query, QuerySet, Res, ResMut};
 use glam::{Vec3, Vec4, Quat};
 use seija_asset::Assets;
-use seija_core::time::Time;
 use seija_core::{window::AppWindow, CoreStage, StartupStage};
 use seija_examples::{add_render_mesh, load_texture, IExamples};
 use seija_gltf::{create_gltf, create_node, load_gltf};
 use seija_render::light::{Light, LightEnv, LightType};
+use seija_render::resource::Texture;
 use seija_render::resource::shape::{Sphere, Plane};
 use seija_render::wgpu::{self};
 use seija_render::{
     camera::camera::Camera,
     material::MaterialStorage,
-    resource::{shape::Cube, Mesh, Texture},
+    resource::{shape::Cube, Mesh},
 };
 use seija_transform::Transform;
 pub struct LightTest;

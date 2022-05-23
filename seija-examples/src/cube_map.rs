@@ -1,12 +1,11 @@
 use std::path::Path;
 
 use bevy_ecs::prelude::{Commands, Entity, IntoSystem, Query, Res, ResMut};
-use glam::{Quat, Vec3, Vec4};
-use seija_asset::{Asset, Assets, Handle, HandleId};
+use glam::{Quat, Vec3};
+use seija_asset::{Assets, Handle, HandleId};
 use seija_core::{CoreStage, StartupStage, window::AppWindow};
 use seija_examples::IExamples;
-use seija_gltf::{create_gltf, load_gltf};
-use seija_render::{camera::camera::Camera, material::MaterialStorage, resource::{CubeMapBuilder, Mesh, Texture, shape::{Cube, SkyBox}}};
+use seija_render::{camera::camera::Camera, material::MaterialStorage, resource::{CubeMapBuilder, Mesh, shape::{Cube, SkyBox}, Texture}};
 use seija_transform::Transform;
 
 pub struct CubeMapTest;

@@ -4,7 +4,7 @@ use seija_core::{CoreStage, StartupStage, window::AppWindow, time::Time};
 use seija_examples::{IExamples, add_render_mesh, load_material, load_texture};
 use bevy_ecs::{prelude::{Commands, Entity, Query, Res, ResMut}, system::{IntoSystem,SystemParam}};
 use seija_gltf::load_gltf;
-use seija_render::{camera::camera::{Camera, Perspective}, material::{Material, MaterialStorage}, resource::{CubeMapBuilder, Mesh, Texture, shape::{Sphere, Cube, Quad}}};
+use seija_render::{camera::camera::{Camera, Perspective}, material::{Material, MaterialStorage}, resource::{CubeMapBuilder, Mesh, shape::{Sphere, Cube, Quad}, Texture}};
 use seija_skeleton3d::{Skeleton, AnimationSet, RuntimeSkeleton, Skin};
 use seija_transform::Transform;
 

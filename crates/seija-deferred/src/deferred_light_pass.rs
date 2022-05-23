@@ -1,11 +1,9 @@
 use bevy_ecs::prelude::{World, Entity};
 
 use seija_asset::Handle;
-use seija_render::{graph::INode, RenderContext, resource::{RenderResourceId, shape::{Quad}, Mesh, Texture}, 
+use seija_render::{graph::INode, RenderContext, resource::{RenderResourceId, Texture}, 
 material::{MaterialStorage, Material}, errors::RenderErrors};
-use seija_transform::Transform;
 use anyhow::{Result,anyhow};
-
 use crate::DeferredQuad;
 
 pub struct DeferredLightPass {

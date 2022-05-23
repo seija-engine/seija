@@ -1,11 +1,11 @@
-use bevy_ecs::{prelude::{Commands, Entity, Res}, schedule::SystemDescriptor, system::SystemParam};
+use bevy_ecs::{prelude::{Commands, Entity, Res}};
 use glam::{Quat, Vec3, Vec4};
 use lite_clojure_eval::EvalRT;
 use seija_app::App;
 use seija_asset::{Assets, Handle};
 use seija_core::{CoreStage, window::AppWindow};
 use seija_pbr::PBRCameraInfo;
-use seija_render::{camera::{camera::Perspective,camera::Camera}, material::{MaterialStorage, read_material_def}, resource::{Mesh, Texture}};
+use seija_render::{camera::{camera::Perspective,camera::Camera}, material::{MaterialStorage, read_material_def}, resource::{Mesh, Texture, TextureDescInfo}};
 use seija_transform::{Transform, hierarchy::Parent};
 use bevy_ecs::prelude::*;
 use seija_render::wgpu;
@@ -67,16 +67,15 @@ pub fn load_material(path:&str,mats:&MaterialStorage) {
 }
 
 
-pub fn load_texture(textures:&mut Assets<Texture>,path:&str,format:Option<wgpu::TextureFormat>) -> Handle<Texture> {
-    let texture = Texture::from_bytes(&std::fs::read(path).unwrap(),format).unwrap();
-    println!("{} format:{:?}",path,texture.format);
+pub fn load_texture(textures:&mut Assets<Texture>,path:&str) -> Handle<Texture> {
+    let texture = Texture::from_image_bytes(&std::fs::read(path).unwrap(),TextureDescInfo::default()).unwrap();
     textures.add(texture)
 }
 
 pub fn add_render_mesh(
-                       mut commands:&mut Commands,
+                       commands:&mut Commands,
                        mesh:Handle<Mesh>,
-                       texture:Handle<seija_render::resource::Texture>,
+                       texture:Handle<Texture>,
                        mat_name:&str,
                        pos:Vec3,
                        mats:&MaterialStorage) -> Entity {

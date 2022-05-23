@@ -4,7 +4,7 @@ use bevy_ecs::prelude::{Commands, Entity, IntoSystem, Query, Res, ResMut};
 use seija_asset::{Assets, Handle};
 use seija_core::{CoreStage, StartupStage, window::AppWindow};
 
-use seija_render::{wgpu,light::LightEnv, material::MaterialStorage, resource::{Mesh, Texture, shape::{Cube, Sphere}}};
+use seija_render::{wgpu,light::LightEnv, material::MaterialStorage, resource::{Mesh, shape::{Cube, Sphere}, Texture}};
 use seija_transform::Transform;
 
 pub struct PbrTest;
@@ -22,9 +22,9 @@ fn on_start(mut commands:Commands,mut meshs:ResMut<Assets <Mesh>>,mut textures:R
 }
 
 fn create_pbr_sphere(commands:&mut Commands,textures:&mut Assets<Texture>,meshs:&mut Assets<Mesh>,materials:Res<MaterialStorage>) {
-    let h_texture = load_texture(textures, "res/texture/WoodFloor043_1K_Color.jpg",Some(wgpu::TextureFormat::Rgba8UnormSrgb));
-    let h_roughness = load_texture(textures, "res/texture/WoodFloor043_1K_Roughness.jpg",Some(wgpu::TextureFormat::R8Unorm));
-    let h_normal = load_texture(textures, "res/texture/WoodFloor043_1K_Normal.jpg",Some(wgpu::TextureFormat::Rgba8Unorm));
+    let h_texture = load_texture(textures, "res/texture/WoodFloor043_1K_Color.jpg");
+    let h_roughness = load_texture(textures, "res/texture/WoodFloor043_1K_Roughness.jpg");
+    let h_normal = load_texture(textures, "res/texture/WoodFloor043_1K_Normal.jpg");
     let mesh:Mesh = Sphere::new(2f32).into();
     let h_mesh = meshs.add(mesh);
     let h_material = materials.create_material_with("pbr", |mat| {

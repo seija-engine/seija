@@ -1,9 +1,10 @@
 use std::{collections::HashMap, num::NonZeroU32, ops::Range, sync::Arc};
 use seija_asset::{HandleId};
 use seija_core::IDGenU64;
-use wgpu::{Buffer, BufferUsage, Device, SwapChainError, TextureView, util::DeviceExt};
+use wgpu::{BufferUsage, SwapChainError, TextureView, util::DeviceExt};
 
-use super::Texture;
+use super::{Texture, TextureType};
+
 
 pub const COPY_BYTES_PER_ROW_ALIGNMENT: usize = wgpu::COPY_BYTES_PER_ROW_ALIGNMENT as usize;
 
@@ -251,30 +252,36 @@ impl RenderResources {
     }
 
     pub fn fill_texture(&mut self,texture:&Texture,texture_id:&TextureId,command:&mut wgpu::CommandEncoder) {
-        let width = texture.size.width as usize;
-        let aligned_width = Self::get_aligned_texture_size(width);
-        let format_size:usize = texture.format.describe().block_size as usize;
-       
-        let mut aligned_data = vec![0;format_size * 
-                                              aligned_width * 
-                                              texture.size.height as usize * 
-                                              texture.size.depth_or_array_layers as usize];
-
-        texture.data.chunks_exact(format_size * width)
-                    .enumerate()
-                    .for_each(|(index, row)| {
-                                let offset = index * aligned_width * format_size;
-                                aligned_data[offset..(offset + width * format_size)]
-                                    .copy_from_slice(row);
-                              });
-
-        let texture_buffer = self.create_buffer_with_data(wgpu::BufferUsage::COPY_SRC,&aligned_data);
-        self.copy_buffer_to_texture(command, texture_buffer, 0, 
-                                    NonZeroU32::new((format_size * aligned_width) as u32).unwrap(), 
-                                    texture_id, wgpu::Origin3d::default(), 0, texture.size,
-                                   if texture.size.depth_or_array_layers > 1 {
-                                      Some(NonZeroU32::new(texture.size.height).unwrap())
-                                   } else { None })
+        if let TextureType::Image(image_info) = &texture.texture {
+            let desc = &texture.desc().desc;
+            let width = desc.size.width as usize;
+            let aligned_width = Self::get_aligned_texture_size(width);
+            let format_size:usize = desc.format.describe().block_size as usize;
+           
+            let mut aligned_data = vec![0;format_size * 
+                                                  aligned_width * 
+                                                  desc.size.height as usize * 
+                                                  desc.size.depth_or_array_layers as usize];
+    
+            image_info.data.chunks_exact(format_size * width)
+                        .enumerate()
+                        .for_each(|(index, row)| {
+                                    let offset = index * aligned_width * format_size;
+                                    aligned_data[offset..(offset + width * format_size)]
+                                        .copy_from_slice(row);
+                                  });
+    
+            let texture_buffer = self.create_buffer_with_data(wgpu::BufferUsage::COPY_SRC,&aligned_data);
+            self.copy_buffer_to_texture(command, 
+                           texture_buffer, 
+                           0, 
+                     NonZeroU32::new((format_size * aligned_width) as u32).unwrap(), 
+                           texture_id,
+                            wgpu::Origin3d::default(),
+                         0, desc.size,
+                        if desc.size.depth_or_array_layers > 1 { Some(NonZeroU32::new(desc.size.height).unwrap()) } else { None })
+        }
+        
     }
 
     pub fn copy_buffer_to_texture(&self,

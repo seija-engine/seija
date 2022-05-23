@@ -8,7 +8,7 @@ use seija_core::{TypeUuid};
 use once_cell::sync::Lazy;
 
 
-use crate::{material::Material, resource::{Texture, color_texture}};
+use crate::{material::Material, resource::{color_texture, Texture}};
 use super::{MaterialDef, read_material_def};
 
 pub(crate) static DEFAULT_TEXTURES:Lazy<HashMap<String,usize>> = Lazy::new(|| {

@@ -3,7 +3,10 @@ use crate::anim_loader::{load_skeleton, load_animations, load_skin};
 use crate::{ImportData};
 use crate::{GltfError, asset::{GltfAsset, GltfCamera, GltfMaterial, GltfMesh, GltfNode, GltfPrimitive, GltfScene, NodeIndex}};
 use seija_asset::{Assets, Handle};
-use seija_render::{camera::camera::{Orthographic, Perspective, Projection}, resource::{Indices, Mesh,Texture, MeshAttributeType, VertexAttributeValues}, wgpu, wgpu::{PrimitiveTopology}};
+use seija_render::resource::{Texture, TextureDescInfo};
+use seija_render::{camera::camera::{Orthographic, Perspective, Projection}, 
+                   resource::{Indices, Mesh, MeshAttributeType, VertexAttributeValues}, 
+                   wgpu, wgpu::{PrimitiveTopology}};
 use seija_skeleton3d::{Skeleton, AnimationSet, Skin};
 use seija_transform::{Transform, TransformMatrix};
 
@@ -127,14 +130,19 @@ fn load_textures(gltf:&ImportData,path:&Path,texture_assets:&mut Assets<Texture>
                 let start = view.offset() as usize;
                 let end = (view.offset() + view.length()) as usize;
                 let buffer = &gltf.1[view.buffer().index()][start..end];
-                let texture = Texture::from_bytes(buffer,None).map_err(|_| GltfError::LoadImageError)?;
+                let mut desc = TextureDescInfo::default();
+                desc.sampler_desc = get_texture_sampler(&json_texture);
+                let texture = Texture::from_image_bytes(buffer,desc)
+                                             .map_err(|_| GltfError::LoadImageError)?;
                 textures.push(texture_assets.add(texture));
             },
             gltf::image::Source::Uri { uri, mime_type:_ } => {
                 let texture_path = path.parent().map(|p| p.join(uri)).ok_or(GltfError::LoadImageError)?;
                 let bytes = std::fs::read(texture_path).map_err(|_| GltfError::LoadImageError)?;
-                let mut texture = Texture::from_bytes(&bytes,None).map_err(|_| GltfError::LoadImageError)?;
-                texture.sampler = get_texture_sampler(&json_texture);
+                let mut desc = TextureDescInfo::default();
+                desc.sampler_desc = get_texture_sampler(&json_texture);
+                let texture = Texture::from_image_bytes(&bytes,desc)
+                                                  .map_err(|_| GltfError::LoadImageError)?;
                 textures.push(texture_assets.add(texture));
             }
         }
