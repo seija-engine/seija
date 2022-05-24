@@ -1,5 +1,5 @@
 use std::{collections::HashMap, num::NonZeroU32, ops::Range, sync::Arc};
-use seija_asset::{HandleId};
+use seija_asset::{HandleId, Handle};
 use seija_core::IDGenU64;
 use wgpu::{BufferUsage, SwapChainError, TextureView, util::DeviceExt};
 
@@ -12,15 +12,17 @@ pub const COPY_BYTES_PER_ROW_ALIGNMENT: usize = wgpu::COPY_BYTES_PER_ROW_ALIGNME
 pub enum RenderResourceId {
     Buffer(BufferId),
     BufferAddr(BufferId,u64,u64),
-    Texture(TextureId),
+    TextureView(TextureId),
     Sampler(SamplerId),
-    MainSwap
+    MainSwap,
+
+    Texture(Handle<Texture>)
 }
 
 impl RenderResourceId {
     pub fn into_texture_id(&self) -> Option<TextureId> {
         match self {
-            RenderResourceId::Texture(texture_id) => Some(*texture_id),
+            RenderResourceId::TextureView(texture_id) => Some(*texture_id),
             _ => None
         }
     }
@@ -28,6 +30,13 @@ impl RenderResourceId {
     pub fn into_sampler_id(&self) -> Option<SamplerId> {
         match self {
             RenderResourceId::Sampler(sampler_id) => Some(*sampler_id),
+            _ => None
+        }
+    }
+
+    pub fn into_texture(&self) -> Option<Handle<Texture>> {
+        match self {
+            RenderResourceId::Texture(texture) => Some(texture.clone_weak()),
             _ => None
         }
     }
@@ -163,6 +172,9 @@ impl RenderResources {
     }
 
     pub fn next_swap_chain_texture(&mut self) -> Result<RenderResourceId,SwapChainError> {
+       if self.main_swap_chain_frame.is_some() {
+           return Ok(RenderResourceId::MainSwap)
+       }
        self.main_swap_chain.as_mut().ok_or(SwapChainError::Lost)
                                     .and_then(|v| v.get_current_frame())
                                     .map(|s| {
@@ -176,9 +188,13 @@ impl RenderResources {
             RenderResourceId::MainSwap => {
                 self.main_swap_chain_frame.as_ref().map(|v| &v.output.view)
             }
-            RenderResourceId::Texture(texture_id) => {
+            RenderResourceId::TextureView(texture_id) => {
                 self.texture_views.get(texture_id)
-            }
+            },
+            RenderResourceId::Texture(h_tex) => {
+                let view_res_id = self.get_render_resource(&h_tex.id, 0)?;
+                self.get_texture_view_by_resid(view_res_id)
+            },
             _ => None
         }
     }
@@ -225,7 +241,7 @@ impl RenderResources {
     }
 
     pub fn remove_texture(&mut self,id:&RenderResourceId) {
-        if let RenderResourceId::Texture(tex_id) = id {
+        if let RenderResourceId::TextureView(tex_id) = id {
             self.textures.remove(tex_id);
             self.texture_views.remove(tex_id);
         }
@@ -316,7 +332,15 @@ impl RenderResources {
     }
 
     pub fn clear_swap_chain_texture(&mut self) {
-        
         self.main_swap_chain_frame = None;
+    }
+
+    pub fn is_ready(&self,res_id:&RenderResourceId) -> bool {
+        match res_id {
+            RenderResourceId::Texture(tex) => {
+                !self.get_render_resource(&tex.id, 0).is_none()
+            },
+            _ => true
+        }
     }
 }

@@ -1,6 +1,7 @@
 use bevy_ecs::prelude::World;
+use seija_asset::Assets;
 
-use crate::{graph::INode, RenderContext, resource::RenderResourceId};
+use crate::{graph::INode, RenderContext, resource::{RenderResourceId, TextureDescInfo, Texture}};
 
 use super::WindowEvent;
 
@@ -32,13 +33,18 @@ impl INode for ScreenTextureNode {
                     ctx.resources.remove_texture(id);
                 }
             }
-            let default_view = &wgpu::TextureViewDescriptor::default();
+
+            let mut textures = world.get_resource_mut::<Assets<Texture>>().unwrap();
             let mut index:usize = 0;
             for texture_desc in self.texture_descs.iter_mut() {
-                texture_desc.size.width = w;
-                texture_desc.size.height = h;
-                let new_texture = ctx.resources.create_texture(texture_desc, default_view);
-                self.out_textures[index] = Some(RenderResourceId::Texture(new_texture));
+                let mut desc = TextureDescInfo::default();
+                desc.desc = texture_desc.clone();
+                desc.desc.size.width = w;
+                desc.desc.size.height = h;
+                let rt_texture = Texture::create_rt(desc);
+                let h_texture = textures.add(rt_texture);
+                
+                self.out_textures[index] = Some(RenderResourceId::Texture(h_texture));
                 index += 1;
             }
        }

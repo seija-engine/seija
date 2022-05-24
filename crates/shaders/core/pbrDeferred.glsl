@@ -10,6 +10,7 @@ VSOutput deferred_vs_main() {
 }
 
 vec4 deferred_fs_main(VSOutput o) {
- 
-  return vec4(0.3,0.3,0.3,1);
+  vec4 posColor = texture(sampler2D(tex_positionTex,tex_positionTexSampler),o.uv);
+  vec4 normalColor = texture(sampler2D(tex_normalTex,tex_normalTexSampler),o.uv);
+  return vec4(posColor.r * normalColor.r,posColor.g * normalColor.g,posColor.b * normalColor.b,1);
 }

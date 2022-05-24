@@ -4,7 +4,7 @@ use lite_clojure_eval::{Variable,GcRefCell};
 use seija_core::LogOption;
 use serde_json::Value;
 
-use crate::{graph::{NodeId, nodes::{CameraCollect, SwapchainNode, PassNode, WindowTextureNode, TransformCollect, LightCollect, ScreenTextureNode}}, render::RenderGraphContext, material::{STextureDescriptor, RenderPath}};
+use crate::{graph::{NodeId, nodes::{CameraCollect, SwapchainNode, PassNode, TransformCollect, LightCollect, ScreenTextureNode}}, render::RenderGraphContext, material::{STextureDescriptor, RenderPath}};
 
 use super::{NodeCreatorSet, NodeCreatorFn};
 
@@ -13,7 +13,6 @@ pub fn builtin_node_creators() -> NodeCreatorSet {
     map.insert("CAMERA".into()    , create_camera_node);
     map.insert("SWAP_CHAIN".into(), create_swap_chain_node);
     map.insert("PASS".into(), create_pass_node);
-    map.insert("WINDOW_TEXTURE".into(), create_window_texture_node);
     map.insert("SCREEN_TEXTURE".into(), create_screen_texture_node);
     map.insert("TRANSFORM".into(), create_transform_node);
     map.insert("LIGHT".into(), create_light_node);
@@ -68,19 +67,6 @@ fn create_pass_node(ctx:&mut RenderGraphContext,params:Variable) -> NodeId {
     let path = RenderPath::try_from(str_path).unwrap_or(RenderPath::Forward);
     let pass_node = PassNode::new(view_count,is_depth,is_outinput,path);
     ctx.graph.add_node("PassNode", pass_node)
-}
-
-fn create_window_texture_node(ctx:&mut RenderGraphContext,params:Variable) -> NodeId {
-    let window_texture_node = WindowTextureNode::new(wgpu::TextureDescriptor { 
-        label: None,
-        size: wgpu::Extent3d::default(),
-        mip_level_count: 1,
-        sample_count: 1, 
-        dimension: wgpu::TextureDimension::D2, 
-        format: wgpu::TextureFormat::Depth32Float, 
-        usage: wgpu::TextureUsage::RENDER_ATTACHMENT 
-    });
-    ctx.graph.add_node("WindowTexture", window_texture_node)
 }
 
 fn create_screen_texture_node(ctx:&mut RenderGraphContext,params:Variable) -> NodeId {

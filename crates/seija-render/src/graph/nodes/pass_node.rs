@@ -29,9 +29,13 @@ impl INode for PassNode {
     fn update(&mut self,world: &mut World,ctx:&mut RenderContext,
               inputs:&Vec<Option<RenderResourceId>>,
              outputs:&mut Vec<Option<RenderResourceId>>) {
+            if !self.is_input_ready(&ctx.resources,inputs) { return; }
+            
             let mut command = ctx.command_encoder.take().unwrap();
             if let Err(err) = self.draw(world,&mut command,inputs,ctx) {
                 log::error!("pass node error:{:?}",err);
+            } else {
+                ctx.frame_draw_pass += 1;
             }
             ctx.command_encoder = Some(command);
 
@@ -114,6 +118,16 @@ impl PassNode {
         Ok(())
     }
 
+    fn is_input_ready(&self,res:&RenderResources,inputs:&Vec<Option<RenderResourceId>>) -> bool {
+        for idx in 0..self.arg_count {
+            if let Some(res_id) = inputs[idx].as_ref() {
+                if !res.is_ready(res_id) { return false; }
+            } else {
+                return false;
+            }
+        }
+        true
+    }
 
     fn create_render_pass<'a>(&self,inputs:&Vec<Option<RenderResourceId>>,
                           res:&'a RenderResources,command:&'a mut CommandEncoder) -> Result<wgpu::RenderPass<'a>,PassError>  {

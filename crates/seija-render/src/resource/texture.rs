@@ -107,7 +107,7 @@ pub fn update_texture_system(world:&mut World,texture_reader:&mut ManualEventRea
         if let Some(texture) = textures.get(&texture_handle.id) {
             let desc = texture.desc();
             let texture_id = ctx.resources.create_texture(&desc.desc,&desc.view_desc);
-            ctx.resources.set_render_resource(&texture_handle.id, RenderResourceId::Texture(texture_id), 0);
+            ctx.resources.set_render_resource(&texture_handle.id, RenderResourceId::TextureView(texture_id), 0);
 
             let sampler_id = ctx.resources.create_sampler(&desc.sampler_desc);
             ctx.resources.set_render_resource(&texture_handle.id, RenderResourceId::Sampler(sampler_id), 1);

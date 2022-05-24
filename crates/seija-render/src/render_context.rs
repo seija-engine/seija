@@ -14,7 +14,9 @@ pub struct RenderContext {
     pub material_sys:MaterialSystem,
     pub shaders:RuntimeShaderInfo,
     pub ubo_ctx:UBOContext,
-    pub setting:Arc<GraphSetting>
+    pub setting:Arc<GraphSetting>,
+
+    pub frame_draw_pass:u8,
 }
 
 impl RenderContext {
@@ -39,7 +41,8 @@ impl RenderContext {
             material_sys:MaterialSystem::new(&device),
             shaders,
             ubo_ctx:UBOContext::default(),
-            setting
+            setting,
+            frame_draw_pass:0
         };
        
          

@@ -18,6 +18,7 @@ impl INode for SwapchainNode {
                         inputs:&Vec<Option<RenderResourceId>>,
                         outputs:&mut Vec<Option<RenderResourceId>>) {
        if let Ok(res_id) = ctx.resources.next_swap_chain_texture() {
+           
            outputs[0] = Some(res_id);
        }
     }

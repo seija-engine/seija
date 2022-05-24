@@ -106,6 +106,7 @@ impl AppRender {
 
 
     pub fn update(&mut self, world: &mut World,ctx:&mut RenderContext) {
+        ctx.frame_draw_pass = 0;
         ctx.command_encoder = Some(self.device.create_command_encoder(&CommandEncoderDescriptor::default()));
         self.update_winodw_surface(world,&mut ctx.resources);
         ctx.ubo_ctx.update(&mut ctx.resources,ctx.command_encoder.as_mut().unwrap());
@@ -117,7 +118,8 @@ impl AppRender {
             for parent_edge in cur_node.edges.input_edges.iter() {
                 let parent_node = self.graph.graph.get_node(&parent_edge.output_node).unwrap();
                 for i in 0..parent_edge.output_idxs.len() {
-                    let out_value = &parent_node.outputs[parent_edge.output_idxs[i]];
+                   
+                    let out_value = parent_node.outputs.get(parent_edge.output_idxs[i]).unwrap_or(&None);
                     if let Some(id) = new_inputs.get_mut(parent_edge.input_idxs[i]) {
                         *id = out_value.clone();
                     } else {
@@ -135,9 +137,14 @@ impl AppRender {
        
         resource::update_texture_system(world, &mut self.texture_event_reader, ctx);
 
+        
         let command_buffer = ctx.command_encoder.take().unwrap().finish();
         self.queue.submit(Some(command_buffer));
-        ctx.resources.clear_swap_chain_texture();
+        if ctx.frame_draw_pass > 0 {
+            ctx.resources.clear_swap_chain_texture();
+            ctx.frame_draw_pass = 0;
+        }
+       
     }
 
     fn update_winodw_surface(&mut self, world: &mut World,render_res:&mut RenderResources) {
