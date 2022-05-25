@@ -38,7 +38,7 @@ impl BindGroupLayoutBuilder {
             binding:self.layout_entrys.len() as u32,
             visibility:ShaderStage::FRAGMENT,
             ty:wgpu::BindingType::Texture {
-                sample_type:wgpu::TextureSampleType::Float { filterable: true },
+                sample_type:wgpu::TextureSampleType::Float { filterable: false },
                 view_dimension:if is_cube_map {wgpu::TextureViewDimension::Cube } else { wgpu::TextureViewDimension::D2 },
                 multisampled:false
             },

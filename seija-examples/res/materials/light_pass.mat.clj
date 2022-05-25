@@ -2,15 +2,15 @@
     :name "DeferredLightPass"
     :order "Opaque"
     :props [
-        {:name "positionTex" :type "Texture" :default "white"}
-        {:name "normalTex"   :type "Texture" :default "white"}
-        {:name "mainTexture" :type "Texture" :default "white"}
-        {:name "color" :type "float4" :default [1,1,1,1]}
+        {:name "positionTexture" :type "Texture" :default "white"}
+        {:name "normalTexture"   :type "Texture" :default "white"}
+        {:name "diffTexture" :type "Texture" :default "white"}
+        {:name "specTexture" :type "Texture" :default "white"}
     ]
     :pass {
 
         :shader {
-            :name "core.quadTexture"
+            :name "core.pbrDeferred"
             :macros []
         }
     }

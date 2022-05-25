@@ -26,10 +26,14 @@ V2S pbr_gbuffer_vs_main() {
 struct GBufferTexs {
    vec4 rt0;
    vec4 rt1;
+   vec4 rt2;
+   vec4 rt3;
 };
 
 GBufferTexs pbr_gbuffer_fs_main(V2S v2s) {
     vec4 normalColor = texture(sampler2D(tex_normalTexture,tex_normalTextureSampler),v2s.uv);
+    vec4 diffColor = texture(sampler2D(tex_baseColor,tex_baseColorSampler),v2s.uv);
+    vec4 specColor = texture(sampler2D(tex_metallicRoughness,tex_metallicRoughnessSampler),v2s.uv);
 
     vec3 n = normalize(v2s.normal);
     vec3 t = normalize(v2s.tangent.xyz);
@@ -41,5 +45,7 @@ GBufferTexs pbr_gbuffer_fs_main(V2S v2s) {
     GBufferTexs texs;
     texs.rt0 = vec4(v2s.position,0);
     texs.rt1 = vec4(n,0);
+    texs.rt2 = diffColor;
+    texs.rt3 = specColor;
     return texs;
 }

@@ -85,7 +85,7 @@
           "POSITION": "require",
           "UV0":"require"
         },
-        "backend": [ "Camera3D", "Transform"],
+        "backend": [ "Camera3D", "Transform","PBRLight","PBRCameraEx"],
         "vs": "pbrDeferred.deferred_vs_main",
         "fs": "pbrDeferred.deferred_fs_main"
       }

@@ -1,9 +1,10 @@
-use glam::Vec3;
+use glam::{Vec3, Quat};
 use seija_asset::{Assets, Handle};
 use seija_core::{CoreStage, StartupStage, window::AppWindow, time::Time};
 use seija_examples::{IExamples, add_render_mesh, load_material, load_texture};
 use bevy_ecs::{prelude::{Commands, Entity, Query, Res, ResMut}, system::{IntoSystem,SystemParam}};
 use seija_gltf::load_gltf;
+use seija_pbr::lights::PBRLight;
 use seija_render::{camera::camera::{Camera, Perspective}, material::{Material, MaterialStorage}, resource::{CubeMapBuilder, Mesh, shape::{Sphere, Cube, Quad}, Texture}};
 use seija_skeleton3d::{Skeleton, AnimationSet, RuntimeSkeleton, Skin};
 use seija_transform::Transform;
@@ -40,6 +41,16 @@ fn on_start(mut commands:Commands,
                                 &mut skeletons,
                             &mut animations,
                                               &mut skins).unwrap();
+
+    {
+            let point_light = PBRLight::directional(Vec3::new(1f32, 1f32, 1f32)  , 3000f32);
+            let mut t = Transform::default();
+            let r = Quat::from_euler(glam::EulerRot::XYZ  , 0f32, 0f32, 30f32.to_radians());
+            t.local.rotation = r;
+            let mut l = commands.spawn();
+            l.insert(point_light);
+            l.insert(t);
+    }
     
     let coin_mesh = gltf_asset.first_mesh().unwrap();
     {
@@ -55,22 +66,7 @@ fn on_start(mut commands:Commands,
         }).unwrap();
         coin_entity.insert(h_material);
     };
-    /* 
-    {
-        
-        let h_mat = materials.create_material_with("DeferredLightPass",|mat| {
-            mat.texture_props.set("mainTexture",h_texture.clone());
-        }).unwrap();
-
-        let quad_mesh:Mesh = Quad::new(2f32).into();
-        
-        let h_quad = meshs.add(quad_mesh);
-
-        let mut t = Transform::default();
-        t.local.position.z = -0.1f32;
-       
-        commands.spawn().insert(h_quad).insert(t).insert(h_mat);
-    };*/
+    
 }
 
 
