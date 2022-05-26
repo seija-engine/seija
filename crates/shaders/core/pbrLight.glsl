@@ -24,8 +24,7 @@ struct MaterialInputs {
     vec4 baseColor;
     
     float metallic;
-    vec3  specularColor;
-    float glossiness;
+    float roughness;
     vec3  normal;
 };
 
@@ -33,8 +32,11 @@ void initMaterial(out MaterialInputs inputs) {
     inputs.baseColor = vec4(1.0);
     inputs.metallic = 0.0;
     inputs.normal = vec3(0.0, 0.0, 1.0);
-    inputs.glossiness = 0.0;
-    inputs.specularColor = vec3(0.0);
+    inputs.roughness = 0.0;
+}
+
+vec3 computeF0(const vec4 baseColor, float metallic, float reflectance) {
+    return baseColor.rgb * metallic + (reflectance * (1.0 - metallic));
 }
 
 float computePreExposedIntensity(const  float intensity, const  float exposure) {
@@ -71,14 +73,15 @@ Light getLight(const int index,vec3 vertPos,vec3 normal) {
     light.colorIntensity.rgb = getLightsColor(index);
     float intensity          = getLightsIntensity(index);
     light.colorIntensity.w  = computePreExposedIntensity(intensity, getExposure());
-    vec3 posToLight = light.worldPosition - vertPos;
+    vec3 posToLight = normalize(light.worldPosition - vertPos);
     float falloff   = getLightsFalloff(index);
     if(light.typ == eLIGHT_TYPE_DIR) {
         light.l = normalize(getLightsDirection(index));
         light.attenuation = 1.0;
     } else if (light.typ == eLIGHT_TYPE_POINT) {
+       
         light.attenuation = getDistanceAttenuation(posToLight, falloff);
-        light.l =  normalize(posToLight);
+        light.l = posToLight;
     } else if (light.typ == eLIGHT_TYPE_SPOT) {
         light.l =  normalize(posToLight);
         float scale  = getLightsSpotScale(index);
@@ -94,8 +97,8 @@ Light getLight(const int index,vec3 vertPos,vec3 normal) {
 void getPixelParams(const MaterialInputs inputs, out PixelParams pixel) {
    vec4 baseColor = inputs.baseColor;
    pixel.diffuseColor = baseColor.rgb * (1.0 - inputs.metallic);
-   pixel.f0 = inputs.specularColor;
-   float perceptualRoughness = 1.0 - inputs.glossiness;
+   pixel.f0 = computeF0(baseColor,inputs.metallic,0.04);
+   float perceptualRoughness = inputs.roughness;
    pixel.perceptualRoughness = clamp(perceptualRoughness, 0.045, 1.0);
    pixel.roughness = pixel.perceptualRoughness * pixel.perceptualRoughness;
    pixel.energyCompensation = vec3(1.0);

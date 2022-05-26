@@ -26,7 +26,7 @@ impl DeferredLightPass {
         let mats = world.get_resource::<MaterialStorage>().ok_or(RenderErrors::NotFoundMaterialStorage)?;
         
         mats.material_mut(&h_mat.id, |mat| {
-          mat.texture_props.set("positioTexture", textures[0].clone());
+          mat.texture_props.set("positionTexture", textures[0].clone());
           mat.texture_props.set("normalTexture", textures[1].clone());
           mat.texture_props.set("diffTexture", textures[2].clone());
           mat.texture_props.set("specTexture", textures[3].clone());

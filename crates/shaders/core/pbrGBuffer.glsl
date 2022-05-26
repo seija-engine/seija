@@ -1,5 +1,5 @@
 struct V2S {
-  vec3 position;
+  vec4 position;
   vec3 normal;
   vec4 tangent;
   vec2 uv;
@@ -16,7 +16,7 @@ V2S pbr_gbuffer_vs_main() {
   vec3 normal = transposeTrans * vert_normal;
   vec4 tangent = vec4(transposeTrans * vert_tangent.xyz,vert_tangent.w);
 
-  v2s.position = worldPosition.xyz;
+  v2s.position = worldPosition;
   v2s.normal = normal;
   v2s.tangent = tangent;
   v2s.uv = vert_uv0;
@@ -43,7 +43,7 @@ GBufferTexs pbr_gbuffer_fs_main(V2S v2s) {
     n = normalize(tbn * normal);
 
     GBufferTexs texs;
-    texs.rt0 = vec4(v2s.position,0);
+    texs.rt0 = v2s.position;
     texs.rt1 = vec4(n,0);
     texs.rt2 = diffColor;
     texs.rt3 = specColor;

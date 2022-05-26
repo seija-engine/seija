@@ -48,8 +48,8 @@ pub fn add_pbr_camera(window:&AppWindow,commands: &mut Commands) {
     let pbr_camera = PBRCameraInfo::default();
     let mut root = commands.spawn();
     let mut t = Transform::default();
-    t.local.position = Vec3::new(0f32, 0f32, 70f32);
-    //t.local.rotation = Quat::from_euler(glam::EulerRot::XYZ , -15f32 *  0.0174533f32, 0f32, 0f32); 
+    t.local.position = Vec3::new(0f32, 10f32, 0f32);
+    t.local.rotation = Quat::from_euler(glam::EulerRot::XYZ , -60f32.to_radians(), 0f32, 0f32); 
     root.insert(t);
     let mut per = Perspective::default();
     per.aspect_ratio = window.width() as f32 / window.height() as f32;

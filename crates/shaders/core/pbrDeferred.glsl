@@ -15,7 +15,8 @@ vec4 deferred_fs_main(VSOutput o) {
   MaterialInputs inputs;
   initMaterial(inputs);
 
-  vec4 posColor = texture(sampler2D(tex_positionTexture,tex_positionTextureSampler),o.uv);
+  vec3 newPos = texture(sampler2D(tex_positionTexture,tex_positionTextureSampler),o.uv).rgb;
+  
   vec4 normalColor = texture(sampler2D(tex_normalTexture,tex_normalTextureSampler),o.uv);
   vec4 diffColor = texture(sampler2D(tex_diffTexture,tex_diffTextureSampler),o.uv);
   vec4 specColor = texture(sampler2D(tex_specTexture,tex_specTextureSampler),o.uv);
@@ -23,12 +24,17 @@ vec4 deferred_fs_main(VSOutput o) {
   inputs.normal = normalize(normalColor.xyz);
   inputs.baseColor  = diffColor;
   inputs.metallic   = specColor.b;
-  inputs.glossiness = (1 - specColor.g);
-  inputs.specularColor = diffColor.rgb;
+  inputs.roughness  = specColor.g;
 
+  
   vec4 cameraPos = getCameraPosition();
-  vec3 viewDir = normalize(cameraPos.xyz - posColor.xyz);
 
-  vec4 evalColor = evaluateMaterial(inputs,posColor.xyz,viewDir);
-  return evalColor;
+  vec3 viewDir = normalize(cameraPos.xyz - newPos);
+  
+  
+
+  vec4 evalColor = evaluateMaterial(inputs,newPos,viewDir);
+ 
+  vec3 c = getLightsColor(1);
+  return vec4(c,1);
 }

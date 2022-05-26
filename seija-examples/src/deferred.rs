@@ -5,7 +5,7 @@ use seija_examples::{IExamples, add_render_mesh, load_material, load_texture};
 use bevy_ecs::{prelude::{Commands, Entity, Query, Res, ResMut}, system::{IntoSystem,SystemParam}};
 use seija_gltf::load_gltf;
 use seija_pbr::lights::PBRLight;
-use seija_render::{camera::camera::{Camera, Perspective}, material::{Material, MaterialStorage}, resource::{CubeMapBuilder, Mesh, shape::{Sphere, Cube, Quad}, Texture}};
+use seija_render::{camera::camera::{Camera, Perspective}, material::{Material, MaterialStorage}, resource::{CubeMapBuilder, Mesh, shape::{Sphere, Cube, Quad, Plane}, Texture}};
 use seija_skeleton3d::{Skeleton, AnimationSet, RuntimeSkeleton, Skin};
 use seija_transform::Transform;
 
@@ -42,8 +42,8 @@ fn on_start(mut commands:Commands,
                             &mut animations,
                                               &mut skins).unwrap();
 
-    {
-            let point_light = PBRLight::directional(Vec3::new(1f32, 1f32, 1f32)  , 3000f32);
+   {
+            let point_light = PBRLight::directional(Vec3::new(0f32, 1f32, 0f32)  , 3000f32);
             let mut t = Transform::default();
             let r = Quat::from_euler(glam::EulerRot::XYZ  , 0f32, 0f32, 30f32.to_radians());
             t.local.rotation = r;
@@ -51,12 +51,40 @@ fn on_start(mut commands:Commands,
             l.insert(point_light);
             l.insert(t);
     }
-    
+   
+    {
+        let point_light = PBRLight::directional(Vec3::new(1f32, 0f32, 0f32)  , 3000f32);
+        let mut t = Transform::default();
+        let r = Quat::from_euler(glam::EulerRot::XYZ  , 0f32, 0f32, 30f32.to_radians());
+        t.local.rotation = r;
+        let mut l = commands.spawn();
+        l.insert(point_light);
+        l.insert(t);
+}
+    {
+        let h_texture = load_texture(&mut textures, "res/texture/WoodFloor043_1K_Color.jpg");
+        let h_roughness = load_texture(&mut textures, "res/texture/WoodFloor043_1K_Roughness.jpg");
+        let h_normal = load_texture(&mut textures, "res/texture/WoodFloor043_1K_Normal.jpg");
+
+        let mesh = Plane::new(100f32,10);
+        let hmesh = meshs.add(mesh.into());
+        let hmat = materials.create_material_with("DeferredPBR", |mat| {
+            mat.texture_props.set("baseColor", h_texture.clone());
+            mat.texture_props.set("metallicRoughness", gltf_asset.textures[1].clone());
+            mat.texture_props.set("normalTexture", h_normal.clone());
+        }).unwrap();
+        let mut t = Transform::default();
+        t.local.position = Vec3::new(-50f32, -80f32, -90f32);
+        commands.spawn().insert(hmesh).insert(hmat).insert(t);
+    };
+
+     
     let coin_mesh = gltf_asset.first_mesh().unwrap();
     {
         let mut coin_entity = commands.spawn();
         let mut t = Transform::default();
-        t.local.position = Vec3::new(0f32, 0f32, -1f32);
+        t.local.position = Vec3::new(0f32, -70f32, -15f32);
+        t.local.rotation = Quat::from_euler(glam::EulerRot::XYZ  , -90f32.to_radians(), 0f32, 0f32);
         coin_entity.insert(t);
         coin_entity.insert(coin_mesh.clone());
         let h_material = materials.create_material_with("DeferredPBR", |mat| {
@@ -65,15 +93,19 @@ fn on_start(mut commands:Commands,
             mat.texture_props.set("normalTexture", gltf_asset.textures[2].clone());
         }).unwrap();
         coin_entity.insert(h_material);
-    };
+    };/**/
     
 }
 
 
-fn on_update(mut commands:Commands,time:Res<Time>,query:Query<(Entity,&Handle<RuntimeSkeleton>,&Handle<Mesh>)>) {
-    //if time.frame() < 200 { return; }
-    //for (e,_,_) in query.iter() {
-    //    commands.entity(e).remove::<Handle<RuntimeSkeleton>>();
-    //    commands.entity(e).remove::<Handle<Mesh>>();
-    //}
+fn on_update(mut commands:Commands,time:Res<Time>,mut query_camera:Query<(Entity,&mut Transform,&PBRLight)>) {
+    let speed:u128 = 1;
+    let v:f32 = (std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_millis() % (36000 * speed)) as f32;
+    let r = v * 0.01f32 * 0.0174533f32  * speed as f32;
+   
+
+    for (e,mut t,_) in query_camera.iter_mut() {
+        t.local.rotation = Quat::from_euler(glam::EulerRot::XYZ  , -r, 0f32, 0f32);
+        //log::error!("update :{:?}",t.local.rotation);
+     }
 }

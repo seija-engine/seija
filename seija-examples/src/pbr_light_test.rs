@@ -66,7 +66,7 @@ fn on_start(
             let hmesh = meshs.add(mesh.into());
             let hmat = materials.create_material_with("pbrColor", |mat| {
                 mat.props.set_f32("metallic",  (1f32 / 5f32)  * x as f32, 0);
-                mat.props.set_f32("glossiness", (1f32 / 5f32) * y as f32, 0);
+                mat.props.set_f32("roughness", (1f32 / 5f32) * y as f32, 0);
             }).unwrap();
             let mut t = Transform::default();
           
