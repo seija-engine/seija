@@ -80,7 +80,7 @@ Light getLight(const int index,vec3 vertPos,vec3 normal) {
         light.attenuation = 1.0;
     } else if (light.typ == eLIGHT_TYPE_POINT) {
        
-        light.attenuation = getDistanceAttenuation(posToLight, falloff);
+        light.attenuation = 1;
         light.l = posToLight;
     } else if (light.typ == eLIGHT_TYPE_SPOT) {
         light.l =  normalize(posToLight);

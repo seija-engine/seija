@@ -21,7 +21,7 @@
         {:name "ex1"          :type "float"}
         {:name "ex2"          :type "float"}
         {:name "ex3"          :type "float"}
-     ] :size 10}
+     ] :size 64}
   ]
   :backends ["Light"]
 })

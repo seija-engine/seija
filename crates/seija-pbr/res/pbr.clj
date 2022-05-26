@@ -25,7 +25,7 @@
               {:name "falloff"          :type "float"}
               {:name "spotScale"        :type "float"}
               {:name "spotOffset"       :type "float"}
-           ] :size 10}
+           ] :size 60}
         ]
         :backends ["PBRLight"]
     })

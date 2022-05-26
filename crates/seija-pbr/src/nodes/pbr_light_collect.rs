@@ -13,7 +13,7 @@ pub struct PBRLightCollect {
 
 impl PBRLightCollect {
     pub fn new(ubo_name:String) -> Self {
-        let array_collect = UBOArrayCollect::new(ubo_name, 10);
+        let array_collect = UBOArrayCollect::new(ubo_name, 64);
         PBRLightCollect { array_collect }
     }
 }
@@ -21,7 +21,6 @@ impl PBRLightCollect {
 fn set_pbr_light(backend:&PBRLightBackend,index:usize,light:&PBRLight,buffer:&mut UniformBuffer,t:&Transform) {
     let dir = t.global().rotation * (-Vec3::Z);
     
-    backend.set_light_count(buffer, 2);
     backend.set_ambile_color(buffer, Vec3::ONE);
     backend.set_lights_position(buffer,index,t.global().position);
     backend.set_lights_type(buffer, index, light.get_type().type_id() as i32);

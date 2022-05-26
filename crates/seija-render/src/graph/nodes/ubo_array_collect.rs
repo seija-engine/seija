@@ -63,7 +63,10 @@ impl<T,ET> UBOArrayCollect<T,ET> where T:IShaderBackend,ET:'static + Send + Sync
                frame_size += 1;
            }
        };
-       let type_ubo = self.name_index.and_then(|index| ctx.ubo_ctx.buffers.get_buffer_mut(&index, None)).log_err("get buffer error")?;
+       let type_ubo = self.name_index
+                                                   .and_then(|index| 
+                                                              ctx.ubo_ctx.buffers.get_buffer_mut(&index, None)).log_err("get buffer error")?;
+       
        let backend = self.backend.as_ref().log_err("get backend error")?;
         //update
         let mut elems = world.query_filtered::<(Entity,&ET,&Transform),Or<(Changed<ET>, Changed<Transform>)>>();

@@ -11,6 +11,7 @@ impl IShaderBackend for PBRLightBackend {
     }
 }
 
+#[derive(Debug)]
 pub struct PBRLightBackend {
     ambile_idx:usize,
     light_count_idx:usize,
@@ -43,7 +44,9 @@ impl PBRLightBackend {
 
 
         let arr_info = def.get_array_info("lights").ok_or("ok_or".to_string())?;
-        Ok(PBRLightBackend {
+
+
+        let backend = PBRLightBackend {
             ambile_idx,
             light_count_idx,
             lights_type_idx,
@@ -55,7 +58,9 @@ impl PBRLightBackend {
             lights_falloff_idx,
             lights_spot_scale_idx,
             lights_spot_offset_idx
-        })
+        };
+
+        Ok(backend)
     }
 
     pub fn set_ambile_color(&self,buffer:&mut UniformBuffer,color:Vec3) {
@@ -67,32 +72,32 @@ impl PBRLightBackend {
     }
 
     pub fn set_lights_position(&self,buffer:&mut UniformBuffer,index:usize,pos:Vec3) {
-        let offset = self.lights_position_idx + (self.lights_item_size * index * 4);
+        let offset = self.lights_position_idx + (self.lights_item_size * index);
         buffer.write_bytes(offset, pos.to_array());
     }
 
     pub fn set_lights_type(&self,buffer:&mut UniformBuffer,index:usize,num:i32) {
-        let offset = self.lights_type_idx + (self.lights_item_size * index * 4);
+        let offset = self.lights_type_idx + (self.lights_item_size * index);
         buffer.write_bytes(offset, num);
     }
 
     pub fn set_lights_direction(&self,buffer:&mut UniformBuffer,index:usize,dir:Vec3) {
-        let offset = self.lights_direction_idx + (self.lights_item_size * index * 4);
+        let offset = self.lights_direction_idx + (self.lights_item_size * index);
         buffer.write_bytes(offset, dir.to_array());
     }
 
     pub fn set_lights_color(&self,buffer:&mut UniformBuffer,index:usize,color:Vec3) {
-        let offset = self.lights_color_idx + (self.lights_item_size * index * 4);
+        let offset = self.lights_color_idx + (self.lights_item_size * index);
         buffer.write_bytes(offset, color.to_array());
     }
 
     pub fn set_lights_intensity(&self,buffer:&mut UniformBuffer,index:usize,num:f32) {
-        let offset = self.lights_intensity_idx + (self.lights_item_size * index * 4);
+        let offset = self.lights_intensity_idx + (self.lights_item_size * index );
         buffer.write_bytes(offset, num);
     }
 
     pub fn set_lights_falloff(&self,buffer:&mut UniformBuffer,index:usize,num:f32) {
-        let offset = self.lights_falloff_idx + (self.lights_item_size * index * 4);
+        let offset = self.lights_falloff_idx + (self.lights_item_size * index);
         buffer.write_bytes(offset, num);
     }
 

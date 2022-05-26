@@ -21,20 +21,20 @@ vec4 deferred_fs_main(VSOutput o) {
   vec4 diffColor = texture(sampler2D(tex_diffTexture,tex_diffTextureSampler),o.uv);
   vec4 specColor = texture(sampler2D(tex_specTexture,tex_specTextureSampler),o.uv);
 
-  inputs.normal = normalize(normalColor.xyz);
+  inputs.normal =   normalize(normalColor.xyz);
   inputs.baseColor  = diffColor;
   inputs.metallic   = specColor.b;
   inputs.roughness  = specColor.g;
-
-  
+  inputs.metallic   = 0.8;
+  inputs.roughness  = 0.4;
   vec4 cameraPos = getCameraPosition();
 
   vec3 viewDir = normalize(cameraPos.xyz - newPos);
   
   
-
+  //inputs.normal = vec3(0,1,0);
   vec4 evalColor = evaluateMaterial(inputs,newPos,viewDir);
  
-  vec3 c = getLightsColor(1);
-  return vec4(c,1);
+ 
+  return evalColor;
 }

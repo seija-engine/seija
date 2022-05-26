@@ -40,11 +40,11 @@ GBufferTexs pbr_gbuffer_fs_main(V2S v2s) {
     vec3 b = cross(n, t) * v2s.tangent.w;
     mat3 tbn = mat3(t, b, n);
     vec3 normal = normalColor.rgb * 2.0 - 1.0;
-    n = normalize(tbn * normal);
+    vec3 out_normal = normalize(tbn * normal);
 
     GBufferTexs texs;
     texs.rt0 = v2s.position;
-    texs.rt1 = vec4(n,0);
+    texs.rt1 = vec4(out_normal,0);
     texs.rt2 = diffColor;
     texs.rt3 = specColor;
     return texs;
