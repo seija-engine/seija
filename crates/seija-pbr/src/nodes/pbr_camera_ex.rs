@@ -31,7 +31,7 @@ impl INode for PBRCameraEx {
             for (e,ex_info) in cameras.iter(world) {
                 if let Some(key) = self.name_index {
                     if let Some(buffer) = ctx.ubo_ctx.buffers.get_buffer_mut(&key, Some(e.id())) {
-                        //println!("set exposure {}",ex_info.exposure.exposure_self());
+                        log::error!("set exposure {} {}",ex_info.exposure.exposure_self(),ex_info.exposure.luminance_self());
                         buffer.buffer.write_bytes(exposure_index, ex_info.exposure.exposure_self());
                     }
                 }

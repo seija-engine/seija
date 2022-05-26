@@ -29,11 +29,10 @@ fn set_pbr_light(backend:&PBRLightBackend,index:usize,light:&PBRLight,buffer:&mu
     backend.set_lights_intensity(buffer, index, light.get_luminous_intensity());
     match light.get_type() {
         PBRLightType::Point => {
-            
-            backend.set_lights_falloff(buffer, index, light.get_squared_fall_offinv());
+            backend.set_lights_falloff(buffer, index, light.get_falloff());
         },
         PBRLightType::Spot => {
-            backend.set_lights_falloff(buffer, index, light.get_squared_fall_offinv());
+            backend.set_lights_falloff(buffer, index, light.get_falloff());
             let scale_offset = light.get_scale_offset();
             backend.set_lights_spot_scale(buffer, index,scale_offset.x);
             backend.set_lights_spot_offset(buffer, index, scale_offset.y);

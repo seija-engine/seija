@@ -51,18 +51,33 @@ float getSquareFalloffAttenuation(float distanceSquare, float falloff) {
     return smoothFactor * smoothFactor;
 }
 
-float getDistanceAttenuation(const  vec3 posToLight, float falloff) {
+float getDistanceAttenuation_old(const  vec3 posToLight, float falloff) {
     float distanceSquare = dot(posToLight, posToLight);
     float attenuation = getSquareFalloffAttenuation(distanceSquare, falloff);
     // Assume a punctual light occupies a volume of 1cm to avoid a division by 0
     return attenuation * 1.0 / max(distanceSquare, 1e-4);
 }
 
+
+
+
+float getDistanceAttenuation(vec3 posToLight,float falloff) {
+    float rangeSqr = falloff * falloff;
+    float distanceSquare = dot(posToLight, posToLight);
+    float x2 = distanceSquare / rangeSqr;
+    float x4 = x2 * x2;
+    float oneMinuseX4 =  clamp(1 - x4, 0.0, 1.0);
+    float smoothFactor = oneMinuseX4 * oneMinuseX4;
+    return smoothFactor / x2;
+}
+
+
 float getAngleAttenuation(const  vec3 lightDir, const  vec3 l, const  vec2 scaleOffset) {
     float cd = dot(lightDir, l);
     float attenuation = clamp(cd * scaleOffset.x + scaleOffset.y,0.0,1.0);
     return attenuation * attenuation;
 }
+
 
 
 Light getLight(const int index,vec3 vertPos,vec3 normal) {
@@ -73,15 +88,14 @@ Light getLight(const int index,vec3 vertPos,vec3 normal) {
     light.colorIntensity.rgb = getLightsColor(index);
     float intensity          = getLightsIntensity(index);
     light.colorIntensity.w  = computePreExposedIntensity(intensity, getExposure());
-    vec3 posToLight = normalize(light.worldPosition - vertPos);
+    vec3 posToLight = light.worldPosition - vertPos;
     float falloff   = getLightsFalloff(index);
     if(light.typ == eLIGHT_TYPE_DIR) {
         light.l = normalize(getLightsDirection(index));
         light.attenuation = 1.0;
     } else if (light.typ == eLIGHT_TYPE_POINT) {
-       
-        light.attenuation = 1;
-        light.l = posToLight;
+        light.attenuation = getDistanceAttenuation(posToLight,falloff);
+        light.l = normalize(posToLight);
     } else if (light.typ == eLIGHT_TYPE_SPOT) {
         light.l =  normalize(posToLight);
         float scale  = getLightsSpotScale(index);
@@ -92,6 +106,12 @@ Light getLight(const int index,vec3 vertPos,vec3 normal) {
     return light;
 }
 
+/*
+
+//光强随距离衰减公式
+
+
+*/
 
 
 void getPixelParams(const MaterialInputs inputs, out PixelParams pixel) {

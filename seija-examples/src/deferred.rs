@@ -52,16 +52,17 @@ fn on_start(mut commands:Commands,
                                 Vec3::new(1f32,122f32 / 255f32,0f32),
                                 Vec3::new(1f32,1f32,0f32),
                                 Vec3::new(0f32,1f32,0f32),
-                                Vec3::new(1f32,1f32,1f32),
+                                Vec3::new(0f32,1f32,1f32),
                                 Vec3::new(0f32,0f32,1f32),
                                 Vec3::new(1f32,0f32,1f32)];
+   
    let mut index = 0;
    for x in 0..8 {
        for y in 0..7 {
         let c = colors[index];
-        let point_light = PBRLight::point(c, 90000f32,10f32);
+        let point_light = PBRLight::point(c, 55000f32,10f32);
         let mut t = Transform::default();
-        t.local.position = Vec3::new(-50f32 + x as f32 * (100f32 / 8f32), -71f32, -100f32 + (y as f32 * (100f32 / 7f32)));
+        t.local.position = Vec3::new(-50f32 + x as f32 * (100f32 / 8f32), -100f32, -100f32 + (y as f32 * (100f32 / 7f32)));
         let mut l = commands.spawn();
         l.insert(point_light);
         l.insert(t);
@@ -71,21 +72,21 @@ fn on_start(mut commands:Commands,
             index = 0;
         }
        }
-   }
- 
-    /* 
+   }/* */
+    
+    
     {
-        let point_light = PBRLight::directional(Vec3::new(1f32, 1f32, 1f32)  , 3000f32);
+        let point_light = PBRLight::directional(Vec3::new(1f32, 1f32, 1f32)  , 1500f32);
         let mut t = Transform::default();
-        let r = Quat::from_euler(glam::EulerRot::XYZ  , 0f32, 0f32, 30f32.to_radians());
+        let r = Quat::from_euler(glam::EulerRot::XYZ  , 45f32.to_radians(), 0f32, 0f32.to_radians());
         t.local.rotation = r;
         let mut l = commands.spawn();
         l.insert(point_light);
         l.insert(t);
-}*/
+}/* */
     {
         let h_texture = load_texture(&mut textures, "res/texture/WoodFloor043_1K_Color.jpg");
-        let h_roughness = load_texture(&mut textures, "res/texture/tield/Material_metallicRoughness.png");
+        let h_roughness = load_texture(&mut textures, "res/texture/WoodFloor043_1K_Roughness.jpg");
         let h_normal = load_texture(&mut textures, "res/texture/WoodFloor043_1K_Normal.jpg");
 
         let mesh = Quad::new(100f32);
@@ -108,7 +109,7 @@ fn on_start(mut commands:Commands,
     {
         let mut coin_entity = commands.spawn();
         let mut t = Transform::default();
-        t.local.position = Vec3::new(0f32, -70f32, -15f32);
+        t.local.position = Vec3::new(0f32, -78f32, -15f32);
         t.local.rotation = Quat::from_euler(glam::EulerRot::XYZ  , -90f32.to_radians(), 0f32, 0f32);
         coin_entity.insert(t);
         coin_entity.insert(coin_mesh.clone());
@@ -130,8 +131,18 @@ fn on_update(mut commands:Commands,time:Res<Time>,mut numbers:ResMut<AnimationNu
    
 
     for (e,mut t,mut light) in query_camera.iter_mut() {
-        t.local.rotation = Quat::from_euler(glam::EulerRot::XYZ  , -r, 0f32, 0f32);
-        
+        let f = light.get_falloff();
+        //light.set_falloff(f + 0.01f32);
+        t.local.position += Vec3::new(0f32, 0.003f32, 0f32);
+        //light.set_intensity(numbers.point_size);
+        //numbers.point_size += 1f32;
         //log::error!("update :{:?}",t.local.rotation);
      }
+}
+
+#[test]
+fn ttt() {
+    let a = Vec3::new(0f32, 100f32, 0f32);
+    let v = a.dot(a);
+    dbg!(v);
 }

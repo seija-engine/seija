@@ -45,7 +45,7 @@ pub fn add_camera_3d(mut commands:&mut Commands,window:&AppWindow) -> Entity {
 }
 
 pub fn add_pbr_camera(window:&AppWindow,commands: &mut Commands) {
-    let pbr_camera = PBRCameraInfo::default();
+    
     let mut root = commands.spawn();
     let mut t = Transform::default();
     t.local.position = Vec3::new(0f32, 10f32, 0f32);
@@ -55,6 +55,8 @@ pub fn add_pbr_camera(window:&AppWindow,commands: &mut Commands) {
     per.aspect_ratio = window.width() as f32 / window.height() as f32;
     let camera = Camera::from_3d(per);
     root.insert(camera);
+
+    let pbr_camera = PBRCameraInfo::default();
     root.insert(pbr_camera);
 }
 

@@ -25,8 +25,8 @@ vec4 deferred_fs_main(VSOutput o) {
   inputs.baseColor  = diffColor;
   inputs.metallic   = specColor.b;
   inputs.roughness  = specColor.g;
-  inputs.metallic   = 0.8;
-  inputs.roughness  = 0.4;
+  inputs.metallic   = 0.4;
+  inputs.roughness  = 0.6;
   vec4 cameraPos = getCameraPosition();
 
   vec3 viewDir = normalize(cameraPos.xyz - newPos);
