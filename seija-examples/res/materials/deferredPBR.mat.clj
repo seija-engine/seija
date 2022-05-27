@@ -10,10 +10,10 @@
         {:name "roughnessFactor"     :type "float" :default "0"}
     ]
     :pass {
-        :targets [{:format "Rgba32Float" :blend nil} 
-                  {:format "Rgba32Float" :blend nil} 
-                  {:format "Rgba32Float" :blend nil} 
-                  {:format "Rgba32Float" :blend nil} ]
+        :targets [{:format "Rgba16Float" :blend nil} 
+                  {:format "Rgba16Float" :blend nil} 
+                  {:format "Rgba8Unorm" :blend nil} 
+                  {:format "Rgba8Unorm" :blend nil} ]
         :shader {
             :name "core.pbrGBuffer"
             :macros []

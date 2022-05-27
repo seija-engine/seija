@@ -16,10 +16,10 @@
              gbuffer-pass  (node PASS {:is-outinput true :view-count 4 :is-depth true :path "Deferred"})
              swapchain     (node SWAP_CHAIN)
              depth-texture (node SCREEN_TEXTURE [{:format "Depth32Float"}])
-             gbuffer-texs  (node SCREEN_TEXTURE [{:format "Rgba32Float"} 
-                                                 {:format "Rgba32Float"}
-                                                 {:format "Rgba32Float"}
-                                                 {:format "Rgba32Float"} 
+             gbuffer-texs  (node SCREEN_TEXTURE [{:format "Rgba16Float"} 
+                                                 {:format "Rgba16Float"}
+                                                 {:format "Rgba8Unorm"}
+                                                 {:format "Rgba8Unorm"} 
                                                  ])
 
              light-pass (node DEFERRED_LIGHT_PASS {:tex-count 4})
