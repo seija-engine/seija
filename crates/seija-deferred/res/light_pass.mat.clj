@@ -8,7 +8,7 @@
         {:name "specTexture" :type "Texture" :default "white"}
     ]
     :pass {
-
+        :z-write false
         :shader {
             :name "core.pbrDeferred"
             :macros []

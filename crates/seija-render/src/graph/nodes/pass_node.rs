@@ -12,7 +12,8 @@ pub struct PassNode {
     arg_count:usize,
     path:RenderPath,
     operations:Operations<Color>,
-    is_outinput:bool
+    is_outinput:bool,
+    is_clear_depth:bool
 }
 
 
@@ -46,7 +47,7 @@ impl INode for PassNode {
 }
 
 impl PassNode {
-    pub fn new(view_count:usize,is_depth:bool,is_outinput:bool,path:RenderPath) -> PassNode {
+    pub fn new(view_count:usize,is_depth:bool,is_outinput:bool,is_clear_depth:bool,path:RenderPath) -> PassNode {
         let mut arg_count = view_count;
         if is_depth { arg_count += 1; }
         PassNode {
@@ -55,6 +56,7 @@ impl PassNode {
             arg_count,
             path,
             is_outinput,
+            is_clear_depth,
             operations:Operations { load:wgpu::LoadOp::Clear(wgpu::Color{r:0.01,g:0.01,b:0.01,a:0.0}), store:true }
         }
     }
@@ -150,7 +152,7 @@ impl PassNode {
                 view,
                 stencil_ops: None,
                 depth_ops: Some(Operations {
-                    load: wgpu::LoadOp::Clear(1.0),
+                    load: if self.is_clear_depth { wgpu::LoadOp::Clear(1.0) } else { wgpu::LoadOp::Load },
                     store: true,
                 }),
             });

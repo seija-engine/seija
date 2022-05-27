@@ -62,10 +62,11 @@ fn create_pass_node(ctx:&mut RenderGraphContext,params:Variable) -> NodeId {
     let view_count = json_param.get(":view-count").and_then(Value::as_i64).unwrap_or(1) as usize;
     let is_depth = json_param.get(":is-depth").and_then(Value::as_bool).unwrap_or(true);
     let is_outinput = json_param.get(":is-outinput").and_then(Value::as_bool).unwrap_or(false);
+    let is_clear_depth = json_param.get(":clear-depth").and_then(Value::as_bool).unwrap_or(true);
   
     let str_path = json_param.get(":path").and_then(Value::as_str).unwrap_or("Foward");
     let path = RenderPath::try_from(str_path).unwrap_or(RenderPath::Forward);
-    let pass_node = PassNode::new(view_count,is_depth,is_outinput,path);
+    let pass_node = PassNode::new(view_count,is_depth,is_outinput,is_clear_depth,path);
     ctx.graph.add_node("PassNode", pass_node)
 }
 

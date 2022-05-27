@@ -23,7 +23,7 @@
                                                  ])
 
              light-pass (node DEFERRED_LIGHT_PASS {:tex-count 4})
-             foward-pass  (node PASS {:is-depth true})
+             foward-pass  (node PASS {:is-depth true :clear-depth false})
          ]
          (link-> pbr-camera-ex camera)
          (link-> camera gbuffer-pass)

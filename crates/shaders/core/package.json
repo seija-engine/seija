@@ -8,7 +8,7 @@
           "POSITION": "require"
         },
         "backend": [ "Camera3D", "Transform" ],
-        "slots": ["slot_fs_offset_color"],
+       
         "vs": "pures.color_vs_main",
         "fs": "pures.color_fs_main"
       },

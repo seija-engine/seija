@@ -28,7 +28,7 @@ vec4 fs_main(VSOutput ino) {
     initMaterial(inputs);
 
     inputs.normal = normalize(ino.normal);
-    inputs.baseColor  = vec4(0.0,0.6,0.2,1.0);
+    inputs.baseColor  = material.color;
     inputs.metallic   = material.metallic;
     
     vec4 evalColor = evaluateMaterial(inputs,ino.outPos.xyz,viewDir);

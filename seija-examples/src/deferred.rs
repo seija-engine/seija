@@ -1,4 +1,4 @@
-use glam::{Vec3, Quat};
+use glam::{Vec3, Quat, Vec4};
 use seija_asset::{Assets, Handle};
 use seija_core::{CoreStage, StartupStage, window::AppWindow, time::Time};
 use seija_examples::{IExamples, add_render_mesh, load_material, load_texture};
@@ -14,7 +14,7 @@ pub struct Deferred;
 
 impl IExamples for Deferred {
     fn run(app:&mut seija_app::App) {
-       app.world.insert_resource(AnimationNumbers::default());
+       app.world.insert_resource(DemoEnv::default());
 
        app.add_system2(CoreStage::Startup,StartupStage::Startup, on_start.system());
        app.add_system(CoreStage::Update ,on_update.system());
@@ -22,14 +22,16 @@ impl IExamples for Deferred {
 }
 
 #[derive(Default)]
-pub struct AnimationNumbers {
-    point_size:f32
+pub struct DemoEnv {
+    point_size:f32,
+    ball:Option<Entity>
 }
 
 
 
 
 fn on_start(mut commands:Commands,
+            mut env:ResMut<DemoEnv>,
             mut meshs:ResMut<Assets<Mesh>>,
             mut textures:ResMut<Assets<Texture>>,
             mut skeletons:ResMut<Assets<Skeleton>>,
@@ -40,6 +42,8 @@ fn on_start(mut commands:Commands,
             materials:Res<MaterialStorage>) {
     add_pbr_camera(&window, &mut commands);
     load_material("res/materials/deferredPBR.mat.clj", &materials);
+    load_material("res/materials/color.mat.clj", &materials);
+    load_material("res/materials/pbrColor.mat.clj", &materials);
     
     //let h_texture = load_texture(&mut textures, "res/texture/b.jpg",None);
     let gltf_asset = load_gltf("res/gltf/coin/scene.gltf",
@@ -48,6 +52,7 @@ fn on_start(mut commands:Commands,
                                 &mut skeletons,
                             &mut animations,
                                               &mut skins).unwrap();
+   /*
    let colors = vec![Vec3::new(1f32,0f32,0f32),
                                 Vec3::new(1f32,122f32 / 255f32,0f32),
                                 Vec3::new(1f32,1f32,0f32),
@@ -55,7 +60,7 @@ fn on_start(mut commands:Commands,
                                 Vec3::new(0f32,1f32,1f32),
                                 Vec3::new(0f32,0f32,1f32),
                                 Vec3::new(1f32,0f32,1f32)];
-   
+  
    let mut index = 0;
    for x in 0..8 {
        for y in 0..7 {
@@ -72,11 +77,11 @@ fn on_start(mut commands:Commands,
             index = 0;
         }
        }
-   }/* */
+   } */
     
     
     {
-        let point_light = PBRLight::directional(Vec3::new(1f32, 1f32, 1f32)  , 1500f32);
+        let point_light = PBRLight::directional(Vec3::new(1f32, 1f32, 1f32)  , 12000f32);
         let mut t = Transform::default();
         let r = Quat::from_euler(glam::EulerRot::XYZ  , 45f32.to_radians(), 0f32, 0f32.to_radians());
         t.local.rotation = r;
@@ -84,13 +89,14 @@ fn on_start(mut commands:Commands,
         l.insert(point_light);
         l.insert(t);
 }/* */
+     let quad_mesh = Quad::new(100f32);
+     let hquad_mesh = meshs.add(quad_mesh.into());
     {
         let h_texture = load_texture(&mut textures, "res/texture/WoodFloor043_1K_Color.jpg");
         let h_roughness = load_texture(&mut textures, "res/texture/WoodFloor043_1K_Roughness.jpg");
         let h_normal = load_texture(&mut textures, "res/texture/WoodFloor043_1K_Normal.jpg");
 
-        let mesh = Quad::new(100f32);
-        let hmesh = meshs.add(mesh.into());
+        
         let hmat = materials.create_material_with("DeferredPBR", |mat| {
             mat.texture_props.set("baseColor", h_texture.clone());
             mat.texture_props.set("metallicRoughness", h_roughness.clone());
@@ -101,7 +107,7 @@ fn on_start(mut commands:Commands,
         let mut t = Transform::default();
         t.local.rotation = Quat::from_euler(glam::EulerRot::XYZ  , -90f32.to_radians(), 0f32, 0f32);
         t.local.position = Vec3::new(0f32, -80f32, -50f32);
-        commands.spawn().insert(hmesh).insert(hmat).insert(t);
+        commands.spawn().insert(hquad_mesh.clone()).insert(hmat).insert(t);
     };
 
      
@@ -120,29 +126,38 @@ fn on_start(mut commands:Commands,
         }).unwrap();
         coin_entity.insert(h_material);
     };/**/
+
+    {
+        let mesh = Sphere::new(10f32);
+        let hmesh = meshs.add(mesh.into());
+        let hmat = materials.create_material_with("pbrColor", |mat| {
+            mat.props.set_f32("metallic",  0.5f32, 0);
+            mat.props.set_f32("roughness", 0.5f32, 0);
+            mat.props.set_float4("color", Vec4::new(1f32, 0f32, 1f32, 1f32), 0)
+        }).unwrap();
+        let mut t = Transform::default();
+        t.local.position = Vec3::new(0f32, -100f32, -35f32);
+        let mut cmds = commands.spawn();
+        cmds.insert(hmesh).insert(hmat).insert(t);
+        env.ball = Some(cmds.id());
+    };
+
+   
     
 }
 
 
-fn on_update(mut commands:Commands,time:Res<Time>,mut numbers:ResMut<AnimationNumbers>,mut query_camera:Query<(Entity,&mut Transform,&mut PBRLight)>) {
+fn on_update(mut commands:Commands,time:Res<Time>,mut env:ResMut<DemoEnv>,mut query_camera:Query<(Entity,&mut Transform,&Handle<Mesh>)>) {
     let speed:u128 = 3;
     let v:f32 = (std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_millis() % (36000 * speed)) as f32;
     let r = v * 0.01f32 * 0.0174533f32  * speed as f32;
-   
+
+    
 
     for (e,mut t,mut light) in query_camera.iter_mut() {
-        let f = light.get_falloff();
-        //light.set_falloff(f + 0.01f32);
-        t.local.position += Vec3::new(0f32, 0.003f32, 0f32);
-        //light.set_intensity(numbers.point_size);
-        //numbers.point_size += 1f32;
-        //log::error!("update :{:?}",t.local.rotation);
+    
+        if Some(e) == env.ball {
+            t.local.position += Vec3::new(0f32, 1f32 * time.delta_seconds(), 0f32);
+        } 
      }
-}
-
-#[test]
-fn ttt() {
-    let a = Vec3::new(0f32, 100f32, 0f32);
-    let v = a.dot(a);
-    dbg!(v);
 }
