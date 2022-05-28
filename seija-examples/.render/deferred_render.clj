@@ -21,11 +21,8 @@
                                                  {:format "Rgba8Unorm"}
                                                  {:format "Rgba8Unorm"} 
                                                  ])
-
              light-pass (node DEFERRED_LIGHT_PASS {:tex-count 4})
              foward-pass  (node PASS {:is-depth true :clear-depth false})
-
-             shadow-map (node SCREEN_TEXTURE [{:format "Depth32Float"}])
          ]
          (link-> pbr-camera-ex camera)
          (link-> camera gbuffer-pass)

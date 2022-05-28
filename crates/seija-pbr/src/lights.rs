@@ -26,6 +26,7 @@ impl Default for PBRLightType {
 
 #[derive(Default)]
 pub struct PBRLight {
+    pub main_light:bool,
     typ: PBRLightType,
     pub color: Vec3,
     //点光源聚光灯是辐射通量/光通量,平行光是辐射照度/光照度，

@@ -6,6 +6,7 @@ mod transform_collect;
 mod light_collect;
 mod ubo_array_collect;
 mod screen_texture_node;
+mod shadow_map;
 
 use bevy_ecs::prelude::World;
 use seija_core::{event::{ManualEventReader, Events}, window::AppWindow};
@@ -18,6 +19,7 @@ pub use camera_collect::{CameraCollect};
 pub use transform_collect::{TransformCollect};
 pub use light_collect::{LightCollect};
 pub use screen_texture_node::{ScreenTextureNode};
+pub use shadow_map::{ShadowMapNode};
 
 
 #[derive(Default)]

@@ -5,7 +5,7 @@ mod light_test;
 mod pbr_light_test;
 mod pbr;
 mod deferred;
-
+pub mod shadow;
 use std::sync::Arc;
 
 
@@ -27,8 +27,9 @@ use seija_render::{RenderModule, RenderConfig, GraphSetting};
 use seija_skeleton3d::{Skeleton3dModule, create_skeleton_plugin};
 use seija_winit::WinitModule;
 use seija_transform::{TransformModule};
+use shadow::ShadowTest;
 
-const TEST_NAME:&'static str = "deferred";
+const TEST_NAME:&'static str = "shadow";
 
 fn main() {
      env_logger::Builder::new().filter_level(log::LevelFilter::Info).try_init().unwrap();
@@ -65,7 +66,8 @@ fn main() {
         "light_test"     =>  { LightTest::run(&mut app);  },
         "pbr_light_test" =>  { PBRLightTest::run(&mut app); },
         "pbr_test" => { pbr::PbrTest::run(&mut app); },
-        "deferred" => { deferred::Deferred::run(&mut app); }
+        "deferred" => { deferred::Deferred::run(&mut app); },
+        "shadow" => { ShadowTest::run(&mut app); }
         _ => { unimplemented!() }
     }; /**/
 
