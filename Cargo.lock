@@ -2346,6 +2346,7 @@ dependencies = [
 name = "seija-render"
 version = "0.1.0"
 dependencies = [
+ "anyhow",
  "bevy_ecs",
  "bitflags",
  "crossbeam-channel",
