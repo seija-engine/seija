@@ -45,3 +45,18 @@
         :backends ["SkinUniform"]
     })
 )
+
+
+(defn add-shadow-ubo [index]
+    (add-ubo {
+        :type :GlobalBuffer
+        :name "ShadowMap"
+        :index index
+        :apply :Frame
+        :shader-stage SS_FRAGMENT
+        :props [
+            {:name "lightProjView" :type "mat4" }
+        ]
+        :backends ["ShadowMap"]
+    })
+)

@@ -5,6 +5,7 @@
 (core/add-transform-ubo 2)
 (pbr/add-pbr-light-ubo  3)
 (core/add-anim-skin-ubo 4)
+(core/add-shadow-ubo 5)
 (defn create-graph []
    (let [
              camera        (node CAMERA           {:ubo "CameraBuffer" })
@@ -25,8 +26,10 @@
              light-pass (node DEFERRED_LIGHT_PASS {:tex-count 4})
              foward-pass  (node PASS {:is-depth true :clear-depth false})
 
-             shadow-map (node SCREEN_TEXTURE [{:format "Depth32Float"}])
+             shadow-map-texture (node SCREEN_TEXTURE [{:format "Depth32Float"}])
+             shadow-map (node SHADOW_MAP {:ubo "ShadowMap"})
          ]
+         (link-> shadow-map-texture shadow-map)
          (link-> pbr-camera-ex camera)
          (link-> camera gbuffer-pass)
          (link-> light  gbuffer-pass)

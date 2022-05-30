@@ -19,7 +19,7 @@ pub use camera_collect::{CameraCollect};
 pub use transform_collect::{TransformCollect};
 pub use light_collect::{LightCollect};
 pub use screen_texture_node::{ScreenTextureNode};
-pub use shadow_map::{ShadowMapNode};
+pub use shadow_map::{ShadowMapNode,ShadowLight};
 
 
 #[derive(Default)]

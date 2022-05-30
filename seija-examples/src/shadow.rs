@@ -11,7 +11,7 @@ use seija_render::{
         shape::{Cube, Sphere},
         Mesh, Texture,
     },
-    wgpu,
+    wgpu, graph::nodes::{ShadowMapNode, ShadowLight},
 };
 use seija_transform::Transform;
 
@@ -21,6 +21,8 @@ impl IExamples for ShadowTest {
     fn run(app: &mut seija_app::App) {
         app.add_system2(CoreStage::Startup, StartupStage::Startup, on_start.system());
         app.add_system(CoreStage::Update, on_update.system());
+
+        app.world.insert_resource(ShadowLight::new(Vec3::new(0f32,-0.5f32, -0.5f32)));
     }
 }
 
@@ -31,6 +33,7 @@ fn on_start(
     window: Res<AppWindow>,
     materials: Res<MaterialStorage>,
 ) {
+    
 }
 
 fn on_update(

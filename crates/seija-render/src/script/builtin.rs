@@ -4,7 +4,7 @@ use lite_clojure_eval::{Variable,GcRefCell};
 use seija_core::LogOption;
 use serde_json::Value;
 
-use crate::{graph::{NodeId, nodes::{CameraCollect, SwapchainNode, PassNode, TransformCollect, LightCollect, ScreenTextureNode}}, render::RenderGraphContext, material::{STextureDescriptor, RenderPath}};
+use crate::{graph::{NodeId, nodes::{CameraCollect, SwapchainNode, PassNode, TransformCollect, LightCollect, ScreenTextureNode, ShadowMapNode}}, render::RenderGraphContext, material::{STextureDescriptor, RenderPath}};
 
 use super::{NodeCreatorSet, NodeCreatorFn};
 
@@ -16,6 +16,8 @@ pub fn builtin_node_creators() -> NodeCreatorSet {
     map.insert("SCREEN_TEXTURE".into(), create_screen_texture_node);
     map.insert("TRANSFORM".into(), create_transform_node);
     map.insert("LIGHT".into(), create_light_node);
+
+    map.insert("SHADOW_MAP".into(), create_shadow_node);
     NodeCreatorSet(map)
 }
 
@@ -50,6 +52,17 @@ fn create_light_node(ctx:&mut RenderGraphContext,params:Variable) -> NodeId {
     let mut light_node = LightCollect::default();
     light_node.ubo_name = ubo_name_str;
     ctx.graph.add_node("LightCollect", light_node)
+}
+
+fn create_shadow_node(ctx:&mut RenderGraphContext,params:Variable) -> NodeId {
+    let map = params.cast_map().unwrap();
+    let ubo_key = Variable::Keyword(GcRefCell::new(String::from(":ubo")));
+    let ubo_name = map.borrow().get(&ubo_key).unwrap().cast_string().unwrap();
+    let ubo_name_str:String = ubo_name.borrow().clone();
+
+
+    let shadow_map_node = ShadowMapNode::new(ubo_name_str);
+    ctx.graph.add_node("ShadowMap", shadow_map_node)
 }
 
 fn create_swap_chain_node(ctx:&mut RenderGraphContext,params:Variable) -> NodeId {
