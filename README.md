@@ -28,7 +28,7 @@
         a. <del> 实现贴图属性的默认值 </del>  
         b. <del> 完成glsl-pack </del>  
         c. <del> 完成材质编译工具 </del>   
-        d. <del> 重新整理uniform的结构，做成插件模式 </del>
+        d. <del> 重新整理uniform的结构，做成插件模式 </del>  
         e. 除了Uniform外还需要支持贴图的Backend
 
   6. 使用新的材质系统重新梳理实现各种光照shader  
