@@ -37,6 +37,8 @@ impl RenderPipelines {
 }
 
 pub struct RenderPipeline {
+    //TODO 优化
+    pub tag:Option<String>,
     pub ubos:Vec<UBONameIndex>,
     pub pipeline:wgpu::RenderPipeline
 }
@@ -173,6 +175,7 @@ impl PipelineCache {
        }
       
        let render_pipeline = RenderPipeline {
+           tag:pass.tag.clone(),
            ubos,
            pipeline:gpu_pipeline
        };

@@ -29,7 +29,8 @@ pub struct PassDef {
     pub cull:Cull,
     pub clamp_depth:bool,
     pub shader_info:ShaderInfoDef,
-    pub targets:Vec<TargetInfo>
+    pub targets:Vec<TargetInfo>,
+    pub tag:Option<String>
    
 }
 
@@ -51,7 +52,8 @@ impl Default for PassDef {
             clamp_depth:false,
             cull: Cull::Back,
             shader_info:ShaderInfoDef::default(),
-            targets:vec![]
+            targets:vec![],
+            tag:None
         }
     }
 }
@@ -157,7 +159,9 @@ fn read_pass(json_value:&Value) -> Result<PassDef,MaterialDefReadError> {
     //if let Some(b) = map.get(":clamp-depth").and_then(|v| v.as_bool()) {
     //    pass_def.clamp_depth = b;
     //}
-    
+    if let Some(tag) = map.get(":tag").and_then(|v| v.as_str()) {
+        pass_def.tag = Some(tag.into());
+    }
     if let Some(z_test) = map.get(":z-test").and_then(|v| v.as_str()) {
         pass_def.z_test = ZTest::try_from(z_test).map_err(|_| MaterialDefReadError::InvalidPassProp(":z-test".into()))?;
     }

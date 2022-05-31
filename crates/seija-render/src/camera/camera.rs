@@ -1,6 +1,7 @@
+use bevy_ecs::prelude::Entity;
 use glam::Mat4;
 
-use super::view_list::ViewList;
+use super::view_list::{ViewList, ViewEntity};
 pub struct Camera {
     pub projection:Projection,
     pub view_list:ViewList,
@@ -13,6 +14,10 @@ pub struct Camera {
 
      pub fn from_3d(perspective:Perspective) -> Camera {
         Camera { projection:Projection::Perspective(perspective),view_list:ViewList::default() }
+     }
+
+     pub fn iter(&self) -> impl Iterator<Item = &Entity> {
+        self.view_list.values.iter().map(|v| v.value.iter()).flatten().map(|v| &v.entity)
      }
  }
 

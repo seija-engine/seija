@@ -5,10 +5,14 @@
     :props [
         {:name "color" :type "float4" :default [1,1,1,1]}
     ]
-    :pass {
-        :shader {
-            :name "core.color"
-            :macros []
+    :pass [
+        {
+            :shader { :name "core.color" :macros [] }
         }
-    }
+
+        {
+            :tag "Shadow"
+            :shader { :name "core.depth" :macros [] }
+        }
+    ]
 }

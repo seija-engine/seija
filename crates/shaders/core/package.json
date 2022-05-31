@@ -13,6 +13,16 @@
         "fs": "pures.color_fs_main"
       },
       {
+        "name": "depth",
+        "vertex": {
+          "POSITION": "require"
+        },
+        "backend": [ "ShadowMap", "Transform" ],
+       
+        "vs": "depth.depth_vs_main",
+        "fs": "depth.depth_fs_main"
+      },
+      {
         "name": "texture",
         "vertex": {
           "POSITION": "require",
