@@ -29,6 +29,7 @@
         b. <del> 完成glsl-pack </del>  
         c. <del> 完成材质编译工具 </del>   
         d. <del> 重新整理uniform的结构，做成插件模式 </del>
+        e. 除了Uniform外还需要支持贴图的Backend
 
   6. 使用新的材质系统重新梳理实现各种光照shader  
         a. <del> 重新实现Blinn-Phong光照模型和相关灯光处理</del>  
