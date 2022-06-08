@@ -15,10 +15,10 @@ impl UBOInfoSet {
             self.backend2ubo.insert(backend_name.to_string(), (info.name.to_string(),info.index));
         }
         match info.typ {
-            UBOType::ComponentBuffer => {
+            UBOType::Component => {
                 self.component_buffers.insert(info.name.to_string(), info);
             },
-            UBOType::GlobalBuffer => {
+            UBOType::Global => {
                 self.global_buffers.insert(info.name.to_string(), info);
             },
         }

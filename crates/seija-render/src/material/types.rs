@@ -218,6 +218,7 @@ impl TryFrom<&str> for STextureFormat {
     }
 }
 
+#[derive(Debug)]
 pub struct STextureDescriptor(pub wgpu::TextureDescriptor<'static>);
 
 impl TryFrom<&Value> for STextureDescriptor {

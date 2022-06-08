@@ -91,7 +91,7 @@ fn def_ubo(rt:&mut ExecScope,args:Vec<Variable>) -> Variable {
 
 fn node(rt:&mut ExecScope,args:Vec<Variable>) -> Variable {
     if args.len() < 1 {
-        log::error!("node args < 2");
+        log::error!("node args < 1");
         return Variable::Nil;
     }
     (|rt:&mut ExecScope,mut args:Vec<Variable>| {

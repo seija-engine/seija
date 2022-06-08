@@ -78,26 +78,26 @@ impl BufferContext {
   pub fn init(&mut self,info_set:&UBOInfoSet,res:&mut RenderResources,layouts:&HashMap<String,wgpu::BindGroupLayout>) {
     for (_,info) in info_set.component_buffers.iter() {
         self.components.push(UBOArrayBuffer::new(info.props.clone()));
-        self.comp_nameidxs.insert(info.name.to_string(), (UBOType::ComponentBuffer,self.components.len() - 1,info.apply));
+        self.comp_nameidxs.insert(info.name.to_string(), (UBOType::Component,self.components.len() - 1,info.apply));
     }
 
     for (_,info) in info_set.global_buffers.iter() {
       if let Some(layout) = layouts.get(info.name.as_str()) {
         self.globals.push(UBObject::create(info, res,layout));
-        self.global_nameidxs.insert(info.name.to_string(), (UBOType::GlobalBuffer,self.globals.len() - 1,info.apply));
+        self.global_nameidxs.insert(info.name.to_string(), (UBOType::Global,self.globals.len() - 1,info.apply));
       }
     }
   }
 
   pub fn add_buffer(&mut self,info:&UBOInfo,m_eid:Option<u32>,res:&mut RenderResources,layout:&wgpu::BindGroupLayout) -> Option<()> {
       match info.typ {
-        UBOType::ComponentBuffer => {
+        UBOType::Component => {
           let eid = m_eid.log_err(&format!("ComponentBuffer {} need eid",info.name.as_str()))?;
           let arr_idx = *self.comp_nameidxs.get(info.name.as_str()).log_err(&format!("not found {}",info.name.as_str()))?;
           self.components[arr_idx.1].add_item(eid, res,layout);
           Some(())
         },
-        UBOType::GlobalBuffer => {
+        UBOType::Global => {
           Some(())
         }
       }
@@ -127,11 +127,11 @@ impl BufferContext {
 
   pub fn get_buffer_mut(&mut self,name_index:&UBONameIndex,eid:Option<u32>) -> Option<&mut TypedUniformBuffer> {
     match name_index.0 {
-        UBOType::ComponentBuffer => {
+        UBOType::Component => {
           let array = &mut self.components[name_index.1];
           array.get_item_buffer_mut(eid.log_err("not found eid in buffer")?)
         },
-        UBOType::GlobalBuffer => {
+        UBOType::Global => {
           let ubo = &mut self.globals[name_index.1]; 
           Some(&mut ubo.local) 
         }
@@ -140,7 +140,7 @@ impl BufferContext {
 
   pub fn get_bind_group(&self,name_index:&UBONameIndex,m_eid:Option<u32>) -> Option<&wgpu::BindGroup> {
     match name_index.0 {
-      UBOType::ComponentBuffer => {
+      UBOType::Component => {
         let array = &self.components[name_index.1];
         let eid = m_eid.log_err("not found eid in buffer")?;
         let bind_group = array.get_item(eid).map(|v| &v.bind_group);
@@ -153,7 +153,7 @@ impl BufferContext {
         }
         bind_group
       },
-      UBOType::GlobalBuffer => { 
+      UBOType::Global => { 
         let ubo = &self.globals[name_index.1];
         Some(&ubo.bind_group)
       }

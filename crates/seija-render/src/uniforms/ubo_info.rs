@@ -4,8 +4,8 @@ use serde_json::{Value};
 use crate::memory::{PropInfoList, UniformBufferDef};
 #[derive(Debug,Clone, Copy)]
 pub enum UBOType {
-    ComponentBuffer,
-    GlobalBuffer
+    Component,
+    Global
 }
 
 impl TryFrom<&Value> for UBOType {
@@ -13,8 +13,8 @@ impl TryFrom<&Value> for UBOType {
     fn try_from(value: &Value) -> Result<Self, Self::Error> {
        let str = value.as_str().ok_or(format!("{:?}",value))?;
        match str {
-           ":ComponentBuffer" => Ok(UBOType::ComponentBuffer),
-           ":GlobalBuffer" => Ok(UBOType::GlobalBuffer),
+           ":Component" => Ok(UBOType::Component),
+           ":Global" => Ok(UBOType::Global),
            _ => Err(str.to_string())
        }
     }
@@ -47,6 +47,7 @@ pub struct UBOInfo {
     pub name:Arc<String>,
     pub index:usize,
     pub props:Arc<UniformBufferDef>,
+    pub textures:Vec<UniformBufferDef>,
     pub backends:Vec<String>,
     pub shader_stage:wgpu::ShaderStage
 }
@@ -77,6 +78,7 @@ impl TryFrom<&Value> for UBOInfo {
             props:Arc::new(udf),
             backends,
             index:prop_index as usize,
+            textures:vec![],
             shader_stage:wgpu::ShaderStage::from_bits(shader_stage)
                                .unwrap_or(wgpu::ShaderStage::VERTEX_FRAGMENT) 
         })

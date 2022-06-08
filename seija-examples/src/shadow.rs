@@ -1,7 +1,7 @@
 use bevy_ecs::prelude::{Commands, Entity, IntoSystem, Query, Res, ResMut};
 use glam::{Quat, Vec3};
 use seija_asset::{Assets, Handle};
-use seija_core::{window::AppWindow, CoreStage, StartupStage};
+use seija_core::{window::AppWindow, CoreStage, StartupStage, time::Time};
 use seija_examples::{load_texture, IExamples};
 
 use seija_render::{
@@ -37,7 +37,7 @@ fn on_start(
 }
 
 fn on_update(
-    mut light: ResMut<LightEnv>,
-    mut query: Query<(Entity, &Handle<Mesh>, &mut Transform)>,
+    mut light: ResMut<LightEnv>
+    ,time:Res<Time>,
 ) {
 }

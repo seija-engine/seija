@@ -8,7 +8,7 @@
 
 (defn add-pbr-light-ubo [index]
     (add-ubo {
-        :type :GlobalBuffer
+        :type :Global
         :apply :Frame
         :name "LightBuffer"
         :index index

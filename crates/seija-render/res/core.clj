@@ -1,6 +1,6 @@
 (defn add-transform-ubo [index]
     (add-ubo {
-        :type :ComponentBuffer
+        :type :Component
         :apply :RenderObject
         :name "ObjectBuffer"
         :index index
@@ -21,7 +21,7 @@
 
 (defn add-camera-ubo [index props backends]
    (add-ubo {
-        :type :ComponentBuffer
+        :type :Component
         :apply :Camera
         :name "CameraBuffer"
         :index index
@@ -34,7 +34,7 @@
 
 (defn add-anim-skin-ubo [index]
     (add-ubo {
-        :type :ComponentBuffer
+        :type :Component
         :name "SkinBuffer"
         :index index
         :apply :RenderObject
@@ -49,7 +49,7 @@
 
 (defn add-shadow-ubo [index]
     (add-ubo {
-        :type :GlobalBuffer
+        :type :Global
         :name "ShadowMap"
         :index index
         :apply :Frame
@@ -57,6 +57,22 @@
         :props [
             {:name "lightProjView" :type "mat4" }
         ]
+    
+        :textures [
+            {
+                :name "shadowTexture" 
+                :desc { :format "Depth32Float"}
+            }
+        ]
+
         :backends ["ShadowMap"]
     })
 )
+
+
+
+
+
+
+
+

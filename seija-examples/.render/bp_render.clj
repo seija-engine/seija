@@ -5,7 +5,7 @@
 (core/add-transform-ubo 2)
 
 (add-ubo {
-  :type :GlobalBuffer
+  :type :Global
   :apply :Frame
   :name "LightBuffer"
   :index 3

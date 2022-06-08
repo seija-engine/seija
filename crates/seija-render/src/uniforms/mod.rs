@@ -3,6 +3,7 @@ mod ubo_info;
 mod ubo_context;
 mod buffer;
 mod array_buffer;
+mod texture_def;
 pub mod backends;
 pub use buffer::{UBObject};
 pub use ubo_context::{UBOContext,BufferIndex,BufferArrayIndex,UBONameIndex};

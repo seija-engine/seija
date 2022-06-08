@@ -29,7 +29,7 @@
              shadow-map-texture (node SCREEN_TEXTURE [{:format "Depth32Float"}])
              shadow-map (node SHADOW_MAP {:ubo "ShadowMap"})
          ]
-         (link-> shadow-map-texture shadow-map)
+         (link-> shadow-map-texture shadow-map {0 0})
          (link-> pbr-camera-ex camera)
          (link-> camera gbuffer-pass)
          (link-> light  gbuffer-pass)
