@@ -2,7 +2,7 @@ use std::{collections::{HashMap}, fmt::Write, sync::Arc};
 use glsl_pack_rtbase::shader::Shader;
 use glsl_pkg::{IShaderBackend, backends::BackendItem};
 
-use seija_render::{UBOInfo, RawUniformInfo,UniformInfo,UniformType};
+use seija_render::{UniformInfo, RawUniformInfo,MemUniformInfo,UniformType};
 
 use crate::{render_info::RenderInfo, ShaderTask};
 
@@ -47,7 +47,7 @@ impl IShaderBackend for SeijaShaderBackend {
 
 
     fn write_uniforms<W:Write>(&self, writer:&mut W,shader:&Shader,ex_data:&ShaderTask) {
-        let mut ubos:HashMap<String,Arc<UBOInfo>> = Default::default();
+        let mut ubos:HashMap<String,Arc<UniformInfo>> = Default::default();
         for backend_name in shader.backend.iter() {
             if let Some(ubo_info) = self.render_info.backend2ubo.get(backend_name) {
                 if !ubos.contains_key(ubo_info.name.as_str()) {
@@ -66,7 +66,7 @@ impl IShaderBackend for SeijaShaderBackend {
         if ex_data.prop_def.infos.len() > 0 {
             writer.write_str(&format!("layout(set = {}, binding = 0) uniform Material {{\r\n",index)).unwrap();
             for prop in ex_data.prop_def.infos.iter() {
-                if let UniformInfo::Raw(raw) = prop {
+                if let MemUniformInfo::Raw(raw) = prop {
                     write_ubo_uniform_prop(raw, writer);
                 }
             }
@@ -149,14 +149,14 @@ impl SeijaShaderBackend {
 }
 
 
-fn write_ubo_uniform<W:Write>(info:&UBOInfo, writer:&mut W,index:usize) {
+fn write_ubo_uniform<W:Write>(info:&UniformInfo, writer:&mut W,index:usize) {
 
     for prop in info.props.infos.iter() {
-        if let UniformInfo::Array(arr) = prop {
+        if let MemUniformInfo::Array(arr) = prop {
             writer.write_str("\r\n").unwrap();
             writer.write_str(&format!("struct {}{} {{\r\n",&info.name,arr.name)).unwrap();
             for prop in arr.elem_def.infos.iter() {
-                if let UniformInfo::Raw(raw) = prop {
+                if let MemUniformInfo::Raw(raw) = prop {
                     write_ubo_uniform_prop(raw, writer);
                 }
             }
@@ -167,10 +167,10 @@ fn write_ubo_uniform<W:Write>(info:&UBOInfo, writer:&mut W,index:usize) {
     writer.write_str(&format!("layout(set = {}, binding = 0) uniform {} {{\r\n",index,&info.name)).unwrap();
     for prop in info.props.infos.iter() {
         match prop {
-            UniformInfo::Raw(raw) => {
+            MemUniformInfo::Raw(raw) => {
                 write_ubo_uniform_prop(raw, writer);
             },
-            UniformInfo::Array(arr) => {
+            MemUniformInfo::Array(arr) => {
                 writer.write_str(&format!("  {}{} {}[{}];\r\n",&info.name,&arr.name,&arr.name,arr.array_size)).unwrap();
             }
         }

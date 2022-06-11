@@ -41,7 +41,7 @@ impl TryFrom<&Value> for UBOApplyType {
 }
 
 #[derive(Debug)]
-pub struct UBOInfo {
+pub struct UniformInfo {
     pub typ:UBOType,
     pub apply:UBOApplyType,
     pub name:Arc<String>,
@@ -53,7 +53,7 @@ pub struct UBOInfo {
 }
 
 
-impl TryFrom<&Value> for UBOInfo {
+impl TryFrom<&Value> for UniformInfo {
     type Error = String;
     fn try_from(value: &Value) -> Result<Self, Self::Error> {
         let object = value.as_object().ok_or("root".to_string())?;
@@ -71,7 +71,7 @@ impl TryFrom<&Value> for UBOInfo {
         let shader_stage = object.get(":shader-stage").and_then(Value::as_i64).unwrap_or(
             wgpu::ShaderStage::VERTEX_FRAGMENT.bits() as i64
         ) as u32;
-        Ok(UBOInfo {
+        Ok(UniformInfo {
             typ,
             apply,
             name:Arc::new(name.to_string()),

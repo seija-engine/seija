@@ -3,7 +3,7 @@ use std::{convert::{TryFrom}};
 use lite_clojure_eval::{EvalRT, Variable, ExecScope};
 use serde_json::Value;
 
-use crate::{UBOInfoSet, UBOInfo, graph::{NodeId}, render::RenderGraphContext};
+use crate::{UniformInfoSet, UniformInfo, graph::{NodeId}, render::RenderGraphContext};
 
 use super::{NodeCreatorContext, NodeCreatorSet, NodeCreatorFn,RenderScriptPlugin};
 
@@ -46,8 +46,8 @@ impl RenderScriptContext {
         }
     }
 
-    pub fn run(&mut self,code:&str,info:&mut UBOInfoSet,graph_ctx:&mut RenderGraphContext,is_create_graph:bool) {
-       let info_ptr = info as *mut UBOInfoSet as *mut u8;
+    pub fn run(&mut self,code:&str,info:&mut UniformInfoSet,graph_ctx:&mut RenderGraphContext,is_create_graph:bool) {
+       let info_ptr = info as *mut UniformInfoSet as *mut u8;
        self.rt.global_context().push_var("UBO_SET", Variable::UserData(info_ptr));
        
        let creator_ptr = (&mut self.node_creators) as *mut NodeCreatorContext as *mut u8;
@@ -77,9 +77,9 @@ fn find_userdata<'a,T>(rt:&'a ExecScope,name:&str) -> Option<&'a mut T> {
 
 fn def_ubo(rt:&mut ExecScope,args:Vec<Variable>) -> Variable {
     (|rt:&mut ExecScope,mut args:Vec<Variable>| {
-        let info_set = find_userdata::<UBOInfoSet>(rt, "UBO_SET")?;
+        let info_set = find_userdata::<UniformInfoSet>(rt, "UBO_SET")?;
         let json:Value =  args.remove(0).into();
-        match UBOInfo::try_from(&json) {
+        match UniformInfo::try_from(&json) {
             Ok(ubo_info) =>  info_set.add_info(ubo_info),
             Err(err) => {
                 log::error!("def-ubo error:{:?}",err);
@@ -140,7 +140,7 @@ fn link_node(rt:&mut ExecScope,args:Vec<Variable>) -> Variable {
 fn test_fn() {
     env_logger::init();
     let mut ctx = RenderScriptContext::new();
-    let mut info_set = UBOInfoSet::default();
+    let mut info_set = UniformInfoSet::default();
     let buildin = crate::builtin_node_creators();
     ctx.add_node_creator_set(&buildin);
     ctx.run(r#"

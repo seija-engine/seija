@@ -1,11 +1,11 @@
-mod ubo_info_set;
-mod ubo_info;
-mod ubo_context;
+mod uniform_info_set;
+mod uniform_info;
+mod uniform_context;
 mod buffer;
 mod array_buffer;
 mod texture_def;
 pub mod backends;
 pub use buffer::{UBObject};
-pub use ubo_context::{UBOContext,BufferIndex,BufferArrayIndex,UBONameIndex};
-pub use ubo_info_set::{UBOInfoSet};
-pub use ubo_info::{UBOInfo,UBOType,UBOApplyType};
+pub use uniform_context::{UniformContext,BufferIndex,BufferArrayIndex,UBONameIndex};
+pub use uniform_info_set::{UniformInfoSet};
+pub use uniform_info::{UniformInfo,UBOType,UBOApplyType};

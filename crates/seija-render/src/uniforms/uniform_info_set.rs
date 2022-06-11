@@ -1,16 +1,16 @@
 use std::collections::{HashMap, HashSet};
-use super::ubo_info::{UBOType};
-use super::UBOInfo;
+use super::uniform_info::{UBOType};
+use super::UniformInfo;
 
 #[derive(Default,Debug)]
-pub struct UBOInfoSet {
-    pub component_buffers:HashMap<String,UBOInfo>,
-    pub global_buffers:HashMap<String,UBOInfo>,
+pub struct UniformInfoSet {
+    pub component_buffers:HashMap<String,UniformInfo>,
+    pub global_buffers:HashMap<String,UniformInfo>,
     backend2ubo:HashMap<String,(String,usize)>
 }
 
-impl UBOInfoSet {
-    pub fn add_info(&mut self,info:UBOInfo) {
+impl UniformInfoSet {
+    pub fn add_info(&mut self,info:UniformInfo) {
         for backend_name in info.backends.iter() {
             self.backend2ubo.insert(backend_name.to_string(), (info.name.to_string(),info.index));
         }
@@ -25,7 +25,7 @@ impl UBOInfoSet {
        
     }
 
-    pub fn get_info(&self,name:&str) -> Option<&UBOInfo> {
+    pub fn get_info(&self,name:&str) -> Option<&UniformInfo> {
         if let Some(info) = self.component_buffers.get(name) {
             return Some(info)
         }

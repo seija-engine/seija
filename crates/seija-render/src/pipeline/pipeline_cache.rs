@@ -16,7 +16,7 @@ use wgpu::{BindGroupLayout, DepthStencilState, Device,
           RenderPipelineDescriptor, ShaderModule, 
           ShaderModuleDescriptor, StencilState, VertexState};
 use crate::rt_shaders::RuntimeShaderInfo;
-use crate::uniforms::{UBONameIndex, UBOApplyType, UBOContext};
+use crate::uniforms::{UBONameIndex, UBOApplyType, UniformContext};
 use crate::{RenderContext, RenderConfig, GraphSetting};
 use crate::material::ShaderInfoDef;
 use crate::{material::{MaterialDef, PassDef}, resource::Mesh};
@@ -44,7 +44,7 @@ pub struct RenderPipeline {
 }
 
 impl RenderPipeline {
-    pub fn set_binds<'b:'a,'a>(&self,camera_e:Entity,ve:&Entity,pass:&'a mut wgpu::RenderPass<'b>,buf_ctx:&'b UBOContext) -> Option<u32> {
+    pub fn set_binds<'b:'a,'a>(&self,camera_e:Entity,ve:&Entity,pass:&'a mut wgpu::RenderPass<'b>,buf_ctx:&'b UniformContext) -> Option<u32> {
         for (index,ubo_name_index) in self.ubos.iter().enumerate() {
             match ubo_name_index.2 {
              UBOApplyType::Camera => {

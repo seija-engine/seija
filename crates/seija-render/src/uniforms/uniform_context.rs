@@ -6,10 +6,10 @@ use wgpu::{CommandEncoder, Device};
 use crate::memory::TypedUniformBuffer;
 use crate::pipeline::render_bindings::BindGroupLayoutBuilder;
 use crate::resource::RenderResources;
-use crate::{UBOInfoSet, UBOInfo};
+use crate::{UniformInfoSet, UniformInfo};
 use super::{UBOType, UBObject};
 use super::array_buffer::UBOArrayBuffer;
-use super::ubo_info::UBOApplyType;
+use super::uniform_info::UBOApplyType;
 
 #[derive(Clone, Copy,Debug)]
 pub struct BufferIndex(usize);
@@ -21,13 +21,13 @@ pub type UBONameIndex = (UBOType,usize,UBOApplyType);
 
 
 #[derive(Default)]
-pub struct UBOContext {
-    pub info:UBOInfoSet,
+pub struct UniformContext {
+    pub info:UniformInfoSet,
     pub buffers:BufferContext,
     pub info_layouts:HashMap<String,wgpu::BindGroupLayout>
 }
 
-impl UBOContext {
+impl UniformContext {
   
   pub fn init(&mut self,device:&wgpu::Device,res:&mut RenderResources) {
       
@@ -41,7 +41,7 @@ impl UBOContext {
       self.buffers.init(&self.info,res,&self.info_layouts);
   }
 
-  fn create_layout(layouts:&mut HashMap<String,wgpu::BindGroupLayout>,name:&str,device:&Device,info:&UBOInfo) {
+  fn create_layout(layouts:&mut HashMap<String,wgpu::BindGroupLayout>,name:&str,device:&Device,info:&UniformInfo) {
      let mut builder = BindGroupLayoutBuilder::new();
      //builder.add_uniform(wgpu::ShaderStage::VERTEX_FRAGMENT);
      builder.add_uniform(info.shader_stage);
@@ -75,7 +75,7 @@ pub struct BufferContext {
 
 impl BufferContext {
 
-  pub fn init(&mut self,info_set:&UBOInfoSet,res:&mut RenderResources,layouts:&HashMap<String,wgpu::BindGroupLayout>) {
+  pub fn init(&mut self,info_set:&UniformInfoSet,res:&mut RenderResources,layouts:&HashMap<String,wgpu::BindGroupLayout>) {
     for (_,info) in info_set.component_buffers.iter() {
         self.components.push(UBOArrayBuffer::new(info.props.clone()));
         self.comp_nameidxs.insert(info.name.to_string(), (UBOType::Component,self.components.len() - 1,info.apply));
@@ -89,7 +89,7 @@ impl BufferContext {
     }
   }
 
-  pub fn add_buffer(&mut self,info:&UBOInfo,m_eid:Option<u32>,res:&mut RenderResources,layout:&wgpu::BindGroupLayout) -> Option<()> {
+  pub fn add_buffer(&mut self,info:&UniformInfo,m_eid:Option<u32>,res:&mut RenderResources,layout:&wgpu::BindGroupLayout) -> Option<()> {
       match info.typ {
         UBOType::Component => {
           let eid = m_eid.log_err(&format!("ComponentBuffer {} need eid",info.name.as_str()))?;

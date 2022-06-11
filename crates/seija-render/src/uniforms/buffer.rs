@@ -1,5 +1,5 @@
 use wgpu::CommandEncoder;
-use crate::{memory::TypedUniformBuffer, resource::{BufferId, RenderResources}, UBOInfo, pipeline::render_bindings::{BindGroupLayoutBuilder, BindGroupBuilder}};
+use crate::{memory::TypedUniformBuffer, resource::{BufferId, RenderResources}, UniformInfo, pipeline::render_bindings::{BindGroupLayoutBuilder, BindGroupBuilder}};
 
 
 pub struct UBObject {
@@ -10,7 +10,7 @@ pub struct UBObject {
 }
 
 impl UBObject {
-    pub fn create(info:&UBOInfo,res:&mut RenderResources,layout:&wgpu::BindGroupLayout) -> Self {
+    pub fn create(info:&UniformInfo,res:&mut RenderResources,layout:&wgpu::BindGroupLayout) -> Self {
         let local = TypedUniformBuffer::from_def(info.props.clone());
         let buffer = res.create_buffer(&wgpu::BufferDescriptor {
             label:None,
