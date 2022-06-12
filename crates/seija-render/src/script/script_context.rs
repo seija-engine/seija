@@ -29,7 +29,7 @@ impl RenderScriptContext {
        self.rt.global_context().push_var("SS_COMPUTE", wgpu::ShaderStage::COMPUTE.bits() as i64 );
        self.rt.global_context().push_var("SS_ALL", wgpu::ShaderStage::all().bits() as i64 );
 
-       self.rt.global_context().push_native_fn("add-ubo", def_ubo);
+       self.rt.global_context().push_native_fn("add-uniform", def_uniform);
        self.rt.global_context().push_native_fn("node", node);
        self.rt.global_context().push_native_fn("link->", link_node);
        
@@ -75,7 +75,7 @@ fn find_userdata<'a,T>(rt:&'a ExecScope,name:&str) -> Option<&'a mut T> {
 }
 
 
-fn def_ubo(rt:&mut ExecScope,args:Vec<Variable>) -> Variable {
+fn def_uniform(rt:&mut ExecScope,args:Vec<Variable>) -> Variable {
     (|rt:&mut ExecScope,mut args:Vec<Variable>| {
         let info_set = find_userdata::<UniformInfoSet>(rt, "UBO_SET")?;
         let json:Value =  args.remove(0).into();

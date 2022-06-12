@@ -126,16 +126,17 @@ fn read_texture_prop(json_value:&Value) -> Result<TexturePropDef,()> {
             };
             match prop_type {
                 "Texture" => {
-                    texture_props.layout_builder.add_texture(false);
-                    texture_props.layout_builder.add_sampler();
+                    //TODO 这里需要根据贴图变化布局
+                    texture_props.layout_builder.add_texture(false,None);
+                    texture_props.layout_builder.add_sampler(true);
                     texture_prop.is_cube_map = false;
                     texture_props.indexs.insert(prop_name.to_string(), texture_prop);
                    
                     texture_index += 1;
                 },
                 "CubeMap" => {
-                    texture_props.layout_builder.add_texture(true);
-                    texture_props.layout_builder.add_sampler();
+                    texture_props.layout_builder.add_texture(true,None);
+                    texture_props.layout_builder.add_sampler(true);
                     texture_prop.is_cube_map = true;
                     texture_props.indexs.insert(prop_name.to_string(), texture_prop);
                     texture_index += 1;

@@ -2,6 +2,8 @@ use std::{convert::{TryFrom, TryInto}, sync::Arc};
 
 use serde_json::{Value};
 use crate::memory::{PropInfoList, UniformBufferDef};
+
+use super::texture_def::UniformTextureDef;
 #[derive(Debug,Clone, Copy)]
 pub enum UBOType {
     Component,
@@ -47,7 +49,7 @@ pub struct UniformInfo {
     pub name:Arc<String>,
     pub index:usize,
     pub props:Arc<UniformBufferDef>,
-    pub textures:Vec<UniformBufferDef>,
+    pub textures:Vec<UniformTextureDef>,
     pub backends:Vec<String>,
     pub shader_stage:wgpu::ShaderStage
 }
@@ -62,7 +64,8 @@ impl TryFrom<&Value> for UniformInfo {
         let name = object.get(":name").and_then(Value::as_str).ok_or(":name".to_string())?;
         let backends = object.get(":backends")
                                         .and_then(|v| v.as_array())
-                                        .map(|lst| lst.iter().filter_map(|v| v.as_str().map(String::from)).collect::<Vec<String>>())
+                                        .map(|lst| lst.iter()
+                                        .filter_map(|v| v.as_str().map(String::from)).collect::<Vec<String>>())
                                         .ok_or(":backends")?;
         let prop_json = object.get(":props").ok_or(":props".to_string())?;
         let props:PropInfoList = prop_json.try_into().map_err(|_| ":props".to_string())?;
@@ -71,6 +74,18 @@ impl TryFrom<&Value> for UniformInfo {
         let shader_stage = object.get(":shader-stage").and_then(Value::as_i64).unwrap_or(
             wgpu::ShaderStage::VERTEX_FRAGMENT.bits() as i64
         ) as u32;
+
+        let mut textures:Vec<UniformTextureDef> = vec![];
+        if let Some(json_textures) = object.get(":textures").and_then(Value::as_array) {
+            for json_item in json_textures.iter() {
+                if let Ok(texture_def) = UniformTextureDef::try_from(json_item) {
+                    textures.push(texture_def);
+                } else {
+                    log::warn!("read UniformTextureDef error:{}",json_item.to_string());
+                }
+            }
+        }
+
         Ok(UniformInfo {
             typ,
             apply,
@@ -78,7 +93,7 @@ impl TryFrom<&Value> for UniformInfo {
             props:Arc::new(udf),
             backends,
             index:prop_index as usize,
-            textures:vec![],
+            textures,
             shader_stage:wgpu::ShaderStage::from_bits(shader_stage)
                                .unwrap_or(wgpu::ShaderStage::VERTEX_FRAGMENT) 
         })

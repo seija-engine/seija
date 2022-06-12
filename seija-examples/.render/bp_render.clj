@@ -4,7 +4,7 @@
 
 (core/add-transform-ubo 2)
 
-(add-ubo {
+(add-uniform {
   :type :Global
   :apply :Frame
   :name "LightBuffer"

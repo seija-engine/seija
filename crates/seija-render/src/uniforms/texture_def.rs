@@ -6,8 +6,8 @@ use crate::material::STextureDescriptor;
 
 #[derive(Debug)]
 pub struct UniformTextureDef {
-    name:String,
-    desc:STextureDescriptor
+    pub name:String,
+    pub desc:STextureDescriptor
 }
 
 impl TryFrom<&Value> for UniformTextureDef {

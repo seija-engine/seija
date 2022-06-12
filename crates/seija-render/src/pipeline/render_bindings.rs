@@ -22,23 +22,23 @@ impl BindGroupLayoutBuilder {
         self.layout_entrys.push(layout);
     }
 
-    pub fn add_sampler(&mut self) {
+    pub fn add_sampler(&mut self,filtering:bool) {
         let entry = wgpu::BindGroupLayoutEntry {
             binding:self.layout_entrys.len() as u32,
             visibility:ShaderStage::FRAGMENT,
             //TODO filtering??
-            ty:wgpu::BindingType::Sampler {comparison: false, filtering: true },
+            ty:wgpu::BindingType::Sampler {comparison: false, filtering },
             count:None
         };
         self.layout_entrys.push(entry);
     }
 
-    pub fn add_texture(&mut self,is_cube_map:bool) {
+    pub fn add_texture(&mut self,is_cube_map:bool,sample_type:Option<wgpu::TextureSampleType>) {
         let texture_entry = wgpu::BindGroupLayoutEntry {
             binding:self.layout_entrys.len() as u32,
             visibility:ShaderStage::FRAGMENT,
             ty:wgpu::BindingType::Texture {
-                sample_type:wgpu::TextureSampleType::Float { filterable: false },
+                sample_type: sample_type.unwrap_or(wgpu::TextureSampleType::Float { filterable: false }),
                 view_dimension:if is_cube_map {wgpu::TextureViewDimension::Cube } else { wgpu::TextureViewDimension::D2 },
                 multisampled:false
             },

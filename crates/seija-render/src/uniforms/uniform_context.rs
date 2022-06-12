@@ -23,8 +23,8 @@ pub type UBONameIndex = (UBOType,usize,UBOApplyType);
 #[derive(Default)]
 pub struct UniformContext {
     pub info:UniformInfoSet,
+    pub info_layouts:HashMap<String,wgpu::BindGroupLayout>,
     pub buffers:BufferContext,
-    pub info_layouts:HashMap<String,wgpu::BindGroupLayout>
 }
 
 impl UniformContext {
@@ -43,8 +43,20 @@ impl UniformContext {
 
   fn create_layout(layouts:&mut HashMap<String,wgpu::BindGroupLayout>,name:&str,device:&Device,info:&UniformInfo) {
      let mut builder = BindGroupLayoutBuilder::new();
-     //builder.add_uniform(wgpu::ShaderStage::VERTEX_FRAGMENT);
      builder.add_uniform(info.shader_stage);
+     
+     for texture_desc in info.textures.iter() {
+        let desc = texture_desc.desc.0.format.describe();
+        
+        builder.add_texture(false,Some(desc.sample_type));
+        let filtering = if let wgpu::TextureSampleType::Float { filterable } = desc.sample_type {
+          filterable
+        } else {
+          false
+        };
+        builder.add_sampler(filtering);
+     }
+
      let layout = builder.build(device);
      layouts.insert(name.to_string(), layout);
   }
