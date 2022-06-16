@@ -18,10 +18,10 @@ impl RenderInfo {
               let mut info_set:UniformInfoSet = UniformInfoSet::default();
               let mut graph_ctx = RenderGraphContext::default();
               self.rsc.run(code.as_str(), &mut info_set, &mut graph_ctx,false);
-              for (_,ubo_info) in info_set.component_buffers.drain() {
+              for (_,ubo_info) in info_set.components.drain() {
                   self.add_ubo_info(ubo_info);
               }
-              for (_,ubo_info) in info_set.global_buffers.drain() {
+              for (_,ubo_info) in info_set.globals.drain() {
                 self.add_ubo_info(ubo_info);
             }
           },

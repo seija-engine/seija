@@ -1,6 +1,7 @@
 use std::path::{PathBuf, Path};
 use std::sync::Arc;
 use camera::{view_list::view_list_system};
+use material::MaterialStorage;
 use pipeline::{PipelineCache, update_pipeline_cache};
 use render::{AppRender, Config };
 pub use script::{builtin_node_creators,RenderScriptContext,RenderScriptPlugin,NodeCreatorSet,NodeCreatorFn};
@@ -83,7 +84,9 @@ impl IModule for RenderModule {
 impl RenderModule {
     fn get_render_system(&self,w:&mut World,config:&RenderConfig) -> impl FnMut(&mut World) {
         let mut app_render = AppRender::new_sync(Config::default());
-        let render_ctx = RenderContext::new(app_render.device.clone(),&self.0.config_path,self.0.setting.clone());
+        let mut render_ctx = RenderContext::new(app_render.device.clone(),&self.0.config_path,self.0.setting.clone());
+        //TODO 这里考虑把MaterialStorage的默认贴图删了
+        render_ctx.resources.default_textures = w.get_resource::<MaterialStorage>().unwrap().default_textures.clone();
         self.init_render(w,render_ctx,&mut app_render,config); 
         move |_w| {
             _w.resource_scope(|world:&mut World,mut ctx:Mut<RenderContext>| {
@@ -105,6 +108,7 @@ impl RenderModule {
         let script_path = self.0.config_path.join("render.clj");
         match std::fs::read_to_string(script_path) {
             Ok(code_string) => {
+                rsc.run(code_string.as_str(), &mut ctx.ubo_ctx2.info,&mut app_render.graph,false);
                 rsc.run(code_string.as_str(), &mut ctx.ubo_ctx.info,&mut app_render.graph,true);
             },
             Err(err) => {
@@ -112,6 +116,8 @@ impl RenderModule {
             }
         }
         app_render.graph.build();
+
+        ctx.ubo_ctx2.init(&mut ctx.resources);
         ctx.ubo_ctx.init(&ctx.device,&mut ctx.resources);
         for node in app_render.graph.graph.iter_mut_nodes() {
             node.node.init(w, &mut ctx);

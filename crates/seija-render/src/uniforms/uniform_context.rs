@@ -32,10 +32,10 @@ impl UniformContext {
   pub fn init(&mut self,device:&wgpu::Device,res:&mut RenderResources) {
       
 
-       for (name,info) in self.info.component_buffers.iter() {
+       for (name,info) in self.info.components.iter() {
           Self::create_layout(&mut self.info_layouts,name, device,info);
        }
-       for (name,info) in self.info.global_buffers.iter() {
+       for (name,info) in self.info.globals.iter() {
         Self::create_layout(&mut self.info_layouts,name, device,info);
       }
       self.buffers.init(&self.info,res,&self.info_layouts);
@@ -45,18 +45,6 @@ impl UniformContext {
      let mut builder = BindGroupLayoutBuilder::new();
      builder.add_uniform(info.shader_stage);
      
-     for texture_desc in info.textures.iter() {
-        let desc = texture_desc.desc.0.format.describe();
-        
-        builder.add_texture(false,Some(desc.sample_type));
-        let filtering = if let wgpu::TextureSampleType::Float { filterable } = desc.sample_type {
-          filterable
-        } else {
-          false
-        };
-        builder.add_sampler(filtering);
-     }
-
      let layout = builder.build(device);
      layouts.insert(name.to_string(), layout);
   }
@@ -88,12 +76,12 @@ pub struct BufferContext {
 impl BufferContext {
 
   pub fn init(&mut self,info_set:&UniformInfoSet,res:&mut RenderResources,layouts:&HashMap<String,wgpu::BindGroupLayout>) {
-    for (_,info) in info_set.component_buffers.iter() {
+    for (_,info) in info_set.components.iter() {
         self.components.push(UBOArrayBuffer::new(info.props.clone()));
         self.comp_nameidxs.insert(info.name.to_string(), (UBOType::Component,self.components.len() - 1,info.apply));
     }
 
-    for (_,info) in info_set.global_buffers.iter() {
+    for (_,info) in info_set.globals.iter() {
       if let Some(layout) = layouts.get(info.name.as_str()) {
         self.globals.push(UBObject::create(info, res,layout));
         self.global_nameidxs.insert(info.name.to_string(), (UBOType::Global,self.globals.len() - 1,info.apply));

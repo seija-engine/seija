@@ -1,7 +1,7 @@
 use wgpu::CommandEncoder;
 use crate::{memory::TypedUniformBuffer, resource::{BufferId, RenderResources}, UniformInfo, pipeline::render_bindings::{BindGroupLayoutBuilder, BindGroupBuilder}};
 
-
+//TODO Delete it
 pub struct UBObject {
     pub local:TypedUniformBuffer,
     cache:Option<BufferId>,

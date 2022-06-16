@@ -1,7 +1,7 @@
 use std::{convert::{TryFrom, TryInto}, sync::Arc};
 
 use serde_json::{Value};
-use crate::memory::{PropInfoList, UniformBufferDef};
+use crate::{memory::{PropInfoList, UniformBufferDef}, pipeline::render_bindings::{BindGroupBuilder, BindGroupLayoutBuilder}};
 
 use super::texture_def::UniformTextureDef;
 #[derive(Debug,Clone, Copy)]
@@ -97,5 +97,21 @@ impl TryFrom<&Value> for UniformInfo {
             shader_stage:wgpu::ShaderStage::from_bits(shader_stage)
                                .unwrap_or(wgpu::ShaderStage::VERTEX_FRAGMENT) 
         })
+    }
+}
+
+
+impl UniformInfo {
+    pub fn create_layout(&self,device:&wgpu::Device) -> wgpu::BindGroupLayout {
+        let mut builder = BindGroupLayoutBuilder::new();
+        if self.props.infos.len() > 0 {
+            builder.add_uniform(self.shader_stage);
+        }
+        for texture_desc in self.textures.iter() {
+            builder.add_texture(false, Some(texture_desc.sample_type));
+            builder.add_sampler(texture_desc.is_filterable());
+        }
+        let layout = builder.build(device);
+        layout
     }
 }

@@ -4,32 +4,34 @@ use super::UniformInfo;
 
 #[derive(Default,Debug)]
 pub struct UniformInfoSet {
-    pub component_buffers:HashMap<String,UniformInfo>,
-    pub global_buffers:HashMap<String,UniformInfo>,
+    pub components:HashMap<String,UniformInfo>,
+    pub globals:HashMap<String,UniformInfo>,
     backend2ubo:HashMap<String,(String,usize)>
 }
 
 impl UniformInfoSet {
     pub fn add_info(&mut self,info:UniformInfo) {
+       
         for backend_name in info.backends.iter() {
             self.backend2ubo.insert(backend_name.to_string(), (info.name.to_string(),info.index));
         }
+       
         match info.typ {
             UBOType::Component => {
-                self.component_buffers.insert(info.name.to_string(), info);
+                self.components.insert(info.name.to_string(), info);
             },
             UBOType::Global => {
-                self.global_buffers.insert(info.name.to_string(), info);
+                self.globals.insert(info.name.to_string(), info);
             },
         }
        
     }
 
     pub fn get_info(&self,name:&str) -> Option<&UniformInfo> {
-        if let Some(info) = self.component_buffers.get(name) {
+        if let Some(info) = self.components.get(name) {
             return Some(info)
         }
-        if let Some(info) = self.global_buffers.get(name) {
+        if let Some(info) = self.globals.get(name) {
             return Some(info)
         }
         None

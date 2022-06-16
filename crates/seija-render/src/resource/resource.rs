@@ -58,6 +58,7 @@ pub struct RenderResources {
     main_swap_chain:Option<wgpu::SwapChain>,
     pub main_swap_chain_frame:Option<wgpu::SwapChainFrame>,
 
+    pub default_textures:Vec<Handle<Texture>>,
    
     pub buffers: HashMap<BufferId, wgpu::Buffer>,
     pub textures: HashMap<TextureId, wgpu::Texture>,
@@ -85,7 +86,8 @@ impl RenderResources {
             texture_id_gen:IDGenU64::new(),
             texture_views:HashMap::default(),
             samplers:HashMap::default(),
-            sampler_id_gen:IDGenU64::new()
+            sampler_id_gen:IDGenU64::new(),
+            default_textures:Vec::new()
         }
     }
 

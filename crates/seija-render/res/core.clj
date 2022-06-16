@@ -60,8 +60,9 @@
     
         :textures [
             {
-                :name "shadowTexture" 
-                :desc { :format "Depth32Float"}
+                :name "shadowTexture"
+                :type "texture2D"
+                :filterable true
             }
         ]
 
