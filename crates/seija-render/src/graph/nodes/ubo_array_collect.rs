@@ -6,11 +6,11 @@ use fnv::FnvHashMap;
 use seija_core::LogOption;
 use seija_transform::Transform;
 
-use crate::{UBONameIndex, uniforms::backends::IShaderBackend, RenderContext, UniformBuffer};
+use crate::{uniforms::backends::IShaderBackend, RenderContext, UniformBuffer, UniformIndex};
 
 pub struct UBOArrayCollect<T:IShaderBackend,ET:'static + Send + Sync> {
     pub ubo_name:String,
-    name_index:Option<UBONameIndex>,
+    name_index:Option<UniformIndex>,
     backend:Option<T>,
 
     map_idxs:FnvHashMap<u32,usize>,
@@ -45,7 +45,7 @@ impl<T,ET> UBOArrayCollect<T,ET> where T:IShaderBackend,ET:'static + Send + Sync
                     log::error!("backend error :{}",err);
                 }
             }
-            self.name_index = Some(ctx.ubo_ctx.buffers.get_name_index(self.ubo_name.as_str()).unwrap())
+            self.name_index = Some(ctx.ubo_ctx.get_index(self.ubo_name.as_str()).unwrap())
         }
     }
 
@@ -63,21 +63,25 @@ impl<T,ET> UBOArrayCollect<T,ET> where T:IShaderBackend,ET:'static + Send + Sync
                frame_size += 1;
            }
        };
-       let type_ubo = self.name_index
-                                                   .and_then(|index| 
-                                                              ctx.ubo_ctx.buffers.get_buffer_mut(&index, None)).log_err("get buffer error")?;
-       
+       //let type_ubo = self.name_index
+       //                                            .and_then(|index| 
+       //                                                       ctx.ubo_ctx.buffers.get_buffer_mut(&index, None)).log_err("get buffer error")?;
+       let name_index = self.name_index.as_ref()?;
        let backend = self.backend.as_ref().log_err("get backend error")?;
         //update
         let mut elems = world.query_filtered::<(Entity,&ET,&Transform),Or<(Changed<ET>, Changed<Transform>)>>();
         for (e,elem,t) in elems.iter(world) {
             let index = *self.map_idxs.get(&e.id()).log_err("get index error")?;
-            setter(backend,index,elem,&mut type_ubo.buffer,t);
+            ctx.ubo_ctx.set_buffer(name_index, None, |buffer| {
+                setter(backend,index,elem,&mut buffer.buffer,t);
+            });
         }
 
         if self.cache_len != frame_size {
-            
-            backend.set_count(&mut type_ubo.buffer, frame_size as i32);
+            ctx.ubo_ctx.set_buffer(name_index, None, |buffer| {
+                backend.set_count(&mut buffer.buffer, frame_size as i32);
+            });
+           
             self.cache_len = frame_size;
         }
        Some(())

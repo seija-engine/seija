@@ -58,13 +58,13 @@
             {:name "lightProjView" :type "mat4" }
         ]
     
-        :textures [
-            {
-                :name "shadowTexture"
-                :type "texture2D"
-                :filterable true
-            }
-        ]
+        ;:textures [
+        ;    {
+        ;        :name "shadowTexture"
+        ;        :type "texture2D"
+        ;        :filterable true
+        ;    }
+        ;]
 
         :backends ["ShadowMap"]
     })

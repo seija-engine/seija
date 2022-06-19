@@ -1,6 +1,6 @@
+use crate::UniformIndex;
 use crate::camera::camera::{Camera};
 use crate::memory::TypedUniformBuffer;
-use crate::uniforms::{UBONameIndex};
 use crate::uniforms::backends::Camera3DBackend;
 use crate::{RenderContext, graph::node::INode};
 use bevy_ecs::prelude::*;
@@ -11,7 +11,7 @@ use crate::resource::RenderResourceId;
 #[derive(Default)]
 pub struct CameraCollect {
    pub ubo_name:String,
-   name_index:Option<UBONameIndex>,
+   name_index:Option<UniformIndex>,
    backend:Option<Camera3DBackend>
 }
 
@@ -27,29 +27,32 @@ impl INode for CameraCollect {
                   log::error!("Camera3DBackend backend error :{}",err);
               }
           }
-          self.name_index = Some(ctx.ubo_ctx.buffers.get_name_index(self.ubo_name.as_str()).unwrap())
+          self.name_index = Some(ctx.ubo_ctx.get_index(self.ubo_name.as_str()).unwrap())
        }
        
     }
 
     fn prepare(&mut self, world: &mut World,ctx:&mut RenderContext) {
-        let mut added_cameras = world.query_filtered::<Entity,(Added<Camera>,With<Transform>)>(); 
-        for v in added_cameras.iter(&world) {
-            ctx.ubo_ctx.add_buffer(self.ubo_name.as_str(), &mut ctx.resources,Some(v.id()));
+        if let Some(name_index) = self.name_index.as_ref() {
+            let mut added_cameras = world.query_filtered::<Entity,(Added<Camera>,With<Transform>)>(); 
+            for v in added_cameras.iter(&world) {
+                ctx.ubo_ctx.add_component(name_index, v.id(), &mut ctx.resources);
+            }
+    
+            for rm_e in world.removed::<Camera>() {
+                ctx.ubo_ctx.remove_component(name_index, rm_e.id());
+            }
         }
-
-        for rm_e in world.removed::<Camera>() {
-            ctx.ubo_ctx.buffers.remove_buffer_item_byindex(self.name_index.unwrap().1, rm_e.id());
-        }
+        
     }
 
     fn update(&mut self,world: &mut World,ctx:&mut RenderContext,_:&Vec<Option<RenderResourceId>>,_:&mut Vec<Option<RenderResourceId>>) {
         let mut cameras = world.query::<(Entity,&Transform,&Camera)>();
         for (e,t,camera) in cameras.iter(world) {
             if let Some(key) = self.name_index {
-                if let Some(buffer) = ctx.ubo_ctx.buffers.get_buffer_mut(&key, Some(e.id())) {
-                    self.update_camera_buffer(buffer,t, camera);
-                }
+                ctx.ubo_ctx.set_buffer(&key, Some(e.id()), |buffer| {
+                    self.update_camera_buffer(buffer, t, camera);
+                })
             }
         }
     }

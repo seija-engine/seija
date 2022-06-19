@@ -1,15 +1,17 @@
 use bevy_ecs::prelude::{World, Entity};
-use glam::{Vec3, Mat4, Quat};
+use glam::{Vec3, Mat4};
 use seija_asset::{Handle, Assets};
 use seija_core::bytes::AsBytes;
 use anyhow::{Result};
 use seija_core::LogOption;
 use seija_transform::Transform;
-use crate::{graph::{INode, GraphError}, resource::{RenderResourceId, Mesh}, camera::camera::{Orthographic, Projection, Camera}, UBONameIndex, material::{Material, MaterialStorage}, pipeline::PipelineCache};
+use crate::{graph::{INode, GraphError}, 
+            resource::{RenderResourceId, Mesh}, camera::camera::{Camera}, 
+            material::{Material, MaterialStorage}, pipeline::PipelineCache, UniformIndex};
 
 pub struct ShadowMapNode {
     pub ubo_name:String,
-    name_index:Option<UBONameIndex>,
+    name_index:Option<UniformIndex>,
     proj_view_index:usize,
     orth_mat:Mat4,
     last_dir:Vec3
@@ -21,7 +23,7 @@ impl INode for ShadowMapNode {
         if let Some(info) = ctx.ubo_ctx.info.get_info(self.ubo_name.as_str()) {
             self.proj_view_index = info.props.get_offset("lightProjView", 0)
                                        .log_err("not found lightProjView").unwrap_or(0);
-            self.name_index = ctx.ubo_ctx.buffers.get_name_index(self.ubo_name.as_str());
+            self.name_index = ctx.ubo_ctx.get_index(self.ubo_name.as_str());
         }
     }
 
@@ -118,10 +120,9 @@ impl ShadowMapNode {
         //set ubo
         let mat4 = self.create_orth_mat(dir);
         if let Some(name_index) = self.name_index.as_ref() {
-           let buffer = ctx.ubo_ctx.buffers.get_buffer_mut(name_index, None);
-           if let Some(buffer) = buffer {
-                buffer.buffer.write_bytes_(self.proj_view_index,  mat4.to_cols_array().as_bytes());
-           }
+           ctx.ubo_ctx.set_buffer(name_index, None, |buffer| {
+             buffer.buffer.write_bytes_(self.proj_view_index,  mat4.to_cols_array().as_bytes());
+           });
         }
     }
 

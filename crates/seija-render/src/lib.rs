@@ -32,7 +32,7 @@ mod render;
 mod memory;
 pub use graph_setting::{GraphSetting};
 pub use render_context::{RenderContext};
-pub use uniforms::{UniformInfoSet,UniformInfo,UBONameIndex};
+pub use uniforms::{UniformInfoSet,UniformInfo,UniformIndex};
 pub use uniforms::backends::{IShaderBackend};
 pub use memory::{UniformInfo as MemUniformInfo,RawUniformInfo,UniformType,UniformBufferDef,UniformBuffer,ArrayPropInfo};
 
@@ -108,8 +108,7 @@ impl RenderModule {
         let script_path = self.0.config_path.join("render.clj");
         match std::fs::read_to_string(script_path) {
             Ok(code_string) => {
-                rsc.run(code_string.as_str(), &mut ctx.ubo_ctx2.info,&mut app_render.graph,false);
-                rsc.run(code_string.as_str(), &mut ctx.ubo_ctx.info,&mut app_render.graph,true);
+                rsc.run(code_string.as_str(), &mut ctx.ubo_ctx.info,&mut app_render.graph,false);
             },
             Err(err) => {
                 log::error!("load render.clj error:{:?}",err);
@@ -117,8 +116,7 @@ impl RenderModule {
         }
         app_render.graph.build();
 
-        ctx.ubo_ctx2.init(&mut ctx.resources);
-        ctx.ubo_ctx.init(&ctx.device,&mut ctx.resources);
+        ctx.ubo_ctx.init(&mut ctx.resources);
         for node in app_render.graph.graph.iter_mut_nodes() {
             node.node.init(w, &mut ctx);
         }

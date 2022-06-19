@@ -1,6 +1,6 @@
 use bevy_ecs::prelude::World;
 use glam::Vec3;
-use seija_render::{graph::{INode, nodes::UBOArrayCollect}, RenderContext, resource::RenderResourceId, UBONameIndex, UniformBuffer};
+use seija_render::{graph::{INode, nodes::UBOArrayCollect}, RenderContext, resource::RenderResourceId, UniformBuffer};
 use seija_transform::Transform;
 
 use crate::lights::{PBRLight, PBRLightType};

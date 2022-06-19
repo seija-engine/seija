@@ -303,7 +303,7 @@ impl RenderResources {
     }
 
     pub fn is_texture_ready(&self,texture:&Handle<Texture>) -> bool {
-        self.get_render_resource(&texture.id, 0).is_none()
+        self.get_render_resource(&texture.id, 0).is_some()
     }
 
     pub fn is_textures_ready(&self,textures:&Vec<Handle<Texture>>) -> bool {

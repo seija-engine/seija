@@ -1,14 +1,12 @@
 use bevy_ecs::prelude::{World, Entity, Added, With};
-use glam::Mat4;
 use seija_asset::{Handle, Assets};
-use seija_core::bytes::AsBytes;
-use seija_render::{graph::INode, RenderContext, resource::{RenderResourceId, Mesh}, UBONameIndex, material::Material};
+use seija_render::{graph::INode, RenderContext, resource::{RenderResourceId, Mesh}, material::Material, UniformIndex};
 
 use crate::{RuntimeSkeleton, Skin};
 
 pub struct SkeletonNode {
     ubo_name:String,
-    name_index:Option<UBONameIndex>,
+    name_index:Option<UniformIndex>,
     joints_index:Option<usize>
 }
 
@@ -20,7 +18,7 @@ impl SkeletonNode {
 
 impl INode for SkeletonNode {
     fn init(&mut self, _world: &mut World, ctx:&mut RenderContext) {
-        self.name_index = ctx.ubo_ctx.buffers.get_name_index(self.ubo_name.as_str());
+        self.name_index = ctx.ubo_ctx.get_index(self.ubo_name.as_str());
         if let Some(info) = ctx.ubo_ctx.info.get_info(&self.ubo_name) {
             if let Some(idx) = info.props.get_offset("jointMats", 0) {
                 self.joints_index = Some(idx);
@@ -36,13 +34,16 @@ impl INode for SkeletonNode {
                                                                                     (Added<Handle<RuntimeSkeleton>>,
                                                                                      With<Handle<Mesh>>,
                                                                                      With<Handle<Material>>)>();
-        for v in added_skins.iter(&world) {
-            ctx.ubo_ctx.add_buffer(&self.ubo_name,&mut ctx.resources,Some(v.id()))
+        if let Some(name_index) = self.name_index.as_ref() {
+            for v in added_skins.iter(&world) {
+                ctx.ubo_ctx.add_component(name_index, v.id(), &mut ctx.resources);
+            }
+    
+            for rm_e in world.removed::<Handle<RuntimeSkeleton>>() {
+                ctx.ubo_ctx.remove_component(name_index, rm_e.id());
+            }
         }
-
-        for rm_e in world.removed::<Handle<RuntimeSkeleton>>() {
-            ctx.ubo_ctx.buffers.remove_buffer_item_byindex(self.name_index.unwrap().1, rm_e.id());
-        }
+        
     }
 
     fn update(&mut self,world: &mut World,ctx:&mut RenderContext,_:&Vec<Option<RenderResourceId>>,_:&mut Vec<Option<RenderResourceId>>) {
@@ -65,11 +66,10 @@ impl INode for SkeletonNode {
                 out_f32s.extend_from_slice(&mul_mat.to_cols_array());
             }
 
-          
-            if let Some(buffer) = ctx.ubo_ctx.buffers.get_buffer_mut(&name_index, Some(e.id())) {
+            ctx.ubo_ctx.set_buffer(&name_index, Some(e.id()), |buffer| {
                 let u8_ptr =  unsafe { core::slice::from_raw_parts(out_f32s.as_ptr() as *const u8, out_f32s.len() *4) };
                 buffer.buffer.write_bytes_(joint_index, u8_ptr)
-            }
+            });
         }
     }
 }

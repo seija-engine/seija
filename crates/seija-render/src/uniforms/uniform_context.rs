@@ -1,173 +1,124 @@
 use std::collections::HashMap;
-use bevy_ecs::schedule::GraphNode;
-use seija_core::LogOption;
-use wgpu::{CommandEncoder, Device};
 
-use crate::memory::TypedUniformBuffer;
-use crate::pipeline::render_bindings::BindGroupLayoutBuilder;
-use crate::resource::RenderResources;
-use crate::{UniformInfoSet, UniformInfo};
-use super::{UBOType, UBObject};
-use super::array_buffer::UBOArrayBuffer;
-use super::uniform_info::UBOApplyType;
+use wgpu::CommandEncoder;
 
-#[derive(Clone, Copy,Debug)]
-pub struct BufferIndex(usize);
+use crate::{UniformInfoSet, resource::RenderResources, memory::TypedUniformBuffer,};
 
-#[derive(Clone, Copy,Debug)]
-pub struct BufferArrayIndex(usize,u32);
+use super::{object::UniformObject, array_object::ArrayObject, UniformType, UBOApplyType};
 
-pub type UBONameIndex = (UBOType,usize,UBOApplyType);
-
+#[derive(Clone,Copy)]
+pub struct UniformIndex {
+    pub typ:UniformType,
+    pub index:usize,
+    pub apply_type:UBOApplyType
+}
 
 #[derive(Default)]
 pub struct UniformContext {
     pub info:UniformInfoSet,
-    pub info_layouts:HashMap<String,wgpu::BindGroupLayout>,
-    pub buffers:BufferContext,
+    global_nameidxs:HashMap<String,UniformIndex>,
+    //Name -> Object
+    globals:Vec<UniformObject>,
+    
+    component_nameidxs:HashMap<String,UniformIndex>,
+    //Name + Entity -> Object
+    components:Vec<ArrayObject>,
 }
 
 impl UniformContext {
-  
-  pub fn init(&mut self,device:&wgpu::Device,res:&mut RenderResources) {
-      
-
-       for (name,info) in self.info.components.iter() {
-          Self::create_layout(&mut self.info_layouts,name, device,info);
-       }
-       for (name,info) in self.info.globals.iter() {
-        Self::create_layout(&mut self.info_layouts,name, device,info);
-      }
-      self.buffers.init(&self.info,res,&self.info_layouts);
-  }
-
-  fn create_layout(layouts:&mut HashMap<String,wgpu::BindGroupLayout>,name:&str,device:&Device,info:&UniformInfo) {
-     let mut builder = BindGroupLayoutBuilder::new();
-     builder.add_uniform(info.shader_stage);
-     
-     let layout = builder.build(device);
-     layouts.insert(name.to_string(), layout);
-  }
-
-  pub fn add_buffer(&mut self,name:&str,res:&mut RenderResources,eid:Option<u32>)  {
-    if let Some(info) = self.info.get_info(name) {
-       if let Some(layout) = self.info_layouts.get(name) {
-        self.buffers.add_buffer(info,eid ,res,layout);
-       }
-    }
-  }
-
-  pub fn update(&mut self,res:&mut RenderResources,cmd:&mut CommandEncoder) {
-    self.buffers.update(res,cmd);
-  }
-}
-
-#[derive(Default)]
-pub struct BufferContext {
-  comp_nameidxs:HashMap<String,UBONameIndex>,
-  //Name + EntityId -> Buffer
-  components:Vec<UBOArrayBuffer>,
-
-  global_nameidxs:HashMap<String,UBONameIndex>,
-  //Name -> Buffer
-  globals:Vec<UBObject>
-}
-
-impl BufferContext {
-
-  pub fn init(&mut self,info_set:&UniformInfoSet,res:&mut RenderResources,layouts:&HashMap<String,wgpu::BindGroupLayout>) {
-    for (_,info) in info_set.components.iter() {
-        self.components.push(UBOArrayBuffer::new(info.props.clone()));
-        self.comp_nameidxs.insert(info.name.to_string(), (UBOType::Component,self.components.len() - 1,info.apply));
-    }
-
-    for (_,info) in info_set.globals.iter() {
-      if let Some(layout) = layouts.get(info.name.as_str()) {
-        self.globals.push(UBObject::create(info, res,layout));
-        self.global_nameidxs.insert(info.name.to_string(), (UBOType::Global,self.globals.len() - 1,info.apply));
-      }
-    }
-  }
-
-  pub fn add_buffer(&mut self,info:&UniformInfo,m_eid:Option<u32>,res:&mut RenderResources,layout:&wgpu::BindGroupLayout) -> Option<()> {
-      match info.typ {
-        UBOType::Component => {
-          let eid = m_eid.log_err(&format!("ComponentBuffer {} need eid",info.name.as_str()))?;
-          let arr_idx = *self.comp_nameidxs.get(info.name.as_str()).log_err(&format!("not found {}",info.name.as_str()))?;
-          self.components[arr_idx.1].add_item(eid, res,layout);
-          Some(())
-        },
-        UBOType::Global => {
-          Some(())
+    pub fn init(&mut self,res:&mut RenderResources) {
+        //create global object
+        for (_,info) in self.info.globals.iter() {
+           let object = UniformObject::new(res, info);
+           self.globals.push(object);
+           let name_str:&String = &info.name;
+           self.global_nameidxs.insert(name_str.clone(),
+                                       UniformIndex { 
+                                           typ:UniformType::Global, 
+                                           index:self.globals.len() - 1,
+                                           apply_type:info.apply
+                                      });
         }
-      }
-  }
-
-  pub fn remove_buffer_item(&mut self,name:&str,eid:u32) {
-    if let Some(index) = self.comp_nameidxs.get(name).map(|v| v.1) {
-       self.remove_buffer_item_byindex(index, eid);
-    }
-  }
-
-  pub fn remove_buffer_item_byindex(&mut self,index:usize,eid:u32) {
-    if self.components.len() > index {
-      let arr_buffer = &mut self.components[index];
-      arr_buffer.remove_item(eid);
-    }
-  }
-
-  pub fn get_name_index(&self,name:&str) -> Option<UBONameIndex> {
-      if self.comp_nameidxs.contains_key(name) {
-         return self.comp_nameidxs.get(name).map(|v|*v);
-      } else {
-        return self.global_nameidxs.get(name).map(|v|*v);
-      }
-      
-  }
-
-  pub fn get_buffer_mut(&mut self,name_index:&UBONameIndex,eid:Option<u32>) -> Option<&mut TypedUniformBuffer> {
-    match name_index.0 {
-        UBOType::Component => {
-          let array = &mut self.components[name_index.1];
-          array.get_item_buffer_mut(eid.log_err("not found eid in buffer")?)
-        },
-        UBOType::Global => {
-          let ubo = &mut self.globals[name_index.1]; 
-          Some(&mut ubo.local) 
+        //create component object
+        for (_,info) in self.info.components.iter() {
+           self.components.push(ArrayObject::new(info,res));
+           let name_str:&String = &info.name;
+           self.component_nameidxs.insert(name_str.clone(),
+                                        UniformIndex { 
+                                            typ:UniformType::Component, 
+                                            index:self.globals.len() - 1,
+                                            apply_type:info.apply
+                                          });
         }
     }
-  }
 
-  pub fn get_bind_group(&self,name_index:&UBONameIndex,m_eid:Option<u32>) -> Option<&wgpu::BindGroup> {
-    match name_index.0 {
-      UBOType::Component => {
-        let array = &self.components[name_index.1];
-        let eid = m_eid.log_err("not found eid in buffer")?;
-        let bind_group = array.get_item(eid).map(|v| &v.bind_group);
-        if bind_group.is_none() {
-          if let Some(info) = self.comp_nameidxs.iter().filter(|v| v.1.1 == name_index.1).next() {
-            log::error!("bind_group is none {:?} {}",m_eid,info.0.as_str());
-          } else {
-            log::error!("bind_group is none {:?}",m_eid);
-          }
+    pub fn get_index(&self,name:&str) -> Option<UniformIndex> {
+        if self.component_nameidxs.contains_key(name) {
+            return self.component_nameidxs.get(name).map(|v|*v);
+         } else {
+           return self.global_nameidxs.get(name).map(|v| *v);
+         }
+    }
+
+    pub fn set_buffer<F>(&mut self,index:&UniformIndex,eid:Option<u32>,set_fn:F) where F:FnOnce(&mut TypedUniformBuffer) {
+        match index.typ {
+            UniformType::Global => {
+                let object = &mut self.globals[index.index];
+                set_fn(&mut object.local_buffer);
+            },
+            UniformType::Component => {
+                let object = &mut self.components[index.index];
+                if let Some(item_object) = eid.and_then(|id| object.get_item_mut(id)) {
+                    set_fn(&mut item_object.buffer);
+                }
+            },
         }
-        bind_group
-      },
-      UBOType::Global => { 
-        let ubo = &self.globals[name_index.1];
-        Some(&ubo.bind_group)
-      }
-  }
-  }
-
-  pub fn update(&mut self,res:&mut RenderResources,cmd:&mut CommandEncoder) {
-    for arr in self.components.iter_mut() {
-      arr.update(res,cmd);
     }
-    for global in self.globals.iter_mut() {
-      global.update(res,cmd);
-    }
-  }
 
+    pub fn add_component(&mut self,index:&UniformIndex,eid:u32,res:&mut RenderResources) {
+        let array_object = &mut self.components[index.index];
+        array_object.add_item(eid, res);
+    }
+
+    pub fn remove_component(&mut self,index:&UniformIndex,eid:u32) {
+        let array_object = &mut self.components[index.index];
+        array_object.remove_item(eid);
+    }
+
+    pub fn get_bind_group(&self,index:&UniformIndex,eid:Option<u32>) -> Option<&wgpu::BindGroup> {
+        match index.typ {
+            UniformType::Global => {
+                let object = &self.globals[index.index];
+                object.bind_group.as_ref()
+            },
+            UniformType::Component => {
+                let object = &self.components[index.index];
+                eid.and_then(|id| object.get_item(id))
+                   .and_then(|v| v.bind_group.as_ref())
+            },
+        }
+    }
+
+    pub fn get_layout(&self,name:&str) -> Option<&wgpu::BindGroupLayout> {
+        let index = self.get_index(name)?;
+        match index.typ {
+            UniformType::Global => {
+                let object = &self.globals[index.index];
+                Some(&object.layout)
+            },
+            UniformType::Component => {
+                let object = &self.components[index.index];
+                Some(&object.layout)
+            },
+        }
+    }
+
+    pub fn update(&mut self,res:&mut RenderResources,cmd:&mut CommandEncoder) {
+        for global in self.globals.iter_mut() {
+            global.update(res,cmd);
+        }
+        for comps in self.components.iter_mut() {
+            comps.update(res,cmd);
+        }
+    }
 }
-

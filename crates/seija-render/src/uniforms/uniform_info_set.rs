@@ -1,5 +1,5 @@
 use std::collections::{HashMap, HashSet};
-use super::uniform_info::{UBOType};
+use super::uniform_info::{UniformType};
 use super::UniformInfo;
 
 #[derive(Default,Debug)]
@@ -17,10 +17,10 @@ impl UniformInfoSet {
         }
        
         match info.typ {
-            UBOType::Component => {
+            UniformType::Component => {
                 self.components.insert(info.name.to_string(), info);
             },
-            UBOType::Global => {
+            UniformType::Global => {
                 self.globals.insert(info.name.to_string(), info);
             },
         }

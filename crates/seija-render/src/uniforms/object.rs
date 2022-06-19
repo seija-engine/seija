@@ -5,14 +5,14 @@ use crate::{resource::{RenderResources, BufferId, Texture}, UniformInfo, memory:
 
 pub struct UniformObject {
     //buffer
-    local_buffer:TypedUniformBuffer,
+    pub local_buffer:TypedUniformBuffer,
     buffer:BufferId,
     cache_buffer:Option<BufferId>,
     //texture
     textures:Vec<Handle<Texture>>,
-    is_texture_dirty:bool,
-    layout:wgpu::BindGroupLayout,
-    bind_group:Option<wgpu::BindGroup>
+    texture_dirty:bool,
+    pub layout:wgpu::BindGroupLayout,
+    pub bind_group:Option<wgpu::BindGroup>
 }
 
 impl UniformObject {
@@ -35,13 +35,13 @@ impl UniformObject {
             cache_buffer:None,
             layout,
             bind_group:None,
-            is_texture_dirty:true,
+            texture_dirty:true,
             textures
         }
     }
 
     fn update_bind_group(&mut self,res:&RenderResources)  {
-        if !self.is_texture_dirty || !self.is_ready(res)   { return };
+        if !self.texture_dirty || !res.is_textures_ready(&self.textures)   { return };
         
         let mut builder = BindGroupBuilder::new();
         builder.add_buffer(self.buffer);
@@ -50,17 +50,7 @@ impl UniformObject {
         }
         let bind_group = builder.build(&self.layout, &res.device, &res);
         self.bind_group = Some(bind_group);
-        self.is_texture_dirty = false;
-    }
-
-    fn is_ready(&self,res:&RenderResources) -> bool {
-        if self.textures.is_empty() { return  true; }
-        for texture in self.textures.iter() {
-            if res.get_render_resource(&texture.id, 0).is_none() {      
-                return false;
-            }
-        }
-        true
+        self.texture_dirty = false;
     }
 
     fn update_buffer(&mut self,res:&mut RenderResources,cmd:&mut CommandEncoder) {

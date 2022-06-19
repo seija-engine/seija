@@ -5,18 +5,18 @@ use crate::{memory::{PropInfoList, UniformBufferDef}, pipeline::render_bindings:
 
 use super::texture_def::UniformTextureDef;
 #[derive(Debug,Clone, Copy)]
-pub enum UBOType {
+pub enum UniformType {
     Component,
     Global
 }
 
-impl TryFrom<&Value> for UBOType {
+impl TryFrom<&Value> for UniformType {
     type Error = String;
     fn try_from(value: &Value) -> Result<Self, Self::Error> {
        let str = value.as_str().ok_or(format!("{:?}",value))?;
        match str {
-           ":Component" => Ok(UBOType::Component),
-           ":Global" => Ok(UBOType::Global),
+           ":Component" => Ok(UniformType::Component),
+           ":Global" => Ok(UniformType::Global),
            _ => Err(str.to_string())
        }
     }
@@ -44,7 +44,7 @@ impl TryFrom<&Value> for UBOApplyType {
 
 #[derive(Debug)]
 pub struct UniformInfo {
-    pub typ:UBOType,
+    pub typ:UniformType,
     pub apply:UBOApplyType,
     pub name:Arc<String>,
     pub index:usize,
@@ -59,7 +59,7 @@ impl TryFrom<&Value> for UniformInfo {
     type Error = String;
     fn try_from(value: &Value) -> Result<Self, Self::Error> {
         let object = value.as_object().ok_or("root".to_string())?;
-        let typ:UBOType = object.get(":type").ok_or(":type".to_string())?.try_into()?;
+        let typ:UniformType = object.get(":type").ok_or(":type".to_string())?.try_into()?;
         let apply:UBOApplyType = object.get(":apply").ok_or(":apply".to_string())?.try_into()?;
         let name = object.get(":name").and_then(Value::as_str).ok_or(":name".to_string())?;
         let backends = object.get(":backends")

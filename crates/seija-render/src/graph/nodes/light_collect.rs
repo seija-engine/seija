@@ -4,16 +4,17 @@ use fnv::FnvHashMap;
 use glam::{Vec3};
 use seija_core::LogOption;
 use seija_transform::Transform;
+use crate::UniformIndex;
 use crate::light::{LightEnv, Light, LightType};
 use crate::memory::UniformBuffer;
-use crate::{uniforms::{UBONameIndex, backends::LightBackend}, graph::node::INode, RenderContext, resource::RenderResourceId};
+use crate::{uniforms::{backends::LightBackend}, graph::node::INode, RenderContext, resource::RenderResourceId};
 
 const MAX_LIGHT:usize = 10;
 
 #[derive(Default)]
 pub struct LightCollect {
    pub ubo_name:String,
-   name_index:Option<UBONameIndex>,
+   name_index:Option<UniformIndex>,
    backend:Option<LightBackend>,
 
    light_idxs:FnvHashMap<u32,usize>,
@@ -34,7 +35,7 @@ impl INode for LightCollect {
                     log::error!("LightBackend backend error :{}",err);
                 }
             }
-            self.name_index = Some(ctx.ubo_ctx.buffers.get_name_index(self.ubo_name.as_str()).unwrap())
+            self.name_index = Some(ctx.ubo_ctx.get_index(self.ubo_name.as_str()).unwrap())
          }
     }
 
@@ -50,7 +51,7 @@ impl INode for LightCollect {
 
 impl LightCollect {
     pub fn _update(&mut self,world:&mut World,ctx:&mut RenderContext) -> Option<()> {
-        
+         
          //add
          let mut frame_eids:FixedBitSet = FixedBitSet::with_capacity(20);
          {
@@ -62,25 +63,35 @@ impl LightCollect {
                 frame_eids.insert(e.id() as usize);
             }
         };
-
-        let type_ubo = self.name_index.and_then(|index| ctx.ubo_ctx.buffers.get_buffer_mut(&index, None)).log_err("get buffer error")?;
+        let name_index = self.name_index.as_ref()?;
         let backend = self.backend.as_ref().log_err("get backend error")?;
         if let Some(mut light_env) = world.get_resource_mut::<LightEnv>() {
             if light_env.is_dirty {
-                backend.set_ambile_color(&mut type_ubo.buffer, light_env.ambient_color);
+                ctx.ubo_ctx.set_buffer(name_index, None, |buffer| {
+                    backend.set_ambile_color(&mut buffer.buffer, light_env.ambient_color);
+                });
                 light_env.clear_dirty();
             }
         }
         
         //update
         let mut lights = world.query_filtered::<(Entity,&Light,&Transform),Or<(Changed<Light>, Changed<Transform>)>>();
-        for (e,light,t) in lights.iter(world) {
-            let index = *self.light_idxs.get(&e.id()).log_err("get index error")?;
-            Self::set_light(index, backend, light, &mut type_ubo.buffer,t);
-        }
+        ctx.ubo_ctx.set_buffer(&name_index, None, |buffer| {
+            for (e,light,t) in lights.iter(world) {
+                let index = self.light_idxs.get(&e.id());
+                if let Some(index) = index {
+                    Self::set_light(*index, backend, light, &mut buffer.buffer,t);
+                } else {
+                    log::error!("get index error");
+                }
+            }
+        });
+        
         
         if self.cache_len != frame_eids.len() {
-            backend.set_light_count(&mut type_ubo.buffer, frame_eids.len() as i32);
+            ctx.ubo_ctx.set_buffer(name_index, None, |buffer| {
+                backend.set_light_count(&mut buffer.buffer, frame_eids.len() as i32);
+            });
             self.cache_len = frame_eids.len();
         }
         Some(())
