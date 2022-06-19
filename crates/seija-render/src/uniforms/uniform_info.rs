@@ -49,7 +49,7 @@ pub struct UniformInfo {
     pub name:Arc<String>,
     pub index:usize,
     pub props:Arc<UniformBufferDef>,
-    pub textures:Vec<UniformTextureDef>,
+    pub textures:Arc<Vec<UniformTextureDef>>,
     pub backends:Vec<String>,
     pub shader_stage:wgpu::ShaderStage
 }
@@ -93,7 +93,7 @@ impl TryFrom<&Value> for UniformInfo {
             props:Arc::new(udf),
             backends,
             index:prop_index as usize,
-            textures,
+            textures:Arc::new(textures),
             shader_stage:wgpu::ShaderStage::from_bits(shader_stage)
                                .unwrap_or(wgpu::ShaderStage::VERTEX_FRAGMENT) 
         })

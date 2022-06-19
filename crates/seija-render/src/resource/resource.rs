@@ -302,6 +302,19 @@ impl RenderResources {
         
     }
 
+    pub fn is_texture_ready(&self,texture:&Handle<Texture>) -> bool {
+        self.get_render_resource(&texture.id, 0).is_none()
+    }
+
+    pub fn is_textures_ready(&self,textures:&Vec<Handle<Texture>>) -> bool {
+        for texture in textures.iter() {
+            if !self.is_texture_ready(texture) {
+                return false;
+            }
+        }
+        true
+    }
+
     pub fn copy_buffer_to_texture(&self,
                                   command: &mut wgpu::CommandEncoder,
                                   source_buffer: BufferId,

@@ -4,6 +4,7 @@ mod uniform_context;
 mod uniform_context2;
 mod buffer;
 mod object;
+mod array_object;
 mod array_buffer;
 mod texture_def;
 pub mod backends;
