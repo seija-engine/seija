@@ -32,5 +32,5 @@ vec4 fs_main(VSOutput ino) {
     inputs.metallic   = material.metallic;
     
     vec4 evalColor = evaluateMaterial(inputs,ino.outPos.xyz,viewDir);
-    return evalColor;
+    return vec4(1,1,1,1);
 }

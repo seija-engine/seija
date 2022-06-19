@@ -88,7 +88,7 @@ fn on_start(mut commands:Commands,
         let mut l = commands.spawn();
         l.insert(point_light);
         l.insert(t);
-}/* */
+    }/* */
      let quad_mesh = Quad::new(100f32);
      let hquad_mesh = meshs.add(quad_mesh.into());
     {

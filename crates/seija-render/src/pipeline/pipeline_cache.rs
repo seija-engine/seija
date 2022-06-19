@@ -61,7 +61,7 @@ impl RenderPipeline {
              }
             }
         }
-
+        
         Some(self.ubos.len() as u32)
     }
 }

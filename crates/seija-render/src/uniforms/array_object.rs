@@ -46,6 +46,7 @@ impl ArrayObjectItem {
         build_group_builder.add_buffer_addr(*bufferid, start, item_size);
 
         self.bind_group = Some(build_group_builder.build(layout, &res.device, res));
+        log::error!("set bind_group {:?}",self.buffer.def.names());
         self.texture_dirty = false;
     }
 
@@ -152,7 +153,7 @@ impl ArrayObject {
         for object in self.infos.values_mut().chain(self.free_items.iter_mut()) {
             if object.buffer.is_dirty() { is_buffer_changed = true; }
 
-            if res.is_textures_ready(&object.textures) { continue; }
+            if !res.is_textures_ready(&object.textures) || !object.texture_dirty { continue; }
             if let Some(bufferid) = self.buffer.as_ref() {
                 object.update_bind_group(self.buffer_item_size,bufferid,res,&self.layout);
             }

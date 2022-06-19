@@ -10,9 +10,9 @@
             :shader { :name "core.color" :macros [] }
         }
 
-        {
-            :tag "Shadow"
-            :shader { :name "core.depth" :macros [] }
-        }
+        ;{
+        ;    :tag "Shadow"
+        ;    :shader { :name "core.depth" :macros [] }
+        ;}
     ]
 }

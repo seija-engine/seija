@@ -27,7 +27,8 @@ impl INode for PBRCameraEx {
 
     fn update(&mut self,world: &mut World,ctx:&mut RenderContext,_:&Vec<Option<RenderResourceId>>,_:&mut Vec<Option<RenderResourceId>>) {
         if let Some(exposure_index) = self.exposure_index {
-            let mut cameras = world.query_filtered::<(Entity,&PBRCameraInfo),(With<Camera>,With<Transform>,Changed<PBRCameraInfo>)>();
+            let mut cameras = world.query_filtered::<(Entity,&PBRCameraInfo),
+                                                                                       (With<Camera>,With<Transform>,Changed<PBRCameraInfo>)>();
             for (e,ex_info) in cameras.iter(world) {
                 if let Some(key) = self.name_index {
                     ctx.ubo_ctx.set_buffer(&key, Some(e.id()),|buffer| {

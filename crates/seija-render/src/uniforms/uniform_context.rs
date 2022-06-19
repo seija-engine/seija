@@ -6,7 +6,7 @@ use crate::{UniformInfoSet, resource::RenderResources, memory::TypedUniformBuffe
 
 use super::{object::UniformObject, array_object::ArrayObject, UniformType, UBOApplyType};
 
-#[derive(Clone,Copy)]
+#[derive(Clone,Copy,Debug)]
 pub struct UniformIndex {
     pub typ:UniformType,
     pub index:usize,
@@ -46,7 +46,7 @@ impl UniformContext {
            self.component_nameidxs.insert(name_str.clone(),
                                         UniformIndex { 
                                             typ:UniformType::Component, 
-                                            index:self.globals.len() - 1,
+                                            index:self.components.len() - 1,
                                             apply_type:info.apply
                                           });
         }

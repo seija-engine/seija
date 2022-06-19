@@ -87,8 +87,9 @@ impl PassNode {
                          if let Some(mesh_buffer_id)  = ctx.resources.get_render_resource(&hmesh.id, 0) {
                             for pipeline in pipelines.pipelines.iter() {
                                 let vert_buffer = ctx.resources.get_buffer_by_resid(&mesh_buffer_id).unwrap();
-                                let mut set_index = pipeline.set_binds(camera_e, &view_entity.entity, &mut render_pass, &ctx.ubo_ctx)
-                                                                .ok_or(PassError::ErrUBOIndex)?;
+                                let oset_index = pipeline.set_binds(camera_e, &view_entity.entity, &mut render_pass, &ctx.ubo_ctx);
+                                if oset_index.is_none() { continue }
+                                let mut set_index = oset_index.unwrap();                
                                 if material.props.def.infos.len() > 0 {
                                    
                                     render_pass.set_bind_group(set_index, material.bind_group.as_ref().unwrap(), &[]);
@@ -104,7 +105,7 @@ impl PassNode {
                                     render_pass.set_index_buffer(idx_buffer.slice(0..), mesh.index_format().unwrap());
                                     render_pass.set_pipeline(&pipeline.pipeline);
                                     render_pass.draw_indexed(mesh.indices_range().unwrap(),0, 0..1);
-                                  
+                                    
                                 } else {
                                     render_pass.set_pipeline(&pipeline.pipeline);
                                     render_pass.draw(0..mesh.count_vertices() as u32, 0..1);

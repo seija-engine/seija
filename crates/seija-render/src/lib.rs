@@ -108,7 +108,7 @@ impl RenderModule {
         let script_path = self.0.config_path.join("render.clj");
         match std::fs::read_to_string(script_path) {
             Ok(code_string) => {
-                rsc.run(code_string.as_str(), &mut ctx.ubo_ctx.info,&mut app_render.graph,false);
+                rsc.run(code_string.as_str(), &mut ctx.ubo_ctx.info,&mut app_render.graph,true);
             },
             Err(err) => {
                 log::error!("load render.clj error:{:?}",err);
