@@ -39,13 +39,13 @@ fn on_start(
     {
         let light = PBRLight::directional(Vec3::new(1f32, 1f32, 1f32)  , 12000f32);
         let mut t = Transform::default();
-        let r = Quat::from_euler(glam::EulerRot::XYZ  , 45f32.to_radians(), 0f32, 0f32.to_radians());
+        let r = Quat::from_euler(glam::EulerRot::XYZ  , 0f32, 90f32.to_radians(), 0f32.to_radians());
         t.local.rotation = r;
         let mut l = commands.spawn();
         l.insert(light);
         l.insert(t);
     }
-    let mesh = Cube::new(2f32);
+    let mesh = Sphere::new(1f32);
     let hmesh = meshs.add(mesh.into());
     let hmat = materials.create_material_with("pbrColor", |mat| {
             mat.props.set_f32("metallic",  0.5f32, 0);

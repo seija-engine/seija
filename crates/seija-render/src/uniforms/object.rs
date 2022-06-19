@@ -50,7 +50,6 @@ impl UniformObject {
         }
         let bind_group = builder.build(&self.layout, &res.device, &res);
         self.bind_group = Some(bind_group);
-        log::error!("set bind_group {:?}",self.local_buffer.def.names());
         self.texture_dirty = false;
     }
 

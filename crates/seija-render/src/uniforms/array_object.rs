@@ -46,7 +46,7 @@ impl ArrayObjectItem {
         build_group_builder.add_buffer_addr(*bufferid, start, item_size);
 
         self.bind_group = Some(build_group_builder.build(layout, &res.device, res));
-        log::error!("set bind_group {:?}",self.buffer.def.names());
+       
         self.texture_dirty = false;
     }
 

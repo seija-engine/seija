@@ -13,7 +13,7 @@
              transform     (node TRANSFORM        {:ubo "ObjectBuffer" })
              swapchain     (node SWAP_CHAIN)
              depth-texture (node SCREEN_TEXTURE [{:format "Depth32Float"}])
-             foward-pass  (node PASS {:is-depth true :clear-depth false})
+             foward-pass  (node PASS {:is-depth true})
          ]
          (link-> pbr-camera-ex camera)
          (link-> camera foward-pass)
