@@ -58,6 +58,7 @@ pub struct RenderResources {
     main_swap_chain:Option<wgpu::SwapChain>,
     pub main_swap_chain_frame:Option<wgpu::SwapChainFrame>,
 
+    pub default_textures:Vec<Handle<Texture>>,
    
     pub buffers: HashMap<BufferId, wgpu::Buffer>,
     pub textures: HashMap<TextureId, wgpu::Texture>,
@@ -85,7 +86,8 @@ impl RenderResources {
             texture_id_gen:IDGenU64::new(),
             texture_views:HashMap::default(),
             samplers:HashMap::default(),
-            sampler_id_gen:IDGenU64::new()
+            sampler_id_gen:IDGenU64::new(),
+            default_textures:Vec::new()
         }
     }
 
@@ -298,6 +300,19 @@ impl RenderResources {
                         if desc.size.depth_or_array_layers > 1 { Some(NonZeroU32::new(desc.size.height).unwrap()) } else { None })
         }
         
+    }
+
+    pub fn is_texture_ready(&self,texture:&Handle<Texture>) -> bool {
+        self.get_render_resource(&texture.id, 0).is_some()
+    }
+
+    pub fn is_textures_ready(&self,textures:&Vec<Handle<Texture>>) -> bool {
+        for texture in textures.iter() {
+            if !self.is_texture_ready(texture) {
+                return false;
+            }
+        }
+        true
     }
 
     pub fn copy_buffer_to_texture(&self,

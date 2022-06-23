@@ -1,14 +1,15 @@
 use bevy_ecs::prelude::{Commands, Entity, IntoSystem, Query, Res, ResMut};
-use glam::{Quat, Vec3};
+use glam::{Quat, Vec3, Vec4};
 use seija_asset::{Assets, Handle};
 use seija_core::{window::AppWindow, CoreStage, StartupStage, time::Time};
-use seija_examples::{load_texture, IExamples};
+use seija_examples::{load_texture, IExamples, add_pbr_camera, load_material};
 
+use seija_pbr::lights::PBRLight;
 use seija_render::{
     light::LightEnv,
     material::MaterialStorage,
     resource::{
-        shape::{Cube, Sphere},
+        shape::{Cube, Sphere, Quad},
         Mesh, Texture,
     },
     wgpu, graph::nodes::{ShadowMapNode, ShadowLight},
@@ -33,6 +34,31 @@ fn on_start(
     window: Res<AppWindow>,
     materials: Res<MaterialStorage>,
 ) {
+    load_material("res/materials/pbrColor.mat.clj", &materials);
+    add_pbr_camera(&window, &mut commands);
+    {
+        let light = PBRLight::directional(Vec3::new(1f32, 1f32, 1f32)  , 12000f32);
+        let mut t = Transform::default();
+        let r = Quat::from_euler(glam::EulerRot::XYZ  , 0f32, 90f32.to_radians(), 0f32.to_radians());
+        t.local.rotation = r;
+        let mut l = commands.spawn();
+        l.insert(light);
+        l.insert(t);
+    }
+    let mesh = Sphere::new(1f32);
+    let hmesh = meshs.add(mesh.into());
+    let hmat = materials.create_material_with("pbrColor", |mat| {
+            mat.props.set_f32("metallic",  0.5f32, 0);
+            mat.props.set_f32("roughness", 0.5f32, 0);
+            mat.props.set_float4("color", Vec4::new(1f32, 0f32, 1f32, 1f32), 0)
+    }).unwrap();
+    let mut t = Transform::default();
+    t.local.position = Vec3::new(0f32, 0f32, 0f32);
+    let mut cmds = commands.spawn();
+    cmds.insert(hmesh).insert(hmat.clone()).insert(t);
+
+    
+
     
 }
 

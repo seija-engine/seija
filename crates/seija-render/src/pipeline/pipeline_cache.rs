@@ -6,18 +6,18 @@ use std::hash::{Hash, Hasher};
 use std::fs;
 use std::path::Path;
 use bevy_ecs::prelude::Entity;
-use seija_core::{LogOption,LogResult};
-use std::sync::{ RwLockReadGuard, Arc};
+use seija_core::{LogOption};
+use std::sync::{Arc};
 use fnv::{FnvHashMap, FnvHasher};
 use glsl_pack_rtbase::MacroGroup;
-use wgpu::{BindGroupLayout, DepthStencilState, Device, 
+use wgpu::{DepthStencilState, Device, 
           FragmentState, MultisampleState, PipelineLayout, 
           PipelineLayoutDescriptor, 
           RenderPipelineDescriptor, ShaderModule, 
           ShaderModuleDescriptor, StencilState, VertexState};
 use crate::rt_shaders::RuntimeShaderInfo;
-use crate::uniforms::{UBONameIndex, UBOApplyType, UBOContext};
-use crate::{RenderContext, RenderConfig, GraphSetting};
+use crate::uniforms::{UBOApplyType, UniformContext};
+use crate::{RenderContext, RenderConfig, GraphSetting, UniformIndex};
 use crate::material::ShaderInfoDef;
 use crate::{material::{MaterialDef, PassDef}, resource::Mesh};
 
@@ -39,29 +39,29 @@ impl RenderPipelines {
 pub struct RenderPipeline {
     //TODO 优化
     pub tag:Option<String>,
-    pub ubos:Vec<UBONameIndex>,
+    pub ubos:Vec<UniformIndex>,
     pub pipeline:wgpu::RenderPipeline
 }
 
 impl RenderPipeline {
-    pub fn set_binds<'b:'a,'a>(&self,camera_e:Entity,ve:&Entity,pass:&'a mut wgpu::RenderPass<'b>,buf_ctx:&'b UBOContext) -> Option<u32> {
+    pub fn set_binds<'b:'a,'a>(&self,camera_e:Entity,ve:&Entity,pass:&'a mut wgpu::RenderPass<'b>,buf_ctx:&'b UniformContext) -> Option<u32> {
         for (index,ubo_name_index) in self.ubos.iter().enumerate() {
-            match ubo_name_index.2 {
+            match ubo_name_index.apply_type {
              UBOApplyType::Camera => {
-                let bind_group = buf_ctx.buffers.get_bind_group(ubo_name_index, Some(camera_e.id()))?;
-                pass.set_bind_group(index as u32, bind_group, &[]);
+                let bind_group = buf_ctx.get_bind_group(ubo_name_index, Some(camera_e.id()))?;
+                pass.set_bind_group(index as u32, &bind_group, &[]);
              },
              UBOApplyType::RenderObject => {
-                let bind_group = buf_ctx.buffers.get_bind_group(ubo_name_index, Some(ve.id()))?;
-                pass.set_bind_group(index as u32, bind_group, &[]);
+                let bind_group = buf_ctx.get_bind_group(ubo_name_index, Some(ve.id()))?;
+                pass.set_bind_group(index as u32, &bind_group, &[]);
              },
              UBOApplyType::Frame => {
-                let bind_group = buf_ctx.buffers.get_bind_group(ubo_name_index, None)?;
-                pass.set_bind_group(index as u32, bind_group, &[]);
+                let bind_group = buf_ctx.get_bind_group(ubo_name_index, None)?;
+                pass.set_bind_group(index as u32, &bind_group, &[]);
              }
             }
         }
-
+        
         Some(self.ubos.len() as u32)
     }
 }
@@ -168,9 +168,9 @@ impl PipelineCache {
 
        let rt_shader = ctx.shaders.find_shader(&pass.shader_info.name)?;
        let ubo_names = ctx.ubo_ctx.info.get_ubos_by_backends(&rt_shader.backends);
-       let mut ubos:Vec<UBONameIndex> = vec![];
+       let mut ubos:Vec<UniformIndex> = vec![];
        for (ubo_name,_) in ubo_names.iter() {
-           let name_index = ctx.ubo_ctx.buffers.get_name_index(ubo_name).log_err(&format!("not found ubo: {}",ubo_name))?;
+           let name_index = ctx.ubo_ctx.get_index(ubo_name).log_err(&format!("not found ubo: {}",ubo_name))?;
            ubos.push(name_index);
        }
       

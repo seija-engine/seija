@@ -1,6 +1,7 @@
 use std::path::{PathBuf, Path};
 use std::sync::Arc;
 use camera::{view_list::view_list_system};
+use material::MaterialStorage;
 use pipeline::{PipelineCache, update_pipeline_cache};
 use render::{AppRender, Config };
 pub use script::{builtin_node_creators,RenderScriptContext,RenderScriptPlugin,NodeCreatorSet,NodeCreatorFn};
@@ -31,9 +32,9 @@ mod render;
 mod memory;
 pub use graph_setting::{GraphSetting};
 pub use render_context::{RenderContext};
-pub use uniforms::{UBOInfoSet,UBOInfo,UBONameIndex};
+pub use uniforms::{UniformInfoSet,UniformInfo,UniformIndex};
 pub use uniforms::backends::{IShaderBackend};
-pub use memory::{RawUniformInfo,UniformType,UniformBufferDef,UniformBuffer,UniformInfo,ArrayPropInfo};
+pub use memory::{UniformInfo as MemUniformInfo,RawUniformInfo,UniformType,UniformBufferDef,UniformBuffer,ArrayPropInfo};
 
 
 #[derive(Debug, Hash, PartialEq, Eq, Clone,StageLabel )]
@@ -83,7 +84,9 @@ impl IModule for RenderModule {
 impl RenderModule {
     fn get_render_system(&self,w:&mut World,config:&RenderConfig) -> impl FnMut(&mut World) {
         let mut app_render = AppRender::new_sync(Config::default());
-        let render_ctx = RenderContext::new(app_render.device.clone(),&self.0.config_path,self.0.setting.clone());
+        let mut render_ctx = RenderContext::new(app_render.device.clone(),&self.0.config_path,self.0.setting.clone());
+        //TODO 这里考虑把MaterialStorage的默认贴图删了
+        render_ctx.resources.default_textures = w.get_resource::<MaterialStorage>().unwrap().default_textures.clone();
         self.init_render(w,render_ctx,&mut app_render,config); 
         move |_w| {
             _w.resource_scope(|world:&mut World,mut ctx:Mut<RenderContext>| {
@@ -112,7 +115,8 @@ impl RenderModule {
             }
         }
         app_render.graph.build();
-        ctx.ubo_ctx.init(&ctx.device,&mut ctx.resources);
+
+        ctx.ubo_ctx.init(&mut ctx.resources);
         for node in app_render.graph.graph.iter_mut_nodes() {
             node.node.init(w, &mut ctx);
         }

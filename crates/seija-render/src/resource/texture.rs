@@ -27,7 +27,7 @@ pub enum TextureType {
 }
 
 impl Texture {
-    pub fn create_rt(desc:TextureDescInfo) -> Texture {
+    pub fn create_by_desc(desc:TextureDescInfo) -> Texture {
         let id = IDGEN_TEXTURE.next();
         let rt = TextureType::RenderTexture(id);
         Texture { texture:rt, desc }

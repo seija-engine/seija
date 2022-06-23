@@ -1,9 +1,9 @@
 use std::{sync::Arc, collections::HashMap};
-use seija_render::{UBOInfo, RenderScriptContext, UBOInfoSet, RenderGraphContext};
+use seija_render::{UniformInfo, RenderScriptContext, UniformInfoSet, RenderGraphContext};
 
 pub struct RenderInfo {
-    ubos:Vec<Arc<UBOInfo>>,
-    pub backend2ubo:HashMap<String,Arc<UBOInfo>>,
+    ubos:Vec<Arc<UniformInfo>>,
+    pub backend2ubo:HashMap<String,Arc<UniformInfo>>,
     pub rsc:RenderScriptContext
 }
 
@@ -15,13 +15,13 @@ impl RenderInfo {
     pub fn run(&mut self,path:&str) {
        match std::fs::read_to_string(path) {
           Ok(code) => {
-              let mut info_set:UBOInfoSet = UBOInfoSet::default();
+              let mut info_set:UniformInfoSet = UniformInfoSet::default();
               let mut graph_ctx = RenderGraphContext::default();
               self.rsc.run(code.as_str(), &mut info_set, &mut graph_ctx,false);
-              for (_,ubo_info) in info_set.component_buffers.drain() {
+              for (_,ubo_info) in info_set.components.drain() {
                   self.add_ubo_info(ubo_info);
               }
-              for (_,ubo_info) in info_set.global_buffers.drain() {
+              for (_,ubo_info) in info_set.globals.drain() {
                 self.add_ubo_info(ubo_info);
             }
           },
@@ -29,7 +29,7 @@ impl RenderInfo {
        }
     }
 
-    fn add_ubo_info(&mut self,info:UBOInfo) {
+    fn add_ubo_info(&mut self,info:UniformInfo) {
         let arc_info = Arc::new(info);
         self.ubos.push(arc_info.clone());
         for backend in arc_info.backends.iter() {

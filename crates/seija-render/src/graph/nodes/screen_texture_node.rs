@@ -41,7 +41,7 @@ impl INode for ScreenTextureNode {
                 desc.desc = texture_desc.clone();
                 desc.desc.size.width = w;
                 desc.desc.size.height = h;
-                let rt_texture = Texture::create_rt(desc);
+                let rt_texture = Texture::create_by_desc(desc);
                 let h_texture = textures.add(rt_texture);
                 
                 self.out_textures[index] = Some(RenderResourceId::Texture(h_texture));
