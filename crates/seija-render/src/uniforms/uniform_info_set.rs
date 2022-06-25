@@ -13,7 +13,7 @@ impl UniformInfoSet {
     pub fn add_info(&mut self,info:UniformInfo) {
        
         for backend_name in info.backends.iter() {
-            self.backend2ubo.insert(backend_name.to_string(), (info.name.to_string(),info.index));
+            self.backend2ubo.insert(backend_name.to_string(), (info.name.to_string(),info.sort));
         }
        
         match info.typ {

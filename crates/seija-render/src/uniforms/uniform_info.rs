@@ -47,7 +47,7 @@ pub struct UniformInfo {
     pub typ:UniformType,
     pub apply:UBOApplyType,
     pub name:Arc<String>,
-    pub index:usize,
+    pub sort:usize,
     pub props:Arc<UniformBufferDef>,
     pub textures:Arc<Vec<UniformTextureDef>>,
     pub backends:Vec<String>,
@@ -61,7 +61,7 @@ impl TryFrom<&Value> for UniformInfo {
         let object = value.as_object().ok_or("root".to_string())?;
         let typ:UniformType = object.get(":type").ok_or(":type".to_string())?.try_into()?;
         let apply:UBOApplyType = object.get(":apply").ok_or(":apply".to_string())?.try_into()?;
-        let name = object.get(":name").and_then(Value::as_str).ok_or(":name".to_string())?;
+        let name = object.get(":name").and_then(Value::as_str).unwrap_or_default();
         let backends = object.get(":backends")
                                         .and_then(|v| v.as_array())
                                         .map(|lst| lst.iter()
@@ -92,7 +92,7 @@ impl TryFrom<&Value> for UniformInfo {
             name:Arc::new(name.to_string()),
             props:Arc::new(udf),
             backends,
-            index:prop_index as usize,
+            sort:prop_index as usize,
             textures:Arc::new(textures),
             shader_stage:wgpu::ShaderStage::from_bits(shader_stage)
                                .unwrap_or(wgpu::ShaderStage::VERTEX_FRAGMENT) 

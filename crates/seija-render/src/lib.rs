@@ -16,6 +16,7 @@ extern crate serde_derive;
 pub use wgpu;
 mod script;
 mod graph_setting;
+pub mod rdsl;
 pub mod material;
 pub mod camera;
 pub mod graph;
