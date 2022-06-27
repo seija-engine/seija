@@ -33,12 +33,12 @@
     })
 )
 
-(defn on-render-start [globalEnv]
-    (add-uniform "ObjectBuffer")
-    (add-uniform "CameraBuffer")
-    (select-add-uniform "PBR"    "LightBuffer")
-    (select-add-uniform "Skin"   "SkinBuffer")
-    (select-add-uniform "Shadow" "ShadowBuffer")
+(defn on-render-start [this globalEnv]
+    (add-uniform this "ObjectBuffer")
+    (add-uniform this "CameraBuffer")
+    (select-add-uniform this "PBR"    "LightBuffer")
+    (select-add-uniform this "Skin"   "SkinBuffer")
+    (select-add-uniform this "Shadow" "ShadowBuffer")
 )
 
 (defn on-render-update [globalEnv]

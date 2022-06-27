@@ -16,8 +16,6 @@ impl RenderMain {
     pub fn init(&mut self) {
         let mut script_ctx:ScriptContext = ScriptContext::new();
         script_ctx.exec_declare_uniform(&mut self.uniforms);
-
-        
     }
 }
 
