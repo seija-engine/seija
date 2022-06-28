@@ -26,24 +26,23 @@ pub struct UniformContext {
 }
 
 impl UniformContext {
-    pub fn init(&mut self,res:&mut RenderResources) {
-        //create global object
-        for (_,info) in self.info.globals.iter() {
-           let object = UniformObject::new(res, info);
-           self.globals.push(object);
-           let name_str:&String = &info.name;
-           self.global_nameidxs.insert(name_str.clone(),
-                                       UniformIndex { 
+    pub fn init(&mut self,res:&mut RenderResources) {}
+
+    pub fn add_uniform(&mut self,name:&str,res:&mut RenderResources) {
+        if let Some(info) = self.info.globals.get(name) {
+            let object = UniformObject::new(res, info);
+            self.globals.push(object);
+            self.global_nameidxs.insert(name.to_string(),
+                                       UniformIndex {
                                            typ:UniformType::Global, 
                                            index:self.globals.len() - 1,
                                            apply_type:info.apply
                                       });
         }
-        //create component object
-        for (_,info) in self.info.components.iter() {
-           self.components.push(ArrayObject::new(info,res));
-           let name_str:&String = &info.name;
-           self.component_nameidxs.insert(name_str.clone(),
+
+        if let Some(info) = self.info.components.get(name) {
+            self.components.push(ArrayObject::new(info,res));
+            self.component_nameidxs.insert(name.to_string(),
                                         UniformIndex { 
                                             typ:UniformType::Component, 
                                             index:self.components.len() - 1,

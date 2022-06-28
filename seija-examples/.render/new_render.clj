@@ -33,12 +33,15 @@
     })
 )
 
-(defn on-render-start [this globalEnv]
-    (add-uniform this "ObjectBuffer")
-    (add-uniform this "CameraBuffer")
-    (select-add-uniform this "PBR"    "LightBuffer")
-    (select-add-uniform this "Skin"   "SkinBuffer")
-    (select-add-uniform this "Shadow" "ShadowBuffer")
+(println "Enter New Render Clojure")
+
+(defn on-render-start [globalEnv]
+    (println "on-render-start")
+    (add-uniform  "ObjectBuffer")
+    (add-uniform  "CameraBuffer")
+    (select-add-uniform  "PBR"    "LightBuffer")
+    (select-add-uniform  "Skin"   "SkinBuffer")
+    (select-add-uniform  "Shadow" "ShadowBuffer")
 )
 
 (defn on-render-update [globalEnv]

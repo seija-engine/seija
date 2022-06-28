@@ -6,6 +6,7 @@ use seija_winit::event::{WindowCreated, WindowResized};
 use std::{borrow::Cow, sync::Arc};
 use wgpu::{CommandEncoderDescriptor, Device, Instance, Queue};
 use crate::graph::{LinearGraphIter, RenderGraph};
+use crate::rdsl::RenderMain;
 use crate::render_context::RenderContext;
 use crate::resource::{self, Mesh, RenderResources, Texture};
 
@@ -30,6 +31,7 @@ pub struct AppRender {
     pub device: Arc<wgpu::Device>,
     pub queue: wgpu::Queue,
 
+    pub main:RenderMain,
     pub graph:RenderGraphContext,
 
     pub window_resized_event_reader: ManualEventReader<WindowResized>,
@@ -75,7 +77,7 @@ impl AppRender {
             window_resized_event_reader:Default::default(),
             mesh_event_reader:Default::default(),
             texture_event_reader:Default::default(),
-
+            main:RenderMain::new(),
             graph:RenderGraphContext::default()
         }
     }

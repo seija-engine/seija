@@ -4,11 +4,13 @@ use camera::{view_list::view_list_system};
 use material::MaterialStorage;
 use pipeline::{PipelineCache, update_pipeline_cache};
 use render::{AppRender, Config };
+use resource::Texture;
 pub use script::{builtin_node_creators,RenderScriptContext,RenderScriptPlugin,NodeCreatorSet,NodeCreatorFn};
 use seija_app::IModule;
 use seija_app::{App};
 use bevy_ecs::prelude::*;
 pub use render::{RenderGraphContext};
+use seija_asset::Assets;
 use seija_core::{CoreStage};
 
 extern crate serde_derive;
@@ -97,6 +99,23 @@ impl RenderModule {
     }
 
     fn init_render(&self,w:&mut World,mut ctx:RenderContext,app_render:&mut AppRender,config:&RenderConfig) {
+        w.insert_resource(PipelineCache::default());
+        ctx.ubo_ctx.init(&mut ctx.resources);
+        let script_path = self.0.config_path.join("new_render.clj");
+        match std::fs::read_to_string(script_path) {
+            Ok(code_string) => {
+                app_render.main.init(&code_string,&mut ctx.ubo_ctx.info);
+            },
+            Err(err) => {
+                log::error!("load render.clj error:{:?}",err);
+            }
+        }
+
+        let mut textures = w.get_resource_mut::<Assets<Texture>>().unwrap();
+        let textures_mut:&mut Assets<Texture> = &mut textures;
+
+        app_render.main.start(textures_mut, &mut ctx);
+        /*
         let mut rsc = RenderScriptContext::new();
         for lib_path in config.render_lib_paths.iter() {
             rsc.rt.add_search_path(lib_path);
@@ -114,14 +133,14 @@ impl RenderModule {
             Err(err) => {
                 log::error!("load render.clj error:{:?}",err);
             }
-        }
-        app_render.graph.build();
-
-        ctx.ubo_ctx.init(&mut ctx.resources);
-        for node in app_render.graph.graph.iter_mut_nodes() {
-            node.node.init(w, &mut ctx);
-        }
-        w.insert_resource(PipelineCache::default());
+        } */
+        //app_render.graph.build();
+        
+        //for node in app_render.graph.graph.iter_mut_nodes() {
+        //    node.node.init(w, &mut ctx);
+        //}
+        
         w.insert_resource(ctx);
+       
     }
 }

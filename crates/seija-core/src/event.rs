@@ -1,6 +1,7 @@
 use std::marker::PhantomData;
 
 use bevy_ecs::{system::SystemParam,component::Component, prelude::*};
+
 use seija_app::App;
 
 use crate::CoreStage;
@@ -134,8 +135,7 @@ impl<T: Component> Events<T> {
     pub fn update_system(mut events: ResMut<Self>) {
         events.update();
     }
-
-
+    
     pub fn update(&mut self) {
         match self.state {
             State::A => {
