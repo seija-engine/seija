@@ -13,7 +13,7 @@
 (defn on-render-start [globalEnv]
     (env-add-texture :shadowMap globalEnv)
     
-    (add-render-path "PBR" {
+    (add-render-path "Deferred" {
         :on-start (fn [env] 
             (env-add-texture  :depth env {})
             (env-add-textures :gbufferTextures env [{} {} {} {}])

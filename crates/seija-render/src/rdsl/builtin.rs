@@ -1,10 +1,11 @@
 use std::sync::Arc;
 use std::convert::{TryFrom};
 use lite_clojure_eval::{ExecScope, Variable};
-use seija_asset::Assets;
 use serde_json::Value;
-use crate::resource::Texture;
+use crate::rdsl::main::DynUniformItem;
 use crate::{UniformInfoSet, UniformInfo, RenderContext};
+
+use super::rt_tags::RuntimeTags;
 
 fn find_userdata<T>(scope:&mut ExecScope,name:&str) -> Option<&'static mut T> {
     let textures = scope.context.find_local_symbol(name)?;
@@ -41,7 +42,9 @@ fn _add_uniform(scope:&mut ExecScope,args:Vec<Variable>) -> Option<()> {
     if args.len() != 1 { return None; }
     let ctx = find_userdata::<RenderContext>(scope,"*RENDER_CTX*")?;
     let name = args[0].cast_string()?;
-    ctx.ubo_ctx.add_uniform(name.borrow().as_str(), &mut ctx.resources);
+    if !ctx.ubo_ctx.add_uniform(name.borrow().as_str(), &mut ctx.resources) {
+        log::error!("not found uniform:{}",name.borrow().as_str());
+    }
     Some(())
 }
 
@@ -53,8 +56,45 @@ pub fn select_add_uniform(scope:&mut ExecScope,args:Vec<Variable>) -> Variable {
     Variable::Nil
 }
 
-fn _select_add_uniform(_scope:&mut ExecScope,args:Vec<Variable>) -> Option<()> { 
+fn _select_add_uniform(scope:&mut ExecScope,args:Vec<Variable>) -> Option<()> { 
     if args.len() != 2 { return None; }
-    
+    let tags = find_userdata::<RuntimeTags>(scope, "*TAGS*")?;
+    let dyn_list = find_userdata::<Vec<DynUniformItem>>(scope, "*DYN_UNIFORMS*")?;
+    let ctx = find_userdata::<RenderContext>(scope,"*RENDER_CTX*")?;
+
+    let tag_name = args[0].cast_string()?;
+    let tag_index = tags.name_id(tag_name.borrow().as_str())?;
+    let ubo_name:String = args[1].cast_string()?.borrow().clone();
+    let enable = tags.tags[tag_index];
+    if enable {
+        if !ctx.ubo_ctx.add_uniform(&ubo_name, &mut ctx.resources) {
+            log::error!("not found uniform:{}",ubo_name.as_str());
+        }
+    }
+    let item = DynUniformItem {tag_index,ubo_name,enable};
+    dyn_list.push(item);
+
     Some(())
+}
+
+pub fn add_tag(scope:&mut ExecScope,args:Vec<Variable>) -> Variable {
+    if args.len() != 2 {
+        log::error!("add-tag args error !=2"); 
+        return Variable::Nil; 
+    }
+    if let Some(tags) = find_userdata::<RuntimeTags>(scope, "*TAGS*") {
+        match (args[0].cast_string(),args[1].cast_bool()) {
+            (Some(name),Some(b)) => {
+                tags.add_tag(name.borrow().as_str(),b);
+            }
+            _ => { log::error!("add-tag error"); }
+        }
+    } else {
+        log::error!("*TAGS* is nil");
+    }
+    Variable::Nil
+}
+
+pub fn add_render_path(scope:&mut ExecScope,args:Vec<Variable>) -> Variable {
+    Variable::Nil
 }

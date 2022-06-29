@@ -37,11 +37,31 @@
 
 (defn on-render-start [globalEnv]
     (println "on-render-start")
+    (add-tag "PBR" true)
+    (add-tag "Skin" false)
+    (add-tag "Shadow" false)
+
     (add-uniform  "ObjectBuffer")
-    (add-uniform  "CameraBuffer")
+    ;(add-uniform  "CameraBuffer")
     (select-add-uniform  "PBR"    "LightBuffer")
     (select-add-uniform  "Skin"   "SkinBuffer")
     (select-add-uniform  "Shadow" "ShadowBuffer")
+
+    (add-render-path "Deferred" {
+        :on-start (fn [env] 
+            (env-add-texture  :depth env {})
+            (env-add-textures :gbufferTextures env [{} {} {} {}])
+        )
+        
+        :on-update (fn [env]
+            ;GBuffer
+            (draw-pass (env :gbufferTextures) (env :depth) {:pass "GBuffer"})
+
+            (draw-light-pass (env :gbufferTextures))
+
+            (draw-pass (env :targetTexture) (env :depth) {:clear-depth false :pass "Foward"})
+        )
+    })
 )
 
 (defn on-render-update [globalEnv]

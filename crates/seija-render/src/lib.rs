@@ -3,6 +3,7 @@ use std::sync::Arc;
 use camera::{view_list::view_list_system};
 use material::MaterialStorage;
 use pipeline::{PipelineCache, update_pipeline_cache};
+use rdsl::RenderMain;
 use render::{AppRender, Config };
 use resource::Texture;
 pub use script::{builtin_node_creators,RenderScriptContext,RenderScriptPlugin,NodeCreatorSet,NodeCreatorFn};
@@ -70,6 +71,7 @@ impl IModule for RenderModule {
         resource::init_resource(app);
         material::init_material(app);
         light::init_light(app);
+        RenderMain::add_system(app);
 
         let render_system = self.get_render_system(&mut app.world,&self.0);
         app.schedule.add_stage_after(CoreStage::PostUpdate, RenderStage::AfterRender, SystemStage::parallel());
@@ -99,6 +101,7 @@ impl RenderModule {
     }
 
     fn init_render(&self,w:&mut World,mut ctx:RenderContext,app_render:&mut AppRender,config:&RenderConfig) {
+       
         w.insert_resource(PipelineCache::default());
         ctx.ubo_ctx.init(&mut ctx.resources);
         let script_path = self.0.config_path.join("new_render.clj");
@@ -115,31 +118,6 @@ impl RenderModule {
         let textures_mut:&mut Assets<Texture> = &mut textures;
 
         app_render.main.start(textures_mut, &mut ctx);
-        /*
-        let mut rsc = RenderScriptContext::new();
-        for lib_path in config.render_lib_paths.iter() {
-            rsc.rt.add_search_path(lib_path);
-        }
-        let creator_set = builtin_node_creators();
-        rsc.add_node_creator_set(&creator_set);
-        for p in config.plugins.iter() {
-            rsc.add_node_creator_set(&p.node_creators);
-        }
-        let script_path = self.0.config_path.join("render.clj");
-        match std::fs::read_to_string(script_path) {
-            Ok(code_string) => {
-                rsc.run(code_string.as_str(), &mut ctx.ubo_ctx.info,&mut app_render.graph,true);
-            },
-            Err(err) => {
-                log::error!("load render.clj error:{:?}",err);
-            }
-        } */
-        //app_render.graph.build();
-        
-        //for node in app_render.graph.graph.iter_mut_nodes() {
-        //    node.node.init(w, &mut ctx);
-        //}
-        
         w.insert_resource(ctx);
        
     }

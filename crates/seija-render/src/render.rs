@@ -32,7 +32,6 @@ pub struct AppRender {
     pub queue: wgpu::Queue,
 
     pub main:RenderMain,
-    pub graph:RenderGraphContext,
 
     pub window_resized_event_reader: ManualEventReader<WindowResized>,
     pub window_created_event_reader: ManualEventReader<WindowCreated>,
@@ -77,8 +76,7 @@ impl AppRender {
             window_resized_event_reader:Default::default(),
             mesh_event_reader:Default::default(),
             texture_event_reader:Default::default(),
-            main:RenderMain::new(),
-            graph:RenderGraphContext::default()
+            main:RenderMain::new()
         }
     }
 
@@ -114,27 +112,7 @@ impl AppRender {
         ctx.ubo_ctx.update(&mut ctx.resources,ctx.command_encoder.as_mut().unwrap());
 
         ctx.material_sys.update(world, &ctx.device, ctx.command_encoder.as_mut().unwrap(),&mut ctx.resources);
-        self.graph.graph.prepare(world,ctx);
-        for node_id in self.graph.graph_iter.nodes.iter() {
-            let cur_node = self.graph.graph.get_node(node_id).unwrap();
-            let mut new_inputs = cur_node.inputs.clone();
-            for parent_edge in cur_node.edges.input_edges.iter() {
-                let parent_node = self.graph.graph.get_node(&parent_edge.output_node).unwrap();
-                for i in 0..parent_edge.output_idxs.len() {
-                   
-                    let out_value = parent_node.outputs.get(parent_edge.output_idxs[i]).unwrap_or(&None);
-                    if let Some(id) = new_inputs.get_mut(parent_edge.input_idxs[i]) {
-                        *id = out_value.clone();
-                    } else {
-                        log::error!("input count error:{:?}",cur_node.name);
-                    }
-                }
-            }
-
-            if let Ok(node) = self.graph.graph.get_node_mut(node_id) {
-                node.node.update(world,ctx, &new_inputs, &mut node.outputs);
-            }
-        }
+        self.main.update(ctx,world);
         
         resource::update_mesh_system(world,&mut self.mesh_event_reader,ctx);
        

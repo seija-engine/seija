@@ -28,7 +28,7 @@ pub struct UniformContext {
 impl UniformContext {
     pub fn init(&mut self,res:&mut RenderResources) {}
 
-    pub fn add_uniform(&mut self,name:&str,res:&mut RenderResources) {
+    pub fn add_uniform(&mut self,name:&str,res:&mut RenderResources) -> bool {
         if let Some(info) = self.info.globals.get(name) {
             let object = UniformObject::new(res, info);
             self.globals.push(object);
@@ -38,6 +38,7 @@ impl UniformContext {
                                            index:self.globals.len() - 1,
                                            apply_type:info.apply
                                       });
+            return true;
         }
 
         if let Some(info) = self.info.components.get(name) {
@@ -48,6 +49,19 @@ impl UniformContext {
                                             index:self.components.len() - 1,
                                             apply_type:info.apply
                                           });
+            return true;
+        }
+        false
+    }
+
+    pub fn remove_uniform(&mut self,name:&str) {
+        if let Some(index) = self.global_nameidxs.get(name).map(|v| v.index) {
+            self.globals.remove(index);
+            self.global_nameidxs.remove(name);
+        }
+        if let Some(index) = self.component_nameidxs.get(name).map(|v| v.index) {
+            self.components.remove(index);
+            self.component_nameidxs.remove(name);
         }
     }
 
