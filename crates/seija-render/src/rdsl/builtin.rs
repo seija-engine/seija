@@ -1,10 +1,12 @@
 use std::sync::Arc;
 use std::convert::{TryFrom};
-use lite_clojure_eval::{ExecScope, Variable};
+use lite_clojure_eval::{ExecScope, Variable, GcRefCell};
 use serde_json::Value;
 use crate::rdsl::main::DynUniformItem;
 use crate::{UniformInfoSet, UniformInfo, RenderContext};
 
+use super::main::MainContext;
+use super::render_path::RenderPathDef;
 use super::rt_tags::RuntimeTags;
 
 fn find_userdata<T>(scope:&mut ExecScope,name:&str) -> Option<&'static mut T> {
@@ -58,21 +60,20 @@ pub fn select_add_uniform(scope:&mut ExecScope,args:Vec<Variable>) -> Variable {
 
 fn _select_add_uniform(scope:&mut ExecScope,args:Vec<Variable>) -> Option<()> { 
     if args.len() != 2 { return None; }
-    let tags = find_userdata::<RuntimeTags>(scope, "*TAGS*")?;
-    let dyn_list = find_userdata::<Vec<DynUniformItem>>(scope, "*DYN_UNIFORMS*")?;
+    let main_ctx = find_userdata::<MainContext>(scope, "*MAIN_CTX*")?;
     let ctx = find_userdata::<RenderContext>(scope,"*RENDER_CTX*")?;
 
     let tag_name = args[0].cast_string()?;
-    let tag_index = tags.name_id(tag_name.borrow().as_str())?;
+    let tag_index = main_ctx.rt_tags.name_id(tag_name.borrow().as_str())?;
     let ubo_name:String = args[1].cast_string()?.borrow().clone();
-    let enable = tags.tags[tag_index];
+    let enable =  main_ctx.rt_tags.tags[tag_index];
     if enable {
         if !ctx.ubo_ctx.add_uniform(&ubo_name, &mut ctx.resources) {
             log::error!("not found uniform:{}",ubo_name.as_str());
         }
     }
     let item = DynUniformItem {tag_index,ubo_name,enable};
-    dyn_list.push(item);
+    main_ctx.dyn_uniform_set.push(item);
 
     Some(())
 }
@@ -82,19 +83,43 @@ pub fn add_tag(scope:&mut ExecScope,args:Vec<Variable>) -> Variable {
         log::error!("add-tag args error !=2"); 
         return Variable::Nil; 
     }
-    if let Some(tags) = find_userdata::<RuntimeTags>(scope, "*TAGS*") {
+    if let Some(main_ctx) = find_userdata::<MainContext>(scope, "*MAIN_CTX*") {
         match (args[0].cast_string(),args[1].cast_bool()) {
             (Some(name),Some(b)) => {
-                tags.add_tag(name.borrow().as_str(),b);
+                main_ctx.rt_tags.add_tag(name.borrow().as_str(),b);
             }
             _ => { log::error!("add-tag error"); }
         }
     } else {
-        log::error!("*TAGS* is nil");
+        log::error!("*MAIN_CTX* is nil");
     }
     Variable::Nil
 }
 
 pub fn add_render_path(scope:&mut ExecScope,args:Vec<Variable>) -> Variable {
+    if _add_render_path(scope, args).is_none() {
+        log::error!("add render path error");
+    }
     Variable::Nil
+}
+
+pub fn _add_render_path(scope:&mut ExecScope,args:Vec<Variable>) -> Option<()> {
+    if args.len() != 2 {
+        log::error!("add-render-paths args error !=2"); 
+        return None; 
+    }
+    let main_ctx = find_userdata::<MainContext>(scope, "*MAIN_CTX*")?;
+    let name = args[0].cast_string()?.borrow().clone();
+    let map = args[1].cast_map()?;
+    let start_key = Variable::Keyword(GcRefCell::new(String::from(":on-start")  ));
+    let update_key = Variable::Keyword(GcRefCell::new(String::from(":on-update")  ));
+    let start_fn = map.borrow().get(&start_key)?.clone();
+    let update_fn = map.borrow().get(&update_key)?.clone();
+    let render_path = RenderPathDef {
+        name,
+        start_fn,
+        update_fn
+    };
+    main_ctx.path_dic.insert(render_path.name.clone(), render_path);
+    Some(())
 }

@@ -2,7 +2,7 @@ use lite_clojure_eval::{EvalRT, Variable};
 use seija_asset::Assets;
 use crate::{UniformInfoSet, RenderContext, resource::Texture};
 
-use super::{builtin::{declare_uniform, add_uniform, select_add_uniform, add_tag, add_render_path}, rt_tags::RuntimeTags, main::DynUniformItem};
+use super::{builtin::{declare_uniform, add_uniform, select_add_uniform, add_tag, add_render_path}, rt_tags::RuntimeTags, main::{DynUniformItem, MainContext}};
 
 pub struct ScriptContext {
    pub rt:EvalRT
@@ -24,6 +24,7 @@ impl ScriptContext {
         self.rt.global_context().push_native_fn("select-add-uniform", select_add_uniform);
         self.rt.global_context().push_native_fn("add-tag", add_tag);
         self.rt.global_context().push_native_fn("add-render-path", add_render_path);
+        
         self.rt.global_context().push_var("SS_VERTEX", wgpu::ShaderStage::VERTEX.bits() as i64 );
         self.rt.global_context().push_var("SS_FRAGMENT", wgpu::ShaderStage::FRAGMENT.bits() as i64 );
         self.rt.global_context().push_var("SS_VERTEX_FRAGMENT", wgpu::ShaderStage::VERTEX_FRAGMENT.bits() as i64 );
@@ -31,10 +32,7 @@ impl ScriptContext {
         self.rt.global_context().push_var("SS_ALL", wgpu::ShaderStage::all().bits() as i64 );
     }
 
-    pub fn start(&mut self) {
-
-    }
-
+   
     pub fn exec_declare_uniform(&mut self,info_set:&mut UniformInfoSet) {
         let info_ptr = info_set as *mut UniformInfoSet as *mut u8;
         if let Err(err) = self.rt.invoke_func("declare-uniforms", vec![Variable::UserData(info_ptr)]) {
@@ -42,13 +40,28 @@ impl ScriptContext {
         }
     }
 
-    pub fn exec_render_start(&mut self,ctx:&mut RenderContext,textures:&mut Assets<Texture>,tags:&mut RuntimeTags,dyn_uniforms:&mut Vec<DynUniformItem>)  {
+    pub fn exec_render_start(&mut self,
+        ctx:&mut RenderContext,
+        textures:&mut Assets<Texture>,
+        main_ctx:&mut MainContext)  {
         self.set_userdata("*TEXTURES*", textures);
         self.set_userdata("*RENDER_CTX*", ctx);
-        self.set_userdata("*TAGS*", tags);
-        self.set_userdata("*DYN_UNIFORMS*", dyn_uniforms);
+        self.set_userdata("*MAIN_CTX*", main_ctx);
 
         if let Err(err) = self.rt.invoke_func("on-render-start", vec![Variable::Nil]) {
+            log::error!("{:?}",err);
+        }
+    }
+
+    pub fn exec_render_update(&mut self,
+        ctx:&mut RenderContext,
+        textures:&mut Assets<Texture>,
+        main_ctx:&mut MainContext) {
+            
+        self.set_userdata("*TEXTURES*", textures);
+        self.set_userdata("*RENDER_CTX*", ctx);
+        self.set_userdata("*MAIN_CTX*", main_ctx);
+        if let Err(err) = self.rt.invoke_func("on-render-update", vec![Variable::Nil]) {
             log::error!("{:?}",err);
         }
     }

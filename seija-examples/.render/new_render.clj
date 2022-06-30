@@ -35,6 +35,7 @@
 
 (println "Enter New Render Clojure")
 
+
 (defn on-render-start [globalEnv]
     (println "on-render-start")
     (add-tag "PBR" true)
@@ -49,14 +50,16 @@
 
     (add-render-path "Deferred" {
         :on-start (fn [env] 
-            (env-add-texture  :depth env {})
+            (env-add-texture :depth env {})
             (env-add-textures :gbufferTextures env [{} {} {} {}])
         )
         
         :on-update (fn [env]
             ;GBuffer
-            (draw-pass (env :gbufferTextures) (env :depth) {:pass "GBuffer"})
-
+            ;这里传一个闭包进去，当修改的时候重现运行Node参数获取。
+            ;可以考虑写个env-get宏，生成闭包函数。这样在这里不会显的奇怪
+            (draw-pass #(env :gbufferTextures) #(env :depth) {:pass "GBuffer"})
+            
             (draw-light-pass (env :gbufferTextures))
 
             (draw-pass (env :targetTexture) (env :depth) {:clear-depth false :pass "Foward"})
@@ -65,10 +68,10 @@
 )
 
 (defn on-render-update [globalEnv]
-    (camera-update "CameraBuffer")
+    ;(camera-update "CameraBuffer")
     (trasform-update "ObjectBuffer")
-    (select-node "PBR" (do
-        (pbr-camera-update "CameraBuffer")
-        (pbr-light-update "CameraBuffer")    
-    ))
+    ;(select-node "PBR" (do
+    ;    (pbr-camera-update "CameraBuffer")
+    ;    (pbr-light-update "CameraBuffer")    
+    ;))
 )

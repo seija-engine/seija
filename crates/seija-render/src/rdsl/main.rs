@@ -5,7 +5,7 @@ use seija_app::App;
 use seija_asset::Assets;
 use seija_core::AddCore;
 use crate::{UniformInfoSet, resource::Texture, RenderContext};
-use super::{ScriptContext, rt_tags::{RuntimeTags, TagEvent}};
+use super::{ScriptContext, rt_tags::{RuntimeTags, TagEvent}, render_path::RenderPathDef, node::IUpdateNode};
 
 //这里通过逻辑保证RenderMain只在一个线程运行，ECS库的System必须要这俩个trait
 unsafe impl Send for RenderMain {}
@@ -19,16 +19,27 @@ pub struct DynUniformItem {
 
 pub struct RenderMain {
     script_ctx:ScriptContext,
-    rt_tags:RuntimeTags,
-    dyn_uniform_set:Vec<DynUniformItem>
+    main_ctx:MainContext
+}
+
+pub struct MainContext {
+    pub rt_tags:RuntimeTags,
+    pub dyn_uniform_set:Vec<DynUniformItem>,
+    pub path_dic:HashMap<String,RenderPathDef>,
+
+    pub global_nodes:Vec<Box<dyn IUpdateNode>>,
 }
 
 impl RenderMain {
     pub fn new() -> Self {
         RenderMain { 
             script_ctx:ScriptContext::new(),
-            rt_tags:RuntimeTags::new(),
-            dyn_uniform_set:vec![]
+            main_ctx:MainContext { 
+                rt_tags: RuntimeTags::new(),
+                 dyn_uniform_set: vec![],
+                 path_dic:HashMap::default(),
+                 global_nodes:vec![]
+            }
         }
     }
 
@@ -42,9 +53,18 @@ impl RenderMain {
     }
 
     pub fn start(&mut self,textures:&mut Assets<Texture>,ctx:&mut RenderContext) {
-        self.script_ctx.exec_render_start(ctx, textures,&mut self.rt_tags,&mut self.dyn_uniform_set);
+        self.script_ctx.exec_render_start(ctx, textures,&mut self.main_ctx);
+        self.script_ctx.exec_render_update(ctx, textures, &mut self.main_ctx);
     }
 
+    pub fn update(&mut self,ctx:&mut RenderContext,world:&mut World) {
+       self.main_ctx.update(ctx, world);
+    }
+
+}
+
+
+impl MainContext {
     pub fn update(&mut self,ctx:&mut RenderContext,world:&mut World) {
         self.rt_tags.update(world);
         if self.rt_tags.dirtys.len() > 0 {
@@ -65,8 +85,4 @@ impl RenderMain {
         }
         self.rt_tags.dirtys.clear();
     }
-
 }
-
-
-
