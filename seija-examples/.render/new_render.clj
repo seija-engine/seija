@@ -56,9 +56,8 @@
         
         :on-update (fn [env]
             ;GBuffer
-            ;这里传一个闭包进去，当修改的时候重现运行Node参数获取。
-            ;可以考虑写个env-get宏，生成闭包函数。这样在这里不会显的奇怪
-            (draw-pass #(env :gbufferTextures) #(env :depth) {:pass "GBuffer"})
+            ;他妈的是谁忘了实现lambda语法糖
+            (draw-pass (fn [] env :gbufferTextures) (fn [] env :depth) {:pass "GBuffer"})
             
             (draw-light-pass (env :gbufferTextures))
 
@@ -68,8 +67,13 @@
 )
 
 (defn on-render-update [globalEnv]
+    (println " on-render-update")
+    (assoc! globalEnv :testKey "ObjectBuffer")
     ;(camera-update "CameraBuffer")
-    (trasform-update "ObjectBuffer")
+    (transform-update (fn [] (globalEnv :testKey)))
+    ;TMD我匿名函数语法糖呢
+    ;(transform-update #(globalEnv :testKey) )
+
     ;(select-node "PBR" (do
     ;    (pbr-camera-update "CameraBuffer")
     ;    (pbr-light-update "CameraBuffer")    

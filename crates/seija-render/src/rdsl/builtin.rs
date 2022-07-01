@@ -7,9 +7,8 @@ use crate::{UniformInfoSet, UniformInfo, RenderContext};
 
 use super::main::MainContext;
 use super::render_path::RenderPathDef;
-use super::rt_tags::RuntimeTags;
 
-fn find_userdata<T>(scope:&mut ExecScope,name:&str) -> Option<&'static mut T> {
+pub fn find_userdata<T>(scope:&mut ExecScope,name:&str) -> Option<&'static mut T> {
     let textures = scope.context.find_local_symbol(name)?;
     let ptr = textures.cast_userdata()?;
     let value_ptr = unsafe { &mut *(ptr as *mut T) };

@@ -1,11 +1,12 @@
 use std::collections::HashMap;
 
 use bevy_ecs::prelude::World;
+use lite_clojure_eval::{Variable, GcRefCell};
 use seija_app::App;
 use seija_asset::Assets;
 use seija_core::AddCore;
 use crate::{UniformInfoSet, resource::Texture, RenderContext};
-use super::{ScriptContext, rt_tags::{RuntimeTags, TagEvent}, render_path::RenderPathDef, node::IUpdateNode};
+use super::{ScriptContext, rt_tags::{RuntimeTags, TagEvent}, render_path::RenderPathDef, node::{UpdateNodeBox}};
 
 //这里通过逻辑保证RenderMain只在一个线程运行，ECS库的System必须要这俩个trait
 unsafe impl Send for RenderMain {}
@@ -27,7 +28,9 @@ pub struct MainContext {
     pub dyn_uniform_set:Vec<DynUniformItem>,
     pub path_dic:HashMap<String,RenderPathDef>,
 
-    pub global_nodes:Vec<Box<dyn IUpdateNode>>,
+    pub global_env:GcRefCell<HashMap<Variable,Variable>>,
+
+    pub global_nodes:Vec<UpdateNodeBox>,
 }
 
 impl RenderMain {
@@ -38,6 +41,7 @@ impl RenderMain {
                 rt_tags: RuntimeTags::new(),
                  dyn_uniform_set: vec![],
                  path_dic:HashMap::default(),
+                 global_env:GcRefCell::new(HashMap::default()),
                  global_nodes:vec![]
             }
         }
@@ -55,11 +59,18 @@ impl RenderMain {
     pub fn start(&mut self,textures:&mut Assets<Texture>,ctx:&mut RenderContext) {
         self.script_ctx.exec_render_start(ctx, textures,&mut self.main_ctx);
         self.script_ctx.exec_render_update(ctx, textures, &mut self.main_ctx);
+
+        for node_box in self.main_ctx.global_nodes.iter_mut() {
+            node_box.set_params(&mut self.script_ctx.rt,true);
+        }
     }
+
+    
 
     pub fn update(&mut self,ctx:&mut RenderContext,world:&mut World) {
        self.main_ctx.update(ctx, world);
     }
+
 
 }
 
