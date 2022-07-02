@@ -1,7 +1,16 @@
+use bevy_ecs::prelude::World;
 use lite_clojure_eval::{Variable, EvalRT};
 
+use crate::RenderContext;
+
 pub trait IUpdateNode {
-    fn update_params(&self,params:Vec<Variable>);
+    fn update_params(&mut self,params:Vec<Variable>);
+
+    fn init(&mut self,world:&mut World,ctx:&mut RenderContext);
+
+    fn prepare(&mut self,world:&mut World,ctx:&mut RenderContext) {}
+
+    fn update(&mut self,world:&mut World,ctx:&mut RenderContext) {}
 }
 
 pub struct UpdateNodeBox {
@@ -39,4 +48,17 @@ impl UpdateNodeBox {
         }
         self.node.update_params(new_params);
     }
+
+    pub fn init(&mut self,world:&mut World,ctx:&mut RenderContext) {
+        self.node.init(world, ctx);
+    }
+
+    pub fn prepare(&mut self,world:&mut World,ctx:&mut RenderContext) {
+        self.node.prepare(world, ctx);
+    }
+
+    pub fn update(&mut self,world:&mut World,ctx:&mut RenderContext) {
+        self.node.update(world, ctx);
+    }
+   
 }

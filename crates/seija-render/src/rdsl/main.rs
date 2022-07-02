@@ -56,12 +56,16 @@ impl RenderMain {
         self.script_ctx.exec_declare_uniform(info_set);
     }
 
-    pub fn start(&mut self,textures:&mut Assets<Texture>,ctx:&mut RenderContext) {
-        self.script_ctx.exec_render_start(ctx, textures,&mut self.main_ctx);
-        self.script_ctx.exec_render_update(ctx, textures, &mut self.main_ctx);
+    pub fn start(&mut self,world:&mut World,ctx:&mut RenderContext) {
+        let mut textures = world.get_resource_mut::<Assets<Texture>>().unwrap();
+        let textures_mut:&mut Assets<Texture> = &mut textures;
+
+        self.script_ctx.exec_render_start(ctx, textures_mut,&mut self.main_ctx);
+        self.script_ctx.exec_render_update(ctx, textures_mut, &mut self.main_ctx);
 
         for node_box in self.main_ctx.global_nodes.iter_mut() {
             node_box.set_params(&mut self.script_ctx.rt,true);
+            node_box.init(world, ctx);
         }
     }
 
@@ -69,6 +73,7 @@ impl RenderMain {
 
     pub fn update(&mut self,ctx:&mut RenderContext,world:&mut World) {
        self.main_ctx.update(ctx, world);
+       
     }
 
 
@@ -80,6 +85,13 @@ impl MainContext {
         self.rt_tags.update(world);
         if self.rt_tags.dirtys.len() > 0 {
             self.update_dirty_tag(ctx);
+        }
+
+        for node in self.global_nodes.iter_mut() {
+            node.prepare(world, ctx);
+        }
+        for node in self.global_nodes.iter_mut() {
+            node.update(world, ctx);
         }
     }
 

@@ -2,7 +2,7 @@ use lite_clojure_eval::{EvalRT, Variable};
 use seija_asset::Assets;
 use crate::{UniformInfoSet, RenderContext, resource::Texture};
 
-use super::{builtin::*, main::{MainContext}, node::{IUpdateNode, UpdateNodeBox}, nodes::TransfromNode};
+use super::{builtin::*, main::{MainContext}, node::{IUpdateNode, UpdateNodeBox}, nodes::{TransfromNode, CameraNode}};
 
 pub struct ScriptContext {
    pub rt:EvalRT
@@ -36,6 +36,7 @@ impl ScriptContext {
         self.rt.global_context().push_var("SS_ALL", wgpu::ShaderStage::all().bits() as i64 );
 
         self.add_update_node::<TransfromNode>("transform-update");
+        self.add_update_node::<CameraNode>("camera-update");
     }
 
    

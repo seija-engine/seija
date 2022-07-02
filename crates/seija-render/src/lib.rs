@@ -114,10 +114,9 @@ impl RenderModule {
             }
         }
 
-        let mut textures = w.get_resource_mut::<Assets<Texture>>().unwrap();
-        let textures_mut:&mut Assets<Texture> = &mut textures;
+       
 
-        app_render.main.start(textures_mut, &mut ctx);
+        app_render.main.start(w, &mut ctx);
         w.insert_resource(ctx);
        
     }

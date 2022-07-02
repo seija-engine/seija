@@ -31,6 +31,21 @@
         ]
         :backends ["PBRLight"]
     })
+
+    (declare-uniform set "CameraBuffer" {
+        :type :Component
+        :apply :Camera
+        :sort 3
+        :shader-stage SS_VERTEX_FRAGMENT
+        :props [
+            {:name "cameraView"       :type "mat4"  }
+            {:name "cameraProj"       :type "mat4"  }
+            {:name "cameraProjView"   :type "mat4"  }
+            {:name "cameraPosition"   :type "float4"}
+            {:name "exposure"  :type "float"  }
+        ]
+        :backends ["Camera3D" "PBRCameraEx"]
+   })
 )
 
 (println "Enter New Render Clojure")
@@ -43,7 +58,7 @@
     (add-tag "Shadow" false)
 
     (add-uniform  "ObjectBuffer")
-    ;(add-uniform  "CameraBuffer")
+    (add-uniform  "CameraBuffer")
     (select-add-uniform  "PBR"    "LightBuffer")
     (select-add-uniform  "Skin"   "SkinBuffer")
     (select-add-uniform  "Shadow" "ShadowBuffer")
@@ -68,14 +83,12 @@
 
 (defn on-render-update [globalEnv]
     (println " on-render-update")
-    (assoc! globalEnv :testKey "ObjectBuffer")
-    ;(camera-update "CameraBuffer")
-    (transform-update (fn [] (globalEnv :testKey)))
-    ;TMD我匿名函数语法糖呢
-    ;(transform-update #(globalEnv :testKey) )
 
-    ;(select-node "PBR" (do
-    ;    (pbr-camera-update "CameraBuffer")
-    ;    (pbr-light-update "CameraBuffer")    
-    ;))
+    (camera-update "CameraBuffer")
+    (transform-update "ObjectBuffer")
+   
+    (if-tag "PBR" 
+        (pbr-camera-update "CameraBuffer")
+        (pbr-light-update "CameraBuffer")    
+    )
 )
