@@ -71,7 +71,6 @@
         
         :on-update (fn [env]
             ;GBuffer
-            ;他妈的是谁忘了实现lambda语法糖
             (draw-pass (fn [] env :gbufferTextures) (fn [] env :depth) {:pass "GBuffer"})
             
             (draw-light-pass (env :gbufferTextures))
@@ -86,9 +85,9 @@
 
     (camera-update "CameraBuffer")
     (transform-update "ObjectBuffer")
+    ;先实现功能吧，这里写法以后优化
+    ;(add-node nil   camera-update     "CameraBuffer")
+    ;(add-node nil   transform-update  "ObjectBuffer")
+    ;(add-node "PBR" pbr-camera-update "CameraBuffer")
    
-    (if-tag "PBR" 
-        (pbr-camera-update "CameraBuffer")
-        (pbr-light-update "CameraBuffer")    
-    )
 )

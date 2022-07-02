@@ -122,3 +122,15 @@ pub fn _add_render_path(scope:&mut ExecScope,args:Vec<Variable>) -> Option<()> {
     main_ctx.path_dic.insert(render_path.name.clone(), render_path);
     Some(())
 }
+
+pub fn add_node(scope:&mut ExecScope,args:Vec<Variable>) -> Variable {
+    if _add_node(scope, args).is_none() { log::error!("add node error"); }
+    Variable::Nil
+}
+
+pub fn _add_node(_scope:&mut ExecScope,mut args:Vec<Variable>) -> Option<()> {
+    if args.len() <= 2 { log::error!("add node args error < 2");  return None; }
+    let tag_name = args.remove(0).cast_string().map(|v| v.borrow().clone());
+    let node_index = args.remove(0);
+    None
+}

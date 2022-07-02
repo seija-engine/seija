@@ -27,6 +27,7 @@ impl ScriptContext {
         self.rt.global_context().push_native_fn("select-add-uniform", select_add_uniform);
         self.rt.global_context().push_native_fn("add-tag", add_tag);
         self.rt.global_context().push_native_fn("add-render-path", add_render_path);
+        self.rt.global_context().push_native_fn("add-node", add_node);
         
         
         self.rt.global_context().push_var("SS_VERTEX", wgpu::ShaderStage::VERTEX.bits() as i64 );
@@ -35,6 +36,7 @@ impl ScriptContext {
         self.rt.global_context().push_var("SS_COMPUTE", wgpu::ShaderStage::COMPUTE.bits() as i64 );
         self.rt.global_context().push_var("SS_ALL", wgpu::ShaderStage::all().bits() as i64 );
 
+        
         self.add_update_node::<TransfromNode>("transform-update");
         self.add_update_node::<CameraNode>("camera-update");
     }
