@@ -6,7 +6,7 @@ use seija_app::App;
 use seija_asset::Assets;
 use seija_core::AddCore;
 use crate::{UniformInfoSet, resource::Texture, RenderContext};
-use super::{ScriptContext, rt_tags::{RuntimeTags, TagEvent}, render_path::RenderPathDef, node::{UpdateNodeBox}};
+use super::{ScriptContext, rt_tags::{RuntimeTags, TagEvent}, render_path::RenderPathDef, node::{UpdateNodeBox, NodeCreatorContext, NodeCreatorSet}, builtin::create_builtin_node_set};
 
 //这里通过逻辑保证RenderMain只在一个线程运行，ECS库的System必须要这俩个trait
 unsafe impl Send for RenderMain {}
@@ -23,16 +23,6 @@ pub struct RenderMain {
     main_ctx:MainContext
 }
 
-pub struct MainContext {
-    pub rt_tags:RuntimeTags,
-    pub dyn_uniform_set:Vec<DynUniformItem>,
-    pub path_dic:HashMap<String,RenderPathDef>,
-
-    pub global_env:GcRefCell<HashMap<Variable,Variable>>,
-
-    pub global_nodes:Vec<UpdateNodeBox>,
-}
-
 impl RenderMain {
     pub fn new() -> Self {
         RenderMain { 
@@ -42,7 +32,8 @@ impl RenderMain {
                  dyn_uniform_set: vec![],
                  path_dic:HashMap::default(),
                  global_env:GcRefCell::new(HashMap::default()),
-                 global_nodes:vec![]
+                 global_nodes:vec![],
+                 creators:Default::default()
             }
         }
     }
@@ -52,8 +43,21 @@ impl RenderMain {
     }
 
     pub fn init(&mut self,code_string:&str,info_set:&mut UniformInfoSet) {
+        let global_nodes_mut = &mut self.main_ctx.global_nodes;
+        let global_node_ptr = global_nodes_mut as *mut Vec<UpdateNodeBox> as *mut u8;
+        self.main_ctx.global_env.borrow_mut().insert(Variable::Keyword(GcRefCell::new(":nodes".to_string())), 
+                                                     Variable::UserData(global_node_ptr));
+
+        self.add_node_creator(create_builtin_node_set());
         self.script_ctx.init(code_string);
         self.script_ctx.exec_declare_uniform(info_set);
+    }
+
+    pub fn add_node_creator(&mut self,set:NodeCreatorSet) {
+        for (k,f) in set.0.iter() {
+            let index = self.main_ctx.creators.add(*f) as i64;
+            self.script_ctx.rt.global_context().push_var(k.as_str(), Variable::Int(index));
+        }
     }
 
     pub fn start(&mut self,world:&mut World,ctx:&mut RenderContext) {
@@ -61,7 +65,6 @@ impl RenderMain {
         let textures_mut:&mut Assets<Texture> = &mut textures;
 
         self.script_ctx.exec_render_start(ctx, textures_mut,&mut self.main_ctx);
-        self.script_ctx.exec_render_update(ctx, textures_mut, &mut self.main_ctx);
 
         for node_box in self.main_ctx.global_nodes.iter_mut() {
             node_box.set_params(&mut self.script_ctx.rt,true);
@@ -79,6 +82,15 @@ impl RenderMain {
 
 }
 
+pub struct MainContext {
+    pub rt_tags:RuntimeTags,
+    pub dyn_uniform_set:Vec<DynUniformItem>,
+    pub path_dic:HashMap<String,RenderPathDef>,
+    pub global_env:GcRefCell<HashMap<Variable,Variable>>,
+    pub global_nodes:Vec<UpdateNodeBox>,
+
+    creators:NodeCreatorContext
+}
 
 impl MainContext {
     pub fn update(&mut self,ctx:&mut RenderContext,world:&mut World) {
@@ -93,6 +105,12 @@ impl MainContext {
         for node in self.global_nodes.iter_mut() {
             node.update(world, ctx);
         }
+    }
+
+    pub fn create_node(&mut self,index:usize,params:Vec<Variable>) -> Option<UpdateNodeBox> {
+        let f = self.creators.creators.get(index)?;
+        let node = f(self,params);
+        Some(node)
     }
 
     fn update_dirty_tag(&mut self,ctx:&mut RenderContext) {

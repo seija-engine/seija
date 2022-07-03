@@ -1,6 +1,6 @@
 use lite_clojure_eval::{EvalRT, Variable};
 use seija_asset::Assets;
-use crate::{UniformInfoSet, RenderContext, resource::Texture};
+use crate::{UniformInfoSet, RenderContext, resource::Texture, NodeCreatorFn};
 
 use super::{builtin::*, main::{MainContext}, node::{IUpdateNode, UpdateNodeBox}, nodes::{TransfromNode, CameraNode}};
 
@@ -36,9 +36,6 @@ impl ScriptContext {
         self.rt.global_context().push_var("SS_COMPUTE", wgpu::ShaderStage::COMPUTE.bits() as i64 );
         self.rt.global_context().push_var("SS_ALL", wgpu::ShaderStage::all().bits() as i64 );
 
-        
-        self.add_update_node::<TransfromNode>("transform-update");
-        self.add_update_node::<CameraNode>("camera-update");
     }
 
    
@@ -57,20 +54,7 @@ impl ScriptContext {
         self.set_userdata("*RENDER_CTX*", ctx);
         self.set_userdata("*MAIN_CTX*", main_ctx);
 
-        if let Err(err) = self.rt.invoke_func("on-render-start", vec![Variable::Nil]) {
-            log::error!("{:?}",err);
-        }
-    }
-
-    pub fn exec_render_update(&mut self,
-        ctx:&mut RenderContext,
-        textures:&mut Assets<Texture>,
-        main_ctx:&mut MainContext) {
-            
-        self.set_userdata("*TEXTURES*", textures);
-        self.set_userdata("*RENDER_CTX*", ctx);
-        self.set_userdata("*MAIN_CTX*", main_ctx);
-        if let Err(err) = self.rt.invoke_func("on-render-update", vec![Variable::Map(main_ctx.global_env.clone())]) {
+        if let Err(err) = self.rt.invoke_func("on-render-start", vec![Variable::Map(main_ctx.global_env.clone())]) {
             log::error!("{:?}",err);
         }
     }
@@ -79,15 +63,4 @@ impl ScriptContext {
         let value_ptr = value as *mut T as *mut u8;
         self.rt.main_context().set_var(name,Variable::UserData(value_ptr) );
     }
-
-    pub fn add_update_node<T>(&mut self,name:&str) where T:Default + IUpdateNode + 'static {
-        self.rt.global_context().push_native_fn(name, |scope,args| {
-            if let Some(main_ctx) = find_userdata::<MainContext>(scope, "*MAIN_CTX*") {
-                let update_box = UpdateNodeBox::create::<T>(&args); 
-                main_ctx.global_nodes.push(update_box);
-            }
-            Variable::Nil
-        });
-    }
-
 }

@@ -1,7 +1,11 @@
+use std::collections::HashMap;
+
 use bevy_ecs::prelude::World;
 use lite_clojure_eval::{Variable, EvalRT};
 
 use crate::RenderContext;
+
+use super::main::MainContext;
 
 pub trait IUpdateNode {
     fn update_params(&mut self,params:Vec<Variable>);
@@ -59,6 +63,24 @@ impl UpdateNodeBox {
 
     pub fn update(&mut self,world:&mut World,ctx:&mut RenderContext) {
         self.node.update(world, ctx);
+    }  
+}
+
+pub type NodeCreatorFn = fn(ctx:&mut MainContext,Vec<Variable>) -> UpdateNodeBox;
+
+#[derive(Default)]
+pub struct NodeCreatorSet(pub HashMap<String,NodeCreatorFn>);
+
+#[derive(Default)]
+pub struct NodeCreatorContext {
+   pub creators:Vec<NodeCreatorFn>
+}
+
+impl NodeCreatorContext {
+    pub fn add(&mut self,f:NodeCreatorFn) -> usize {
+        self.creators.push(f);
+        self.creators.len() - 1
     }
+
    
 }

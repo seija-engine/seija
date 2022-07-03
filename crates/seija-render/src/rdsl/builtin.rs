@@ -3,10 +3,22 @@ use std::convert::{TryFrom};
 use lite_clojure_eval::{ExecScope, Variable, GcRefCell};
 use serde_json::Value;
 use crate::rdsl::main::DynUniformItem;
+use crate::rdsl::nodes::CameraNode;
 use crate::{UniformInfoSet, UniformInfo, RenderContext};
 
 use super::main::MainContext;
+use super::node::{NodeCreatorSet, UpdateNodeBox};
+use super::nodes::TransfromNode;
 use super::render_path::RenderPathDef;
+
+pub fn create_builtin_node_set() -> NodeCreatorSet {
+    let mut node_set = NodeCreatorSet::default();
+    node_set.0.insert("CAMERA_NODE".into(), |_,params| UpdateNodeBox::create::<CameraNode>(&params));
+    node_set.0.insert("TRANSFROM_NODE".into(), |_,params| UpdateNodeBox::create::<TransfromNode>(&params));
+    node_set
+}
+
+
 
 pub fn find_userdata<T>(scope:&mut ExecScope,name:&str) -> Option<&'static mut T> {
     let textures = scope.context.find_local_symbol(name)?;
@@ -124,13 +136,20 @@ pub fn _add_render_path(scope:&mut ExecScope,args:Vec<Variable>) -> Option<()> {
 }
 
 pub fn add_node(scope:&mut ExecScope,args:Vec<Variable>) -> Variable {
-    if _add_node(scope, args).is_none() { log::error!("add node error"); }
+    if let Err(err_code) = _add_node(scope, args) { log::error!("add node error:{}",err_code); }
     Variable::Nil
 }
 
-pub fn _add_node(_scope:&mut ExecScope,mut args:Vec<Variable>) -> Option<()> {
-    if args.len() <= 2 { log::error!("add node args error < 2");  return None; }
+pub fn _add_node(scope:&mut ExecScope,mut args:Vec<Variable>) -> Result<(),i32> {
+    if args.len() < 3 { log::error!("add node args error < 3");  return Err(0); }
+    let env_map = args.remove(0).cast_map().ok_or (1)?;
+    let nodes_key = Variable::Keyword(GcRefCell::new(String::from(":nodes")));
+    let nodes_ptr = env_map.borrow().get(&nodes_key).ok_or(2)?.cast_userdata().ok_or(3)?;
+    let nodes_mut = unsafe { &mut *(nodes_ptr as *mut Vec<UpdateNodeBox>) };
     let tag_name = args.remove(0).cast_string().map(|v| v.borrow().clone());
-    let node_index = args.remove(0);
-    None
+    let node_index = args.remove(0).cast_int().ok_or(5)?;
+    let main_ctx = find_userdata::<MainContext>(scope, "*MAIN_CTX*").ok_or(6)?;
+    let update_node = main_ctx.create_node(node_index as usize, args).ok_or(7)?;
+    nodes_mut.push(update_node);
+    Ok(())
 }

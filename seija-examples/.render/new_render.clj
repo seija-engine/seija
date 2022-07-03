@@ -63,31 +63,14 @@
     (select-add-uniform  "Skin"   "SkinBuffer")
     (select-add-uniform  "Shadow" "ShadowBuffer")
 
-    (add-render-path "Deferred" {
-        :on-start (fn [env] 
-            (env-add-texture :depth env {})
-            (env-add-textures :gbufferTextures env [{} {} {} {}])
-        )
-        
-        :on-update (fn [env]
-            ;GBuffer
-            (draw-pass (fn [] env :gbufferTextures) (fn [] env :depth) {:pass "GBuffer"})
-            
-            (draw-light-pass (env :gbufferTextures))
-
-            (draw-pass (env :targetTexture) (env :depth) {:clear-depth false :pass "Foward"})
-        )
-    })
+    
+    (add-node globalEnv nil CAMERA_NODE "CameraBuffer")
 )
 
-(defn on-render-update [globalEnv]
-    (println " on-render-update")
-
-    (camera-update "CameraBuffer")
-    (transform-update "ObjectBuffer")
-    ;先实现功能吧，这里写法以后优化
-    ;(add-node nil   camera-update     "CameraBuffer")
-    ;(add-node nil   transform-update  "ObjectBuffer")
-    ;(add-node "PBR" pbr-camera-update "CameraBuffer")
-   
+(defn add-foward-path [globalEnv]
+    (add-render-path "Foward" {
+        :on-start (fn [env] 
+        
+        )
+    })
 )
