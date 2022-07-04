@@ -71,6 +71,12 @@ pub type NodeCreatorFn = fn(ctx:&mut MainContext,Vec<Variable>) -> UpdateNodeBox
 #[derive(Default)]
 pub struct NodeCreatorSet(pub HashMap<String,NodeCreatorFn>);
 
+impl NodeCreatorSet {
+    pub fn add<T>(&mut self,name:&str) where T:Default + IUpdateNode + 'static {
+        self.0.insert(name.to_string(), |_,args| UpdateNodeBox::create::<T>(&args) );
+    }
+}
+
 #[derive(Default)]
 pub struct NodeCreatorContext {
    pub creators:Vec<NodeCreatorFn>
@@ -81,6 +87,4 @@ impl NodeCreatorContext {
         self.creators.push(f);
         self.creators.len() - 1
     }
-
-   
 }

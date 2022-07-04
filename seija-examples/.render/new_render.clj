@@ -64,7 +64,9 @@
     (select-add-uniform  "Shadow" "ShadowBuffer")
 
     
-    (add-node globalEnv nil CAMERA_NODE "CameraBuffer")
+    (add-node globalEnv nil   CAMERA_NODE    "CameraBuffer")
+    (add-node globalEnv nil   TRANSFROM_NODE "ObjectBuffer")
+    ;(add-node globalEnv "PBR" TRANSFROM_NODE "LightBuffer")
 )
 
 (defn add-foward-path [globalEnv]

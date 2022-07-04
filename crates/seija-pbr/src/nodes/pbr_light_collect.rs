@@ -20,7 +20,6 @@ impl PBRLightCollect {
 
 fn set_pbr_light(backend:&PBRLightBackend,index:usize,light:&PBRLight,buffer:&mut UniformBuffer,t:&Transform) {
     let dir = t.global().rotation * (-Vec3::Z);
-    dbg!(&dir);
     backend.set_ambile_color(buffer, Vec3::ONE);
     backend.set_lights_position(buffer,index,t.global().position);
     backend.set_lights_type(buffer, index, light.get_type().type_id() as i32);

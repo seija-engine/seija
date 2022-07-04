@@ -1,8 +1,8 @@
 use lite_clojure_eval::{EvalRT, Variable};
 use seija_asset::Assets;
-use crate::{UniformInfoSet, RenderContext, resource::Texture, NodeCreatorFn};
+use crate::{UniformInfoSet, RenderContext, resource::Texture};
 
-use super::{builtin::*, main::{MainContext}, node::{IUpdateNode, UpdateNodeBox}, nodes::{TransfromNode, CameraNode}};
+use super::{builtin::*, main::{MainContext}};
 
 pub struct ScriptContext {
    pub rt:EvalRT

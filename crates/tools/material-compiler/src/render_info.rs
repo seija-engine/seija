@@ -1,23 +1,23 @@
 use std::{sync::Arc, collections::HashMap};
-use seija_render::{UniformInfo, RenderScriptContext, UniformInfoSet, RenderGraphContext};
+use seija_render::{UniformInfo, ScriptContext, UniformInfoSet};
 
 pub struct RenderInfo {
     ubos:Vec<Arc<UniformInfo>>,
     pub backend2ubo:HashMap<String,Arc<UniformInfo>>,
-    pub rsc:RenderScriptContext
+    pub rsc:ScriptContext
 }
 
 impl RenderInfo {
     pub fn new() -> Self {
-        RenderInfo { ubos:vec![],backend2ubo:HashMap::default(),rsc:RenderScriptContext::new() }
+        RenderInfo { ubos:vec![],backend2ubo:HashMap::default(),rsc:ScriptContext::new() }
     }
 
     pub fn run(&mut self,path:&str) {
        match std::fs::read_to_string(path) {
           Ok(code) => {
               let mut info_set:UniformInfoSet = UniformInfoSet::default();
-              let mut graph_ctx = RenderGraphContext::default();
-              self.rsc.run(code.as_str(), &mut info_set, &mut graph_ctx,false);
+              self.rsc.init(code.as_str());
+              self.rsc.exec_declare_uniform(&mut info_set);
               for (_,ubo_info) in info_set.components.drain() {
                   self.add_ubo_info(ubo_info);
               }

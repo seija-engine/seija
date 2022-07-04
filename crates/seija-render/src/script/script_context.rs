@@ -134,29 +134,3 @@ fn link_node(rt:&mut ExecScope,args:Vec<Variable>) -> Variable {
         None
     })(rt,args).unwrap_or(Variable::Nil)
 }
-
-
-#[test]
-fn test_fn() {
-    env_logger::init();
-    let mut ctx = RenderScriptContext::new();
-    let mut info_set = UniformInfoSet::default();
-    let buildin = crate::builtin_node_creators();
-    ctx.add_node_creator_set(&buildin);
-    ctx.run(r#"
-    (def-ubo {
-        :type :PerCamera
-        :name "CameraBuffer"
-        :backends ["Camera3D"]
-        :props [
-            {:name "projView" :type "mat4"  }
-            {:name "view"     :type "mat4"  }
-            {:name "proj"     :type "mat4"  }
-            {:name "pos"      :type "float4"}
-        ]
-    })
-    (def camera-node  (node CAMERA {:ubo "CameraBuffer"}))
-    (def camera-node2 (node CAMERA {:ubo "CameraBuffer"}))
-    (link-> camera-node camera-node2 {0 1})
-    "#,&mut info_set,&mut RenderGraphContext::default(),true);
-}
