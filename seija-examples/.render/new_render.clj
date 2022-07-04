@@ -75,8 +75,8 @@
 (defn add-foward-path [globalEnv]
     (add-render-path "Foward" {
         :on-start (fn [env] 
-            (println "fowwwwwwwwwwwwwward")
-            (add-node env nil   CAMERA_NODE    "CameraBuffer")
+            (add-node env nil   CAMERA_NODE "CameraBuffer")
+            (println "success")
         )
     })
 )

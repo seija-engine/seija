@@ -50,7 +50,6 @@ impl ScriptContext {
         ctx:&mut RenderContext,
         textures:&mut Assets<Texture>,
         main_ctx:&mut MainContext)  {
-            log::error!("exec_render_start");
         self.set_userdata("*TEXTURES*", textures);
         self.set_userdata("*RENDER_CTX*", ctx);
         self.set_userdata("*MAIN_CTX*", main_ctx);
@@ -60,7 +59,7 @@ impl ScriptContext {
         }
     }
 
-    fn set_userdata<T>(&mut self,name:&str,value:&mut T) {
+    pub fn set_userdata<T>(&mut self,name:&str,value:&mut T) {
         let value_ptr = value as *mut T as *mut u8;
         self.rt.main_context().set_var(name,Variable::UserData(value_ptr) );
     }

@@ -27,7 +27,6 @@ impl RenderPath {
    }
 
    pub fn start(&mut self,vm:&mut EvalRT) {
-      log::error!("start???");
       let nodes_mut = &mut self.nodes;
       let node_ptr = nodes_mut as *mut Vec<UpdateNodeBox> as *mut u8;
       self.env.borrow_mut().insert(Variable::Keyword(GcRefCell::new(":nodes".to_string())), 
@@ -52,7 +51,7 @@ impl RenderPathList {
       }
    }
 
-   fn add_render_path(&mut self,path:&String,sc:&mut ScriptContext) {
+   pub fn add_render_path(&mut self,path:&String,sc:&mut ScriptContext) {
       if let Some(def) = self.path_dic.get(path) {
          let mut render_path = RenderPath::from_def(def.clone());
          self.list.push(render_path);

@@ -21,8 +21,9 @@ pub fn create_builtin_node_set() -> NodeCreatorSet {
 
 
 pub fn find_userdata<T>(scope:&mut ExecScope,name:&str) -> Option<&'static mut T> {
-    let textures = scope.context.find_local_symbol(name)?;
+    let textures = scope.context.find_symbol(None, name, &scope.modules)?;
     let ptr = textures.cast_userdata()?;
+    
     let value_ptr = unsafe { &mut *(ptr as *mut T) };
     Some(value_ptr)
 }

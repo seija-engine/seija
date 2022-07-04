@@ -1,12 +1,13 @@
 use std::collections::HashMap;
-
-use bevy_ecs::prelude::World;
+use bevy_ecs::prelude::{World, Entity, Added, With};
 use lite_clojure_eval::{Variable, GcRefCell};
 use seija_app::App;
 use seija_asset::Assets;
 use seija_core::AddCore;
+use seija_transform::Transform;
+use crate::{camera::camera::Camera};
 use crate::{UniformInfoSet, resource::Texture, RenderContext, RenderScriptPlugin};
-use super::{ScriptContext, rt_tags::{RuntimeTags, TagEvent}, render_path::{RenderPathDef, RenderPathList}, node::*, builtin::create_builtin_node_set};
+use super::{ScriptContext, rt_tags::{RuntimeTags, TagEvent}, render_path::{RenderPathList}, node::*, builtin::create_builtin_node_set};
 
 //这里通过逻辑保证RenderMain只在一个线程运行，ECS库的System必须要这俩个trait
 unsafe impl Send for RenderMain {}
@@ -79,9 +80,24 @@ impl RenderMain {
     
 
     pub fn update(&mut self,ctx:&mut RenderContext,world:&mut World) {
-        
+       self.update_camera(world,ctx);
        self.main_ctx.update(ctx, world,&mut self.script_ctx);
        
+    }
+
+    pub fn update_camera(&mut self,world:&mut World,ctx:&mut RenderContext) {
+        let mut added_cameras = world.query_filtered::<(Entity,&Camera),(Added<Camera>,With<Transform>)>();
+        if added_cameras.iter(world).count() > 0 {
+            self.script_ctx.set_userdata("*MAIN_CTX*", &mut self.main_ctx);
+            let mut textures = world.get_resource_mut::<Assets<Texture>>().unwrap();
+            let textures_mut:&mut Assets<Texture> = &mut textures;
+            self.script_ctx.set_userdata("*TEXTURES*", textures_mut);
+            self.script_ctx.set_userdata("*RENDER_CTX*", ctx);
+        }
+        for (_,add_camera) in added_cameras.iter(world) {
+            
+            self.main_ctx.path_list.add_render_path(&add_camera.path, &mut self.script_ctx);   
+        }
     }
 
 
@@ -100,7 +116,6 @@ pub struct MainContext {
 
 impl MainContext {
     pub fn update(&mut self,ctx:&mut RenderContext,world:&mut World,sc:&mut ScriptContext) {
-        self.path_list.update_camera(world,sc);
         self.rt_tags.update(world);
         if self.rt_tags.dirtys.len() > 0 {
             self.update_dirty_tag(ctx);
@@ -113,6 +128,8 @@ impl MainContext {
             node.update(world, ctx);
         }
     }
+
+    
 
     pub fn create_node(&mut self,index:usize,params:Vec<Variable>) -> Option<UpdateNodeBox> {
         let f = self.creators.creators.get(index)?;
