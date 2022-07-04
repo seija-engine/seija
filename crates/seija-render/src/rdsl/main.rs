@@ -5,8 +5,8 @@ use lite_clojure_eval::{Variable, GcRefCell};
 use seija_app::App;
 use seija_asset::Assets;
 use seija_core::AddCore;
-use crate::{UniformInfoSet, resource::Texture, RenderContext};
-use super::{ScriptContext, rt_tags::{RuntimeTags, TagEvent}, render_path::RenderPathDef, node::{UpdateNodeBox, NodeCreatorContext, NodeCreatorSet}, builtin::create_builtin_node_set};
+use crate::{UniformInfoSet, resource::Texture, RenderContext, RenderScriptPlugin};
+use super::{ScriptContext, rt_tags::{RuntimeTags, TagEvent}, render_path::{RenderPathDef, RenderPathList}, node::*, builtin::create_builtin_node_set};
 
 //这里通过逻辑保证RenderMain只在一个线程运行，ECS库的System必须要这俩个trait
 unsafe impl Send for RenderMain {}
@@ -30,7 +30,7 @@ impl RenderMain {
             main_ctx:MainContext { 
                 rt_tags: RuntimeTags::new(),
                  dyn_uniform_set: vec![],
-                 path_dic:HashMap::default(),
+                 path_list:RenderPathList::default(),
                  global_env:GcRefCell::new(HashMap::default()),
                  global_nodes:vec![],
                  creators:Default::default()
@@ -48,12 +48,16 @@ impl RenderMain {
         self.main_ctx.global_env.borrow_mut().insert(Variable::Keyword(GcRefCell::new(":nodes".to_string())), 
                                                      Variable::UserData(global_node_ptr));
 
-        self.add_node_creator(create_builtin_node_set());
+        self.add_node_creator(&create_builtin_node_set());
         self.script_ctx.init(code_string);
         self.script_ctx.exec_declare_uniform(info_set);
     }
 
-    pub fn add_node_creator(&mut self,set:NodeCreatorSet) {
+    pub fn add_render_plugin(&mut self,plugin:&RenderScriptPlugin) {
+        self.add_node_creator(&plugin.node_creators);
+    }
+
+    pub fn add_node_creator(&mut self,set:&NodeCreatorSet) {
         for (k,f) in set.0.iter() {
             let index = self.main_ctx.creators.add(*f) as i64;
             self.script_ctx.rt.global_context().push_var(k.as_str(), Variable::Int(index));
@@ -75,7 +79,8 @@ impl RenderMain {
     
 
     pub fn update(&mut self,ctx:&mut RenderContext,world:&mut World) {
-       self.main_ctx.update(ctx, world);
+        
+       self.main_ctx.update(ctx, world,&mut self.script_ctx);
        
     }
 
@@ -85,15 +90,17 @@ impl RenderMain {
 pub struct MainContext {
     pub rt_tags:RuntimeTags,
     pub dyn_uniform_set:Vec<DynUniformItem>,
-    pub path_dic:HashMap<String,RenderPathDef>,
     pub global_env:GcRefCell<HashMap<Variable,Variable>>,
     pub global_nodes:Vec<UpdateNodeBox>,
 
-    creators:NodeCreatorContext
+    pub path_list:RenderPathList,
+
+    creators:NodeCreatorContext,
 }
 
 impl MainContext {
-    pub fn update(&mut self,ctx:&mut RenderContext,world:&mut World) {
+    pub fn update(&mut self,ctx:&mut RenderContext,world:&mut World,sc:&mut ScriptContext) {
+        self.path_list.update_camera(world,sc);
         self.rt_tags.update(world);
         if self.rt_tags.dirtys.len() > 0 {
             self.update_dirty_tag(ctx);
@@ -123,6 +130,9 @@ impl MainContext {
                 }
                 info.enable = !info.enable;
             }
+        }
+        for node in self.global_nodes.iter_mut() {
+            node.update_enable(&self.rt_tags);
         }
         self.rt_tags.dirtys.clear();
     }

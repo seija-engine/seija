@@ -123,15 +123,13 @@ pub fn _add_render_path(scope:&mut ExecScope,args:Vec<Variable>) -> Option<()> {
     let name = args[0].cast_string()?.borrow().clone();
     let map = args[1].cast_map()?;
     let start_key = Variable::Keyword(GcRefCell::new(String::from(":on-start")  ));
-    let update_key = Variable::Keyword(GcRefCell::new(String::from(":on-update")  ));
     let start_fn = map.borrow().get(&start_key)?.clone();
-    let update_fn = map.borrow().get(&update_key)?.clone();
     let render_path = RenderPathDef {
         name,
         start_fn,
-        update_fn
     };
-    main_ctx.path_dic.insert(render_path.name.clone(), render_path);
+    main_ctx.path_list.path_dic.insert(render_path.name.clone(), Arc::new(render_path));
+    
     Some(())
 }
 
@@ -145,11 +143,21 @@ pub fn _add_node(scope:&mut ExecScope,mut args:Vec<Variable>) -> Result<(),i32> 
     let env_map = args.remove(0).cast_map().ok_or (1)?;
     let nodes_key = Variable::Keyword(GcRefCell::new(String::from(":nodes")));
     let nodes_ptr = env_map.borrow().get(&nodes_key).ok_or(2)?.cast_userdata().ok_or(3)?;
+   
     let nodes_mut = unsafe { &mut *(nodes_ptr as *mut Vec<UpdateNodeBox>) };
+   
     let tag_name = args.remove(0).cast_string().map(|v| v.borrow().clone());
     let node_index = args.remove(0).cast_int().ok_or(5)?;
     let main_ctx = find_userdata::<MainContext>(scope, "*MAIN_CTX*").ok_or(6)?;
-    let update_node = main_ctx.create_node(node_index as usize, args).ok_or(7)?;
+    let mut update_node = main_ctx.create_node(node_index as usize, args).ok_or(7)?;
+    if let Some(tag_name) = tag_name.as_ref() {
+        if let Some(tag_index) = main_ctx.rt_tags.name_id(tag_name.as_str()) {
+            update_node.tag_index = Some(tag_index);
+            update_node.enable = main_ctx.rt_tags.tags[tag_index];
+        } else {
+            log::error!("not found tag:{}",tag_name.as_str());
+        }
+    }
     nodes_mut.push(update_node);
     Ok(())
 }

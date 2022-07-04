@@ -1,19 +1,22 @@
 use bevy_ecs::prelude::Entity;
 use glam::Mat4;
 
-use super::view_list::{ViewList, ViewEntity};
+use super::view_list::{ViewList};
 pub struct Camera {
     pub projection:Projection,
     pub view_list:ViewList,
+    pub order:i32,
+    pub path:String
  }
  
+
  impl Camera {
      pub fn from_2d(ortho:Orthographic) -> Camera {
-         Camera { projection:Projection::Ortho(ortho),view_list:ViewList::default() }
+         Camera { projection:Projection::Ortho(ortho),view_list:ViewList::default(),path:String::from("Foward"),order:0 }
      }
 
      pub fn from_3d(perspective:Perspective) -> Camera {
-        Camera { projection:Projection::Perspective(perspective),view_list:ViewList::default() }
+        Camera { projection:Projection::Perspective(perspective),view_list:ViewList::default(),path:String::from("Foward"),order:0 }
      }
 
      pub fn iter(&self) -> impl Iterator<Item = &Entity> {

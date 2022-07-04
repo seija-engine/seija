@@ -100,7 +100,9 @@ impl RenderModule {
     }
 
     fn init_render(&self,w:&mut World,mut ctx:RenderContext,app_render:&mut AppRender,config:&RenderConfig) {
-       
+        for plugin in self.0.plugins.iter() {
+            app_render.main.add_render_plugin(plugin);
+        }
         w.insert_resource(PipelineCache::default());
         ctx.ubo_ctx.init(&mut ctx.resources);
         let script_path = self.0.config_path.join("new_render.clj");

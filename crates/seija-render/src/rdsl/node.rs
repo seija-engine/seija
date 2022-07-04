@@ -1,11 +1,11 @@
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
 use bevy_ecs::prelude::World;
 use lite_clojure_eval::{Variable, EvalRT};
 
 use crate::RenderContext;
 
-use super::main::MainContext;
+use super::{main::MainContext, rt_tags::RuntimeTags};
 
 pub trait IUpdateNode {
     fn update_params(&mut self,params:Vec<Variable>);
@@ -18,6 +18,8 @@ pub trait IUpdateNode {
 }
 
 pub struct UpdateNodeBox {
+    pub tag_index:Option<usize>,
+    pub enable:bool,
     pub params:Vec<Variable>,
     pub node:Box<dyn IUpdateNode>
 }
@@ -25,7 +27,7 @@ pub struct UpdateNodeBox {
 impl UpdateNodeBox {
     pub fn create<T>(params:&Vec<Variable>) -> UpdateNodeBox where T:Default + IUpdateNode + 'static {
         let node:T = Default::default();
-        UpdateNodeBox { params:params.clone(), node:Box::new(node) }
+        UpdateNodeBox { tag_index:None,enable:true, params:params.clone(), node:Box::new(node) }
     }
 
     pub fn set_params(&mut self,rt:&mut EvalRT,is_first:bool) {
@@ -56,14 +58,24 @@ impl UpdateNodeBox {
     pub fn init(&mut self,world:&mut World,ctx:&mut RenderContext) {
         self.node.init(world, ctx);
     }
+    
+    pub fn update_enable(&mut self,rt_tags:&RuntimeTags) {
+        if let Some(tag_index) = self.tag_index {
+            if rt_tags.dirtys.contains(&tag_index) && rt_tags.tags[tag_index] != self.enable { 
+                self.enable = !self.enable;
+            }
+        }
+    }
 
     pub fn prepare(&mut self,world:&mut World,ctx:&mut RenderContext) {
         self.node.prepare(world, ctx);
     }
 
     pub fn update(&mut self,world:&mut World,ctx:&mut RenderContext) {
-        self.node.update(world, ctx);
-    }  
+        if self.enable {
+            self.node.update(world, ctx);
+        }
+    }
 }
 
 pub type NodeCreatorFn = fn(ctx:&mut MainContext,Vec<Variable>) -> UpdateNodeBox;

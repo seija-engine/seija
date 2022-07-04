@@ -1,22 +1,19 @@
 use bevy_ecs::prelude::World;
 use glam::Vec3;
-use seija_render::{graph::{INode, nodes::UBOArrayCollect}, RenderContext, resource::RenderResourceId, UniformBuffer};
+use lite_clojure_eval::Variable;
+use seija_render::{IUpdateNode, RenderContext, graph::nodes::UBOArrayCollect, UniformBuffer};
 use seija_transform::Transform;
 
 use crate::lights::{PBRLight, PBRLightType};
 
 use super::pbr_light_backend::PBRLightBackend;
 
-pub struct PBRLightCollect {
-    array_collect:UBOArrayCollect<PBRLightBackend,PBRLight> 
+#[derive(Default)]
+pub struct PBRLightNode {
+    pub ubo_name:String,
+    array_collect:Option<UBOArrayCollect<PBRLightBackend,PBRLight>> 
 }
 
-impl PBRLightCollect {
-    pub fn new(ubo_name:String) -> Self {
-        let array_collect = UBOArrayCollect::new(ubo_name, 64);
-        PBRLightCollect { array_collect }
-    }
-}
 
 fn set_pbr_light(backend:&PBRLightBackend,index:usize,light:&PBRLight,buffer:&mut UniformBuffer,t:&Transform) {
     let dir = t.global().rotation * (-Vec3::Z);
@@ -40,12 +37,21 @@ fn set_pbr_light(backend:&PBRLightBackend,index:usize,light:&PBRLight,buffer:&mu
     }
 }
 
-impl INode for PBRLightCollect {
-    fn init(&mut self, _world: &mut World, ctx:&mut RenderContext) {
-        self.array_collect.init(ctx);
+impl IUpdateNode for PBRLightNode {
+    fn update_params(&mut self,params:Vec<Variable>) {
+        if let Some(string) = params.get(0).and_then(Variable::cast_string) {
+            self.ubo_name = string.borrow().clone();
+        }
     }
 
-    fn update(&mut self,world: &mut World,ctx:&mut RenderContext,_:&Vec<Option<RenderResourceId>>,_:&mut Vec<Option<RenderResourceId>>) {
-        self.array_collect.update(world, ctx, set_pbr_light);
+    fn init(&mut self,_:&mut World,_:&mut RenderContext) {
+        let array_collect = UBOArrayCollect::new(self.ubo_name.clone(), 64);
+        self.array_collect = Some(array_collect)
+    }
+
+    fn update(&mut self,world:&mut World,ctx:&mut RenderContext) {
+        if let Some(array_collect) = self.array_collect.as_mut() {
+            array_collect.update(world, ctx, set_pbr_light);
+        }
     }
 }

@@ -50,6 +50,7 @@ impl ScriptContext {
         ctx:&mut RenderContext,
         textures:&mut Assets<Texture>,
         main_ctx:&mut MainContext)  {
+            log::error!("exec_render_start");
         self.set_userdata("*TEXTURES*", textures);
         self.set_userdata("*RENDER_CTX*", ctx);
         self.set_userdata("*MAIN_CTX*", main_ctx);

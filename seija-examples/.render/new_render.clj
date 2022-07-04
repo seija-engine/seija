@@ -66,13 +66,17 @@
     
     (add-node globalEnv nil   CAMERA_NODE    "CameraBuffer")
     (add-node globalEnv nil   TRANSFROM_NODE "ObjectBuffer")
-    ;(add-node globalEnv "PBR" TRANSFROM_NODE "LightBuffer")
+    (add-node globalEnv "PBR" PBR_CAMERA_EX  "CameraBuffer")
+    (add-node globalEnv "PBR" PBRLIGHT       "LightBuffer")
+
+    (add-foward-path globalEnv)
 )
 
 (defn add-foward-path [globalEnv]
     (add-render-path "Foward" {
         :on-start (fn [env] 
-        
+            (println "fowwwwwwwwwwwwwward")
+            (add-node env nil   CAMERA_NODE    "CameraBuffer")
         )
     })
 )
