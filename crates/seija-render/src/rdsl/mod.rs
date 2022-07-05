@@ -5,6 +5,7 @@ mod rt_tags;
 mod script_context;
 mod render_path;
 mod node;
+mod atom;
 pub mod nodes;
 pub use script_context::{ScriptContext};
 pub use main::{RenderMain};

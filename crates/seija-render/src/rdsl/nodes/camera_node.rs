@@ -18,7 +18,7 @@ impl IUpdateNode for CameraNode {
         }
     }
 
-    fn init(&mut self,_:&mut World,ctx:&mut crate::RenderContext) {
+    fn init(&mut self,_:& World,ctx:&mut crate::RenderContext) {
         if let Some(info) = ctx.ubo_ctx.info.get_info(&self.ubo_name) {
             match Camera3DBackend::from_def(&info.props) {
                 Ok(backend) => {

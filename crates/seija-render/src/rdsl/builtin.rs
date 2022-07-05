@@ -1,20 +1,27 @@
 use std::sync::Arc;
 use std::convert::{TryFrom};
+
 use lite_clojure_eval::{ExecScope, Variable, GcRefCell};
+use seija_asset::Assets;
 use serde_json::Value;
+use crate::material::STextureDescriptor;
 use crate::rdsl::main::DynUniformItem;
 use crate::rdsl::nodes::CameraNode;
+use crate::resource::{Texture, TextureDescInfo, RenderResourceId};
 use crate::{UniformInfoSet, UniformInfo, RenderContext};
 
+use super::atom::Atom;
 use super::main::MainContext;
 use super::node::{NodeCreatorSet, UpdateNodeBox};
-use super::nodes::TransfromNode;
+use super::nodes::{TransfromNode, WindowReSizeNode};
 use super::render_path::RenderPathDef;
+
 
 pub fn create_builtin_node_set() -> NodeCreatorSet {
     let mut node_set = NodeCreatorSet::default();
     node_set.0.insert("CAMERA_NODE".into(), |_,params| UpdateNodeBox::create::<CameraNode>(&params));
     node_set.0.insert("TRANSFROM_NODE".into(), |_,params| UpdateNodeBox::create::<TransfromNode>(&params));
+    node_set.0.insert("WINSIZE_TEXTURE".into(), |_,params| UpdateNodeBox::create::<WindowReSizeNode>(&params));
     node_set
 }
 
@@ -161,4 +168,28 @@ pub fn _add_node(scope:&mut ExecScope,mut args:Vec<Variable>) -> Result<(),i32> 
     }
     nodes_mut.push(update_node);
     Ok(())
+}
+
+pub fn atom_texture(scope:&mut ExecScope,args:Vec<Variable>) -> Variable {
+    match _atom_texture(scope, args) {
+        Ok(var) => var,
+        Err(err) => {
+            log::error!("atom texture error:{:?}",err);
+            Variable::Nil
+        }
+    }
+}
+
+pub fn _atom_texture(scope:&mut ExecScope, args:Vec<Variable>) -> Result<Variable,i32> {
+    let value:Value = args.get(0).ok_or(0)?.clone().into();
+    let texture_desc = STextureDescriptor::try_from(&value).map_err(|_|1)?;
+    let mut desc_info = TextureDescInfo::default();
+    desc_info.desc = texture_desc.0;
+    let textures_mut:&mut Assets<Texture> = find_userdata(scope, "*TEXTURES*").ok_or(2)?;
+    let texture = Texture::create_by_desc(desc_info);
+    let h_texture = textures_mut.add(texture);
+    let atom_texture = Box::new(Atom::new(RenderResourceId::Texture(h_texture)));
+    let atom_ptr = Box::into_raw(atom_texture) as *mut u8;
+    log::error!("init {:?}",atom_ptr);
+    Ok(Variable::UserData( atom_ptr))
 }

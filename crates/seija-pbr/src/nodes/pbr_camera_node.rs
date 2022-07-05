@@ -18,7 +18,7 @@ impl IUpdateNode for PBRCameraNode {
         }
     }
 
-    fn init(&mut self,_:&mut World,ctx:&mut RenderContext) {
+    fn init(&mut self,_:& World,ctx:&mut RenderContext) {
         self.name_index = ctx.ubo_ctx.get_index(self.ubo_name.as_str());
         if let Some(info) = ctx.ubo_ctx.info.get_info(&self.ubo_name) {
             if let Some(idx) = info.props.get_offset("exposure", 0) {

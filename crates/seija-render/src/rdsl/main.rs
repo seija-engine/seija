@@ -96,7 +96,7 @@ impl RenderMain {
         }
         for (_,add_camera) in added_cameras.iter(world) {
             
-            self.main_ctx.path_list.add_render_path(&add_camera.path, &mut self.script_ctx);   
+            self.main_ctx.path_list.add_render_path(&add_camera.path, &mut self.script_ctx,add_camera,world,ctx);   
         }
     }
 
@@ -127,6 +127,8 @@ impl MainContext {
         for node in self.global_nodes.iter_mut() {
             node.update(world, ctx);
         }
+
+        self.path_list.update(world, ctx);
     }
 
     

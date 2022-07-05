@@ -1,22 +1,41 @@
 use bevy_ecs::prelude::Entity;
 use glam::Mat4;
+use seija_asset::Handle;
+
+use crate::resource::Texture;
 
 use super::view_list::{ViewList};
 pub struct Camera {
     pub projection:Projection,
     pub view_list:ViewList,
     pub order:i32,
-    pub path:String
+    pub path:String,
+    pub target:Option<Handle<Texture>>
  }
  
+ impl Default for Camera {
+    fn default() -> Self {
+       Self { 
+          projection:Projection::Perspective(Perspective::default()),
+          view_list:ViewList::default(),
+          path:String::from("Foward"),
+          order:0,
+          target:None 
+       }
+    }
+}
 
  impl Camera {
      pub fn from_2d(ortho:Orthographic) -> Camera {
-         Camera { projection:Projection::Ortho(ortho),view_list:ViewList::default(),path:String::from("Foward"),order:0 }
+         let mut camera = Camera::default();
+         camera.projection = Projection::Ortho(ortho);
+         camera
      }
 
      pub fn from_3d(perspective:Perspective) -> Camera {
-        Camera { projection:Projection::Perspective(perspective),view_list:ViewList::default(),path:String::from("Foward"),order:0 }
+        let mut camera = Camera::default();
+        camera.projection = Projection::Perspective(perspective);
+        camera
      }
 
      pub fn iter(&self) -> impl Iterator<Item = &Entity> {

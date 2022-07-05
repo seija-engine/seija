@@ -75,8 +75,10 @@
 (defn add-foward-path [globalEnv]
     (add-render-path "Foward" {
         :on-start (fn [env] 
-            (add-node env nil   CAMERA_NODE "CameraBuffer")
-            (println "success")
+            (assoc! env :depth (atom-texture {:format "Depth32Float"}))
+            
+            (add-node env nil WINSIZE_TEXTURE (env :depth))
+            (println "add foward success")
         )
     })
 )

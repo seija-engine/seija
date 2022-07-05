@@ -18,7 +18,7 @@ impl IUpdateNode for TransfromNode {
         }
     }
 
-    fn init(&mut self,_:&mut World,ctx:&mut RenderContext) {
+    fn init(&mut self,_:& World,ctx:&mut RenderContext) {
         if let Some(info) = ctx.ubo_ctx.info.get_info(&self.ubo_name) {
             match TransformBackend::from_def(&info.props) {
                 Ok(backend) => {

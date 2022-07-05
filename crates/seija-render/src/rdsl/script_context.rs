@@ -28,6 +28,7 @@ impl ScriptContext {
         self.rt.global_context().push_native_fn("add-tag", add_tag);
         self.rt.global_context().push_native_fn("add-render-path", add_render_path);
         self.rt.global_context().push_native_fn("add-node", add_node);
+        self.rt.global_context().push_native_fn("atom-texture", atom_texture);
         
         
         self.rt.global_context().push_var("SS_VERTEX", wgpu::ShaderStage::VERTEX.bits() as i64 );
