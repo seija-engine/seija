@@ -56,7 +56,7 @@ impl Texture {
         Ok(Texture {texture,desc })
     }
 }
-#[derive(Debug)]
+#[derive(Debug,Clone)]
 pub struct TextureDescInfo {
    pub desc:wgpu::TextureDescriptor<'static>,
    pub view_desc:wgpu::TextureViewDescriptor<'static>,

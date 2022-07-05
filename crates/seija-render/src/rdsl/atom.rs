@@ -13,7 +13,7 @@ impl<T> Atom<T> {
         self.last_set += 1
     }
 
-    pub fn inner_ref(&self) -> &T { &self.inner }
+    pub fn inner(&self) -> &T { &self.inner }
 
     pub fn version(&self) -> u64 { self.last_set }
 }

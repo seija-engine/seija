@@ -7,6 +7,7 @@ mod render_path;
 mod node;
 mod atom;
 pub mod nodes;
+mod win_event;
 pub use script_context::{ScriptContext};
 pub use main::{RenderMain};
 

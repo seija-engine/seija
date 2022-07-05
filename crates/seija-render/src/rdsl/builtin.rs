@@ -13,7 +13,7 @@ use crate::{UniformInfoSet, UniformInfo, RenderContext};
 use super::atom::Atom;
 use super::main::MainContext;
 use super::node::{NodeCreatorSet, UpdateNodeBox};
-use super::nodes::{TransfromNode, WindowReSizeNode};
+use super::nodes::{TransfromNode, WindowReSizeNode, DrawPassNode};
 use super::render_path::RenderPathDef;
 
 
@@ -22,9 +22,9 @@ pub fn create_builtin_node_set() -> NodeCreatorSet {
     node_set.0.insert("CAMERA_NODE".into(), |_,params| UpdateNodeBox::create::<CameraNode>(&params));
     node_set.0.insert("TRANSFROM_NODE".into(), |_,params| UpdateNodeBox::create::<TransfromNode>(&params));
     node_set.0.insert("WINSIZE_TEXTURE".into(), |_,params| UpdateNodeBox::create::<WindowReSizeNode>(&params));
+    node_set.0.insert("DRAW_PASS".into(), |_,params| UpdateNodeBox::create::<DrawPassNode>(&params));
     node_set
 }
-
 
 
 pub fn find_userdata<T>(scope:&mut ExecScope,name:&str) -> Option<&'static mut T> {

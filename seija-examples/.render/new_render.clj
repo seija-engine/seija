@@ -77,7 +77,9 @@
         :on-start (fn [env] 
             (assoc! env :depth (atom-texture {:format "Depth32Float" :width WINDOW_WIDTH :height WINDOW_HEIGHT}))
             
-            (add-node env nil WINSIZE_TEXTURE (env :depth))
+            (add-node env nil WINSIZE_TEXTURE [(env :depth)])
+
+            (add-node env nil DRAW_PASS [] (env :depth))
             (println "add foward success")
         )
     })
