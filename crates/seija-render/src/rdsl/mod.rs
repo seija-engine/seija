@@ -8,9 +8,10 @@ mod node;
 mod atom;
 pub mod nodes;
 mod win_event;
+mod ubo_array_collect;
 pub use script_context::{ScriptContext};
 pub use main::{RenderMain};
-
+pub use ubo_array_collect::{UBOArrayCollect};
 pub use node::{NodeCreatorSet,NodeCreatorFn,IUpdateNode,UpdateNodeBox};
 
 pub struct RenderScriptPlugin {

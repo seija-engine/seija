@@ -5,27 +5,9 @@ use seija_core::window::AppWindow;
 use seija_winit::event::{WindowCreated, WindowResized};
 use std::{borrow::Cow, sync::Arc};
 use wgpu::{CommandEncoderDescriptor, Device, Instance, Queue};
-use crate::graph::{LinearGraphIter, RenderGraph};
 use crate::rdsl::RenderMain;
 use crate::render_context::RenderContext;
 use crate::resource::{self, Mesh, RenderResources, Texture};
-
-#[derive(Default)]
-pub struct RenderGraphContext {
-    pub graph: RenderGraph,
-    pub graph_iter: LinearGraphIter
-}
-
-
-impl RenderGraphContext {
-    pub fn build(&mut self) {
-        self.graph.build_iter();
-        self.graph_iter = LinearGraphIter::from_graph(&self.graph);
-    }
-}
-
-
-
 pub struct AppRender {
     pub instance: wgpu::Instance,
     pub device: Arc<wgpu::Device>,

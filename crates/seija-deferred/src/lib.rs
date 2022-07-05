@@ -1,5 +1,5 @@
 mod render_plugin;
-mod deferred_light_pass;
+//mod deferred_light_pass;
 use anyhow::{Result,anyhow};
 use bevy_ecs::prelude::{World, Entity};
 pub use render_plugin::{create_deferred_plugin};

@@ -1,7 +1,7 @@
 use bevy_ecs::prelude::World;
 use glam::Vec3;
 use lite_clojure_eval::Variable;
-use seija_render::{IUpdateNode, RenderContext, graph::nodes::UBOArrayCollect, UniformBuffer};
+use seija_render::{IUpdateNode, RenderContext, UniformBuffer, UBOArrayCollect};
 use seija_transform::Transform;
 
 use crate::lights::{PBRLight, PBRLightType};
