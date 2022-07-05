@@ -10,7 +10,7 @@ use super::{main::MainContext, rt_tags::RuntimeTags};
 pub trait IUpdateNode {
     fn update_params(&mut self,params:Vec<Variable>);
 
-    fn init(&mut self,world:&World,ctx:&mut RenderContext);
+    fn init(&mut self,world:&World,ctx:&mut RenderContext) {}
 
     fn prepare(&mut self,world:&mut World,ctx:&mut RenderContext) {}
 

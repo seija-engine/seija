@@ -190,6 +190,5 @@ pub fn _atom_texture(scope:&mut ExecScope, args:Vec<Variable>) -> Result<Variabl
     let h_texture = textures_mut.add(texture);
     let atom_texture = Box::new(Atom::new(RenderResourceId::Texture(h_texture)));
     let atom_ptr = Box::into_raw(atom_texture) as *mut u8;
-    log::error!("init {:?}",atom_ptr);
     Ok(Variable::UserData( atom_ptr))
 }

@@ -66,6 +66,7 @@ impl RenderMain {
     }
 
     pub fn start(&mut self,world:&mut World,ctx:&mut RenderContext) {
+        self.script_ctx.set_global_const(world);
         let mut textures = world.get_resource_mut::<Assets<Texture>>().unwrap();
         let textures_mut:&mut Assets<Texture> = &mut textures;
 

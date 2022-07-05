@@ -17,15 +17,17 @@ impl IUpdateNode for WindowReSizeNode {
        }
     }
 
-    fn init(&mut self,world:& World,ctx:&mut RenderContext) {
-        
-    }
-
     fn update(&mut self,world:&mut World,ctx:&mut RenderContext) {
         if let Some(ptr) = self.texture_ptr {
             let mut_atom = unsafe { &mut *ptr };
             
            
         }
+    }
+}
+
+impl WindowReSizeNode {
+    pub fn _update(&self) {
+        
     }
 }

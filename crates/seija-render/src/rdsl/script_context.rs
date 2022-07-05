@@ -1,5 +1,7 @@
+use bevy_ecs::prelude::World;
 use lite_clojure_eval::{EvalRT, Variable};
 use seija_asset::Assets;
+use seija_core::window::AppWindow;
 use crate::{UniformInfoSet, RenderContext, resource::Texture};
 
 use super::{builtin::*, main::{MainContext}};
@@ -30,13 +32,11 @@ impl ScriptContext {
         self.rt.global_context().push_native_fn("add-node", add_node);
         self.rt.global_context().push_native_fn("atom-texture", atom_texture);
         
-        
         self.rt.global_context().push_var("SS_VERTEX", wgpu::ShaderStage::VERTEX.bits() as i64 );
         self.rt.global_context().push_var("SS_FRAGMENT", wgpu::ShaderStage::FRAGMENT.bits() as i64 );
         self.rt.global_context().push_var("SS_VERTEX_FRAGMENT", wgpu::ShaderStage::VERTEX_FRAGMENT.bits() as i64 );
         self.rt.global_context().push_var("SS_COMPUTE", wgpu::ShaderStage::COMPUTE.bits() as i64 );
         self.rt.global_context().push_var("SS_ALL", wgpu::ShaderStage::all().bits() as i64 );
-
     }
 
    
@@ -44,6 +44,13 @@ impl ScriptContext {
         let info_ptr = info_set as *mut UniformInfoSet as *mut u8;
         if let Err(err) = self.rt.invoke_func("declare-uniforms", vec![Variable::UserData(info_ptr)]) {
             log::error!("{:?}",err);
+        }
+    }
+
+    pub fn set_global_const(&mut self,world:&World) {
+        if let Some(window) = world.get_resource::<AppWindow>() {
+            self.rt.global_context().set_var("WINDOW_WIDTH", Variable::Int(window.width() as i64));
+            self.rt.global_context().set_var("WINDOW_HEIGHT", Variable::Int(window.height() as i64));
         }
     }
 

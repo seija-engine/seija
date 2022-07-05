@@ -240,6 +240,12 @@ impl TryFrom<&Value> for STextureDescriptor {
         if let Some(sample_count) = map_value.get(":sample-count").and_then(Value::as_i64) {
             default_value.sample_count = sample_count as u32;
         }
+        if let Some(w) = map_value.get(":width").and_then(Value::as_i64) {
+            default_value.size.width = w as u32;
+        }
+        if let Some(h) = map_value.get(":height").and_then(Value::as_i64) {
+            default_value.size.height = h as u32;
+        }
         Ok(STextureDescriptor(default_value))
     }
 }

@@ -75,7 +75,7 @@
 (defn add-foward-path [globalEnv]
     (add-render-path "Foward" {
         :on-start (fn [env] 
-            (assoc! env :depth (atom-texture {:format "Depth32Float"}))
+            (assoc! env :depth (atom-texture {:format "Depth32Float" :width WINDOW_WIDTH :height WINDOW_HEIGHT}))
             
             (add-node env nil WINSIZE_TEXTURE (env :depth))
             (println "add foward success")
