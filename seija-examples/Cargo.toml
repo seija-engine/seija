@@ -20,7 +20,7 @@ seija-deferred = {path = "../crates/seija-deferred"}
 seija-transform = {path = "../crates/seija-transform"}
 seija-skeleton3d = {path = "../crates/seija-skeleton3d"}
 lite-clojure-eval = {git = "https://github.com/seija-engine/lite-clojure.git"}
-bevy_ecs = "0.5.0"
+bevy_ecs = "0.7.0"
 glam = "0.20.3"
 env_logger = "*"
 log = "*"

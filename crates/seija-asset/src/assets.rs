@@ -2,7 +2,7 @@ use std::{collections::HashMap, fmt::Debug};
 
 use bevy_ecs::prelude::{Res, ResMut};
 use crossbeam_channel::{Sender, TryRecvError};
-use seija_core::event::{EventWriter, Events};
+use bevy_ecs::event::{EventWriter, Events};
 use crate::{asset::Asset, handle::{Handle, HandleId}, server::{AssetServer, LifecycleEvent, RefEvent}};
 
 pub enum AssetEvent<T: Asset> {

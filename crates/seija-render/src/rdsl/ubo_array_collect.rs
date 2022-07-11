@@ -1,6 +1,6 @@
 use std::marker::PhantomData;
 
-use bevy_ecs::prelude::{World, Entity, With, Changed, Or};
+use bevy_ecs::prelude::{World, Entity, With, Changed, Or, Component};
 use fixedbitset::FixedBitSet;
 use fnv::FnvHashMap;
 use seija_core::LogOption;
@@ -20,7 +20,7 @@ pub struct UBOArrayCollect<T:IShaderBackend,ET:'static + Send + Sync> {
     _mark:PhantomData<ET>
 }
 
-impl<T,ET> UBOArrayCollect<T,ET> where T:IShaderBackend,ET:'static + Send + Sync {
+impl<T,ET> UBOArrayCollect<T,ET> where T:IShaderBackend,ET:Component {
     pub fn new(ubo_name:String,max_size:usize) -> Self {
         UBOArrayCollect { 
             ubo_name,

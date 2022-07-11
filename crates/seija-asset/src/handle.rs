@@ -1,4 +1,5 @@
 use std::{hash::{Hash, Hasher}, marker::PhantomData};
+use bevy_ecs::prelude::Component;
 use crossbeam_channel::Sender;
 use uuid::Uuid;
 
@@ -26,7 +27,7 @@ impl HandleId {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug,Component)]
 pub struct Handle<T> where T:Asset {
     pub id:HandleId,
     ref_sender:Option<Sender<RefEvent>>,

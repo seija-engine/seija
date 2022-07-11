@@ -1,10 +1,12 @@
-use bevy_ecs::prelude::Entity;
+use bevy_ecs::prelude::{Entity, Component};
 use glam::Mat4;
 use seija_asset::Handle;
 
 use crate::resource::Texture;
 
 use super::view_list::{ViewList};
+
+#[derive(Component)]
 pub struct Camera {
     pub projection:Projection,
     pub view_list:ViewList,

@@ -1,5 +1,3 @@
-use std::sync::Arc;
-
 use  bevy_ecs::prelude::*;
 use bevy_ecs::schedule::{StageLabel};
 use bevy_ecs::schedule::SystemStage;
@@ -27,7 +25,7 @@ impl IModule for AssetModule {
         app.add_resource(AssetServer::new());
         app.schedule.add_stage_before(CoreStage::PreUpdate, AssetStage::LoadAssets, SystemStage::parallel());
         app.schedule.add_stage_after(CoreStage::PostUpdate, AssetStage::AssetEvents, SystemStage::parallel());
-        app.add_system(CoreStage::PreUpdate, server::free_unused_assets_system.system());
+        app.add_system(CoreStage::PreUpdate, server::free_unused_assets_system);
     }
 }
 
@@ -42,8 +40,9 @@ impl AddAsset for App {
         let assets = asset_server.register_type::<T>();
       
         self.add_resource(assets);
-        self.add_system(AssetStage::AssetEvents, Assets::<T>::asset_event_system.system());
-        self.add_system(AssetStage::LoadAssets, Assets::<T>::update_assets_system.system());
+        self.add_system(AssetStage::AssetEvents, Assets::<T>::asset_event_system);
+        self.add_system(AssetStage::LoadAssets, Assets::<T>::update_assets_system);
+        //self.add_event::<AssetEvent<T>>();
         self.add_event::<AssetEvent<T>>();
     }
 }

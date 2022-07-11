@@ -6,6 +6,7 @@ edition = "2018"
 [dependencies]
 seija-app = {path = "../seija-app"}
 seija-core = {path = "../seija-core"}
+bevy_ecs = "0.7.0"
+lazy_static = "1.4.0"
 smallvec = "1.6.1"
-bevy_ecs = "0.5.0"
 glam = "0.20.3"

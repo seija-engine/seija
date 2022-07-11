@@ -1,35 +1,17 @@
 mod lib;
-mod sample_gltf;
-mod cube_map;
-mod light_test;
-mod pbr_light_test;
-mod pbr;
-mod deferred;
-pub mod shadow;
-use std::sync::Arc;
-
-
-use light_test::LightTest;
-use pbr_light_test::{PBRLightTest};
+use std::sync::Arc; 
 use bevy_ecs::prelude::{IntoSystem};
-
-use cube_map::CubeMapTest;
-use sample_gltf::SampleGltf;
 use seija_app::App;
 use seija_asset::{AssetModule};
 use seija_core::{CoreModule, CoreStage, StartupStage};
-
 use seija_deferred::{create_deferred_plugin, DeferredRenderModule};
-use seija_examples::{IExamples, pre_start};
-
+use seija_examples::{pre_start};
 use seija_pbr::create_pbr_plugin;
 use seija_render::{RenderModule, RenderConfig, GraphSetting};
 use seija_skeleton3d::{Skeleton3dModule, create_skeleton_plugin};
 use seija_winit::WinitModule;
 use seija_transform::{TransformModule};
-use shadow::ShadowTest;
 
-const TEST_NAME:&'static str = "shadow";
 
 fn main() {
      env_logger::Builder::new().filter_level(log::LevelFilter::Info).try_init().unwrap();
@@ -57,19 +39,10 @@ fn main() {
     render_config.set_config_path(".render");
     app.add_module(RenderModule(Arc::new(render_config)));
     app.add_module(DeferredRenderModule {mat_path:"res/materials/light_pass.mat.clj".into() });
-    app.add_system2(CoreStage::Startup, StartupStage::PreStartup, pre_start.system());
+    app.add_system2(CoreStage::Startup, StartupStage::PreStartup, pre_start);
     app.start();
 
-    match TEST_NAME {
-        "sample_gltf"    =>  { SampleGltf::run(&mut app); },
-        "cube_map"       =>  { CubeMapTest::run(&mut app) },
-        "light_test"     =>  { LightTest::run(&mut app);  },
-        "pbr_light_test" =>  { PBRLightTest::run(&mut app); },
-        "pbr_test" => { pbr::PbrTest::run(&mut app); },
-        "deferred" => { deferred::Deferred::run(&mut app); },
-        "shadow" => { ShadowTest::run(&mut app); }
-        _ => { unimplemented!() }
-    }; /**/
+    
 
    
     app.run();

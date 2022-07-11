@@ -1,3 +1,4 @@
+use bevy_ecs::prelude::Component;
 use seija_asset::{Handle, Assets};
 use seija_transform::TransformMatrix;
 
@@ -12,7 +13,7 @@ pub enum AnimationError {
     NotFoundAnim,
     NotFoundSkeleton
 }
-
+#[derive(Component)]
 pub struct AnimationControl {
     skeleton:Handle<Skeleton>,
     animation_set:Handle<AnimationSet>,

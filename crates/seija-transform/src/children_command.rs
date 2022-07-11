@@ -11,7 +11,7 @@ pub struct PushChildren {
 }
 
 impl Command for PushChildren {
-    fn write(self: Box<Self>, world: &mut World) {
+    fn write(self, world: &mut World) {
         for child in self.children.iter() {
             world.entity_mut(*child).insert(Parent(self.parent));
         }
@@ -28,7 +28,7 @@ pub trait BuildChildren {
     fn add_children(&mut self, children: &[Entity]) -> &mut Self;
 }
 
-impl<'a, 'b> BuildChildren for EntityCommands<'a, 'b> {
+impl<'a, 'b,'c> BuildChildren for EntityCommands<'a, 'b,'c> {
     fn add_children(&mut self, children: &[Entity]) -> &mut Self {
         let parent = self.id();
         self.commands().add(PushChildren {

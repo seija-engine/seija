@@ -1,6 +1,6 @@
 use bevy_ecs::prelude::{World};
 use seija_asset::{AssetEvent};
-use seija_core::event::{Events, ManualEventReader};
+use bevy_ecs::event::{Events, ManualEventReader};
 use seija_core::window::AppWindow;
 use seija_winit::event::{WindowCreated, WindowResized};
 use std::{borrow::Cow, sync::Arc};

@@ -1,7 +1,12 @@
-use bevy_ecs::prelude::{Changed, Entity, Query, QuerySet, With, Without};
-use glam::{Mat4, Quat, Vec2, Vec3};
 
+use bevy_ecs::prelude::Component;
+use glam::{Mat4, Quat, Vec2, Vec3};
 use crate::hierarchy::{Children, Parent};
+use lazy_static::{lazy_static};
+
+lazy_static! {
+    pub static ref TRANSFORM_MAT_ID:TransformMatrix = TransformMatrix::default(); 
+}
 
 #[derive(Debug,PartialEq,Clone)]
 pub struct TransformMatrix {
@@ -57,7 +62,7 @@ impl Default for TransformMatrix {
 }
 
 
-#[derive(Default,PartialEq,Clone,Debug)]
+#[derive(Default,PartialEq,Clone,Debug,Component)]
 pub struct Transform {
     pub local:TransformMatrix,
     pub(crate) global:TransformMatrix
@@ -94,50 +99,3 @@ impl Transform {
 
 
 
-
-pub(crate) fn update_transform_system(
-                                children_query: Query<Option<&Children>, (With<Parent>, With<Transform>)>,
-                                query_set:QuerySet<(
-                                                    Query<(Entity, Option<&Children>, &mut Transform),Without<Parent>>,
-                                                    Query<&mut Transform, With<Parent>>,
-                                                    Query<Entity, Changed<Transform>>)>
-                               ) {
-    unsafe {
-        for (entity, children, mut transform) in query_set.q0().iter_unsafe() {
-            let mut changed = false;
-            if query_set.q2().get_unchecked(entity).is_ok() {
-                transform.global = transform.local.clone();
-                changed = true;
-            }
-            if let Some(children) = children {
-                for child in children.0.iter() {
-                    update_transform(transform.global(),&children_query,&query_set,*child,changed);
-                }
-            }
-        }
-    }    
-}
-
-unsafe fn update_transform(parent:&TransformMatrix,children_query: &Query<Option<&Children>, (With<Parent>, With<Transform>)>,
-                        query_set:&QuerySet<(
-                        Query<(Entity, Option<&Children>, &mut Transform),Without<Parent>>,
-                        Query<&mut Transform, With<Parent>>,
-                        Query<Entity, Changed<Transform>>
-                       )>,entity: Entity,mut changed: bool) {
-    changed |= query_set.q2().get(entity).is_ok();
-    let global_matrix = {
-        if let Ok(mut transform) = query_set.q1().get_unchecked(entity) {
-            if changed {
-                transform.global = parent.mul_transform(&transform.local);
-            }
-            transform.global().clone()
-        } else {
-            return;
-        }
-    };
-    if let Ok(Some(children)) = children_query.get(entity) {
-        for child in children.0.iter() {
-            update_transform(&global_matrix,&children_query,query_set,*child,changed);
-        }
-    }
-}

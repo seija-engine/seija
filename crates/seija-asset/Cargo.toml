@@ -7,7 +7,7 @@ edition = "2018"
 
 [dependencies]
 crossbeam-channel = "0.5.1"
-bevy_ecs = "0.5.0"
+bevy_ecs = "0.7.0"
 seija-app = {path = "../seija-app"}
 seija-core = {path = "../seija-core"}
 uuid = "0.8.2"

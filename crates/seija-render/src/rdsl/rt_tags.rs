@@ -1,7 +1,7 @@
 use std::collections::{HashMap, HashSet};
 
 use bevy_ecs::prelude::World;
-use seija_core::event::{ManualEventReader, Events};
+use bevy_ecs::event::{ManualEventReader, Events};
 
 pub enum TagEvent {
     Start(usize),

@@ -2,7 +2,8 @@ mod window;
 pub mod event;
 use event::{WindowCreated, WindowResized};
 use seija_app::{IModule,App};
-use seija_core::{event::{Events}, window::{AppWindow, WindowConfig},AddCore};
+use seija_core::{ window::{AppWindow, WindowConfig},AddCore};
+use seija_core::bevy_ecs::{event::{Events}};
 use window::WinitWindow;
 use winit::{event::{Event,WindowEvent}, event_loop::{ControlFlow, EventLoop, EventLoopWindowTarget}};
 

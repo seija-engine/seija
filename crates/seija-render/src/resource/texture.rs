@@ -1,11 +1,10 @@
 use std::collections::HashSet;
-
 use bevy_ecs::prelude::World;
 use image::ImageError;
 use seija_asset::{Assets, AssetEvent, Handle};
-use serde::__private::de;
 use uuid::Uuid;
-use seija_core::{TypeUuid, IDGenU32, event::{ManualEventReader, Events}};
+use seija_core::{TypeUuid, IDGenU32};
+use bevy_ecs::event::{ManualEventReader, Events};
 use once_cell::sync::Lazy;
 use crate::{resource::{read_image_info, image_info::color_image_info}, RenderContext};
 

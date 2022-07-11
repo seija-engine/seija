@@ -1,4 +1,4 @@
-use bevy_ecs::{ schedule::{Schedule, Stage, StageLabel, SystemDescriptor}, world::World};
+use bevy_ecs::{ schedule::{Schedule, Stage, StageLabel, SystemDescriptor, IntoSystemDescriptor}, world::World};
 
 use crate::IModule;
 
@@ -48,11 +48,12 @@ impl App {
         self.runner = Some(Box::new(run_fn));
     }
 
-    pub fn add_system(&mut self,stage_label: impl StageLabel,system:impl Into<SystemDescriptor>) {
+    pub fn add_system<Params>(&mut self,stage_label: impl StageLabel,system:impl IntoSystemDescriptor<Params>) {
         self.schedule.add_system_to_stage(stage_label, system);
+        
     }
 
-    pub fn add_system2(&mut self,label: impl StageLabel,label2: impl StageLabel,system:impl Into<SystemDescriptor>) {
+    pub fn add_system2<Params>(&mut self,label: impl StageLabel,label2: impl StageLabel,system:impl IntoSystemDescriptor<Params>) {
         self.schedule.stage(label, |s: &mut Schedule| {
             s.add_system_to_stage(label2, system)
         });

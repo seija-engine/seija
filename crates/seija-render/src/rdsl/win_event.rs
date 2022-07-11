@@ -1,6 +1,7 @@
 use bevy_ecs::prelude::World;
-use seija_core::{event::{ManualEventReader, Events}, window::AppWindow};
+use seija_core::{ window::AppWindow};
 use seija_winit::event::{WindowResized, WindowCreated};
+use bevy_ecs::event::{ManualEventReader, Events};
 
 #[derive(Default)]
 pub struct WindowEvent {

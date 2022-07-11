@@ -1,3 +1,4 @@
+use bevy_ecs::prelude::Component;
 use glam::{f32, Vec2, Vec4, Vec3};
 
 #[derive(PartialEq, Eq)]
@@ -24,7 +25,7 @@ impl Default for PBRLightType {
     fn default() -> Self { PBRLightType::Directional }
 }
 
-#[derive(Default)]
+#[derive(Default,Component)]
 pub struct PBRLight {
     pub main_light:bool,
     typ: PBRLightType,

@@ -1,6 +1,7 @@
 use std::sync::Arc;
 use super::{MaterialDef, RenderOrder};
 
+use bevy_ecs::prelude::Component;
 use seija_asset::Handle;
 use seija_core::{TypeUuid};
 use wgpu::{BufferUsage, Device};
@@ -9,7 +10,7 @@ use crate::resource::{BufferId, RenderResources, Texture};
 use crate::{memory::{TypedUniformBuffer}};
 use uuid::Uuid;
 
-#[derive(Debug,TypeUuid)]
+#[derive(Debug,TypeUuid,Component)]
 #[uuid = "9fb83fbe-b850-42e0-a58c-53da87bace04"]
 pub struct Material {
     pub def:Arc<MaterialDef>,

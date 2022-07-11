@@ -1,9 +1,9 @@
 use std::ops::{Deref, DerefMut};
 
 use smallvec::SmallVec;
-use bevy_ecs::entity::Entity;
+use bevy_ecs::{entity::Entity, prelude::Component};
 
-#[derive(Debug, Copy, Clone, Eq, PartialEq)]
+#[derive(Debug, Copy, Clone, Eq, PartialEq,Component)]
 pub struct Parent(pub Entity);
 
 impl Deref for Parent {
@@ -19,11 +19,11 @@ impl DerefMut for Parent {
     }
 }
 
-#[derive(Debug, Copy, Clone, Eq, PartialEq)]
+#[derive(Debug, Copy, Clone, Eq, PartialEq,Component)]
 pub struct PreviousParent(pub(crate) Entity);
 
 
-#[derive(Default, Clone, Debug)]
+#[derive(Default, Clone, Debug,Component)]
 pub struct Children(pub(crate) SmallVec<[Entity; 8]>);
 
 impl Children {

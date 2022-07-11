@@ -12,7 +12,7 @@ seija-core = {path = "../seija-core"}
 seija-app = {path = "../seija-app"}
 seija-render = {path = "../seija-render"}
 lazy_static = "1.4.0"
-bevy_ecs = "0.5.0"
+bevy_ecs = "0.7.0"
 gltf = "1.0.0"
 log = "0.4.16"
 lite-clojure-eval = {git = "https://github.com/seija-engine/lite-clojure.git"}
