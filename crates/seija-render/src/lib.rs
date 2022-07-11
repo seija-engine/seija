@@ -1,6 +1,5 @@
 use std::path::{PathBuf, Path};
 use std::sync::Arc;
-use camera::{view_list::view_list_system};
 use material::MaterialStorage;
 use pipeline::{PipelineCache, update_pipeline_cache};
 use rdsl::{RenderMain};
@@ -72,10 +71,8 @@ impl IModule for RenderModule {
         app.schedule.add_stage_before(RenderStage::AfterRender, RenderStage::Render, SystemStage::single(render_system.exclusive_system()));
         app.schedule.add_stage_before(RenderStage::Render, RenderStage::PostRender, SystemStage::parallel());
 
-        
 
-        app.add_system(RenderStage::AfterRender, update_pipeline_cache.system());
-        app.add_system(CoreStage::PostUpdate, view_list_system.system());
+        app.add_system(RenderStage::AfterRender, update_pipeline_cache);
     }
 }
 

@@ -1,6 +1,6 @@
 use std::collections::{HashMap, HashSet};
 
-use bevy_ecs::prelude::{Changed, Entity, Query, With, Without, Commands};
+use bevy_ecs::prelude::{Changed, Entity, Query, With, Without, Commands, ParamSet};
 use smallvec::SmallVec;
 use crate::{hierarchy::{Children, Parent, PreviousParent}, Transform, TransformMatrix, transform::TRANSFORM_MAT_ID};
 
@@ -50,32 +50,31 @@ pub(crate) fn parent_update_system(
 
 
 pub(crate) fn update_transform_system(
-    changed_query: Query<Entity,Changed<Transform>>,
     parent_query: Query<(Entity,Option<&Parent>)>,
     child_query:Query<Option<&Children>>,
-    mut t_query:Query<&mut Transform>,
+    mut params:ParamSet<(Query<Entity,Changed<Transform>>,Query<&mut Transform>)>
 ) {
-    if changed_query.is_empty() { return; }
+    if params.p1().is_empty() { return; }
     let mut changed_set:HashSet<Entity> = HashSet::new(); 
+    let changed_query = params.p0();
     for e_changed in changed_query.iter() {
         let  top_entity = cacl_top_changed(e_changed, &parent_query, &changed_query);
         changed_set.insert(top_entity);
     }
-
     for top_entity in changed_set.iter() {
-        update_transform(*top_entity,&TRANSFORM_MAT_ID,&mut t_query,&child_query);
+        update_transform(*top_entity,&TRANSFORM_MAT_ID,&mut params,&child_query);
     }
 }
 
-fn update_transform(entity:Entity,parent:&TransformMatrix,t_query:&mut Query<&mut Transform>,child_query:&Query<Option<&Children>>) {
-    let parent_trans = if let Ok(mut t) = t_query.get_mut(entity) {
+fn update_transform(entity:Entity,parent:&TransformMatrix,params:&mut ParamSet<(Query<Entity,Changed<Transform>>,Query<&mut Transform>)>,child_query:&Query<Option<&Children>>) {
+    let parent_trans = if let Ok(mut t) = params.p1().get_mut(entity) {
         t.global = t.local.mul_transform(parent);
         t.global.clone()
     } else { TransformMatrix::default() };
 
     if let Ok(Some(childs)) = child_query.get(entity) {
         for child in childs.iter() {
-            update_transform(*child,&parent_trans,t_query,&child_query);
+            update_transform(*child,&parent_trans,params,&child_query);
         }
     }
 }

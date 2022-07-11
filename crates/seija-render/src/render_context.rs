@@ -3,7 +3,7 @@ use std::{sync::Arc, path::Path};
 use wgpu::{CommandEncoder, Device};
 
 use crate::{ material::{MaterialSystem, PassDef}, 
-resource::RenderResources,  rt_shaders::RuntimeShaderInfo, uniforms::{UniformContext}, graph_setting::GraphSetting};
+resource::RenderResources,  rt_shaders::RuntimeShaderInfo, uniforms::{UniformContext}, graph_setting::GraphSetting, query::QuerySystem};
 
 unsafe impl Send for RenderContext {}
 unsafe impl Sync for RenderContext {}
@@ -15,7 +15,7 @@ pub struct RenderContext {
     pub shaders:RuntimeShaderInfo,
     pub ubo_ctx:UniformContext,
     pub setting:Arc<GraphSetting>,
-
+    pub query:QuerySystem,
     pub frame_draw_pass:u8,
 }
 
@@ -42,6 +42,7 @@ impl RenderContext {
             shaders,
             ubo_ctx:UniformContext::default(),
             setting,
+            query:QuerySystem::default(),
             frame_draw_pass:0
         };
        

@@ -7,11 +7,10 @@ use seija_app::{IModule,App};
 use time::{Time};
 use std::fmt::Debug;
 use std::sync::atomic::{AtomicU64,Ordering, AtomicU32};
-
+pub mod info;
 pub mod bytes;
 pub mod time;
 pub mod window;
-//pub mod event;
 pub mod type_uuid;
 pub use type_uuid::{TypeUuid,TypeUuidDynamic};
 pub use uuid;

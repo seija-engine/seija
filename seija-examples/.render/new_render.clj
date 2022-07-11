@@ -79,7 +79,7 @@
             
             (add-node env nil WINSIZE_TEXTURE [(env :depth)])
 
-            (add-node env nil DRAW_PASS [] (env :depth))
+            (add-node env nil DRAW_PASS (env :query) [] (env :depth))
             (println "add foward success")
         )
     })

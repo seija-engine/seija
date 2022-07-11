@@ -1,28 +1,26 @@
 use bevy_ecs::prelude::{Entity, Component};
 use glam::Mat4;
 use seija_asset::Handle;
-
 use crate::resource::Texture;
 
-use super::view_list::{ViewList};
 
 #[derive(Component)]
 pub struct Camera {
     pub projection:Projection,
-    pub view_list:ViewList,
     pub order:i32,
     pub path:String,
-    pub target:Option<Handle<Texture>>
+    pub target:Option<Handle<Texture>>,
+    pub layer:u32
  }
  
  impl Default for Camera {
     fn default() -> Self {
        Self { 
           projection:Projection::Perspective(Perspective::default()),
-          view_list:ViewList::default(),
           path:String::from("Foward"),
           order:0,
-          target:None 
+          target:None,
+          layer:1
        }
     }
 }
@@ -40,9 +38,7 @@ pub struct Camera {
         camera
      }
 
-     pub fn iter(&self) -> impl Iterator<Item = &Entity> {
-        self.view_list.values.iter().map(|v| v.value.iter()).flatten().map(|v| &v.entity)
-     }
+  
  }
 
  #[derive(Debug)]
