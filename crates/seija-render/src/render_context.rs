@@ -15,7 +15,6 @@ pub struct RenderContext {
     pub shaders:RuntimeShaderInfo,
     pub ubo_ctx:UniformContext,
     pub setting:Arc<GraphSetting>,
-    pub query:QuerySystem,
     pub frame_draw_pass:u8,
 }
 
@@ -42,7 +41,6 @@ impl RenderContext {
             shaders,
             ubo_ctx:UniformContext::default(),
             setting,
-            query:QuerySystem::default(),
             frame_draw_pass:0
         };
        

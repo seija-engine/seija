@@ -1,17 +1,31 @@
-use bevy_ecs::{prelude::{World, Entity}};
+use bevy_ecs::{prelude::{World, Entity, Query, ResMut, Res, Added, RemovedComponents}};
 use seija_asset::Handle;
 use seija_core::info::EInfo;
 use seija_transform::Transform;
 
 use crate::{material::{MaterialStorage, Material}, camera::camera::Camera};
 
-use super::{system::IQuery, view_list::{ViewList, ViewEntity}};
+use super::{view_list::{ViewList, ViewEntity}, QuerySystem};
+
+const CAMERA_TYPE:u32 = 1u32;
 
 pub struct CameraQuery {
     camera_entity:Entity
 }
 
-impl IQuery for CameraQuery {
+pub(crate) fn camera_query_check_add(system:ResMut<QuerySystem>,add_cameras:Query<Entity,Added<Camera>>,remove_cameras:RemovedComponents<Camera>) {
+    if add_cameras.is_empty() && remove_cameras.iter().next().is_none() { return ; }
+    for add_camera in add_cameras.iter() {
+        
+    }
+}
+
+pub(crate) fn camera_query_update(system:ResMut<QuerySystem>) { 
+}
+
+
+
+impl CameraQuery {
     fn on_query(&self,world:&mut World,list:&mut ViewList) {
         list.clear();
         

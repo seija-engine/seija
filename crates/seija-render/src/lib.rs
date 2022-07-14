@@ -65,6 +65,7 @@ impl IModule for RenderModule {
         material::init_material(app);
         light::init_light(app);
         RenderMain::add_system(app);
+        query::init_system(app);
 
         let render_system = self.get_render_system(&mut app.world,&self.0);
         app.schedule.add_stage_after(CoreStage::PostUpdate, RenderStage::AfterRender, SystemStage::parallel());
