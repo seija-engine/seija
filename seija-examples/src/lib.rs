@@ -3,7 +3,7 @@ use glam::{Quat, Vec3, Vec4};
 use lite_clojure_eval::EvalRT;
 use seija_app::App;
 use seija_asset::{Assets, Handle};
-use seija_core::{CoreStage, window::AppWindow};
+use seija_core::{CoreStage, window::AppWindow, info::EInfo};
 use seija_pbr::PBRCameraInfo;
 use seija_render::{camera::{camera::Perspective,camera::Camera}, material::{MaterialStorage, read_material_def}, resource::{Mesh, Texture, TextureDescInfo}};
 use seija_transform::{Transform, hierarchy::Parent};
@@ -31,8 +31,7 @@ pub fn pre_start(mut commands:Commands,window:Res<AppWindow>,mats:Res<MaterialSt
 pub fn add_camera_3d(mut commands:&mut Commands,window:&AppWindow) -> Entity {
     let mut root = commands.spawn();
     let mut t = Transform::default();
-    t.local.position = Vec3::new(0f32, 20f32, 70f32);
-    t.local.rotation = Quat::from_euler(glam::EulerRot::XYZ , -15f32 *  0.0174533f32, 0f32, 0f32); 
+    t.local.position = Vec3::new(0f32, 0f32, 0f32);
     root.insert(t);
     
     let mut per = Perspective::default();
@@ -40,6 +39,9 @@ pub fn add_camera_3d(mut commands:&mut Commands,window:&AppWindow) -> Entity {
     let camera = Camera::from_3d(per);
     root.insert(camera);
 
+    let mut info = EInfo::default();
+    info.name = Some("Camera3D".into());
+    root.insert(info);
     root.id()
     
 }

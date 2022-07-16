@@ -30,7 +30,7 @@ impl ViewList {
         self.values[idx].value.push(view_entity);
     }
 
-    pub fn list(&self)  -> impl Iterator<Item = &Entity> {
+    pub fn iter(&self)  -> impl Iterator<Item = &Entity> {
         self.values.iter().map(|v| v.value.iter()).flatten().map(|v| &v.entity)
     }
 

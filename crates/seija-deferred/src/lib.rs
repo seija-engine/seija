@@ -18,6 +18,7 @@ impl IModule for DeferredRenderModule {
     fn init(&mut self,_app:&mut seija_app::App) {}
 
     fn start(&self, world:&mut World) {
+       /*
        match self.load_quad(world) {
            Ok(e) => {
               
@@ -26,7 +27,7 @@ impl IModule for DeferredRenderModule {
            Err(err) => {
             log::error!("{}",err);
            }
-       }
+       }*/
     }
 }
 

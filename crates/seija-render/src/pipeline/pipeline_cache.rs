@@ -44,12 +44,16 @@ pub struct RenderPipeline {
 }
 
 impl RenderPipeline {
-    pub fn set_binds<'b:'a,'a>(&self,camera_e:Entity,ve:&Entity,pass:&'a mut wgpu::RenderPass<'b>,buf_ctx:&'b UniformContext) -> Option<u32> {
+    pub fn set_binds<'b:'a,'a>(&self,camera_e:Option<Entity>,ve:&Entity,pass:&'a mut wgpu::RenderPass<'b>,buf_ctx:&'b UniformContext) -> Option<u32> {
         for (index,ubo_name_index) in self.ubos.iter().enumerate() {
             match ubo_name_index.apply_type {
              UBOApplyType::Camera => {
-                let bind_group = buf_ctx.get_bind_group(ubo_name_index, Some(camera_e.id()))?;
-                pass.set_bind_group(index as u32, &bind_group, &[]);
+                if let Some(camera_entity) = camera_e {
+                    let bind_group = buf_ctx.get_bind_group(ubo_name_index, Some( camera_entity.id() ))?;
+                    pass.set_bind_group(index as u32, &bind_group, &[]);
+                } else {
+                    return None;
+                }
              },
              UBOApplyType::RenderObject => {
                 let bind_group = buf_ctx.get_bind_group(ubo_name_index, Some(ve.id()))?;

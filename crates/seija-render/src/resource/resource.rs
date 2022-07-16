@@ -188,6 +188,7 @@ impl RenderResources {
     pub fn get_texture_view_by_resid(&self,res_id:&RenderResourceId) -> Option<&TextureView> {
         match res_id {
             RenderResourceId::MainSwap => {
+                
                 self.main_swap_chain_frame.as_ref().map(|v| &v.output.view)
             }
             RenderResourceId::TextureView(texture_id) => {

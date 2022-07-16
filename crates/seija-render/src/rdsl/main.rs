@@ -83,7 +83,6 @@ impl RenderMain {
     pub fn update(&mut self,ctx:&mut RenderContext,world:&mut World) {
        self.update_camera(world,ctx);
        self.main_ctx.update(ctx, world,&mut self.script_ctx);
-       
     }
 
     pub fn update_camera(&mut self,world:&mut World,ctx:&mut RenderContext) {
@@ -95,9 +94,8 @@ impl RenderMain {
             self.script_ctx.set_userdata("*TEXTURES*", textures_mut);
             self.script_ctx.set_userdata("*RENDER_CTX*", ctx);
         }
-        for (_,add_camera) in added_cameras.iter(world) {
-            
-            self.main_ctx.path_list.add_render_path(&add_camera.path, &mut self.script_ctx,add_camera,world,ctx);   
+        for (e,add_camera) in added_cameras.iter(world) {
+            self.main_ctx.path_list.add_render_path(&add_camera.path, &mut self.script_ctx,add_camera,world,ctx,e);   
         }
     }
 

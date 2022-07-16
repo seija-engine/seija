@@ -98,7 +98,7 @@ impl RenderModule {
         }
         w.insert_resource(PipelineCache::default());
         ctx.ubo_ctx.init(&mut ctx.resources);
-        let script_path = self.0.config_path.join("new_render.clj");
+        let script_path = self.0.config_path.join("render.clj");
         match std::fs::read_to_string(script_path) {
             Ok(code_string) => {
                 app_render.main.init(&code_string,&mut ctx.ubo_ctx.info);
