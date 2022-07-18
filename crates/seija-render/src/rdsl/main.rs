@@ -67,11 +67,7 @@ impl RenderMain {
 
     pub fn start(&mut self,world:&mut World,ctx:&mut RenderContext) {
         self.script_ctx.set_global_const(world);
-        let mut textures = world.get_resource_mut::<Assets<Texture>>().unwrap();
-        let textures_mut:&mut Assets<Texture> = &mut textures;
-
-        self.script_ctx.exec_render_start(ctx, textures_mut,&mut self.main_ctx);
-
+        self.script_ctx.exec_render_start(ctx,world,&mut self.main_ctx);
         for node_box in self.main_ctx.global_nodes.iter_mut() {
             node_box.set_params(&mut self.script_ctx.rt,true);
             node_box.init(world, ctx);
@@ -88,11 +84,7 @@ impl RenderMain {
     pub fn update_camera(&mut self,world:&mut World,ctx:&mut RenderContext) {
         let mut added_cameras = world.query_filtered::<(Entity,&Camera),(Added<Camera>,With<Transform>)>();
         if added_cameras.iter(world).count() > 0 {
-            self.script_ctx.set_userdata("*MAIN_CTX*", &mut self.main_ctx);
-            let mut textures = world.get_resource_mut::<Assets<Texture>>().unwrap();
-            let textures_mut:&mut Assets<Texture> = &mut textures;
-            self.script_ctx.set_userdata("*TEXTURES*", textures_mut);
-            self.script_ctx.set_userdata("*RENDER_CTX*", ctx);
+            self.script_ctx.set_script_global(ctx, &mut self.main_ctx, world);
         }
         for (e,add_camera) in added_cameras.iter(world) {
             self.main_ctx.path_list.add_render_path(&add_camera.path, &mut self.script_ctx,add_camera,world,ctx,e);   

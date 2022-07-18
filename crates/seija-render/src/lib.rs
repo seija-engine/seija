@@ -18,6 +18,7 @@ pub mod resource;
 pub mod pipeline;
 pub mod light;
 pub mod errors;
+pub mod shadow;
 mod query;
 
 mod uniforms;

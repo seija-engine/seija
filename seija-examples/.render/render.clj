@@ -75,10 +75,15 @@
     (select-add-uniform  "Shadow" "ShadowBuffer")
 
     
+    
     (add-node globalEnv nil   CAMERA_NODE    "CameraBuffer")
     (add-node globalEnv nil   TRANSFROM_NODE "ObjectBuffer")
     (add-node globalEnv "PBR" PBR_CAMERA_EX  "CameraBuffer")
-    (add-node globalEnv "PBR" PBRLIGHT       "LightBuffer")
+    (add-node globalEnv "PBR" PBR_LIGHT       "LightBuffer")
+
+    (add-query "ShadowQuery" 2)
+    (assoc! globalEnv :shadowDepth (atom-texture {:format "Depth32Float" :width 1024 :height 1024}))
+    (add-node globalEnv nil DRAW_PASS (get-query "ShadowQuery") nil [] (globalEnv :shadowDepth) "ShadowCaster")
 
     (add-foward-path globalEnv)
 )
@@ -90,7 +95,7 @@
             
             (add-node env nil WINSIZE_TEXTURE [(env :depth) (env :targetView)])
 
-            (add-node env nil DRAW_PASS (env :camera-query) (env :camera-id) [(env :targetView)] (env :depth))
+            (add-node env nil DRAW_PASS (env :camera-query) (env :camera-id) [(env :targetView)] (env :depth) "Foward")
             (println "add foward success")
         )
     })

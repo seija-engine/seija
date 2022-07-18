@@ -1,3 +1,5 @@
+use std::borrow::Borrow;
+
 use bevy_ecs::prelude::{World, Entity};
 use lite_clojure_eval::Variable;
 use seija_asset::{Handle, Assets};
@@ -24,6 +26,7 @@ pub struct DrawPassNode {
     camera_entity:Option<Entity>,
     textures:Vec<*mut Atom<RenderResourceId>>,
     depth:Option<*mut Atom<RenderResourceId>>,
+    pass_name:String,
 
     operations:Operations<Color>,
 }
@@ -34,9 +37,10 @@ impl Default for DrawPassNode {
             query_index: 0, 
             camera_entity: None, 
             textures: vec![], 
-            depth: None, 
+            depth: None,
+            pass_name:String::default(),
             operations: wgpu::Operations {
-                load:wgpu::LoadOp::Clear(Color::BLACK),
+                load:wgpu::LoadOp::Clear(Color {r:0.1f64,g:0.1f64,b:0.1f64,a:1f64 }),
                 store:true  
             } 
         }
@@ -63,9 +67,13 @@ impl IUpdateNode for DrawPassNode {
             let ptr = u8_ptr as *mut Atom<RenderResourceId>;
             self.depth = Some(ptr)
         }
+        if let Some(pass_name) = params[4].cast_string() {
+            self.pass_name = pass_name.borrow().clone();
+        }
     }
 
     fn update(&mut self,world:&mut World,ctx:&mut RenderContext) {
+        
         let mut command = ctx.command_encoder.take().unwrap();
         if let Err(err) = self.draw(world,ctx,&mut command) {
             if err != PassError::TextureNotReady {
@@ -87,18 +95,23 @@ impl DrawPassNode {
         let query_system = world.get_resource::<QuerySystem>().unwrap();
         let pipeline_cahce = world.get_resource::<PipelineCache>().unwrap();
         let view_query = query_system.querys[self.query_index].read();
-
         
+       
         let mut render_pass = self.create_render_pass(&ctx.resources,  command)?;
-
+   
         for entity in view_query.list.iter() {
             if let Ok((hmesh,hmat)) = render_query.get(world, *entity) {
                 let mesh = meshs.get(&hmesh.id).ok_or(PassError::MissMesh)?;
                 let material = mats.get(&hmat.id).ok_or(PassError::MissMaterial)?;
+                
                 if !material.is_ready(&ctx.resources) { continue }
+               
                 if let Some(pipelines)  = pipeline_cahce.get_pipeline(&material.def.name, mesh) {
                     if let Some(mesh_buffer_id)  = ctx.resources.get_render_resource(&hmesh.id, 0) {
                         for pipeline in pipelines.pipelines.iter() {
+
+                            if pipeline.tag != self.pass_name {  continue; }
+                            
                             let vert_buffer = ctx.resources.get_buffer_by_resid(&mesh_buffer_id).unwrap();
                             let oset_index = pipeline.set_binds(self.camera_entity, entity, &mut render_pass, &ctx.ubo_ctx);
                             if oset_index.is_none() { continue }
@@ -112,6 +125,7 @@ impl DrawPassNode {
                             }
                             render_pass.set_vertex_buffer(0, vert_buffer.slice(0..));
                             if let Some(idx_id) = ctx.resources.get_render_resource(&hmesh.id, 1) {
+                                
                                 let idx_buffer = ctx.resources.get_buffer_by_resid(&idx_id).unwrap();
                                 render_pass.set_index_buffer(idx_buffer.slice(0..), mesh.index_format().unwrap());
                                 render_pass.set_pipeline(&pipeline.pipeline);

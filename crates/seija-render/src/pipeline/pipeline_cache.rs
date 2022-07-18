@@ -37,8 +37,8 @@ impl RenderPipelines {
 }
 
 pub struct RenderPipeline {
-    //TODO 优化
-    pub tag:Option<String>,
+    //TODO 优化 考虑把这个String换成Clojure的真正的keyworld
+    pub tag:String,
     pub ubos:Vec<UniformIndex>,
     pub pipeline:wgpu::RenderPipeline
 }
@@ -179,7 +179,7 @@ impl PipelineCache {
        }
       
        let render_pipeline = RenderPipeline {
-           tag:pass.tag.clone(),
+           tag:pass.tag.clone().unwrap_or("Foward".into()),
            ubos,
            pipeline:gpu_pipeline
        };

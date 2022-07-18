@@ -1,10 +1,10 @@
 use std::sync::Arc;
 use std::convert::{TryFrom};
-
 use lite_clojure_eval::{ExecScope, Variable, GcRefCell};
 use seija_asset::Assets;
 use serde_json::Value;
 use crate::material::STextureDescriptor;
+use crate::query::{QuerySystem, IdOrName};
 use crate::rdsl::main::DynUniformItem;
 use crate::rdsl::nodes::CameraNode;
 use crate::resource::{Texture, TextureDescInfo, RenderResourceId};
@@ -191,4 +191,51 @@ pub fn _atom_texture(scope:&mut ExecScope, args:Vec<Variable>) -> Result<Variabl
     let atom_texture = Box::new(Atom::new(RenderResourceId::Texture(h_texture)));
     let atom_ptr = Box::into_raw(atom_texture) as *mut u8;
     Ok(Variable::UserData( atom_ptr))
+}
+
+pub fn add_query(scope:&mut ExecScope,args:Vec<Variable>) -> Variable {
+    match _add_query(scope, args) {
+        Ok(_) => Variable::Bool(true),
+        Err(err) => {
+            log::error!("add-query error:{:?}",err);
+            Variable::Bool(false)
+        }
+    }
+}
+
+pub fn _add_query(scope:&mut ExecScope, args:Vec<Variable>) -> Result<(),i32> {
+    let query:&mut QuerySystem = find_userdata(scope, "*QUERY*").ok_or(0)?;
+    let query_name = get_query_name(&args[0])?;
+    let query_type = args[1].cast_int().ok_or(1)? as u32;
+    query.add_query(query_name, query_type);
+    Ok( () )
+}
+
+fn get_query_name(var:&Variable) -> Result<IdOrName,i32> {
+    match var {
+        Variable::String(s) => { Ok(IdOrName::Name(s.borrow().clone())) },
+        Variable::Int(i) => { Ok(IdOrName::Id(*i as u64)) },
+        _ => { return Err(1); }
+    }
+}
+
+pub fn get_query(scope:&mut ExecScope,args:Vec<Variable>) -> Variable {
+    let ret = _get_query(scope, args);
+    match ret {
+        Ok(v) => v,
+        Err(err) => {
+            log::error!("get-query error:{:?}",err);
+            Variable::Nil
+        }
+    }
+}
+
+pub fn _get_query(scope:&mut ExecScope, args:Vec<Variable>) -> Result<Variable,i32> {
+    let query:&mut QuerySystem = find_userdata(scope, "*QUERY*").ok_or(0)?;
+    let query_name = get_query_name(&args[0])?;
+    let index = query.get(query_name);
+    if let Some(index) = index {
+        return Ok(Variable::Int(index as i64));
+    }
+    Ok(Variable::Nil)
 }

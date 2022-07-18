@@ -7,12 +7,14 @@
     ]
     :pass [
         {
+            :tag "Foward"
             :shader { :name "core.color" :macros [] }
         }
 
-        ;{
-        ;    :tag "Shadow"
-        ;    :shader { :name "core.depth" :macros [] }
-        ;}
+        {
+            :tag "ShadowCaster"
+            :targets []
+            :shader { :name "core.depth" :macros [] }
+        }
     ]
 }

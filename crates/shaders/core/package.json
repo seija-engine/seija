@@ -17,7 +17,7 @@
         "vertex": {
           "POSITION": "require"
         },
-        "backend": [ "ShadowMap", "Transform" ],
+        "backend": [  "Transform" ],
        
         "vs": "depth.depth_vs_main",
         "fs": "depth.depth_fs_main"

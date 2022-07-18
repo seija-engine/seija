@@ -9,7 +9,7 @@ use seija_core::{CoreModule, CoreStage, StartupStage};
 use seija_deferred::{create_deferred_plugin, DeferredRenderModule};
 use seija_examples::{pre_start};
 use seija_pbr::create_pbr_plugin;
-use seija_render::{RenderModule, RenderConfig, GraphSetting, resource::{shape::Cube, Mesh, Texture}, material::MaterialStorage};
+use seija_render::{RenderModule, RenderConfig, GraphSetting, resource::{shape::Cube, Mesh, Texture}, material::MaterialStorage, shadow::Shadow};
 use seija_skeleton3d::{Skeleton3dModule, create_skeleton_plugin};
 use seija_winit::WinitModule;
 use seija_transform::{TransformModule, Transform};
@@ -60,12 +60,14 @@ fn start(mut commands:Commands,
         let mesh =  Cube::new(1f32);
         let hmesh = meshs.add(mesh.into());
         let hmat = materials.create_material_with("pureColor", |mat| {
-            //mat.props.set_float4("color", Vec4::new(1f32, 0f32, 0f32, 1f32), 0);
+            mat.props.set_float4("color", Vec4::new(1f32, 1f32, 1f32, 1f32), 0);
         }).unwrap();
         let mut t = Transform::default();
         
         t.local.position = Vec3::new(0f32, 0f32, -3f32);
-        commands.spawn().insert(hmesh).insert(hmat).insert(t);
+
+        let shadow = Shadow {cast_shadow:true,receive_shadow:true };
+        commands.spawn().insert(hmesh).insert(hmat).insert(t).insert(shadow );
     };
    
     //load_material("res/new_material/color.mat.clj", &mats);
