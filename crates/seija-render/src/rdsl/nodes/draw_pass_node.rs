@@ -1,5 +1,3 @@
-use std::borrow::Borrow;
-
 use bevy_ecs::prelude::{World, Entity};
 use lite_clojure_eval::Variable;
 use seija_asset::{Handle, Assets};
@@ -98,9 +96,9 @@ impl DrawPassNode {
         
        
         let mut render_pass = self.create_render_pass(&ctx.resources,  command)?;
-   
+       
         for entity in view_query.list.iter() {
-            if let Ok((hmesh,hmat)) = render_query.get(world, *entity) {
+            if let Ok((hmesh,hmat)) = render_query.get(world, *entity) { 
                 let mesh = meshs.get(&hmesh.id).ok_or(PassError::MissMesh)?;
                 let material = mats.get(&hmat.id).ok_or(PassError::MissMaterial)?;
                 
@@ -113,6 +111,7 @@ impl DrawPassNode {
                             if pipeline.tag != self.pass_name {  continue; }
                             
                             let vert_buffer = ctx.resources.get_buffer_by_resid(&mesh_buffer_id).unwrap();
+                           
                             let oset_index = pipeline.set_binds(self.camera_entity, entity, &mut render_pass, &ctx.ubo_ctx);
                             if oset_index.is_none() { continue }
                             let mut set_index = oset_index.unwrap();                

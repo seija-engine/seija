@@ -69,7 +69,7 @@ impl TryFrom<&Value> for UniformInfo {
                                         .ok_or(":backends")?;
         let prop_json = object.get(":props").ok_or(":props".to_string())?;
         let props:PropInfoList = prop_json.try_into().map_err(|_| ":props".to_string())?;
-        let prop_index = object.get(":index").and_then(|v| v.as_i64()).unwrap_or(0);
+        let prop_sort = object.get(":sort").and_then(|v| v.as_i64()).unwrap_or(0);
         let udf = UniformBufferDef::try_from(&props).map_err(|_| ":props".to_string() )?;
         let shader_stage = object.get(":shader-stage").and_then(Value::as_i64).unwrap_or(
             wgpu::ShaderStage::VERTEX_FRAGMENT.bits() as i64
@@ -92,7 +92,7 @@ impl TryFrom<&Value> for UniformInfo {
             name:Arc::new(name.to_string()),
             props:Arc::new(udf),
             backends,
-            sort:prop_index as usize,
+            sort:prop_sort as usize,
             textures:Arc::new(textures),
             shader_stage:wgpu::ShaderStage::from_bits(shader_stage)
                                .unwrap_or(wgpu::ShaderStage::VERTEX_FRAGMENT) 

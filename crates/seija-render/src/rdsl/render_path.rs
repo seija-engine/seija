@@ -55,7 +55,9 @@ impl RenderPath {
    }
 
    pub fn update(&mut self,world:&mut World,ctx:&mut RenderContext) {
-      
+      for node in self.nodes.iter_mut() {
+         node.prepare(world, ctx);
+      }
       for node in self.nodes.iter_mut() {
          node.update(world, ctx);
       }

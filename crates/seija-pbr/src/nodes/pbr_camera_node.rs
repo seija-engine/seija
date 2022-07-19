@@ -1,7 +1,6 @@
-use bevy_ecs::prelude::{World, Entity, With, Changed};
+use bevy_ecs::prelude::{World, Entity, With, Changed, Or, Added};
 use lite_clojure_eval::Variable;
 use seija_render::{IUpdateNode, RenderContext, UniformIndex, camera::camera::Camera};
-use seija_transform::Transform;
 
 use crate::PBRCameraInfo;
 #[derive(Default)]
@@ -32,11 +31,13 @@ impl IUpdateNode for PBRCameraNode {
 
     fn update(&mut self,world:&mut World,ctx:&mut RenderContext) {
         if let Some(exposure_index) = self.exposure_index {
-            let mut cameras = world.query_filtered::<(Entity,&PBRCameraInfo),(With<Camera>,With<Transform>,Changed<PBRCameraInfo>)>();
+            let mut cameras = world.query_filtered::<(Entity,&PBRCameraInfo),Or<(Changed<PBRCameraInfo>,Added<PBRCameraInfo>)>>();
             for (e,ex_info) in cameras.iter(world) {
                 if let Some(key) = self.name_index {
                     ctx.ubo_ctx.set_buffer(&key, Some(e.id()),|buffer| {
+                       
                         buffer.buffer.write_bytes(exposure_index, ex_info.exposure.exposure_self());
+                        
                     })
                     
                 }

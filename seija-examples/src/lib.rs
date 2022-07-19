@@ -42,6 +42,9 @@ pub fn add_camera_3d(mut commands:&mut Commands,window:&AppWindow) -> Entity {
     let mut info = EInfo::default();
     info.name = Some("Camera3D".into());
     root.insert(info);
+
+    let pbr_camera = PBRCameraInfo::default();
+    root.insert(pbr_camera);
     root.id()
     
 }

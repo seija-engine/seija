@@ -95,12 +95,12 @@ impl AppRender {
         ctx.ubo_ctx.update(&mut ctx.resources,ctx.command_encoder.as_mut().unwrap());
        
         ctx.material_sys.update(world, &ctx.device, ctx.command_encoder.as_mut().unwrap(),&mut ctx.resources);
-        self.main.update(ctx,world);
+       
         
         resource::update_mesh_system(world,&mut self.mesh_event_reader,ctx);
        
         resource::update_texture_system(world, &mut self.texture_event_reader, ctx);
-
+        self.main.update(ctx,world);
         
         let command_buffer = ctx.command_encoder.take().unwrap().finish();
         self.queue.submit(Some(command_buffer));

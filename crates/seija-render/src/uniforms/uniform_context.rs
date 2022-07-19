@@ -26,7 +26,7 @@ pub struct UniformContext {
 }
 
 impl UniformContext {
-    pub fn init(&mut self,res:&mut RenderResources) {}
+    pub fn init(&mut self,_:&mut RenderResources) {}
 
     pub fn add_uniform(&mut self,name:&str,res:&mut RenderResources) -> bool {
         if let Some(info) = self.info.globals.get(name) {
@@ -132,6 +132,6 @@ impl UniformContext {
         }
         for comps in self.components.iter_mut() {
             comps.update(res,cmd);
-        }
+        } 
     }
 }

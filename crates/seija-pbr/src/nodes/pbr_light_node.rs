@@ -44,8 +44,9 @@ impl IUpdateNode for PBRLightNode {
         }
     }
 
-    fn init(&mut self,_:& World,_:&mut RenderContext) {
-        let array_collect = UBOArrayCollect::new(self.ubo_name.clone(), 64);
+    fn init(&mut self,_:& World,ctx:&mut RenderContext) {
+        let mut array_collect = UBOArrayCollect::new(self.ubo_name.clone(), 10);
+        array_collect.init(ctx);
         self.array_collect = Some(array_collect)
     }
 
