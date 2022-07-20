@@ -38,7 +38,7 @@ impl Default for DrawPassNode {
             depth: None,
             pass_name:String::default(),
             operations: wgpu::Operations {
-                load:wgpu::LoadOp::Clear(Color {r:0.1f64,g:0.1f64,b:0.1f64,a:1f64 }),
+                load:wgpu::LoadOp::Clear(Color {r:0f64,g:0f64,b:0f64,a:1f64 }),
                 store:true  
             } 
         }

@@ -31,7 +31,8 @@ pub fn pre_start(mut commands:Commands,window:Res<AppWindow>,mats:Res<MaterialSt
 pub fn add_camera_3d(mut commands:&mut Commands,window:&AppWindow) -> Entity {
     let mut root = commands.spawn();
     let mut t = Transform::default();
-    t.local.position = Vec3::new(0f32, 0f32, 0f32);
+    t.local.position = Vec3::new(0f32, 10f32, 0f32);
+    t.local.rotation = Quat::from_euler(glam::EulerRot::XYZ  , 10f32.to_radians(),  0f32.to_radians(), 0f32.to_radians());
     root.insert(t);
     
     let mut per = Perspective::default();
