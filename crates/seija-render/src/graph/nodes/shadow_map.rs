@@ -54,7 +54,7 @@ impl ShadowMapNode {
             name_index:None,
             proj_view_index:0,
             last_dir:Vec3::ZERO,
-            orth_mat:Mat4::orthographic_rh(-1000f32,1000f32,-1000f32,1000f32,0.1f32,1000f32)
+            orth_mat:Mat4::orthographic_lh(-1000f32,1000f32,-1000f32,1000f32,0.1f32,1000f32)
         }
     }
 
@@ -127,7 +127,7 @@ impl ShadowMapNode {
     }
 
     fn create_orth_mat(&self,dir:Vec3) -> Mat4 {
-        let view = Mat4::look_at_rh(Vec3::ZERO, dir, Vec3::Y);
+        let view = Mat4::look_at_lh(Vec3::ZERO, dir, Vec3::Y);
         return self.orth_mat * view;
     }
 }

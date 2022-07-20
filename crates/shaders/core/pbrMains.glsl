@@ -22,7 +22,7 @@ VSOutput vs_main() {
 
 vec4 fs_main(VSOutput ino) {
     vec4 cameraPos = getCameraPosition();
-    vec3 viewDir = normalize(cameraPos.xyz - ino.outPos.xyz);
+    vec3 viewDir = normalize(ino.outPos.xyz - cameraPos.xyz);
     
     MaterialInputs inputs;
     initMaterial(inputs);

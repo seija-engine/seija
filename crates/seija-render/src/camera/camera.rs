@@ -80,7 +80,7 @@ impl Default for Orthographic {
 
 impl Orthographic {
     pub fn proj_matrix(&self) -> Mat4  {
-        Mat4::orthographic_rh(self.left,self.right,self.bottom,self.top,self.near,self.far)
+        Mat4::orthographic_lh(self.left,self.right,self.bottom,self.top,self.near,self.far)
     } 
 }
 
@@ -108,6 +108,6 @@ impl Default for Perspective {
 
 impl Perspective {
     fn proj_matrix(&self) -> Mat4 {
-        Mat4::perspective_rh(self.fov, self.aspect_ratio, self.near, self.far)
+        Mat4::perspective_lh(self.fov, self.aspect_ratio, self.near, self.far)
     }
 }

@@ -58,7 +58,7 @@ fn start(mut commands:Commands,
         {
             let light = PBRLight::directional(Vec3::new(1f32, 1f32, 1f32)  , 12000f32);
             let mut t = Transform::default();
-            let r = Quat::from_euler(glam::EulerRot::XYZ  , 0f32.to_radians(), 90f32.to_radians(), 0f32.to_radians());
+            let r = Quat::from_euler(glam::EulerRot::XYZ  , 0f32.to_radians(),  0f32.to_radians(), 0f32.to_radians());
             t.local.rotation = r;
             let mut l = commands.spawn();
             l.insert(light);
@@ -68,13 +68,13 @@ fn start(mut commands:Commands,
         let mesh =  Sphere::new(1f32);
         let hmesh = meshs.add(mesh.into());
         let hmat = materials.create_material_with("pbrColor", |mat| {
-            mat.props.set_f32("metallic",  0.2f32, 0);
-            //mat.props.set_f32("roughness", 0.5f32, 0);
+            mat.props.set_f32("metallic",  0.5f32, 0);
+            mat.props.set_f32("roughness", 0.5f32, 0);
             mat.props.set_float4("color", Vec4::new(0f32, 0f32, 1f32, 1f32), 0)
         }).unwrap();
 
         let mut t = Transform::default();
-        t.local.position = Vec3::new(0f32, 0f32, -3f32);
+        t.local.position = Vec3::new(0f32, 0f32, 3f32);
         let shadow = Shadow {cast_shadow:true,receive_shadow:true };
         commands.spawn().insert(hmesh).insert(hmat).insert(t).insert(shadow );
     };
