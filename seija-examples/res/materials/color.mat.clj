@@ -14,7 +14,7 @@
         {
             :tag "ShadowCaster"
             :targets []
-            :shader { :name "core.depth" :macros [] }
+            :shader { :name "core.shadowDepth" :macros [] }
         }
     ]
 }

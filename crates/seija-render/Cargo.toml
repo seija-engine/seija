@@ -31,4 +31,4 @@ image = "0.23.14"
 env_logger = "0.9.0"
 glsl-pack-rtbase = {path = "../../../glsl-pack/glsl-pack-rtbase"}
 fixedbitset = "0.4.1"
-anyhow = "1.0.41"
+anyhow = "1.0.58"

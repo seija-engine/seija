@@ -1,5 +1,5 @@
 use std::collections::{HashMap, HashSet};
-
+use anyhow::{Result};
 use bevy_ecs::prelude::World;
 use lite_clojure_eval::{Variable, EvalRT};
 
@@ -10,7 +10,7 @@ use super::{main::MainContext, rt_tags::RuntimeTags};
 pub trait IUpdateNode {
     fn update_params(&mut self,params:Vec<Variable>);
 
-    fn init(&mut self,world:&World,ctx:&mut RenderContext) {}
+    fn init(&mut self,world:&World,ctx:&mut RenderContext) -> anyhow::Result<()> { Ok(()) }
 
     fn prepare(&mut self,world:&mut World,ctx:&mut RenderContext) {}
 
@@ -21,13 +21,14 @@ pub struct UpdateNodeBox {
     pub tag_index:Option<usize>,
     pub enable:bool,
     pub params:Vec<Variable>,
-    pub node:Box<dyn IUpdateNode>
+    pub node:Box<dyn IUpdateNode>,
+    init_fail:bool,
 }
 
 impl UpdateNodeBox {
     pub fn create<T>(params:&Vec<Variable>) -> UpdateNodeBox where T:Default + IUpdateNode + 'static {
         let node:T = Default::default();
-        UpdateNodeBox { tag_index:None,enable:true, params:params.clone(), node:Box::new(node) }
+        UpdateNodeBox { tag_index:None,enable:true, params:params.clone(), node:Box::new(node),init_fail:false }
     }
 
     pub fn set_params(&mut self,rt:&mut EvalRT,is_first:bool) {
@@ -56,7 +57,10 @@ impl UpdateNodeBox {
     }
 
     pub fn init(&mut self,world:&World,ctx:&mut RenderContext) {
-        self.node.init(world, ctx);
+       if let Err(err) = self.node.init(world, ctx) {
+            self.init_fail = true;
+            log::error!("{}",err);
+       }
     }
     
     pub fn update_enable(&mut self,rt_tags:&RuntimeTags) {
@@ -68,11 +72,13 @@ impl UpdateNodeBox {
     }
 
     pub fn prepare(&mut self,world:&mut World,ctx:&mut RenderContext) {
-        self.node.prepare(world, ctx);
+        if self.enable && !self.init_fail {
+            self.node.prepare(world, ctx);
+        }
     }
 
     pub fn update(&mut self,world:&mut World,ctx:&mut RenderContext) {
-        if self.enable {
+        if self.enable && !self.init_fail {
             self.node.update(world, ctx);
         }
     }

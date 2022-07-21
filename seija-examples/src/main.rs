@@ -9,7 +9,7 @@ use seija_core::{CoreModule, CoreStage, StartupStage};
 use seija_deferred::{create_deferred_plugin, DeferredRenderModule};
 use seija_examples::{pre_start};
 use seija_pbr::{create_pbr_plugin, lights::PBRLight};
-use seija_render::{RenderModule, RenderConfig, GraphSetting, resource::{shape::{Cube, Sphere, Plane}, Mesh, Texture}, material::MaterialStorage, shadow::Shadow};
+use seija_render::{RenderModule, RenderConfig, GraphSetting, resource::{shape::{Cube, Sphere, Plane}, Mesh, Texture}, material::MaterialStorage, shadow::{Shadow, ShadowLight}};
 use seija_skeleton3d::{Skeleton3dModule, create_skeleton_plugin};
 use seija_winit::WinitModule;
 use seija_transform::{TransformModule, Transform};
@@ -59,11 +59,15 @@ fn start(mut commands:Commands,
         {
             let light = PBRLight::directional(Vec3::new(1f32, 1f32, 1f32)  , 62000f32);
             let mut t = Transform::default();
-            let r = Quat::from_euler(glam::EulerRot::XYZ  , -45f32.to_radians(),  0f32.to_radians(), 0f32.to_radians());
+            let r = Quat::from_euler(glam::EulerRot::default()  , 90f32.to_radians(),  30f32.to_radians(), 0f32.to_radians());
+           
             t.local.rotation = r;
+            
+            t.local.position = Vec3::new(-10f32, 10f32, 0f32);
             let mut l = commands.spawn();
             l.insert(light);
             l.insert(t);
+            l.insert(ShadowLight::default());
         }
         //sphere
         {

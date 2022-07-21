@@ -2,11 +2,10 @@ use std::collections::HashMap;
 use bevy_ecs::prelude::{World, Entity, Added, With};
 use lite_clojure_eval::{Variable, GcRefCell};
 use seija_app::App;
-use seija_asset::Assets;
 use seija_core::AddCore;
 use seija_transform::Transform;
 use crate::{camera::camera::Camera};
-use crate::{UniformInfoSet, resource::Texture, RenderContext, RenderScriptPlugin};
+use crate::{UniformInfoSet, RenderContext, RenderScriptPlugin};
 use super::{ScriptContext, rt_tags::{RuntimeTags, TagEvent}, render_path::{RenderPathList}, node::*, builtin::create_builtin_node_set};
 
 //这里通过逻辑保证RenderMain只在一个线程运行，ECS库的System必须要这俩个trait

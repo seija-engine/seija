@@ -20,9 +20,9 @@ Light getLight(const int index,vec3 normal,vec3 vPos) {
     light.ex1 = getLightsEx1(index);
     light.ex2 = getLightsEx2(index);
     light.ex3 = getLightsEx3(index);
-    light.dir = normalize(getLightsDirection(index));
+    light.dir = normalize(-getLightsDirection(index));
     if(light.typ == eLIGHT_TYPE_DIR) {
-        light.l = normalize(getLightsDirection(index));
+        light.l = normalize(-getLightsDirection(index));
         light.attenuation = 1;
     } else {
         light.l =  normalize(light.worldPosition - vPos);

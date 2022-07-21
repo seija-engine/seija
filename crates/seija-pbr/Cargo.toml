@@ -6,6 +6,7 @@ edition = "2021"
 [dependencies]
 glam = "0.20.3"
 bevy_ecs = "0.7.0"
+anyhow = "1.0.58"
 log = "0.4.16"
 seija-render = {path = "../seija-render"}
 seija-transform = {path = "../seija-transform"}

@@ -6,12 +6,14 @@ use crate::{UniformInfoSet, resource::RenderResources, memory::TypedUniformBuffe
 
 use super::{object::UniformObject, array_object::ArrayObject, UniformType, UBOApplyType};
 
-#[derive(Clone,Copy,Debug)]
+#[derive(Clone,Copy,Debug,Default)]
 pub struct UniformIndex {
     pub typ:UniformType,
     pub index:usize,
     pub apply_type:UBOApplyType
 }
+
+
 
 #[derive(Default)]
 pub struct UniformContext {

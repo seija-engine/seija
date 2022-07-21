@@ -9,6 +9,9 @@ pub enum UniformType {
     Component,
     Global
 }
+impl Default for UniformType {
+    fn default() -> Self { UniformType::Global }
+}
 
 impl TryFrom<&Value> for UniformType {
     type Error = String;
@@ -27,6 +30,10 @@ pub enum UBOApplyType {
     Camera,
     RenderObject,
     Frame
+}
+
+impl Default for UBOApplyType {
+    fn default() -> Self { UBOApplyType::Frame }
 }
 
 impl TryFrom<&Value> for UBOApplyType {

@@ -12,7 +12,11 @@
             :shader { :name "core.pbr" :macros [] } 
         }
 
-        
+        {
+            :tag "ShadowCaster"
+            :targets []
+            :shader { :name "core.shadowDepth" :macros [] }
+        }
         
     ]
 }

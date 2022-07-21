@@ -84,14 +84,14 @@ Light getLight(const int index,vec3 vertPos,vec3 normal) {
     Light light;
     light.typ                =  getLightsType(index);
     light.worldPosition      =  getLightsPosition(index);
-    light.direction          =  getLightsDirection(index);
+    light.direction          =  -getLightsDirection(index);
     light.colorIntensity.rgb = getLightsColor(index);
     float intensity          = getLightsIntensity(index);
     light.colorIntensity.w  = computePreExposedIntensity(intensity, getExposure());
     vec3 posToLight = light.worldPosition - vertPos;
     float falloff   = getLightsFalloff(index);
     if(light.typ == eLIGHT_TYPE_DIR) {
-        light.l = normalize(getLightsDirection(index));
+        light.l = normalize(-getLightsDirection(index));
         light.attenuation = 1.0;
     } else if (light.typ == eLIGHT_TYPE_POINT) {
         light.attenuation = getDistanceAttenuation(posToLight,falloff);

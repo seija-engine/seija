@@ -57,6 +57,36 @@
         ]
         :backends ["SkinUniform"]
     })
+
+    (declare-uniform set "ShadowCast" {
+        :type :Global
+        :sort 5
+        :apply :Frame
+        :shader-stage SS_VERTEX
+        :props [
+            {:name "projView" :type "mat4" }
+        ]
+        :backends ["ShadowCast"]
+    })
+
+    (declare-uniform set "ShadowRecv" {
+        :type :Global
+        :sort 6
+        :apply :Frame
+        :shader-stage SS_FRAGMENT
+        :props [
+            {:name "bias" :type "float" }
+            {:name "strength" :type "float" }
+        ]
+        :textures [
+            {
+                :name "shadowMap"
+                :type "texture2D"
+                :filterable true
+            }
+        ]
+        :backends ["ShadowRecv"]
+    })
 )
 
 (println "Enter New Render Clojure")
@@ -66,24 +96,26 @@
     (println "on-render-start")
     (add-tag "PBR" true)
     (add-tag "Skin" false)
-    (add-tag "Shadow" false)
+    (add-tag "Shadow" true)
 
     (add-uniform  "ObjectBuffer")
     (add-uniform  "CameraBuffer")
+    (select-add-uniform  "Shadow" "ShadowCast")
+    (select-add-uniform  "Shadow" "ShadowRecv")
+
     (select-add-uniform  "PBR"    "LightBuffer")
     (select-add-uniform  "Skin"   "SkinBuffer")
-    (select-add-uniform  "Shadow" "ShadowBuffer")
+    
 
-    
-    
     (add-node globalEnv nil   CAMERA_NODE    "CameraBuffer")
     (add-node globalEnv nil   TRANSFROM_NODE "ObjectBuffer")
     (add-node globalEnv "PBR" PBR_CAMERA_EX  "CameraBuffer")
     (add-node globalEnv "PBR" PBR_LIGHT      "LightBuffer")
 
-   ;(add-query "ShadowQuery" 2)
-   ;(assoc! globalEnv :shadowDepth (atom-texture {:format "Depth32Float" :width 1024 :height 1024}))
-   ;(add-node globalEnv nil DRAW_PASS (get-query "ShadowQuery") nil [] (globalEnv :shadowDepth) "ShadowCaster")
+    (add-query "ShadowQuery" 2)
+    (add-node globalEnv nil SHADOW_NODE "ShadowCast")
+    (assoc! globalEnv :shadowDepth (atom-texture {:format "Depth32Float" :width 1024 :height 1024}))
+    (add-node globalEnv nil DRAW_PASS (get-query "ShadowQuery") nil [] (globalEnv :shadowDepth) "ShadowCaster")
 
     (add-foward-path globalEnv)
 )

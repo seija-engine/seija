@@ -8,6 +8,7 @@ use crate::query::{QuerySystem, IdOrName};
 use crate::rdsl::main::DynUniformItem;
 use crate::rdsl::nodes::CameraNode;
 use crate::resource::{Texture, TextureDescInfo, RenderResourceId};
+use crate::shadow::ShadowNode;
 use crate::{UniformInfoSet, UniformInfo, RenderContext};
 
 use super::atom::Atom;
@@ -23,6 +24,7 @@ pub fn create_builtin_node_set() -> NodeCreatorSet {
     node_set.0.insert("TRANSFROM_NODE".into(), |_,params| UpdateNodeBox::create::<TransfromNode>(&params));
     node_set.0.insert("WINSIZE_TEXTURE".into(), |_,params| UpdateNodeBox::create::<WindowReSizeNode>(&params));
     node_set.0.insert("DRAW_PASS".into(), |_,params| UpdateNodeBox::create::<DrawPassNode>(&params));
+    node_set.0.insert("SHADOW_NODE".into(), |_,params| UpdateNodeBox::create::<ShadowNode>(&params));
     node_set
 }
 

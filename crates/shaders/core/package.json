@@ -13,11 +13,11 @@
         "fs": "pures.color_fs_main"
       },
       {
-        "name": "depth",
+        "name": "shadowDepth",
         "vertex": {
           "POSITION": "require"
         },
-        "backend": [  "Transform" ],
+        "backend": [  "Transform","ShadowCast" ],
        
         "vs": "depth.depth_vs_main",
         "fs": "depth.depth_fs_main"

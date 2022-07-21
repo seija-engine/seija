@@ -108,7 +108,10 @@ impl DrawPassNode {
                     if let Some(mesh_buffer_id)  = ctx.resources.get_render_resource(&hmesh.id, 0) {
                         for pipeline in pipelines.pipelines.iter() {
 
-                            if pipeline.tag != self.pass_name {  continue; }
+                            if pipeline.tag != self.pass_name {
+                                 //log::warn!("skip tag :{}",&pipeline.tag);
+                                 continue; 
+                            }
                             
                             let vert_buffer = ctx.resources.get_buffer_by_resid(&mesh_buffer_id).unwrap();
                            

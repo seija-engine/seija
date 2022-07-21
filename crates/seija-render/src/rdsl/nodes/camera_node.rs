@@ -1,6 +1,7 @@
 use bevy_ecs::prelude::{World, Entity, Added, With};
 use glam::Vec4;
 use lite_clojure_eval::Variable;
+use anyhow::{Result,  bail,anyhow };
 use seija_transform::Transform;
 
 use crate::{rdsl::node::IUpdateNode, UniformIndex, uniforms::backends::Camera3DBackend, RenderContext, camera::camera::Camera, memory::TypedUniformBuffer};
@@ -18,18 +19,13 @@ impl IUpdateNode for CameraNode {
         }
     }
 
-    fn init(&mut self,_:& World,ctx:&mut crate::RenderContext) {
-        if let Some(info) = ctx.ubo_ctx.info.get_info(&self.ubo_name) {
-            match Camera3DBackend::from_def(&info.props) {
-                Ok(backend) => {
-                    self.backend = Some(backend)
-                },
-                Err(err) => {
-                    log::error!("Camera3DBackend backend error :{}",err);
-                }
-            }
-            self.name_index = Some(ctx.ubo_ctx.get_index(self.ubo_name.as_str()).unwrap())
-         }
+    fn init(&mut self,_:& World,ctx:&mut crate::RenderContext) -> Result<()>  {
+        let info = ctx.ubo_ctx.info.get_info(&self.ubo_name).ok_or(anyhow!("not found ubo {}",&self.ubo_name))?;
+        let backend = Camera3DBackend::from_def(&info.props).map_err(|v| anyhow!("camera3d backend err:{}",v.as_str()))?;
+        self.backend = Some(backend);
+        self.name_index = Some(ctx.ubo_ctx.get_index(self.ubo_name.as_str()).ok_or(anyhow!("err ubo name"))?);
+      
+        Ok(())
     }
 
     fn prepare(&mut self, world: &mut World,ctx:&mut RenderContext) {

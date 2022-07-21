@@ -3,6 +3,7 @@ use glam::Vec3;
 use lite_clojure_eval::Variable;
 use seija_render::{IUpdateNode, RenderContext, UniformBuffer, UBOArrayCollect};
 use seija_transform::Transform;
+use anyhow::{Result,anyhow};
 
 use crate::lights::{PBRLight, PBRLightType};
 
@@ -44,10 +45,11 @@ impl IUpdateNode for PBRLightNode {
         }
     }
 
-    fn init(&mut self,_:& World,ctx:&mut RenderContext) {
+    fn init(&mut self,_:& World,ctx:&mut RenderContext) -> Result<()> {
         let mut array_collect = UBOArrayCollect::new(self.ubo_name.clone(), 10);
         array_collect.init(ctx);
-        self.array_collect = Some(array_collect)
+        self.array_collect = Some(array_collect);
+        Ok(())
     }
 
     fn update(&mut self,world:&mut World,ctx:&mut RenderContext) {

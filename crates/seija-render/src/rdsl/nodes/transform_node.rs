@@ -1,5 +1,6 @@
 use bevy_ecs::prelude::{World, Entity, Added, With, Changed};
 use lite_clojure_eval::Variable;
+use anyhow::{Result,anyhow};
 use seija_asset::Handle;
 use seija_transform::Transform;
 use crate::{rdsl::{node::IUpdateNode}, RenderContext, uniforms::backends::TransformBackend, UniformIndex, resource::Mesh, material::Material};
@@ -18,22 +19,12 @@ impl IUpdateNode for TransfromNode {
         }
     }
 
-    fn init(&mut self,_:& World,ctx:&mut RenderContext) {
-        if let Some(info) = ctx.ubo_ctx.info.get_info(&self.ubo_name) {
-            match TransformBackend::from_def(&info.props) {
-                Ok(backend) => {
-                    self.backend = Some(backend)
-                },
-                Err(err) => {
-                    log::error!("TransformBackend backend error :{}",err);
-                }
-            }
-            if let Some(index) = ctx.ubo_ctx.get_index(self.ubo_name.as_str()) {
-                self.name_index = Some(index);
-            } else {
-                log::error!("not found {}",self.ubo_name.as_str())
-            }
-         }
+    fn init(&mut self,_:& World,ctx:&mut RenderContext) -> Result<()> {
+        let info = ctx.ubo_ctx.info.get_info(&self.ubo_name).ok_or(anyhow!("not found ubo {}",&self.ubo_name))?;
+        let backend = TransformBackend::from_def(&info.props).map_err(|v| anyhow!("TransformBackend  err:{}",v.as_str()))?;
+        self.backend = Some(backend);
+        self.name_index = Some(ctx.ubo_ctx.get_index(self.ubo_name.as_str()).ok_or(anyhow!("not found {}",self.ubo_name.as_str()))?);
+        Ok(())
     }
 
     fn prepare(&mut self,world:&mut World,ctx:&mut RenderContext) {
