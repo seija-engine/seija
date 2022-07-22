@@ -11,6 +11,7 @@ members = [
     "crates/seija-pbr",
     "crates/seija-skeleton3d",
     "crates/seija-deferred",
+    "crates/seija-geometry",
     #"crates/tools/material-compiler",
     "seija-examples"
 ]

@@ -2358,6 +2358,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "seija-geometry"
+version = "0.1.0"
+dependencies = [
+ "glam",
+]
+
+[[package]]
 name = "seija-gltf"
 version = "0.1.0"
 dependencies = [
@@ -2408,6 +2415,7 @@ dependencies = [
  "seija-app",
  "seija-asset",
  "seija-core",
+ "seija-geometry",
  "seija-transform",
  "seija-winit",
  "serde",

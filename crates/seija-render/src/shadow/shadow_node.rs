@@ -1,10 +1,12 @@
 use bevy_ecs::prelude::{World, Entity, Changed, Or};
+use glam::{Mat4, Vec3, Vec4};
 use lite_clojure_eval::Variable;
 use anyhow::{Result,anyhow};
-use seija_transform::Transform;
-use crate::{IUpdateNode, RenderContext, UniformIndex, camera::camera::Orthographic};
+use seija_geometry::{calc_bound_sphere, proj_view_corners};
+use seija_transform::{Transform, TransformMatrix};
+use crate::{IUpdateNode, RenderContext, UniformIndex, camera::camera::{Orthographic, Camera}};
 use seija_core::bytes::AsBytes;
-use super::ShadowLight;
+use super::{ShadowLight, ShadowCamera};
 
 #[derive(Default)]
 pub struct ShadowNode {
@@ -32,16 +34,38 @@ impl IUpdateNode for ShadowNode {
 
     fn update(&mut self,world:&mut World,ctx:&mut RenderContext) {
         let mut shadow_query = world.query_filtered::<(Entity,&Transform,&ShadowLight),Or<(Changed<Transform>,Changed<ShadowLight>)>>();
-        if let Some((e,t,_)) = shadow_query.iter(world).next() {
+        let mut shadow_camera = world.query::<(&Camera,&Transform,&ShadowCamera)>();
+        if let Some((c,camera_t,_)) = shadow_camera.iter(world).next() {
+            let proj = c.projection.matrix();
+            let view = camera_t.global().matrix().inverse();
+            let proj_view = proj * view;
+            let frustum_pts = proj_view_corners(&proj_view);
+            
+            let sphere = calc_bound_sphere(frustum_pts);
+           
             let mut orth = Orthographic::default();
-            orth.left = -100f32;
-            orth.right = 100f32;
-            orth.bottom = -100f32;
-            orth.top = 100f32;
-            let proj_view = orth.proj_matrix() * t.global().matrix().inverse();
-            ctx.ubo_ctx.set_buffer(&self.name_index, Some(e.id()), |buffer| {
-                buffer.buffer.write_bytes_(self.proj_view_index, proj_view.to_cols_array().as_bytes());
-            });
+            orth.left = -sphere.radius;
+            orth.right = sphere.radius;
+            orth.top = sphere.radius;
+            orth.bottom = -sphere.radius;
+            orth.far = sphere.radius;
+            orth.near = -sphere.radius;
+           
+           
+
+            if let Some((e,t,_)) = shadow_query.iter(world).next() {
+              
+                
+                let view = Mat4::from_scale_rotation_translation(Vec3::ONE, t.global().rotation, sphere.center);
+                let light_proj_view = orth.proj_matrix() * view.inverse();
+                
+                log::debug!("shadow debug {:?} {:?} {}",&orth,&sphere,&light_proj_view);
+               
+                ctx.ubo_ctx.set_buffer(&self.name_index, Some(e.id()), |buffer| {
+                    buffer.buffer.write_bytes_(self.proj_view_index, light_proj_view.to_cols_array().as_bytes());
+                });
+
+            }
         }
     }
 }

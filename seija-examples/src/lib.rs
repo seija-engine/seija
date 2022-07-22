@@ -5,7 +5,7 @@ use seija_app::App;
 use seija_asset::{Assets, Handle};
 use seija_core::{CoreStage, window::AppWindow, info::EInfo};
 use seija_pbr::PBRCameraInfo;
-use seija_render::{camera::{camera::Perspective,camera::Camera}, material::{MaterialStorage, read_material_def}, resource::{Mesh, Texture, TextureDescInfo}};
+use seija_render::{camera::{camera::Perspective,camera::Camera}, material::{MaterialStorage, read_material_def}, resource::{Mesh, Texture, TextureDescInfo}, shadow::ShadowCamera};
 use seija_transform::{Transform, hierarchy::Parent};
 use bevy_ecs::prelude::*;
 use seija_render::wgpu;
@@ -31,13 +31,14 @@ pub fn pre_start(mut commands:Commands,window:Res<AppWindow>,mats:Res<MaterialSt
 pub fn add_camera_3d(mut commands:&mut Commands,window:&AppWindow) -> Entity {
     let mut root = commands.spawn();
     let mut t = Transform::default();
-    t.local.position = Vec3::new(0f32, 10f32, 0f32);
-    t.local.rotation = Quat::from_euler(glam::EulerRot::XYZ  , 10f32.to_radians(),  0f32.to_radians(), 0f32.to_radians());
+    //t.local.position = Vec3::new(0f32, 10f32, 0f32);
+    //t.local.rotation = Quat::from_euler(glam::EulerRot::XYZ  , 10f32.to_radians(),  0f32.to_radians(), 0f32.to_radians());
     root.insert(t);
     
     let mut per = Perspective::default();
     per.aspect_ratio = window.width() as f32 / window.height() as f32;
     let camera = Camera::from_3d(per);
+    
     root.insert(camera);
 
     let mut info = EInfo::default();
@@ -46,6 +47,8 @@ pub fn add_camera_3d(mut commands:&mut Commands,window:&AppWindow) -> Entity {
 
     let pbr_camera = PBRCameraInfo::default();
     root.insert(pbr_camera);
+
+    root.insert(ShadowCamera);
     root.id()
     
 }

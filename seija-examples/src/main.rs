@@ -60,10 +60,7 @@ fn start(mut commands:Commands,
             let light = PBRLight::directional(Vec3::new(1f32, 1f32, 1f32)  , 62000f32);
             let mut t = Transform::default();
             let r = Quat::from_euler(glam::EulerRot::default()  , 90f32.to_radians(),  30f32.to_radians(), 0f32.to_radians());
-           
             t.local.rotation = r;
-            
-            t.local.position = Vec3::new(-10f32, 10f32, 0f32);
             let mut l = commands.spawn();
             l.insert(light);
             l.insert(t);
@@ -81,7 +78,7 @@ fn start(mut commands:Commands,
             }).unwrap();
     
             let mut t = Transform::default();
-            t.local.position = Vec3::new(0f32, 7f32, 15f32);
+            t.local.position = Vec3::new(0f32, 0f32, 2f32);
             let shadow = Shadow {cast_shadow:true,receive_shadow:true };
             commands.spawn().insert(hmesh).insert(hmat).insert(t).insert(shadow );
         };
@@ -98,7 +95,7 @@ fn start(mut commands:Commands,
             }).unwrap();
             let mut t = Transform::default();
             t.local.position = Vec3::new(0f32, 0f32, 50f32);
-            t.local.scale = Vec3::new(1f32, 0.1f32, 1f32);
+           
             let r = Quat::from_euler(glam::EulerRot::XYZ  , 0f32.to_radians(),  0f32.to_radians(), 0f32.to_radians());
             t.local.rotation = r;
             let shadow = Shadow {cast_shadow:true,receive_shadow:true };

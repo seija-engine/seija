@@ -1,6 +1,8 @@
 use bevy_ecs::prelude::{Entity, Component};
-use glam::Mat4;
+use glam::{Mat4, Vec4, Vec3};
 use seija_asset::Handle;
+use seija_geometry::proj_view_corners;
+use seija_transform::Transform;
 use crate::resource::Texture;
 
 
@@ -72,19 +74,35 @@ impl Default for Orthographic {
             right: 1.0,
             bottom: -1.0,
             top: 1.0,
-            near: 0.0,
-            far: 1000.0,
+            near: 0.001,
+            far: 100.0,
          }
     }
 }
 
 impl Orthographic {
+    //左手坐标系
     pub fn proj_matrix(&self) -> Mat4  {
-        Mat4::orthographic_lh(self.left,self.right,self.bottom,self.top,self.near,self.far)
+        /*
+             * P =  2/r-l    0         0       - r+l/r-l
+             *       0      2/t-b      0       - t+b/t-b
+             *       0       0       2/F-N    - F+N/F-N
+             *       0       0         0            1
+        */
+        Mat4::from_cols(Vec4::new(2f32 / (self.right - self.left), 0f32, 0f32, 0f32),
+                        Vec4::new(0f32, 2f32 / (self.top - self.bottom), 0f32, 0f32),
+                        Vec4::new(0f32, 0f32, 2f32 / (self.far - self.near), 0f32),
+                        Vec4::new(-(self.right + self.left) / (self.right - self.left), -(self.top + self.bottom) / (self.top - self.bottom), 
+                                          -(self.far + self.near) / (self.far - self.near), 1f32))
+
     } 
 }
 
-
+#[derive(Debug,PartialEq, Eq)]
+pub enum FovDirection {
+    Hor,
+    Ver
+}
 
 #[derive(Debug)]
 pub struct Perspective {
@@ -92,22 +110,48 @@ pub struct Perspective {
     pub aspect_ratio: f32,
     pub near: f32,
     pub far: f32,
+    pub dir:FovDirection
 }
 
 impl Default for Perspective {
     fn default() -> Self {
         Perspective {
-            fov: std::f32::consts::PI / 4.0,
-            near: 0.001f32,
-            far: 1000.0,
+            fov: 60f32.to_radians(),
+            near: 0.01f32,
+            far: 100.0,
             aspect_ratio: 1.0,
+            dir:FovDirection::Ver
         }
     }
 
 }
 
 impl Perspective {
+
+    fn frustum(left:f32,right:f32,bottom:f32,top:f32,near:f32,far:f32) -> Mat4 {
+        /* P =      2N/r-l    0      l+r/l-r        0
+             *       0      2N/t-b   b+t/b-t        0
+             *       0        0      f+n/f-n        2nf/n-f
+             *       0        0        -1           0
+             */
+        Mat4::from_cols(Vec4::new((2f32 * near) / (right - left), 0f32, 0f32, 0f32), 
+                        Vec4::new(0f32, (2f32 * near) / (top - bottom), 0f32, 0f32), 
+                        Vec4::new((left + right) / (left - right), (bottom + top) / (bottom - top), (far + near) / (far - near), 1f32), 
+                        Vec4::new(0f32, 0f32, (2f32 * near * far) / (near - far), 0f32))
+    }
+
     fn proj_matrix(&self) -> Mat4 {
-        Mat4::perspective_lh(self.fov, self.aspect_ratio, self.near, self.far)
+        let w;
+        let h;
+        let s = (self.fov / 2.0f32).tan() * self.near;
+        if self.dir == FovDirection::Ver {
+            w = s * self.aspect_ratio;
+            h = s;
+        } else {
+            w = s;
+            h = s / self.aspect_ratio;
+        }
+        Self::frustum(-w, w, -h, h, self.near, self.far)
     }
 }
+
