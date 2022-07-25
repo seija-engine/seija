@@ -44,11 +44,11 @@ impl From<Plane> for Mesh {
         for z in 0..plane.quad_count {
             for x in 0..plane.quad_count {
                 let y_offset:u32 = (z * pos_row_len) as u32;
-                let y_offset2:u32 = ((z + 1) * pos_row_len) as u32;
-                let lb:u32 = y_offset + x as u32;
-                let rb:u32 = y_offset + x as u32 + 1;
-                let lt:u32 = y_offset2 + x as u32;
-                let rt:u32 = y_offset2 + x as u32 + 1;
+                let y_offset2:u32 = ((z+1) * pos_row_len) as u32;
+                let lt:u32 = y_offset + x as u32;
+                let rt:u32 = y_offset + x as u32 + 1;
+                let lb:u32 = y_offset2 + x as u32;
+                let rb:u32 = y_offset2 + x as u32 + 1;
                 indices.extend_from_slice(&[lb,rb,rt,lb,rt,lt]);
             }
         }

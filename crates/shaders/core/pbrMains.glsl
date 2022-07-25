@@ -22,7 +22,7 @@ VSOutput vs_main() {
 
 vec4 fs_main(VSOutput ino) {
     vec4 cameraPos = getCameraPosition();
-    vec3 viewDir = normalize(ino.outPos.xyz - cameraPos.xyz);
+    vec3 viewDir = normalize(cameraPos.xyz - ino.outPos.xyz);
     
     MaterialInputs inputs;
     initMaterial(inputs);
@@ -32,5 +32,6 @@ vec4 fs_main(VSOutput ino) {
     inputs.metallic   = material.metallic;
     
     vec4 evalColor = evaluateMaterial(inputs,ino.outPos.xyz,viewDir);
+    //vec4 retColor = vec4(evalColor.x + 0.05,evalColor.y + 0.05,evalColor.z + 0.05,evalColor.w);
     return evalColor;
 }

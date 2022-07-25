@@ -1,15 +1,15 @@
 mod lib;
 use std::sync::Arc; 
-use bevy_ecs::prelude::{IntoSystem, Commands, ResMut, Res};
+use bevy_ecs::prelude::{IntoSystem, Commands, ResMut, Res, Query, Entity};
 use glam::{Vec3, Quat, Vec4};
 use lib::load_material;
 use seija_app::App;
-use seija_asset::{AssetModule, Assets};
+use seija_asset::{AssetModule, Assets, Handle};
 use seija_core::{CoreModule, CoreStage, StartupStage};
 use seija_deferred::{create_deferred_plugin, DeferredRenderModule};
 use seija_examples::{pre_start};
 use seija_pbr::{create_pbr_plugin, lights::PBRLight};
-use seija_render::{RenderModule, RenderConfig, GraphSetting, resource::{shape::{Cube, Sphere, Plane}, Mesh, Texture}, material::MaterialStorage, shadow::{Shadow, ShadowLight}};
+use seija_render::{RenderModule, RenderConfig, GraphSetting, resource::{shape::{Cube, Sphere, Plane, Quad}, Mesh, Texture}, material::MaterialStorage, shadow::{Shadow, ShadowLight}};
 use seija_skeleton3d::{Skeleton3dModule, create_skeleton_plugin};
 use seija_winit::WinitModule;
 use seija_transform::{TransformModule, Transform};
@@ -41,6 +41,7 @@ fn main() {
     //app.add_module(DeferredRenderModule {mat_path:"res/materials/light_pass.mat.clj".into() });
     app.add_system2(CoreStage::Startup, StartupStage::PreStartup, pre_start);
     app.add_system2(CoreStage::Startup, StartupStage::Startup, start);
+    app.add_system(CoreStage::Update, on_update);
     app.start();
 
     
@@ -59,7 +60,7 @@ fn start(mut commands:Commands,
         {
             let light = PBRLight::directional(Vec3::new(1f32, 1f32, 1f32)  , 62000f32);
             let mut t = Transform::default();
-            let r = Quat::from_euler(glam::EulerRot::default()  , 90f32.to_radians(),  30f32.to_radians(), 0f32.to_radians());
+            let r = Quat::from_euler(glam::EulerRot::default()  , 90f32.to_radians(),  45f32.to_radians(), 0f32.to_radians());
             t.local.rotation = r;
             let mut l = commands.spawn();
             l.insert(light);
@@ -68,8 +69,7 @@ fn start(mut commands:Commands,
         }
         //sphere
         {
-
-            let mesh =  Sphere::new(1f32);
+            let mesh =  Sphere::new(0.5f32);
             let hmesh = meshs.add(mesh.into());
             let hmat = materials.create_material_with("pbrColor", |mat| {
                 mat.props.set_f32("metallic",  0.5f32, 0);
@@ -78,7 +78,24 @@ fn start(mut commands:Commands,
             }).unwrap();
     
             let mut t = Transform::default();
-            t.local.position = Vec3::new(0f32, 0f32, 2f32);
+            t.local.position = Vec3::new(0.56f32, 0.5f32, 0f32);
+            t.local.rotation = Quat::from_euler(glam::EulerRot::XYZ, 0f32, -40f32.to_radians(), 0f32);
+            let shadow = Shadow {cast_shadow:true,receive_shadow:true };
+            commands.spawn().insert(hmesh).insert(hmat).insert(t).insert(shadow );
+        };
+        //Cube
+        {
+            let mesh =  Cube::new(1f32);
+            let hmesh = meshs.add(mesh.into());
+            let hmat = materials.create_material_with("pbrColor", |mat| {
+                mat.props.set_f32("metallic",  0.5f32, 0);
+                mat.props.set_f32("roughness", 0.5f32, 0);
+                mat.props.set_float4("color", Vec4::new(0f32, 0f32, 1f32, 1f32), 0)
+            }).unwrap();
+    
+            let mut t = Transform::default();
+            t.local.position = Vec3::new(-1.64f32, 0.5f32, 0f32);
+            //t.local.rotation = Quat::from_euler(glam::EulerRot::XYZ, 0f32, -40f32.to_radians(), 0f32);
             let shadow = Shadow {cast_shadow:true,receive_shadow:true };
             commands.spawn().insert(hmesh).insert(hmat).insert(t).insert(shadow );
         };
@@ -94,14 +111,27 @@ fn start(mut commands:Commands,
                 mat.props.set_float4("color", Vec4::new(1f32, 1f32, 1f32, 1f32), 0)
             }).unwrap();
             let mut t = Transform::default();
-            t.local.position = Vec3::new(0f32, 0f32, 50f32);
+            
            
-            let r = Quat::from_euler(glam::EulerRot::XYZ  , 0f32.to_radians(),  0f32.to_radians(), 0f32.to_radians());
-            t.local.rotation = r;
+            //let r = Quat::from_euler(glam::EulerRot::XYZ  , 0f32.to_radians(),  0f32.to_radians(), 0f32.to_radians());
+            //t.local.rotation = r;
             let shadow = Shadow {cast_shadow:true,receive_shadow:true };
             commands.spawn().insert(hmesh).insert(hmat).insert(t).insert(shadow );
         };
         
     };
    
+}
+
+
+fn on_update(mut query:Query<(Entity,&Handle<Mesh>,&mut Transform)>) {
+   
+    let v:f32 = (std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_millis() % 3600) as f32;
+    let r = v * 0.1f32 * 0.0174533f32;
+    
+    for (_,_,mut t) in query.iter_mut() {
+        let r = Quat::from_euler(glam::EulerRot::XYZ  , 0f32, r, 0f32);
+        
+        //t.local.rotation = r;
+    }
 }

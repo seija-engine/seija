@@ -54,10 +54,15 @@ impl IUpdateNode for ShadowNode {
            
 
             if let Some((e,t,_)) = shadow_query.iter(world).next() {
+                let p = t.global().rotation * Vec3::Z;
               
-                
-                let view = Mat4::from_scale_rotation_translation(Vec3::ONE, t.global().rotation, sphere.center);
-                let light_proj_view = orth.proj_matrix() * view.inverse();
+                let mut view = Mat4::look_at_rh(Vec3::ZERO,p , Vec3::Y);
+                let col3_mut = view.col_mut(3);
+                col3_mut.x = sphere.center.x;
+                col3_mut.y = sphere.center.y;
+                col3_mut.z = sphere.center.z;
+                //let view = Mat4::from_scale_rotation_translation(Vec3::ONE, -t.global().rotation, sphere.center);
+                let light_proj_view = orth.proj_matrix() * view;
                 
                 log::debug!("shadow debug {:?} {:?} {}",&orth,&sphere,&light_proj_view);
                

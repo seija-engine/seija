@@ -2,7 +2,6 @@ use bevy_ecs::prelude::{Entity, Component};
 use glam::{Mat4, Vec4, Vec3};
 use seija_asset::Handle;
 use seija_geometry::proj_view_corners;
-use seija_transform::Transform;
 use crate::resource::Texture;
 
 
@@ -81,20 +80,24 @@ impl Default for Orthographic {
 }
 
 impl Orthographic {
-    //左手坐标系
+  
     pub fn proj_matrix(&self) -> Mat4  {
         /*
+            //左手坐标系
              * P =  2/r-l    0         0       - r+l/r-l
              *       0      2/t-b      0       - t+b/t-b
              *       0       0       2/F-N    - F+N/F-N
              *       0       0         0            1
         */
+        /* 
         Mat4::from_cols(Vec4::new(2f32 / (self.right - self.left), 0f32, 0f32, 0f32),
                         Vec4::new(0f32, 2f32 / (self.top - self.bottom), 0f32, 0f32),
                         Vec4::new(0f32, 0f32, 2f32 / (self.far - self.near), 0f32),
                         Vec4::new(-(self.right + self.left) / (self.right - self.left), -(self.top + self.bottom) / (self.top - self.bottom), 
                                           -(self.far + self.near) / (self.far - self.near), 1f32))
-
+        */
+        //右手坐标系
+        Mat4::orthographic_rh_gl(self.left, self.right, self.bottom, self.top, self.near, self.far)
     } 
 }
 
@@ -127,7 +130,7 @@ impl Default for Perspective {
 }
 
 impl Perspective {
-
+    /* 
     fn frustum(left:f32,right:f32,bottom:f32,top:f32,near:f32,far:f32) -> Mat4 {
         /* P =      2N/r-l    0      l+r/l-r        0
              *       0      2N/t-b   b+t/b-t        0
@@ -138,9 +141,10 @@ impl Perspective {
                         Vec4::new(0f32, (2f32 * near) / (top - bottom), 0f32, 0f32), 
                         Vec4::new((left + right) / (left - right), (bottom + top) / (bottom - top), (far + near) / (far - near), 1f32), 
                         Vec4::new(0f32, 0f32, (2f32 * near * far) / (near - far), 0f32))
-    }
+    }*/
 
     fn proj_matrix(&self) -> Mat4 {
+        /* 
         let w;
         let h;
         let s = (self.fov / 2.0f32).tan() * self.near;
@@ -151,7 +155,19 @@ impl Perspective {
             w = s;
             h = s / self.aspect_ratio;
         }
-        Self::frustum(-w, w, -h, h, self.near, self.far)
+        Self::frustum(-w, w, -h, h, self.near, self.far)*/
+
+        //右手坐标系
+        Mat4::perspective_rh_gl(self.fov, self.aspect_ratio, self.near, self.far)
     }
 }
 
+/* 
+#[test]
+fn  test_corners() {
+    let mut per = Perspective::default();
+    per.near = 10f32;
+    let mat = per.proj_matrix();
+    let pts = proj_view_corners(&mat);
+    dbg!(pts);
+}*/
