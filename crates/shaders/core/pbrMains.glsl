@@ -33,5 +33,8 @@ vec4 fs_main(VSOutput ino) {
     
     vec4 evalColor = evaluateMaterial(inputs,ino.outPos.xyz,viewDir);
     //vec4 retColor = vec4(evalColor.x + 0.05,evalColor.y + 0.05,evalColor.z + 0.05,evalColor.w);
+    #ifdef HAS_SHADOW
+      evalColor.r = evalColor.r + 0.5;
+    #endif
     return evalColor;
 }

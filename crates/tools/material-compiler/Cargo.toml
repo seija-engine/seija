@@ -14,3 +14,4 @@ glsl-pkg = {path = "../../../../glsl-pack/glsl-pkg"}
 glsl-pack-rtbase = {path = "../../../../glsl-pack/glsl-pack-rtbase"}
 glob = "0.3.0"
 seija-render = {path = "../../seija-render"}
+smol_str = "*"

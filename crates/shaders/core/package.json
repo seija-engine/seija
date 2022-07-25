@@ -73,6 +73,9 @@
 
         },
         "backend": [ "Camera3D", "Transform","PBRLight","PBRCameraEx"],
+        "features":{ 
+          "Shadow": ["ShadowRecv"]
+        },
         "vs": "pbrMains.vs_main",
         "fs": "pbrMains.fs_main"
       },

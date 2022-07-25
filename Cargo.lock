@@ -1187,6 +1187,7 @@ dependencies = [
  "serde",
  "serde_derive",
  "serde_json",
+ "smol_str",
 ]
 
 [[package]]
@@ -1204,6 +1205,7 @@ dependencies = [
  "serde_derive",
  "serde_json",
  "shaderc",
+ "smol_str",
  "text-macro",
  "thiserror",
  "walkdir",
@@ -1613,6 +1615,7 @@ dependencies = [
  "log",
  "seija-render",
  "serde_json",
+ "smol_str",
  "walkdir",
 ]
 
@@ -2421,6 +2424,7 @@ dependencies = [
  "serde",
  "serde_derive",
  "serde_json",
+ "smol_str",
  "thiserror",
  "uuid",
  "wgpu",

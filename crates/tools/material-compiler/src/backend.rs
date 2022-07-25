@@ -3,12 +3,13 @@ use glsl_pack_rtbase::shader::Shader;
 use glsl_pkg::{IShaderBackend, backends::BackendItem};
 
 use seija_render::{UniformInfo, RawUniformInfo,MemUniformInfo,UniformType};
+use smol_str::SmolStr;
 
 use crate::{render_info::RenderInfo, ShaderTask};
 
 pub struct SeijaShaderBackend {
     pub render_info:RenderInfo,
-    vertexs:HashMap<String,(usize,String)>
+    vertexs:HashMap<SmolStr,(usize,SmolStr)>
 }
 
 impl SeijaShaderBackend {
@@ -41,7 +42,7 @@ impl IShaderBackend for SeijaShaderBackend {
       
     }
 
-    fn vertex_names(&self) -> &HashMap<String,(usize,String)> {
+    fn vertex_names(&self) -> &HashMap<SmolStr,(usize,SmolStr)> {
        &self.vertexs
     }
 
@@ -90,7 +91,7 @@ impl IShaderBackend for SeijaShaderBackend {
 
     fn write_backend_trait<W:Write>(&self, write:&mut W, shader:&Shader, backends:&glsl_pkg::backends::Backends) {
         for backend_name in shader.backend.iter() {
-            if let Some(backend) = backends.values.get(backend_name) {
+            if let Some(backend) = backends.values.get(backend_name.as_str()) {
                 for fn_info in backend.fns.iter() {
                     self.write_backend_trait_fn(write,fn_info,&backend_name);                
                 }
@@ -122,7 +123,7 @@ impl IShaderBackend for SeijaShaderBackend {
 }
 
 impl SeijaShaderBackend {
-    fn write_backend_trait_fn<W:Write>(&self,writer:&mut W,fn_info:&BackendItem,backend_name:&String) {
+    fn write_backend_trait_fn<W:Write>(&self,writer:&mut W,fn_info:&BackendItem,backend_name:&str) {
         writer.write_str("\r\n").unwrap();
         let mut new_name = fn_info.name.clone();
         if let Some(r) = new_name.get_mut(0..1) {

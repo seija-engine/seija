@@ -1,9 +1,10 @@
 use std::{sync::Arc, collections::HashMap};
 use seija_render::{UniformInfo, ScriptContext, UniformInfoSet};
+use smol_str::SmolStr;
 
 pub struct RenderInfo {
     ubos:Vec<Arc<UniformInfo>>,
-    pub backend2ubo:HashMap<String,Arc<UniformInfo>>,
+    pub backend2ubo:HashMap<SmolStr,Arc<UniformInfo>>,
     pub rsc:ScriptContext
 }
 
@@ -33,7 +34,7 @@ impl RenderInfo {
         let arc_info = Arc::new(info);
         self.ubos.push(arc_info.clone());
         for backend in arc_info.backends.iter() {
-            self.backend2ubo.insert(backend.clone(), arc_info.clone());
+            self.backend2ubo.insert(backend.into(), arc_info.clone());
         }
     }
 }

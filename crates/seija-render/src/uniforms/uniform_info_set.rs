@@ -1,19 +1,20 @@
 use std::collections::{HashMap, HashSet};
 use super::uniform_info::{UniformType};
 use super::UniformInfo;
+use smol_str::SmolStr;
 
 #[derive(Default,Debug)]
 pub struct UniformInfoSet {
     pub components:HashMap<String,UniformInfo>,
     pub globals:HashMap<String,UniformInfo>,
-    backend2ubo:HashMap<String,(String,usize)>
+    backend2ubo:HashMap<SmolStr,(SmolStr,usize)>
 }
 
 impl UniformInfoSet {
     pub fn add_info(&mut self,info:UniformInfo) {
        
         for backend_name in info.backends.iter() {
-            self.backend2ubo.insert(backend_name.to_string(), (info.name.to_string(),info.sort));
+            self.backend2ubo.insert(backend_name.into(), (SmolStr::new(info.name.as_str()),info.sort));
         }
        
         match info.typ {
@@ -39,8 +40,8 @@ impl UniformInfoSet {
     
     
 
-    pub fn get_ubos_by_backends(&self,backends:&Vec<String>) -> Vec<(String,usize)> {
-        let mut ubos:HashSet<String> = HashSet::default();
+    pub fn get_ubos_by_backends(&self,backends:&Vec<SmolStr>) -> Vec<(String,usize)> {
+        let mut ubos:HashSet<SmolStr> = HashSet::default();
         let mut ubo_names:Vec<(String,usize)> = vec![];
         for backend_name in backends.iter() {
             if let Some((name,index)) = self.backend2ubo.get(backend_name) {

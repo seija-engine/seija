@@ -72,9 +72,9 @@ fn start(mut commands:Commands,
             let mesh =  Sphere::new(0.5f32);
             let hmesh = meshs.add(mesh.into());
             let hmat = materials.create_material_with("pbrColor", |mat| {
-                mat.props.set_f32("metallic",  0.5f32, 0);
-                mat.props.set_f32("roughness", 0.5f32, 0);
-                mat.props.set_float4("color", Vec4::new(0f32, 0f32, 1f32, 1f32), 0)
+                mat.props.set_f32("metallic",  0.3f32, 0);
+                mat.props.set_f32("roughness", 0.7f32, 0);
+                //mat.props.set_float4("color", Vec4::new(0f32, 0f32, 1f32, 1f32), 0)
             }).unwrap();
     
             let mut t = Transform::default();
@@ -90,7 +90,7 @@ fn start(mut commands:Commands,
             let hmat = materials.create_material_with("pbrColor", |mat| {
                 mat.props.set_f32("metallic",  0.5f32, 0);
                 mat.props.set_f32("roughness", 0.5f32, 0);
-                mat.props.set_float4("color", Vec4::new(0f32, 0f32, 1f32, 1f32), 0)
+                //mat.props.set_float4("color", Vec4::new(0f32, 0f32, 1f32, 1f32), 0)
             }).unwrap();
     
             let mut t = Transform::default();
