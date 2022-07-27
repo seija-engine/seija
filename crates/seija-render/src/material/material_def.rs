@@ -1,6 +1,7 @@
 use std::{convert::{TryFrom}, sync::{Arc}, cell::Ref, collections::HashMap};
 use seija_core::{TypeUuid};
 use serde::{Serialize, Deserialize};
+use smol_str::SmolStr;
 use wgpu::{FrontFace, PolygonMode};
 use super::{RenderOrder, errors::MaterialDefReadError, storage::DEFAULT_TEXTURES, texture_prop_def::TexturePropDef, types::{Cull, SFrontFace, SPolygonMode, ZTest, RenderPath, STextureFormat}, TexturePropInfo};
 use lite_clojure_eval::EvalRT;
@@ -56,12 +57,6 @@ impl Default for PassDef {
             tag:None
         }
     }
-}
-#[derive(Debug,Default)]
-pub struct ShaderInfoDef {
-    pub name:String,
-    pub macros:Arc<Vec<String>>,
-    pub slots:HashMap<String,String>
 }
 
 
@@ -193,15 +188,22 @@ fn read_pass(json_value:&Value) -> Result<PassDef,MaterialDefReadError> {
     Ok(pass_def)
 }
 
+#[derive(Debug,Default)]
+pub struct ShaderInfoDef {
+    pub name:String,
+    pub slots:HashMap<String,String>,
+    pub features:Vec<SmolStr>
+}
+
 impl TryFrom<&Value> for ShaderInfoDef  {
     type Error = MaterialDefReadError;
     fn try_from(value: &Value) -> Result<Self, Self::Error> {
         let object_value = value.as_object().ok_or(MaterialDefReadError::InvalidPassProp("shader".into()))?;
         let name = object_value.get(":name").and_then(|v| v.as_str()).ok_or(MaterialDefReadError::InvalidPassProp("shader".into()))?;
-        let mut macro_arr = vec![];
-        if let Some(macros) = object_value.get(":macros") {
-            macro_arr = macros.as_array().map(|arr| {
-               arr.iter().filter_map(|v| v.as_str()).map(|v| v.to_string()).collect()
+        let mut features = vec![];
+        if let Some(json_features) = object_value.get(":features") {
+            features = json_features.as_array().map(|arr| {
+               arr.iter().filter_map(|v| v.as_str()).map(SmolStr::new).collect()
            }).unwrap_or(vec![]);
         }
         let mut slots:HashMap<String,String> = HashMap::default();
@@ -213,8 +215,8 @@ impl TryFrom<&Value> for ShaderInfoDef  {
         }
         Ok(ShaderInfoDef {
             name:name.to_string(),
-            macros:Arc::new(macro_arr),
-            slots
+            slots,
+            features
         })
     }
 }

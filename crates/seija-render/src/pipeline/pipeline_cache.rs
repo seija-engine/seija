@@ -7,6 +7,7 @@ use std::fs;
 use std::path::Path;
 use bevy_ecs::prelude::Entity;
 use seija_core::{LogOption};
+use smol_str::SmolStr;
 use std::sync::{Arc};
 use fnv::{FnvHashMap, FnvHasher};
 use glsl_pack_rtbase::MacroGroup;
@@ -280,10 +281,10 @@ fn get_shader_name_prefix(mesh:&Mesh,shader:&ShaderInfoDef,shaders:&RuntimeShade
     let shader_info = shaders.find_shader(&shader.name).log_err(&format!("not find shader in rt.json:{}",&shader.name))?;
     let mesh_types = mesh.mesh_attr_types().iter().map(|v| v.name()).collect::<HashSet<_>>();
     
-    let mut macros:Vec<String> = vec![];
+    let mut macros:Vec<SmolStr> = vec![];
     for (s,is_require) in shader_info.verts.iter() {
         if mesh_types.contains(s.as_str()) {
-            macros.push(format!("VERTEX_{}",s.clone()) );
+            macros.push(format!("VERTEX_{}",s).into() );
         } else if *is_require {
             log::error!("mesh attrs:{:?}",&mesh_types);
             return None;

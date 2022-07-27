@@ -9,13 +9,13 @@
     :pass [
        
         { 
-            :shader { :name "core.pbr" :macros [] } 
+            :shader { :name "core.pbr"  } 
         }
 
         {
             :tag "ShadowCaster"
             :targets []
-            :shader { :name "core.shadowDepth" :macros [] }
+            :shader { :name "core.shadowDepth"  }
         }
         
     ]

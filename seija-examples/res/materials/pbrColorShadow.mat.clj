@@ -9,7 +9,7 @@
     :pass [
        
         { 
-            :shader { :name "core.pbr" :macros ["HAS_SHADOW"] } 
+            :shader { :name "core.pbr" :features ["Shadow"] } 
         }
 
         {
