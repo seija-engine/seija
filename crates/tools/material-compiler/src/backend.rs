@@ -1,11 +1,11 @@
 use std::{collections::{HashMap}, fmt::Write, sync::Arc};
 use glsl_pack_rtbase::shader::Shader;
-use glsl_pkg::{IShaderBackend, backends::BackendItem};
+use glsl_pkg::{IShaderBackend, backends::{BackendItem, Backends}};
 
-use seija_render::{UniformInfo, RawUniformInfo,MemUniformInfo,UniformType};
+use seija_render::{UniformInfo, RawUniformInfo,MemUniformInfo,UniformType, UniformBufferDef, material::TexturePropDef};
 use smol_str::SmolStr;
 
-use crate::{render_info::RenderInfo, ShaderTask};
+use crate::{render_info::RenderInfo};
 
 pub struct SeijaShaderBackend {
     pub render_info:RenderInfo,
@@ -31,6 +31,18 @@ impl SeijaShaderBackend {
 }
 
 
+#[derive(Debug)]
+pub struct ShaderTask {
+   pub pkg_name:String,
+   pub shader_name:String,
+   pub macros:Arc<Vec<SmolStr>>,
+   pub backends:Vec<SmolStr>,
+   pub prop_def:Arc<UniformBufferDef>,
+   pub tex_prop_def:Arc<TexturePropDef>,
+   pub slots:HashMap<String,String>
+}
+
+
 impl IShaderBackend for SeijaShaderBackend {
     type ExData = ShaderTask;
     fn write_common_head<W:Write>(&self, writer:&mut W) {
@@ -47,9 +59,9 @@ impl IShaderBackend for SeijaShaderBackend {
     }
 
 
-    fn write_uniforms<W:Write>(&self, writer:&mut W,shader:&Shader,ex_data:&ShaderTask) {
+    fn write_uniforms<W:Write>(&self, writer:&mut W,_:&Shader,ex_data:&ShaderTask) {
         let mut ubos:HashMap<String,Arc<UniformInfo>> = Default::default();
-        for backend_name in shader.backend.iter() {
+        for backend_name in ex_data.backends.iter() {
             if let Some(ubo_info) = self.render_info.backend2ubo.get(backend_name) {
                 if !ubos.contains_key(ubo_info.name.as_str()) {
                     ubos.insert(ubo_info.name.to_string(),ubo_info.clone());
@@ -89,8 +101,8 @@ impl IShaderBackend for SeijaShaderBackend {
 
     }
 
-    fn write_backend_trait<W:Write>(&self, write:&mut W, shader:&Shader, backends:&glsl_pkg::backends::Backends) {
-        for backend_name in shader.backend.iter() {
+    fn write_backend_trait<W:Write>(&self, write:&mut W, _:&Shader, backends:&Backends,task:&ShaderTask) {
+        for backend_name in task.backends.iter() {
             if let Some(backend) = backends.values.get(backend_name.as_str()) {
                 for fn_info in backend.fns.iter() {
                     self.write_backend_trait_fn(write,fn_info,&backend_name);                
@@ -140,11 +152,33 @@ impl SeijaShaderBackend {
                 writer.write_str("}\r\n").unwrap();
             }
         } else {
-            writer.write_str(&format!("{} get{}(){{",fn_info.typ,new_name)).unwrap();
-            if let Some(ubo_info) = self.render_info.backend2ubo.get(backend_name) {
-                writer.write_str(&format!("return _{}.{};",&ubo_info.name,fn_info.name)).unwrap();
+            if fn_info.typ == "texture2D" {
+                writer.write_str(&format!("{} get{}(){{",fn_info.typ,new_name)).unwrap();
+                if let Some(ubo_info) = self.render_info.backend2ubo.get(backend_name) {
+                    writer.write_str(&format!("return {}_{};",&ubo_info.name,fn_info.name)).unwrap();
+                }
+                writer.write_str("}\r\n").unwrap();
+
+                writer.write_str(&format!("sampler get{}Sampler(){{",new_name)).unwrap();
+                if let Some(ubo_info) = self.render_info.backend2ubo.get(backend_name) {
+                    writer.write_str(&format!("return {}_{}S;",&ubo_info.name,fn_info.name)).unwrap();
+                }
+                writer.write_str("}\r\n").unwrap();
+
+                /* 
+                writer.write_str(&format!("sampler get{}Sampler(){{",new_name)).unwrap();
+                if let Some(ubo_info) = self.render_info.backend2ubo.get(backend_name) {
+                    writer.write_str(&format!("return {}_{}S;",&ubo_info.name,fn_info.name)).unwrap();
+                }
+                writer.write_str("}\r\n").unwrap();*/
+            } else {
+                writer.write_str(&format!("{} get{}(){{",fn_info.typ,new_name)).unwrap();
+                if let Some(ubo_info) = self.render_info.backend2ubo.get(backend_name) {
+                    writer.write_str(&format!("return _{}.{};",&ubo_info.name,fn_info.name)).unwrap();
+                }
+                writer.write_str("}\r\n").unwrap();
             }
-            writer.write_str("}\r\n").unwrap();
+            
         }
     }
 }
@@ -175,9 +209,16 @@ fn write_ubo_uniform<W:Write>(info:&UniformInfo, writer:&mut W,index:usize) {
                 writer.write_str(&format!("  {}{} {}[{}];\r\n",&info.name,&arr.name,&arr.name,arr.array_size)).unwrap();
             }
         }
-       
     }
     writer.write_str(&format!("}} _{};\r\n",&info.name)).unwrap();
+
+    let mut binding_index = 1;
+    for texture_prop in info.textures.iter() {
+        writer.write_str(&format!("layout(set = {}, binding = {}) uniform {} {}_{};\r\n",index,binding_index,&texture_prop.str_type,&info.name,&texture_prop.name)).unwrap();
+        binding_index += 1;
+        writer.write_str(&format!("layout(set = {}, binding = {}) uniform sampler {}_{}S;\r\n",index,binding_index,&info.name,&texture_prop.name)).unwrap();
+        binding_index += 1;
+    }
 }
 
 fn write_ubo_uniform_prop<W:Write>(prop:&RawUniformInfo,writer:&mut W) {

@@ -22,7 +22,7 @@ impl RenderContext {
     pub fn create_bind_group_layouts(&self,pass_def:&PassDef) -> Option<Vec<&wgpu::BindGroupLayout>>  {
         let mut ret = vec![];
         let rt_shader = self.shaders.find_shader(&pass_def.shader_info.name)?;
-        let ubos = self.ubo_ctx.info.get_ubos_by_backends(&rt_shader.backends);
+        let ubos = self.ubo_ctx.info.get_ubos_by_backends(&rt_shader.get_backends(&pass_def.shader_info.features));
         for (ubo_name,_) in ubos.iter() {
            let layout = self.ubo_ctx.get_layout(ubo_name)?;
            ret.push(layout);

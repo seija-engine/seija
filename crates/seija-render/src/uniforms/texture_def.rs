@@ -5,6 +5,7 @@ use wgpu::TextureSampleType;
 #[derive(Debug)]
 pub struct UniformTextureDef {
     pub name:String,
+    pub str_type:String,
     pub sample_type:TextureSampleType
 }
 
@@ -29,7 +30,8 @@ impl TryFrom<&Value> for UniformTextureDef {
         };
         Ok(UniformTextureDef {
             name,
-            sample_type
+            sample_type,
+            str_type:type_str.to_string()
         })
     }
 }

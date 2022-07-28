@@ -1,5 +1,5 @@
 {
-    :name "pbrColor"
+    :name "pbrColorShadow"
     :order "Opaque"
     :props [
         {:name "metallic"          :type "float" :default 0.5 }

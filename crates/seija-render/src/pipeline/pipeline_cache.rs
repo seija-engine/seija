@@ -172,7 +172,9 @@ impl PipelineCache {
        let gpu_pipeline = ctx.device.create_render_pipeline(&render_pipeline_desc);
 
        let rt_shader = ctx.shaders.find_shader(&pass.shader_info.name)?;
-       let ubo_names = ctx.ubo_ctx.info.get_ubos_by_backends(&rt_shader.backends);
+       let backends = rt_shader.get_backends(&pass.shader_info.features);
+       let ubo_names = ctx.ubo_ctx.info.get_ubos_by_backends(&backends);
+       dbg!(&ubo_names);
        let mut ubos:Vec<UniformIndex> = vec![];
        for (ubo_name,_) in ubo_names.iter() {
            let name_index = ctx.ubo_ctx.get_index(ubo_name).log_err(&format!("not found ubo: {}",ubo_name))?;
@@ -290,9 +292,12 @@ fn get_shader_name_prefix(mesh:&Mesh,shader:&ShaderInfoDef,shaders:&RuntimeShade
             return None;
         }
     }
-    
+    let feature_macros = shader_info.get_macros(&shader.features);
+    macros.extend(feature_macros);
+
     let macro_group = MacroGroup::new(macros);
     let macro_string = macro_group.hash_base64();
     let sname = shader.name.clone().replace('.', "#");
+    log::info!("get shader {} prefix:{:?}",&shader.name,&macro_group);
     Some(format!("{}_{}",&sname,&macro_string))
 }

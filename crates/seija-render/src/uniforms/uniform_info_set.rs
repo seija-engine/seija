@@ -40,14 +40,14 @@ impl UniformInfoSet {
     
     
 
-    pub fn get_ubos_by_backends(&self,backends:&Vec<SmolStr>) -> Vec<(String,usize)> {
+    pub fn get_ubos_by_backends(&self,backends:&Vec<SmolStr>) -> Vec<(SmolStr,usize)> {
         let mut ubos:HashSet<SmolStr> = HashSet::default();
-        let mut ubo_names:Vec<(String,usize)> = vec![];
+        let mut ubo_names:Vec<(SmolStr,usize)> = vec![];
         for backend_name in backends.iter() {
             if let Some((name,index)) = self.backend2ubo.get(backend_name) {
                 if !ubos.contains(name) {
                     ubos.insert(name.clone());
-                    ubo_names.push((name.to_string(),*index));
+                    ubo_names.push((name.clone(),*index));
                 }
             }
         }

@@ -1,16 +1,15 @@
 mod lib;
 use std::sync::Arc; 
-use bevy_ecs::prelude::{IntoSystem, Commands, ResMut, Res, Query, Entity};
+use bevy_ecs::prelude::{Commands, ResMut, Res, Query, Entity};
 use glam::{Vec3, Quat, Vec4};
 use lib::load_material;
 use seija_app::App;
 use seija_asset::{AssetModule, Assets, Handle};
 use seija_core::{CoreModule, CoreStage, StartupStage};
-use seija_deferred::{create_deferred_plugin, DeferredRenderModule};
 use seija_examples::{pre_start};
 use seija_pbr::{create_pbr_plugin, lights::PBRLight};
-use seija_render::{RenderModule, RenderConfig, GraphSetting, resource::{shape::{Cube, Sphere, Plane, Quad}, Mesh, Texture}, material::MaterialStorage, shadow::{Shadow, ShadowLight}};
-use seija_skeleton3d::{Skeleton3dModule, create_skeleton_plugin};
+use seija_render::{RenderModule, RenderConfig, GraphSetting, resource::{shape::{Cube, Sphere, Plane}, Mesh, Texture}, material::MaterialStorage, shadow::{Shadow, ShadowLight}};
+use seija_skeleton3d::{Skeleton3dModule};
 use seija_winit::WinitModule;
 use seija_transform::{TransformModule, Transform};
 
@@ -22,8 +21,8 @@ fn main() {
     let mut app = App::new();
     app.add_module(CoreModule);
     let mut win = WinitModule::default();
-    //win.0.width = 480f32;
-    //win.0.height = 320f32;
+    win.0.width = 480f32;
+    win.0.height = 320f32;
     app.add_module(win);
     app.add_module(TransformModule);
     app.add_module(AssetModule);
@@ -52,10 +51,11 @@ fn main() {
 
 fn start(mut commands:Commands,
          mut meshs: ResMut<Assets<Mesh>>,
-         mut textures: ResMut<Assets<Texture>>,
+         //mut textures: ResMut<Assets<Texture>>,
          materials: Res<MaterialStorage>) {
     {
         load_material("res/materials/pbrColor.mat.clj", &materials);
+        load_material("res/materials/pbrColorShadow.mat.clj", &materials);
         //light
         {
             let light = PBRLight::directional(Vec3::new(1f32, 1f32, 1f32)  , 62000f32);
@@ -71,7 +71,7 @@ fn start(mut commands:Commands,
         {
             let mesh =  Sphere::new(0.5f32);
             let hmesh = meshs.add(mesh.into());
-            let hmat = materials.create_material_with("pbrColor", |mat| {
+            let hmat = materials.create_material_with("pbrColorShadow", |mat| {
                 mat.props.set_f32("metallic",  0.3f32, 0);
                 mat.props.set_f32("roughness", 0.7f32, 0);
                 //mat.props.set_float4("color", Vec4::new(0f32, 0f32, 1f32, 1f32), 0)
@@ -83,11 +83,12 @@ fn start(mut commands:Commands,
             let shadow = Shadow {cast_shadow:true,receive_shadow:true };
             commands.spawn().insert(hmesh).insert(hmat).insert(t).insert(shadow );
         };
+        
         //Cube
         {
             let mesh =  Cube::new(1f32);
             let hmesh = meshs.add(mesh.into());
-            let hmat = materials.create_material_with("pbrColor", |mat| {
+            let hmat = materials.create_material_with("pbrColorShadow", |mat| {
                 mat.props.set_f32("metallic",  0.5f32, 0);
                 mat.props.set_f32("roughness", 0.5f32, 0);
                 //mat.props.set_float4("color", Vec4::new(0f32, 0f32, 1f32, 1f32), 0)
@@ -102,15 +103,14 @@ fn start(mut commands:Commands,
         //plane
         {
             
-            let mut mesh =  Plane::new(100f32,10).into();
-            //mesh = Cube::new(2f32).into();
+            let mesh =  Plane::new(100f32,10).into();
             let hmesh = meshs.add(mesh);
             let hmat = materials.create_material_with("pbrColor", |mat| {
                 mat.props.set_f32("metallic",  0.5f32, 0);
                 mat.props.set_f32("roughness", 0.5f32, 0);
                 mat.props.set_float4("color", Vec4::new(1f32, 1f32, 1f32, 1f32), 0)
             }).unwrap();
-            let mut t = Transform::default();
+            let t = Transform::default();
             
            
             //let r = Quat::from_euler(glam::EulerRot::XYZ  , 0f32.to_radians(),  0f32.to_radians(), 0f32.to_radians());

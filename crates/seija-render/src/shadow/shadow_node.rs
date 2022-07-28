@@ -4,13 +4,17 @@ use lite_clojure_eval::Variable;
 use anyhow::{Result,anyhow};
 use seija_geometry::{calc_bound_sphere, proj_view_corners};
 use seija_transform::{Transform, TransformMatrix};
+use smol_str::SmolStr;
 use crate::{IUpdateNode, RenderContext, UniformIndex, camera::camera::{Orthographic, Camera}};
 use seija_core::bytes::AsBytes;
-use super::{ShadowLight, ShadowCamera};
+use super::{ShadowLight, ShadowCamera, recv_backend::ShadowRecvBackend};
 
 #[derive(Default)]
 pub struct ShadowNode {
-    uniform_name:String,
+    ubo_cast_name:SmolStr,
+    ubo_recv_name:SmolStr,
+    shadow_backend:ShadowRecvBackend,
+
     proj_view_index:usize,
     name_index:UniformIndex
 }
@@ -18,17 +22,27 @@ pub struct ShadowNode {
 impl IUpdateNode for ShadowNode {
     fn update_params(&mut self,params:Vec<Variable>) {
         if let Some(s) = params.get(0).and_then(Variable::cast_string) {
-            self.uniform_name = s.borrow().clone();
+            self.ubo_cast_name = SmolStr::new(s.borrow().as_str());
         } else {
-            log::error!("shadow node params error");
+            log::error!("shadow node params 0 error");
+        }
+
+        if let Some(s) = params.get(1).and_then(Variable::cast_string) {
+            self.ubo_recv_name = SmolStr::new(s.borrow().as_str());
+        } else {
+            log::error!("shadow node params 1 error");
         }
     }
 
     fn init(&mut self,_:&World,ctx:&mut RenderContext) -> Result<()> {
-        let info = ctx.ubo_ctx.info.get_info(&self.uniform_name).ok_or(anyhow!("not found info {}",&self.uniform_name))?;
+        //cast
+        let info = ctx.ubo_ctx.info.get_info(&self.ubo_cast_name).ok_or(anyhow!("not found info {}",&self.ubo_cast_name))?;
         let proj_view_index = info.props.get_offset("projView", 0).ok_or(anyhow!("not found projView"))?;
         self.proj_view_index = proj_view_index;
-        self.name_index = ctx.ubo_ctx.get_index(self.uniform_name.as_str()).ok_or(anyhow!("err ubo name {}",&self.uniform_name))?;
+        self.name_index = ctx.ubo_ctx.get_index(self.ubo_cast_name.as_str()).ok_or(anyhow!("err ubo name {}",&self.ubo_cast_name))?;
+
+        //recv
+        let recv_info = ctx.ubo_ctx.info.get_info(&self.ubo_recv_name).ok_or(anyhow!("not found info {}",&self.ubo_cast_name))?;
         Ok(())
     }
 
@@ -53,7 +67,7 @@ impl IUpdateNode for ShadowNode {
            
            
 
-            if let Some((e,t,_)) = shadow_query.iter(world).next() {
+            if let Some((e,t,shadow_light)) = shadow_query.iter(world).next() {
                 let p = t.global().rotation * Vec3::Z;
               
                 let mut view = Mat4::look_at_rh(Vec3::ZERO,p , Vec3::Y);
@@ -69,6 +83,8 @@ impl IUpdateNode for ShadowNode {
                 ctx.ubo_ctx.set_buffer(&self.name_index, Some(e.id()), |buffer| {
                     buffer.buffer.write_bytes_(self.proj_view_index, light_proj_view.to_cols_array().as_bytes());
                 });
+
+
 
             }
         }
