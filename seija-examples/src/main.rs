@@ -81,7 +81,7 @@ fn start(mut commands:Commands,
             t.local.position = Vec3::new(0.56f32, 0.5f32, 0f32);
             t.local.rotation = Quat::from_euler(glam::EulerRot::XYZ, 0f32, -40f32.to_radians(), 0f32);
             let shadow = Shadow {cast_shadow:true,receive_shadow:true };
-            commands.spawn().insert(hmesh).insert(hmat).insert(t).insert(shadow );
+            //commands.spawn().insert(hmesh).insert(hmat).insert(t).insert(shadow );
         };
         
         //Cube
@@ -95,7 +95,7 @@ fn start(mut commands:Commands,
             }).unwrap();
     
             let mut t = Transform::default();
-            t.local.position = Vec3::new(-1.64f32, 0.5f32, 0f32);
+            t.local.position = Vec3::new(0f32, 0.5f32, 0f32);
             //t.local.rotation = Quat::from_euler(glam::EulerRot::XYZ, 0f32, -40f32.to_radians(), 0f32);
             let shadow = Shadow {cast_shadow:true,receive_shadow:true };
             commands.spawn().insert(hmesh).insert(hmat).insert(t).insert(shadow );
@@ -105,7 +105,7 @@ fn start(mut commands:Commands,
             
             let mesh =  Plane::new(100f32,10).into();
             let hmesh = meshs.add(mesh);
-            let hmat = materials.create_material_with("pbrColor", |mat| {
+            let hmat = materials.create_material_with("pbrColorShadow", |mat| {
                 mat.props.set_f32("metallic",  0.5f32, 0);
                 mat.props.set_f32("roughness", 0.5f32, 0);
                 mat.props.set_float4("color", Vec4::new(1f32, 1f32, 1f32, 1f32), 0)

@@ -241,3 +241,24 @@ pub fn _get_query(scope:&mut ExecScope, args:Vec<Variable>) -> Result<Variable,i
     }
     Ok(Variable::Nil)
 }
+
+pub fn set_global_uniform(scope:&mut ExecScope,args:Vec<Variable>) -> Variable {
+    if let Err(err) = _set_global_uniform(scope, args) {
+        log::error!("set-global-uniform error:{:?}",err);
+    }
+    Variable::Nil
+}
+
+pub fn _set_global_uniform(scope:&mut ExecScope, args:Vec<Variable>) -> Result<Variable,i32> {
+    let ctx = find_userdata::<RenderContext>(scope,"*RENDER_CTX*").ok_or(0)?;
+    let ubo_name = args[0].cast_string().ok_or(1)?;
+    let texture_name = args[1].cast_string().ok_or(2)?;
+    let atom_texture = args[2].cast_userdata().ok_or(3)? as *mut Atom<RenderResourceId>;
+    let atom_texture_ref = unsafe { &*atom_texture };
+    if let RenderResourceId::Texture(texture) = atom_texture_ref.inner() {
+       if let Err(err) = ctx.ubo_ctx.set_texture(None, ubo_name.borrow().as_str(), texture_name.borrow().as_str(), texture.clone_weak()) {
+            log::error!("set-global-uniform err:{}",err);
+       }
+    }
+    Ok(Variable::Nil)
+}

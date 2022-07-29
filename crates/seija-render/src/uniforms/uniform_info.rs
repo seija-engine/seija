@@ -121,4 +121,13 @@ impl UniformInfo {
         let layout = builder.build(device);
         layout
     }
+
+    pub fn find_texture_index(&self,name:&str) -> Option<usize> {
+        for (index,texture) in self.textures.iter().enumerate() {
+            if texture.name.as_str() == name {
+                return Some(index);
+            }
+        }
+        None
+    }
 }

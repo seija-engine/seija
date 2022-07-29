@@ -1,4 +1,7 @@
+use std::collections::HashMap;
+
 use seija_asset::Handle;
+use smol_str::SmolStr;
 use wgpu::CommandEncoder;
 
 use crate::{
@@ -11,6 +14,7 @@ pub struct UniformObject {
     buffer:BufferId,
     cache_buffer:BufferId,
     //texture
+    texture_idxs:HashMap<SmolStr,usize>,
     textures:Vec<Handle<Texture>>,
     texture_dirty:bool,
     pub layout:wgpu::BindGroupLayout,
@@ -35,14 +39,16 @@ impl UniformObject {
             mapped_at_creation:false
         });
         let cache_buffer = cache_id;
-
+        let mut texture_idxs:HashMap<SmolStr,usize> = HashMap::default();
         let mut textures = vec![];
-        for _ in info.textures.iter() {
+        for (index,def) in info.textures.iter().enumerate() {
             textures.push(res.default_textures[0].clone_weak());
+            texture_idxs.insert(def.name.as_str().into(), index);
         }
        
         let layout = info.create_layout(&res.device);
         UniformObject {
+            texture_idxs,
             local_buffer: buffer_local,
             buffer,
             cache_buffer,
@@ -52,6 +58,7 @@ impl UniformObject {
             textures
         }
     }
+
 
     fn update_bind_group(&mut self,res:&RenderResources)  {
         if !self.texture_dirty || !res.is_textures_ready(&self.textures)   { return };
@@ -65,6 +72,13 @@ impl UniformObject {
         self.bind_group = Some(bind_group);
         self.texture_dirty = false;
        
+    }
+
+    pub fn set_texture(&mut self,name:&str,texture:Handle<Texture>) {
+        if let Some(index) = self.texture_idxs.get(name) {
+            self.textures[*index] = texture;
+            self.texture_dirty = true;
+        } 
     }
 
     fn update_buffer(&mut self,res:&mut RenderResources,cmd:&mut CommandEncoder) {

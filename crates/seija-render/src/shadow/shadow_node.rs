@@ -13,7 +13,7 @@ use super::{ShadowLight, ShadowCamera, recv_backend::ShadowRecvBackend};
 pub struct ShadowNode {
     ubo_cast_name:SmolStr,
     ubo_recv_name:SmolStr,
-    shadow_backend:ShadowRecvBackend,
+    recv_backend:ShadowRecvBackend,
 
     proj_view_index:usize,
     name_index:UniformIndex
@@ -42,7 +42,8 @@ impl IUpdateNode for ShadowNode {
         self.name_index = ctx.ubo_ctx.get_index(self.ubo_cast_name.as_str()).ok_or(anyhow!("err ubo name {}",&self.ubo_cast_name))?;
 
         //recv
-        let recv_info = ctx.ubo_ctx.info.get_info(&self.ubo_recv_name).ok_or(anyhow!("not found info {}",&self.ubo_cast_name))?;
+        self.recv_backend = ShadowRecvBackend::from_name(&self.ubo_recv_name,&ctx.ubo_ctx)?;
+        
         Ok(())
     }
 
@@ -70,22 +71,20 @@ impl IUpdateNode for ShadowNode {
             if let Some((e,t,shadow_light)) = shadow_query.iter(world).next() {
                 let p = t.global().rotation * Vec3::Z;
               
-                let mut view = Mat4::look_at_rh(Vec3::ZERO,p , Vec3::Y);
+                let mut view = Mat4::look_at_rh(p, Vec3::ZERO, Vec3::Y);
                 let col3_mut = view.col_mut(3);
                 col3_mut.x = sphere.center.x;
                 col3_mut.y = sphere.center.y;
                 col3_mut.z = sphere.center.z;
-                //let view = Mat4::from_scale_rotation_translation(Vec3::ONE, -t.global().rotation, sphere.center);
                 let light_proj_view = orth.proj_matrix() * view;
                 
                 log::debug!("shadow debug {:?} {:?} {}",&orth,&sphere,&light_proj_view);
-               
+                
+                self.recv_backend.set_bias(&mut ctx.ubo_ctx, shadow_light.bias);
+                self.recv_backend.set_strength(&mut ctx.ubo_ctx, shadow_light.strength);
                 ctx.ubo_ctx.set_buffer(&self.name_index, Some(e.id()), |buffer| {
                     buffer.buffer.write_bytes_(self.proj_view_index, light_proj_view.to_cols_array().as_bytes());
                 });
-
-
-
             }
         }
     }

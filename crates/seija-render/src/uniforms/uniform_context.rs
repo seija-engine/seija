@@ -1,8 +1,9 @@
 use std::collections::HashMap;
 
+use seija_asset::Handle;
 use wgpu::CommandEncoder;
 
-use crate::{UniformInfoSet, resource::RenderResources, memory::TypedUniformBuffer,};
+use crate::{UniformInfoSet, resource::{RenderResources, Texture}, memory::TypedUniformBuffer,};
 
 use super::{object::UniformObject, array_object::ArrayObject, UniformType, UBOApplyType};
 
@@ -88,6 +89,23 @@ impl UniformContext {
                 }
             },
         }
+    }
+
+    pub fn set_texture(&mut self,eid:Option<u32>,ubo_name:&str,texture_name:&str,texture:Handle<Texture>) -> Result<(),i32> {
+        let index = self.get_index(ubo_name).ok_or(0)?;
+        match index.typ {
+            UniformType::Global => {
+                let object = &mut self.globals[index.index];
+                object.set_texture(texture_name, texture);
+            },
+            UniformType::Component => {
+                let object = &mut self.components[index.index];
+                if let Some(item_object) = eid.and_then(|id| object.get_item_mut(id)) {
+                    item_object.set_texture(texture_name, texture);
+                }
+            },
+        }
+        Ok(())
     }
 
     pub fn add_component(&mut self,index:&UniformIndex,eid:u32,res:&mut RenderResources) {

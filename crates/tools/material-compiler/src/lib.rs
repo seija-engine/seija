@@ -7,6 +7,7 @@ pub use material_compiler::{MaterialCompiler,CompilerConfig};
 fn 
 test_fn() {
    let mut builder = env_logger::builder();
+   
    builder.filter_level(log::LevelFilter::Info);
    builder.init();
 

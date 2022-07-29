@@ -36,6 +36,7 @@ pub fn add_camera_3d(mut commands:&mut Commands,window:&AppWindow) -> Entity {
     root.insert(t);
     
     let mut per = Perspective::default();
+    per.far = 10f32;
     per.aspect_ratio = window.width() as f32 / window.height() as f32;
     let camera = Camera::from_3d(per);
     

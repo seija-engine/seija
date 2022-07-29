@@ -165,6 +165,11 @@ impl SeijaShaderBackend {
                 }
                 writer.write_str("}\r\n").unwrap();
 
+                writer.write_str(&format!("vec4 texture_{}(vec2 uv){{",new_name)).unwrap();
+                if let Some(ubo_info) = self.render_info.backend2ubo.get(backend_name) {
+                    writer.write_str(&format!("return texture(sampler2D({}_{},{}_{}S),uv);",&ubo_info.name,fn_info.name,&ubo_info.name,fn_info.name)).unwrap();
+                }
+                writer.write_str("}\r\n").unwrap();
                 /* 
                 writer.write_str(&format!("sampler get{}Sampler(){{",new_name)).unwrap();
                 if let Some(ubo_info) = self.render_info.backend2ubo.get(backend_name) {
