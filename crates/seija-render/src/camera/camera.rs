@@ -97,7 +97,7 @@ impl Orthographic {
                                           -(self.far + self.near) / (self.far - self.near), 1f32))
         */
         //右手坐标系
-        Mat4::orthographic_rh_gl(self.left, self.right, self.bottom, self.top, self.near, self.far)
+        Mat4::orthographic_rh(self.left, self.right, self.bottom, self.top, self.near, self.far)
     } 
 }
 
@@ -158,16 +158,16 @@ impl Perspective {
         Self::frustum(-w, w, -h, h, self.near, self.far)*/
 
         //右手坐标系
-        Mat4::perspective_rh_gl(self.fov, self.aspect_ratio, self.near, self.far)
+        Mat4::perspective_rh(self.fov, self.aspect_ratio, self.near, self.far)
     }
 }
 
-/* 
+
 #[test]
 fn  test_corners() {
-    let mut per = Perspective::default();
-    per.near = 10f32;
-    let mat = per.proj_matrix();
+    let mut orth = Orthographic::default();
+    
+    let mat = orth.proj_matrix();
     let pts = proj_view_corners(&mat);
     dbg!(pts);
-}*/
+}/* */

@@ -3,7 +3,7 @@ use glam::{Mat4, Vec3, Vec4};
 use lite_clojure_eval::Variable;
 use anyhow::{Result,anyhow};
 use seija_geometry::{calc_bound_sphere, proj_view_corners};
-use seija_transform::{Transform, TransformMatrix};
+use seija_transform::{Transform};
 use smol_str::SmolStr;
 use crate::{IUpdateNode, RenderContext, UniformIndex, camera::camera::{Orthographic, Camera}};
 use seija_core::bytes::AsBytes;
@@ -64,21 +64,22 @@ impl IUpdateNode for ShadowNode {
             orth.top = sphere.radius;
             orth.bottom = -sphere.radius;
             orth.far = sphere.radius;
-            orth.near = -sphere.radius;
-           
+            orth.near = 0.01f32;
+            
            
 
             if let Some((e,t,shadow_light)) = shadow_query.iter(world).next() {
                 let p = t.global().rotation * Vec3::Z;
-              
-                let mut view = Mat4::look_at_rh(p, Vec3::ZERO, Vec3::Y);
-                let col3_mut = view.col_mut(3);
-                col3_mut.x = sphere.center.x;
-                col3_mut.y = sphere.center.y;
-                col3_mut.z = sphere.center.z;
+                //dbg!(p);
+                let view = Mat4::look_at_rh(-p * (orth.far - orth.near) * 0.5f32,Vec3::ZERO, Vec3::Y);
                 let light_proj_view = orth.proj_matrix() * view;
-                
-                log::debug!("shadow debug {:?} {:?} {}",&orth,&sphere,&light_proj_view);
+                //debug
+                dbg!(-p * 5f32);
+                let (s,r,p) = view.to_scale_rotation_translation();
+                let rr = r.to_euler(glam::EulerRot::XYZ);
+                log::error!("r:{:?} p:{:?}",(rr.0.to_degrees(),rr.1.to_degrees(),rr.2.to_degrees()),p);
+                dbg!(&proj_view_corners(&orth.proj_matrix()));
+                log::error!("shadow debug {:?} {:?} {}",&orth,&sphere,&light_proj_view);
                 
                 self.recv_backend.set_bias(&mut ctx.ubo_ctx, shadow_light.bias);
                 self.recv_backend.set_strength(&mut ctx.ubo_ctx, shadow_light.strength);

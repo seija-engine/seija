@@ -21,8 +21,8 @@ fn main() {
     let mut app = App::new();
     app.add_module(CoreModule);
     let mut win = WinitModule::default();
-    win.0.width = 480f32;
-    win.0.height = 320f32;
+    //win.0.width = 480f32;
+    //win.0.height = 320f32;
     app.add_module(win);
     app.add_module(TransformModule);
     app.add_module(AssetModule);
@@ -78,10 +78,10 @@ fn start(mut commands:Commands,
             }).unwrap();
     
             let mut t = Transform::default();
-            t.local.position = Vec3::new(0.56f32, 0.5f32, 0f32);
+            t.local.position = Vec3::new(-2f32, 0.5f32, 0f32);
             t.local.rotation = Quat::from_euler(glam::EulerRot::XYZ, 0f32, -40f32.to_radians(), 0f32);
             let shadow = Shadow {cast_shadow:true,receive_shadow:true };
-            //commands.spawn().insert(hmesh).insert(hmat).insert(t).insert(shadow );
+            commands.spawn().insert(hmesh).insert(hmat).insert(t).insert(shadow );
         };
         
         //Cube
@@ -95,7 +95,8 @@ fn start(mut commands:Commands,
             }).unwrap();
     
             let mut t = Transform::default();
-            t.local.position = Vec3::new(0f32, 0.5f32, 0f32);
+            t.local.scale = Vec3::new(1f32, 1f32, 1f32);
+            t.local.position = Vec3::new(1f32, 0.5f32, 0f32);
             //t.local.rotation = Quat::from_euler(glam::EulerRot::XYZ, 0f32, -40f32.to_radians(), 0f32);
             let shadow = Shadow {cast_shadow:true,receive_shadow:true };
             commands.spawn().insert(hmesh).insert(hmat).insert(t).insert(shadow );
@@ -126,12 +127,12 @@ fn start(mut commands:Commands,
 
 fn on_update(mut query:Query<(Entity,&Handle<Mesh>,&mut Transform)>) {
    
-    let v:f32 = (std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_millis() % 3600) as f32;
-    let r = v * 0.1f32 * 0.0174533f32;
+    let v:f32 = (std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_millis() % 36000) as f32;
+    let r = v * 0.01f32 * 0.0174533f32;
     
     for (_,_,mut t) in query.iter_mut() {
         let r = Quat::from_euler(glam::EulerRot::XYZ  , 0f32, r, 0f32);
         
-        //t.local.rotation = r;
+        t.local.rotation = r;
     }
 }

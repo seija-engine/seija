@@ -1,6 +1,6 @@
 void depth_vs_main() {
-   vec4 pos = getTransform() * vec4(vert_position, 1.0);
-   pos = getProjView() * pos;
+   vec4 pos = getProjView() * getTransform() * vec4(vert_position, 1.0);
+  
    gl_Position =  pos;
 }
 

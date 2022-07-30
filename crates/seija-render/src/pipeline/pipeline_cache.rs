@@ -174,7 +174,7 @@ impl PipelineCache {
        let rt_shader = ctx.shaders.find_shader(&pass.shader_info.name)?;
        let backends = rt_shader.get_backends(&pass.shader_info.features);
        let ubo_names = ctx.ubo_ctx.info.get_ubos_by_backends(&backends);
-       dbg!(&ubo_names);
+
        let mut ubos:Vec<UniformIndex> = vec![];
        for (ubo_name,_) in ubo_names.iter() {
            let name_index = ctx.ubo_ctx.get_index(ubo_name).log_err(&format!("not found ubo: {}",ubo_name))?;
