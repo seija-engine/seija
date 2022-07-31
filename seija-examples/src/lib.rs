@@ -1,73 +1,60 @@
-use bevy_ecs::{prelude::{Commands, Entity, Res}};
+use std::sync::Arc;
+
+use bevy_ecs::{prelude::{Commands, Entity}, system::EntityCommands};
 use glam::{Quat, Vec3, Vec4};
 use lite_clojure_eval::EvalRT;
 use seija_app::App;
-use seija_asset::{Assets, Handle};
-use seija_core::{CoreStage, window::AppWindow, info::EInfo};
-use seija_pbr::PBRCameraInfo;
-use seija_render::{camera::{camera::Perspective,camera::Camera}, material::{MaterialStorage, read_material_def}, resource::{Mesh, Texture, TextureDescInfo}, shadow::ShadowCamera};
-use seija_transform::{Transform, hierarchy::Parent};
-use bevy_ecs::prelude::*;
-use seija_render::wgpu;
+use seija_asset::{Assets, Handle, AssetModule};
+use seija_core::{window::AppWindow, info::EInfo, CoreModule};
+use seija_pbr::{PBRCameraInfo, create_pbr_plugin};
+use seija_render::{camera::{camera::Perspective,camera::Camera}, material::{MaterialStorage, read_material_def}, resource::{Mesh, Texture, TextureDescInfo}, shadow::ShadowCamera, RenderConfig, GraphSetting, RenderModule};
+use seija_transform::{Transform, TransformModule};
+use seija_winit::WinitModule;
 
-pub trait IExamples {
-    fn run(app:&mut App);
+
+pub fn init_core_app() -> App {
+    env_logger::Builder::new().filter_level(log::LevelFilter::Info).try_init().unwrap();
+    let mut app = App::new();
+    app.add_module(CoreModule);
+    app.add_module(WinitModule::default());
+    app.add_module(TransformModule);
+    app.add_module(AssetModule);
+
+    let render_config = RenderConfig {
+        config_path:".render".into(),
+        setting:Arc::new(GraphSetting::default() ),
+        plugins:vec![create_pbr_plugin()],
+        render_lib_paths:vec!["../crates/seija-pbr/res".into(),"../crates/seija-render/res".into()],
+    };
+    app.add_module(RenderModule(Arc::new(render_config)));
+
+    app.start();
+    app
 }
 
-
-pub fn pre_start(mut commands:Commands,window:Res<AppWindow>,mats:Res<MaterialStorage>) {
-   
-    add_camera_3d(&mut commands, &window);
-    //load_material("res/new_material/color.mat.clj", &mats);
-    //load_material("res/new_material/texture.mat.clj", &mats);
-    //load_material("res/new_material/bpColor.mat.clj", &mats);
-    //load_material("res/new_material/pbrColor.mat.clj", &mats);
-    //load_material("res/material/color/model_color.clj", &mats);
-    //load_material("res/material/skybox/sky.clj", &mats);
-    //load_material("res/material/light/light.clj", &mats);
-    //load_material("res/material/pbr/pbr.clj", &mats);
-}
-
-pub fn add_camera_3d(mut commands:&mut Commands,window:&AppWindow) -> Entity {
-    let mut root = commands.spawn();
+pub fn add_pbr_camera(commands:&mut Commands,window:&AppWindow,pos:Vec3,r:Quat,f:Option<fn(&mut EntityCommands)>) -> Entity {
+    let mut camera_entity = commands.spawn();
     let mut t = Transform::default();
-    t.local.position = Vec3::new(0f32, 1.7f32, 3.71f32);
-    t.local.rotation = Quat::from_euler(glam::EulerRot::XYZ  , -20f32.to_radians(),  0f32.to_radians(), 0f32.to_radians());
-    root.insert(t);
-    
+    t.local.position = pos;
+    t.local.rotation = r;
+    camera_entity.insert(t);
+
     let mut per = Perspective::default();
-    per.far = 100f32;
+    per.far = 50f32;
     per.aspect_ratio = window.width() as f32 / window.height() as f32;
     let camera = Camera::from_3d(per);
-    
-    root.insert(camera);
+    camera_entity.insert(camera);
 
     let mut info = EInfo::default();
     info.name = Some("Camera3D".into());
-    root.insert(info);
+    camera_entity.insert(info);
 
     let pbr_camera = PBRCameraInfo::default();
-    root.insert(pbr_camera);
-
-    root.insert(ShadowCamera);
-    root.id()
-    
-}
-
-pub fn add_pbr_camera(window:&AppWindow,commands: &mut Commands) {
-    
-    let mut root = commands.spawn();
-    let mut t = Transform::default();
-    t.local.position = Vec3::new(0f32, 0f32, 5f32);
-    t.local.rotation = Quat::IDENTITY; 
-    root.insert(t);
-    let mut per = Perspective::default();
-    per.aspect_ratio = window.width() as f32 / window.height() as f32;
-    let camera = Camera::from_3d(per);
-    root.insert(camera);
-
-    let pbr_camera = PBRCameraInfo::default();
-    root.insert(pbr_camera);
+    camera_entity.insert(pbr_camera);
+    if let Some(f) = f {
+        f(&mut camera_entity);
+    }
+    camera_entity.id()
 }
 
 pub fn load_material(path:&str,mats:&MaterialStorage) {

@@ -27,6 +27,7 @@ pub struct DrawPassNode {
     pass_name:String,
 
     operations:Operations<Color>,
+
 }
 
 impl Default for DrawPassNode {
@@ -40,7 +41,7 @@ impl Default for DrawPassNode {
             operations: wgpu::Operations {
                 load:wgpu::LoadOp::Clear(Color {r:0f64,g:0f64,b:0f64,a:1f64 }),
                 store:true  
-            } 
+            },
         }
     }
 }
@@ -73,19 +74,22 @@ impl IUpdateNode for DrawPassNode {
     fn update(&mut self,world:&mut World,ctx:&mut RenderContext) {
         
         let mut command = ctx.command_encoder.take().unwrap();
-        if let Err(err) = self.draw(world,ctx,&mut command) {
-            if err != PassError::TextureNotReady {
-                log::error!("draw pass error:{:?}",err);
+        match self.draw(world, ctx, &mut command) {
+            Err(err) => {
+                if err != PassError::TextureNotReady {
+                    log::error!("draw pass error:{:?}",err);
+                }
+            },
+            Ok(draw_count) => {
+                if draw_count > 0 { ctx.frame_draw_pass += 1; }
             }
-        } else {
-            ctx.frame_draw_pass += 1;
         }
         ctx.command_encoder = Some(command)
     }
 }
 
 impl DrawPassNode {
-    pub fn draw(&self,world:&mut World,ctx:&mut RenderContext,command:&mut CommandEncoder) -> Result<(),PassError> {
+    pub fn draw(&self,world:&mut World,ctx:&mut RenderContext,command:&mut CommandEncoder) -> Result<u32,PassError> {
         let mut render_query = world.query::<(&Handle<Mesh>,&Handle<Material>)>();
         let meshs = world.get_resource::<Assets<Mesh>>().unwrap();
         let material_storages = world.get_resource::<MaterialStorage>().unwrap();
@@ -94,6 +98,7 @@ impl DrawPassNode {
         let pipeline_cahce = world.get_resource::<PipelineCache>().unwrap();
         let view_query = query_system.querys[self.query_index].read();
         
+        let mut draw_count:u32 = 0;
        
         let mut render_pass = self.create_render_pass(&ctx.resources,  command)?;
        
@@ -126,6 +131,7 @@ impl DrawPassNode {
                                 render_pass.set_bind_group(set_index, material.texture_props.bind_group.as_ref().unwrap(), &[]);
                             }
                             render_pass.set_vertex_buffer(0, vert_buffer.slice(0..));
+
                             if let Some(idx_id) = ctx.resources.get_render_resource(&hmesh.id, 1) {
                                 
                                 let idx_buffer = ctx.resources.get_buffer_by_resid(&idx_id).unwrap();
@@ -137,12 +143,13 @@ impl DrawPassNode {
                                 render_pass.set_pipeline(&pipeline.pipeline);
                                 render_pass.draw(0..mesh.count_vertices() as u32, 0..1);
                             }
+                            draw_count += 1;
                         }
                     }
                 }
             }
         }
-        Ok(())
+        Ok(draw_count)
     }
 
     fn create_render_pass<'a>(&self,res:&'a RenderResources,command:&'a mut CommandEncoder) -> Result<wgpu::RenderPass<'a>,PassError> {

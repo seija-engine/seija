@@ -74,12 +74,12 @@ impl IUpdateNode for ShadowNode {
                 let view = Mat4::look_at_rh(-p * (orth.far - orth.near) * 0.5f32,Vec3::ZERO, Vec3::Y);
                 let light_proj_view = orth.proj_matrix() * view;
                 //debug
-                dbg!(-p * 5f32);
-                let (s,r,p) = view.to_scale_rotation_translation();
-                let rr = r.to_euler(glam::EulerRot::XYZ);
-                log::error!("r:{:?} p:{:?}",(rr.0.to_degrees(),rr.1.to_degrees(),rr.2.to_degrees()),p);
-                dbg!(&proj_view_corners(&orth.proj_matrix()));
-                log::error!("shadow debug {:?} {:?} {}",&orth,&sphere,&light_proj_view);
+                //dbg!(-p * 5f32);
+                //let (s,r,p) = view.to_scale_rotation_translation();
+                //let rr = r.to_euler(glam::EulerRot::XYZ);
+                //log::error!("r:{:?} p:{:?}",(rr.0.to_degrees(),rr.1.to_degrees(),rr.2.to_degrees()),p);
+                //dbg!(&proj_view_corners(&orth.proj_matrix()));
+                //log::error!("shadow debug {:?} {:?} {}",&orth,&sphere,&light_proj_view);
                 
                 self.recv_backend.set_bias(&mut ctx.ubo_ctx, shadow_light.bias);
                 self.recv_backend.set_strength(&mut ctx.ubo_ctx, shadow_light.strength);
