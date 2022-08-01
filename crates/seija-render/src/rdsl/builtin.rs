@@ -3,7 +3,7 @@ use std::convert::{TryFrom};
 use lite_clojure_eval::{ExecScope, Variable, GcRefCell};
 use seija_asset::Assets;
 use serde_json::Value;
-use crate::material::STextureDescriptor;
+use crate::material::{STextureDescriptor, MaterialStorage};
 use crate::query::{QuerySystem, IdOrName};
 use crate::rdsl::main::DynUniformItem;
 use crate::rdsl::nodes::CameraNode;
@@ -28,6 +28,15 @@ pub fn create_builtin_node_set() -> NodeCreatorSet {
     node_set
 }
 
+fn handle_error(name:&str,scope:&mut ExecScope,args:Vec<Variable>,f:fn(&mut ExecScope,args:Vec<Variable>) -> Result<Variable,i32>) -> Variable {
+    match f(scope,args) {
+        Ok(var) => var,
+        Err(err) => {
+            log::error!("eval {} error:{}",name,err);
+            Variable::Nil
+        }
+    }
+}
 
 pub fn find_userdata<T>(scope:&mut ExecScope,name:&str) -> Option<&'static mut T> {
     let textures = scope.context.find_symbol(None, name, &scope.modules)?;
@@ -276,4 +285,18 @@ pub fn _is_tag(scope:&mut ExecScope,args:Vec<Variable>) -> Result<Variable,i32> 
     let tag_name = args.get(0).and_then(Variable::cast_string).ok_or(1)?;
     let tag_value = main_ctx.rt_tags.get_tag(tag_name.borrow().as_str()).ok_or(2)?;
     Ok(Variable::Bool(tag_value))
+}
+
+pub fn load_material(scope:&mut ExecScope,args:Vec<Variable>) -> Variable {
+   handle_error("load-material", scope, args, |scope,args| {
+    let materials = find_userdata::<MaterialStorage>(scope, "*MATERIALS*").ok_or(0)?;
+        let path = args.get(0).and_then(Variable::cast_string).ok_or(1)?;
+        let material_string = std::fs::read_to_string(path.borrow().as_str()).ok().ok_or(2)?;
+        
+        let is_succ = materials.load_material_def(&material_string);
+        if is_succ {
+            log::info!("load_material:{}",path.borrow().as_str());
+        }
+        Ok(Variable::Bool(is_succ))
+   })
 }

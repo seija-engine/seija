@@ -16,3 +16,8 @@ members = [
     "crates/tools/mc-cli",
     "seija-examples"
 ]
+
+[profile.release]
+lto = true
+strip = true
+opt-level = "z"

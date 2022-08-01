@@ -8,7 +8,7 @@ use seija_render::{resource::{Mesh, shape::{Sphere, Cube, Plane}}, material::Mat
 use bevy_ecs::prelude::*;
 use seija_transform::Transform;
 pub fn main() {
-    let mut app = init_core_app();
+    let mut app = init_core_app("shadow_render.clj");
     app.add_system2(CoreStage::Startup, StartupStage::PreStartup, start);
     //app.add_system(CoreStage::Update, on_update);
     app.run();

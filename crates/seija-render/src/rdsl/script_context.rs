@@ -1,8 +1,8 @@
 use bevy_ecs::prelude::World;
-use lite_clojure_eval::{EvalRT, Variable};
+use lite_clojure_eval::{EvalRT, Variable, ExecScope};
 use seija_asset::Assets;
 use seija_core::window::AppWindow;
-use crate::{UniformInfoSet, RenderContext, resource::Texture, query::QuerySystem};
+use crate::{UniformInfoSet, RenderContext, resource::Texture, query::QuerySystem, material::MaterialStorage};
 
 use super::{builtin::*, main::{MainContext}};
 
@@ -35,6 +35,7 @@ impl ScriptContext {
         self.rt.global_context().push_native_fn("get-query", get_query);
         self.rt.global_context().push_native_fn("set-global-uniform", set_global_uniform);
         self.rt.global_context().push_native_fn("tag?", is_tag);
+        self.rt.global_context().push_native_fn("load-material", load_material);
         
         self.rt.global_context().push_var("SS_VERTEX", wgpu::ShaderStage::VERTEX.bits() as i64 );
         self.rt.global_context().push_var("SS_FRAGMENT", wgpu::ShaderStage::FRAGMENT.bits() as i64 );
@@ -65,7 +66,11 @@ impl ScriptContext {
     
             let mut query_system = world.get_resource_unchecked_mut::<QuerySystem>().unwrap();
             let query_system_mut = query_system.as_mut();
-            
+
+            let mut materials = world.get_resource_unchecked_mut::<MaterialStorage>().unwrap();
+            let materials_mut = materials.as_mut();
+           
+            self.set_userdata("*MATERIALS*", materials_mut);
             self.set_userdata("*TEXTURES*", textures_mut);
             self.set_userdata("*QUERY*",  query_system_mut);
             self.set_userdata("*RENDER_CTX*", ctx);

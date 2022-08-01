@@ -12,7 +12,7 @@ use seija_transform::{Transform, TransformModule};
 use seija_winit::WinitModule;
 
 
-pub fn init_core_app() -> App {
+pub fn init_core_app(render_file:&str) -> App {
     env_logger::Builder::new().filter_level(log::LevelFilter::Info).try_init().unwrap();
     let mut app = App::new();
     app.add_module(CoreModule);
@@ -22,7 +22,7 @@ pub fn init_core_app() -> App {
 
     let render_config = RenderConfig {
         config_path:".render".into(),
-        script_name:"shadow_render.clj".into(),
+        script_name:render_file.into(),
         setting:Arc::new(GraphSetting::default() ),
         plugins:vec![create_pbr_plugin()],
         render_lib_paths:vec!["../crates/seija-pbr/res".into(),"../crates/seija-render/res".into()],
