@@ -1,0 +1,7 @@
+{
+    "material_paths":["../res/materials"],
+    "script_path":"../.render/shadow_render.clj",
+    "out_path":"../.render/shaders",
+    "script_libs":["../../crates/seija-pbr/res","../../crates/seija-render/res"],
+    "shader_libs":["../../crates/shaders"]
+}

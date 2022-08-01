@@ -22,6 +22,7 @@ pub fn init_core_app() -> App {
 
     let render_config = RenderConfig {
         config_path:".render".into(),
+        script_name:"shadow_render.clj".into(),
         setting:Arc::new(GraphSetting::default() ),
         plugins:vec![create_pbr_plugin()],
         render_lib_paths:vec!["../crates/seija-pbr/res".into(),"../crates/seija-render/res".into()],

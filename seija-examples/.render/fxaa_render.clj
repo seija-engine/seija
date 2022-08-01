@@ -47,10 +47,9 @@
 (defn add-foward-path [globalEnv]
     (add-render-path "Foward" {
         :on-start (fn [env] 
-            (assoc! env :post-effect (atom-texture {:format "Bgra8UnormSrgb" :width WINDOW_WIDTH :height WINDOW_HEIGHT}))
             (assoc! env :depth (atom-texture {:format "Depth32Float" :width WINDOW_WIDTH :height WINDOW_HEIGHT}))
             (add-node env nil WINSIZE_TEXTURE [(env :depth) (env :targetView)])
-            (add-node env nil DRAW_PASS (env :camera-query) (env :camera-id) [(env :post-effect)] (env :depth) "Foward")
+            (add-node env nil DRAW_PASS (env :camera-query) (env :camera-id) [(env :targetView)] (env :depth) "Foward")
             (println "add foward success")
         )
     })

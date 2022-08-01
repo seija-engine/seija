@@ -9,6 +9,7 @@ use seija_app::{App};
 use bevy_ecs::prelude::*;
 use seija_core::{CoreStage};
 extern crate serde_derive;
+use smol_str::SmolStr;
 pub use wgpu;
 mod graph_setting;
 pub mod rdsl;
@@ -45,6 +46,7 @@ pub enum RenderStage {
 #[derive(Default)]
 pub struct RenderConfig {
     pub config_path:PathBuf,
+    pub script_name:SmolStr,
     pub setting:Arc<GraphSetting>,
     pub plugins:Vec<RenderScriptPlugin>,
     pub render_lib_paths:Vec<PathBuf>
@@ -100,13 +102,13 @@ impl RenderModule {
         w.insert_resource(PipelineCache::default());
         ctx.ubo_ctx.init(&mut ctx.resources);
         
-        let script_path = self.0.config_path.join("render.clj");
-        match std::fs::read_to_string(script_path) {
+        let script_path = self.0.config_path.join(self.0.script_name.as_str());
+        match std::fs::read_to_string(&script_path) {
             Ok(code_string) => {
                 app_render.main.init(&code_string,&config.render_lib_paths,&config.config_path,&mut ctx.ubo_ctx.info);
             },
             Err(err) => {
-                log::error!("load render.clj error:{:?}",err);
+                log::error!("load {:?} error:{:?}",&script_path,err);
             }
         }
 

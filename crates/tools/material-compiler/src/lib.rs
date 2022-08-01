@@ -11,7 +11,7 @@ test_fn() {
    builder.filter_level(log::LevelFilter::Info);
    builder.init();
 
-   let mut config = CompilerConfig::new("../../../seija-examples/.render/render.clj");
+   let mut config = CompilerConfig::new("../../../seija-examples/.render/shadow_render.clj");
    config.add_shader_lib_path("../../shaders");
    config.add_script_lib("../../seija-pbr/res");
    config.add_script_lib("../../seija-render/res");

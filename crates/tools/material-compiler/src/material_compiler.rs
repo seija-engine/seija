@@ -1,13 +1,14 @@
-use std::{path::PathBuf, fs, sync::Arc};
+use std::{path::{PathBuf, Path}, fs, sync::Arc};
 
 use anyhow::{Result, bail,anyhow};
 use glsl_pack_rtbase::shader::Shader;
 use glsl_pkg::PackageManager;
 use lite_clojure_eval::EvalRT;
 use seija_render::material::{read_material_def, PassDef, MaterialDef};
+use serde::{Deserialize};
 
 use crate::backend::{SeijaShaderBackend, ShaderTask};
-
+#[derive(Default,Deserialize)]
 pub struct CompilerConfig {
     pub material_paths:Vec<String>,
     pub script_path:String,
@@ -25,6 +26,11 @@ impl CompilerConfig {
             script_libs:vec![],
             shader_libs:vec![]
         }
+    }
+
+    pub fn form_json<P:AsRef<Path>>(path:P) -> Result<CompilerConfig> {
+        let de:CompilerConfig = serde_json::from_str(std::fs::read_to_string(path.as_ref())?.as_str() )?;
+        Ok(de)
     }
 
     pub fn add_material_path(&mut self,dir:&str) {

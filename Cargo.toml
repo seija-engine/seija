@@ -13,5 +13,6 @@ members = [
     "crates/seija-deferred",
     "crates/seija-geometry",
     #"crates/tools/material-compiler",
+    "crates/tools/mc-cli",
     "seija-examples"
 ]
