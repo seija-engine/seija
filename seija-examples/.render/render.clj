@@ -111,12 +111,16 @@
     (add-node globalEnv nil   TRANSFROM_NODE "ObjectBuffer")
     (add-node globalEnv "PBR" PBR_CAMERA_EX  "CameraBuffer")
     (add-node globalEnv "PBR" PBR_LIGHT      "LightBuffer")
-
-    (add-query "ShadowQuery" 2)
-    (add-node globalEnv nil SHADOW_NODE "ShadowCast" "ShadowRecv")
-    (assoc! globalEnv :shadowDepth (atom-texture {:format "Depth32Float" :width 2048 :height 2048}))
-    (set-global-uniform "ShadowRecv" "shadowMap" (globalEnv :shadowDepth))
-    (add-node globalEnv nil DRAW_PASS (get-query "ShadowQuery") nil [] (globalEnv :shadowDepth) "ShadowCaster")
+    
+    (if (tag? "Shadow")
+        (do 
+            (add-query "ShadowQuery" 2)
+            (add-node globalEnv nil SHADOW_NODE "ShadowCast" "ShadowRecv")
+            (assoc! globalEnv :shadowDepth (atom-texture {:format "Depth32Float" :width 2048 :height 2048}))
+            (set-global-uniform "ShadowRecv" "shadowMap" (globalEnv :shadowDepth))
+            (add-node globalEnv nil DRAW_PASS (get-query "ShadowQuery") nil [] (globalEnv :shadowDepth) "ShadowCaster")
+        )
+    )
 
     (add-foward-path globalEnv)
 )

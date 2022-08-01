@@ -47,6 +47,8 @@ impl IShaderBackend for SeijaShaderBackend {
     type ExData = ShaderTask;
     fn write_common_head<W:Write>(&self, writer:&mut W) {
         writer.write_str("#version 450\r\n").unwrap();
+        writer.write_str("#extension GL_EXT_samplerless_texture_functions : enable\r\n").unwrap();
+        
     }
 
     fn write_fs_head<W:Write>(&self, writer:&mut W) {
@@ -168,6 +170,12 @@ impl SeijaShaderBackend {
                 writer.write_str(&format!("vec4 texture_{}(vec2 uv){{",new_name)).unwrap();
                 if let Some(ubo_info) = self.render_info.backend2ubo.get(backend_name) {
                     writer.write_str(&format!("return texture(sampler2D({}_{},{}_{}S),uv);",&ubo_info.name,fn_info.name,&ubo_info.name,fn_info.name)).unwrap();
+                }
+                writer.write_str("}\r\n").unwrap();
+                
+                writer.write_str(&format!("ivec2  textureSize_{}(){{",new_name)).unwrap();
+                if let Some(ubo_info) = self.render_info.backend2ubo.get(backend_name) {
+                    writer.write_str(&format!("return textureSize({}_{},0);",&ubo_info.name,fn_info.name)).unwrap();
                 }
                 writer.write_str("}\r\n").unwrap();
                 /* 

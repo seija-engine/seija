@@ -34,6 +34,7 @@ impl ScriptContext {
         self.rt.global_context().push_native_fn("add-query", add_query);
         self.rt.global_context().push_native_fn("get-query", get_query);
         self.rt.global_context().push_native_fn("set-global-uniform", set_global_uniform);
+        self.rt.global_context().push_native_fn("tag?", is_tag);
         
         self.rt.global_context().push_var("SS_VERTEX", wgpu::ShaderStage::VERTEX.bits() as i64 );
         self.rt.global_context().push_var("SS_FRAGMENT", wgpu::ShaderStage::FRAGMENT.bits() as i64 );

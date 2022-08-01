@@ -35,6 +35,11 @@ impl RuntimeTags {
         self.name2usize.insert(name.to_string(), index);
     }
 
+    pub fn get_tag(&self,name:&str) -> Option<bool> {
+        let id = self.name_id(name)?;
+        Some(self.tags[id])
+    }
+
     pub fn update(&mut self,world:&mut World) {
         let tag_events = world.get_resource::<Events<TagEvent>>().unwrap();
         for ev in self.etag_reader.iter(tag_events) {

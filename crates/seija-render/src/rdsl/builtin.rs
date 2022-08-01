@@ -262,3 +262,18 @@ pub fn _set_global_uniform(scope:&mut ExecScope, args:Vec<Variable>) -> Result<V
     }
     Ok(Variable::Nil)
 }
+
+pub fn is_tag(scope:&mut ExecScope,args:Vec<Variable>) -> Variable {
+    match _is_tag(scope, args) {
+        Err(err) => { log::error!("tag? error:{:?}",err); Variable::Bool(false) }
+        Ok(v) => v
+    }
+
+}
+
+pub fn _is_tag(scope:&mut ExecScope,args:Vec<Variable>) -> Result<Variable,i32> {
+    let main_ctx = find_userdata::<MainContext>(scope, "*MAIN_CTX*").ok_or(0)?;
+    let tag_name = args.get(0).and_then(Variable::cast_string).ok_or(1)?;
+    let tag_value = main_ctx.rt_tags.get_tag(tag_name.borrow().as_str()).ok_or(2)?;
+    Ok(Variable::Bool(tag_value))
+}

@@ -32,13 +32,24 @@ float shadowCalculation(vec4 fragPosLightSpace)
     
     //变换到[0,1]的范围
     vec2 uvCoords = projCoords.xy * vec2(0.5,-0.5)  + vec2(0.5,0.5);
-    //取得最近点的深度(使用[0,1]范围下的fragPosLight当坐标)
-    float closestDepth = texture_ShadowMap(uvCoords).r;
     //取得当前片段在光源视角下的深度
     float currentDepth = projCoords.z;
     //检查当前片段是否在阴影中
     float bias = getBias();
-    float shadow = currentDepth - bias  > closestDepth  ? 1.0 : 0.0;
+   
+    ivec2 shadowSize = textureSize_ShadowMap();
+    vec2 texelSize = 1.0 / shadowSize;
+    float shadow = 0.0;
+    for(int x = -1; x <= 1; ++x)
+    {
+      for(int y = -1; y <= 1; ++y)
+      {
+          float pcfDepth = texture_ShadowMap(uvCoords + vec2(x, y) * texelSize).r; 
+          shadow += currentDepth - bias > pcfDepth ? 1.0 : 0.0;        
+      }    
+    }
+    shadow /= 9.0;
+
     return shadow;
 }
 
