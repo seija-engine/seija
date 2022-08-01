@@ -1,42 +1,35 @@
-(defn add-transform-ubo [index]
-    (add-uniform {
+(defn declare-core-uniform [set]
+    (declare-uniform set "ObjectBuffer" {
         :type :Component
         :apply :RenderObject
-        :name "ObjectBuffer"
-        :index index
+        :sort 1
         :shader-stage SS_VERTEX
         :props [
            {:name "transform" :type "mat4"}
         ]
         :backends ["Transform"]
     })
-)
 
-(def core-camera-props  [
-    {:name "cameraView"       :type "mat4"  }
-    {:name "cameraProj"       :type "mat4"  }
-    {:name "cameraProjView"   :type "mat4"  }
-    {:name "cameraPosition"   :type "float4"}
-])
-
-(defn add-camera-ubo [index props backends]
-   (add-uniform {
+    (declare-uniform set "CameraBuffer" {
         :type :Component
         :apply :Camera
-        :name "CameraBuffer"
-        :index index
+        :sort 2
         :shader-stage SS_VERTEX_FRAGMENT
-        :props (if (nil? props) core/core-camera-props props)
-        :backends (concat ["Camera3D"] backends)
-   })    
+        :props [
+            {:name "cameraView"       :type "mat4"  }
+            {:name "cameraProj"       :type "mat4"  }
+            {:name "cameraProjView"   :type "mat4"  }
+            {:name "cameraPosition"   :type "float4"}
+            {:name "exposure"  :type "float"  }
+        ]
+        :backends ["Camera3D" "PBRCameraEx"]
+   })   
 )
 
-
-(defn add-anim-skin-ubo [index]
-    (add-uniform {
+(defn declare-skin-uniform [set index]
+    (declare-uniform set "SkinBuffer" {
         :type :Component
-        :name "SkinBuffer"
-        :index index
+        :sort index
         :apply :RenderObject
         :shader-stage SS_VERTEX
         :props [
@@ -46,32 +39,37 @@
     })
 )
 
-
-(defn add-shadow-ubo [index]
-    (add-uniform {
+(defn declare-shadow-uniform [set index]
+    (declare-uniform set "ShadowCast" {
         :type :Global
-        :name "ShadowMap"
-        :index index
+        :sort index
+        :apply :Frame
+        :shader-stage SS_VERTEX
+        :props [
+            {:name "projView" :type "mat4" }
+        ]
+        :backends ["ShadowCast"]
+    })
+
+    (declare-uniform set "ShadowRecv" {
+        :type :Global
+        :sort (+ index 1)
         :apply :Frame
         :shader-stage SS_FRAGMENT
         :props [
-            {:name "lightProjView" :type "mat4" }
+            {:name "bias" :type "float" }
+            {:name "strength" :type "float" }
         ]
-    
-        ;:textures [
-        ;    {
-        ;        :name "shadowTexture"
-        ;        :type "texture2D"
-        ;        :filterable true
-        ;    }
-        ;]
-
-        :backends ["ShadowMap"]
+        :textures [
+            {
+                :name "shadowMap"
+                :type "texture2D"
+                :filterable true
+            }
+        ]
+        :backends ["ShadowRecv"]
     })
 )
-
-
-
 
 
 

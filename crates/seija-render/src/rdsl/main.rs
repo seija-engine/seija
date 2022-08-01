@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::path::PathBuf;
 use bevy_ecs::prelude::{World, Entity, Added, With};
 use lite_clojure_eval::{Variable, GcRefCell};
 use seija_app::App;
@@ -42,7 +43,11 @@ impl RenderMain {
         app.add_event::<TagEvent>();
     }
 
-    pub fn init(&mut self,code_string:&str,info_set:&mut UniformInfoSet) {
+    pub fn init(&mut self,code_string:&str,lib_paths:&Vec<PathBuf>,render_path:&PathBuf,info_set:&mut UniformInfoSet) {
+        for lib_path in lib_paths.iter() {
+           
+            self.script_ctx.rt.add_search_path(lib_path);
+        }
         let global_nodes_mut = &mut self.main_ctx.global_nodes;
         let global_node_ptr = global_nodes_mut as *mut Vec<UpdateNodeBox> as *mut u8;
         self.main_ctx.global_env.borrow_mut().insert(Variable::Keyword(GcRefCell::new(":nodes".to_string())), 
