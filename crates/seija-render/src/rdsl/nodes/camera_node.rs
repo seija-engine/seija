@@ -13,13 +13,15 @@ pub struct CameraNode {
 }
 
 impl IUpdateNode for CameraNode {
-    fn update_params(&mut self,params:Vec<Variable>) {
+    fn update_params(&mut self,params:Vec<Variable>) -> Result<()> {
         if let Some(string) = params.get(0).and_then(Variable::cast_string) {
             self.ubo_name = string.borrow().clone();
         }
+
+        Ok(())
     }
 
-    fn init(&mut self,_:& World,ctx:&mut crate::RenderContext) -> Result<()>  {
+    fn init(&mut self,_:&mut World,ctx:&mut crate::RenderContext) -> Result<()>  {
         let info = ctx.ubo_ctx.info.get_info(&self.ubo_name).ok_or(anyhow!("not found ubo {}",&self.ubo_name))?;
         let backend = Camera3DBackend::from_def(&info.props).map_err(|v| anyhow!("camera3d backend err:{}",v.as_str()))?;
         self.backend = Some(backend);

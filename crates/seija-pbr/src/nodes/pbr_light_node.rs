@@ -40,13 +40,14 @@ fn set_pbr_light(backend:&PBRLightBackend,index:usize,light:&PBRLight,buffer:&mu
 }
 
 impl IUpdateNode for PBRLightNode {
-    fn update_params(&mut self,params:Vec<Variable>) {
+    fn update_params(&mut self,params:Vec<Variable>) -> Result<()> {
         if let Some(string) = params.get(0).and_then(Variable::cast_string) {
             self.ubo_name = string.borrow().clone();
         }
+        Ok(())
     }
 
-    fn init(&mut self,_:& World,ctx:&mut RenderContext) -> Result<()> {
+    fn init(&mut self,_:&mut World,ctx:&mut RenderContext) -> Result<()> {
         let mut array_collect = UBOArrayCollect::new(self.ubo_name.clone(), 10);
         array_collect.init(ctx);
         self.array_collect = Some(array_collect);

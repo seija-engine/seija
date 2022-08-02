@@ -1,8 +1,7 @@
-use std::{ptr::NonNull, ops::Deref};
-
 use bevy_ecs::prelude::World;
 use lite_clojure_eval::Variable;
 use seija_asset::Assets;
+use anyhow::{Result};
 
 use crate::{IUpdateNode, rdsl::{atom::Atom, win_event::WindowEvent}, resource::{RenderResourceId, Texture}, RenderContext};
 #[derive(Default)]
@@ -12,8 +11,7 @@ pub struct WindowReSizeNode {
 }
 
 impl IUpdateNode for WindowReSizeNode {
-    fn update_params(&mut self,params:Vec<Variable>) {
-      
+    fn update_params(&mut self,params:Vec<Variable>) -> Result<()> {
        if let Some(list) = params[0].cast_vec() {
            for item in list.borrow().iter() {
                 if let Some(u8_ptr) = item.cast_userdata() {
@@ -22,6 +20,7 @@ impl IUpdateNode for WindowReSizeNode {
                 }
            }
        }
+       Ok(())
     }
 
     fn update(&mut self,world:&mut World,ctx:&mut RenderContext) {

@@ -1,5 +1,5 @@
 use bevy_ecs::prelude::{World, Entity, Changed, Or};
-use glam::{Mat4, Vec3, Vec4};
+use glam::{Mat4, Vec3};
 use lite_clojure_eval::Variable;
 use anyhow::{Result,anyhow};
 use seija_geometry::{calc_bound_sphere, proj_view_corners};
@@ -20,7 +20,7 @@ pub struct ShadowNode {
 }
 
 impl IUpdateNode for ShadowNode {
-    fn update_params(&mut self,params:Vec<Variable>) {
+    fn update_params(&mut self,params:Vec<Variable>) -> Result<()> {
         if let Some(s) = params.get(0).and_then(Variable::cast_string) {
             self.ubo_cast_name = SmolStr::new(s.borrow().as_str());
         } else {
@@ -32,9 +32,10 @@ impl IUpdateNode for ShadowNode {
         } else {
             log::error!("shadow node params 1 error");
         }
+        Ok(())
     }
 
-    fn init(&mut self,_:&World,ctx:&mut RenderContext) -> Result<()> {
+    fn init(&mut self,_:&mut World,ctx:&mut RenderContext) -> Result<()> {
         //cast
         let info = ctx.ubo_ctx.info.get_info(&self.ubo_cast_name).ok_or(anyhow!("not found info {}",&self.ubo_cast_name))?;
         let proj_view_index = info.props.get_offset("projView", 0).ok_or(anyhow!("not found projView"))?;

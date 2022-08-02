@@ -1,7 +1,7 @@
-use bevy_ecs::prelude::{Entity, Component};
-use glam::{Mat4, Vec4, Vec3};
+use bevy_ecs::prelude::{Component};
+use glam::{Mat4};
 use seija_asset::Handle;
-use seija_geometry::proj_view_corners;
+use smol_str::SmolStr;
 use crate::resource::Texture;
 
 
@@ -9,7 +9,7 @@ use crate::resource::Texture;
 pub struct Camera {
     pub projection:Projection,
     pub order:i32,
-    pub path:String,
+    pub path:SmolStr,
     pub target:Option<Handle<Texture>>,
     pub layer:u32
  }
@@ -18,7 +18,7 @@ pub struct Camera {
     fn default() -> Self {
        Self { 
           projection:Projection::Perspective(Perspective::default()),
-          path:String::from("Foward"),
+          path:"Foward".into(),
           order:0,
           target:None,
           layer:1
@@ -162,12 +162,3 @@ impl Perspective {
     }
 }
 
-
-#[test]
-fn  test_corners() {
-    let mut orth = Orthographic::default();
-    
-    let mat = orth.proj_matrix();
-    let pts = proj_view_corners(&mat);
-    dbg!(pts);
-}/* */

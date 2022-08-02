@@ -8,9 +8,9 @@ use crate::RenderContext;
 use super::{main::MainContext, rt_tags::RuntimeTags};
 
 pub trait IUpdateNode {
-    fn update_params(&mut self,params:Vec<Variable>);
+    fn update_params(&mut self,params:Vec<Variable>) -> Result<()>;
 
-    fn init(&mut self,world:&World,ctx:&mut RenderContext) -> anyhow::Result<()> { Ok(()) }
+    fn init(&mut self,world:&mut World,ctx:&mut RenderContext) -> anyhow::Result<()> { Ok(()) }
 
     fn prepare(&mut self,world:&mut World,ctx:&mut RenderContext) {}
 
@@ -53,10 +53,12 @@ impl UpdateNodeBox {
                 }
             }
         }
-        self.node.update_params(new_params);
+        if let Err(err) = self.node.update_params(new_params) {
+            log::error!("update params err:{:?}",err);
+        }
     }
 
-    pub fn init(&mut self,world:&World,ctx:&mut RenderContext) {
+    pub fn init(&mut self,world:&mut World,ctx:&mut RenderContext) {
        if let Err(err) = self.node.init(world, ctx) {
             self.init_fail = true;
             log::error!("{}",err);

@@ -104,6 +104,16 @@
         "backend": [ "Camera3D", "Transform","PBRLight","PBRCameraEx"],
         "vs": "pbrDeferred.deferred_vs_main",
         "fs": "pbrDeferred.deferred_fs_main"
+      },
+      {
+        "name": "fxaa",
+        "vertex": {
+          "POSITION": "require",
+          "UV0":"require"
+        },
+        "backend": ["Transform"],
+        "vs": "postEffect.fxaa_vs_main",
+        "fs": "postEffect.fxaa_fs_main"
       }
     ]
 }

@@ -13,13 +13,14 @@ pub struct TransfromNode {
 }
 
 impl IUpdateNode for TransfromNode {
-    fn update_params(&mut self,params:Vec<Variable>) {
+    fn update_params(&mut self,params:Vec<Variable>) -> Result<()> {
         if let Some(string) = params.get(0).and_then(Variable::cast_string) {
             self.ubo_name = string.borrow().clone();
         }
+        Ok(())
     }
 
-    fn init(&mut self,_:& World,ctx:&mut RenderContext) -> Result<()> {
+    fn init(&mut self,_:&mut World,ctx:&mut RenderContext) -> Result<()> {
         let info = ctx.ubo_ctx.info.get_info(&self.ubo_name).ok_or(anyhow!("not found ubo {}",&self.ubo_name))?;
         let backend = TransformBackend::from_def(&info.props).map_err(|v| anyhow!("TransformBackend  err:{}",v.as_str()))?;
         self.backend = Some(backend);

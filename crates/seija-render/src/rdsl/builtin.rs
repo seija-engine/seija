@@ -14,17 +14,18 @@ use crate::{UniformInfoSet, UniformInfo, RenderContext};
 use super::atom::Atom;
 use super::main::MainContext;
 use super::node::{NodeCreatorSet, UpdateNodeBox};
-use super::nodes::{TransfromNode, WindowReSizeNode, DrawPassNode};
+use super::nodes::{TransfromNode, WindowReSizeNode, DrawPassNode, DrawQuadNode};
 use super::render_path::RenderPathDef;
 
 
 pub fn create_builtin_node_set() -> NodeCreatorSet {
     let mut node_set = NodeCreatorSet::default();
-    node_set.0.insert("CAMERA_NODE".into(), |_,params| UpdateNodeBox::create::<CameraNode>(&params));
-    node_set.0.insert("TRANSFROM_NODE".into(), |_,params| UpdateNodeBox::create::<TransfromNode>(&params));
-    node_set.0.insert("WINSIZE_TEXTURE".into(), |_,params| UpdateNodeBox::create::<WindowReSizeNode>(&params));
-    node_set.0.insert("DRAW_PASS".into(), |_,params| UpdateNodeBox::create::<DrawPassNode>(&params));
-    node_set.0.insert("SHADOW_NODE".into(), |_,params| UpdateNodeBox::create::<ShadowNode>(&params));
+    node_set.add::<CameraNode>("CAMERA_NODE");
+    node_set.add::<TransfromNode>("TRANSFROM_NODE");
+    node_set.add::<WindowReSizeNode>("WINSIZE_TEXTURE");
+    node_set.add::<DrawPassNode>("DRAW_PASS");
+    node_set.add::<ShadowNode>("SHADOW_NODE");
+    node_set.add::<DrawQuadNode>("DRAW_QUAD");
     node_set
 }
 

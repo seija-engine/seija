@@ -1,7 +1,8 @@
 use std::{collections::HashMap, sync::Arc};
 use bevy_ecs::prelude::{World, Entity};
 use lite_clojure_eval::{Variable, GcRefCell, EvalRT};
-use crate::{camera::camera::Camera, UpdateNodeBox, ScriptContext, resource::RenderResourceId, RenderContext, query::{QuerySystem, IdOrName}};
+use seija_asset::Handle;
+use crate::{UpdateNodeBox, ScriptContext, resource::{RenderResourceId, Texture}, RenderContext, query::{QuerySystem, IdOrName}};
 
 use super::atom::Atom;
 
@@ -22,7 +23,7 @@ impl RenderPath {
       RenderPath { nodes:vec![],env:GcRefCell::new(HashMap::default()),def }
    }
 
-   pub fn start(&mut self,vm:&mut EvalRT,camera:&Camera,world:&World,ctx:&mut RenderContext,e:Entity) {
+   pub fn start(&mut self,vm:&mut EvalRT,world:&mut World,ctx:&mut RenderContext,e:Entity,target:Option<Handle<Texture>>) {
       {
          let query_system = world.get_resource::<QuerySystem>().unwrap();
          let query_id = IdOrName::Id(e.to_bits());
@@ -36,7 +37,7 @@ impl RenderPath {
       let node_ptr = nodes_mut as *mut Vec<UpdateNodeBox> as *mut u8;
       self.env.borrow_mut().insert(Variable::Keyword(GcRefCell::new(":nodes".to_string())), 
                                    Variable::UserData(node_ptr));
-      let resid = if let Some(texture) = camera.target.as_ref() {
+      let resid = if let Some(texture) = target.as_ref() {
          Box::new(Atom::new(RenderResourceId::Texture(texture.clone_weak())))
       } else {
          Box::new(Atom::new(RenderResourceId::MainSwap))
@@ -73,16 +74,16 @@ pub struct RenderPathList {
 impl RenderPathList {
   
    pub fn add_render_path(&mut self,
-                          path:&String,
+                          path:&str,
                           sc:&mut ScriptContext,
-                          camera:&Camera,
-                          world:&World,
+                          target:Option<Handle<Texture>>,
+                          world:&mut World,
                           ctx:&mut RenderContext,
                           e:Entity) {
    
       if let Some(def) = self.path_dic.get(path) {
          let mut render_path = RenderPath::from_def(def.clone());
-         render_path.start(&mut sc.rt,camera,world,ctx,e);
+         render_path.start(&mut sc.rt,world,ctx,e,target);
          self.list.push(render_path);
       } else {
          log::error!("not found reder path:{}",path);

@@ -1,5 +1,6 @@
 use bevy_ecs::prelude::{World, Entity};
 use lite_clojure_eval::Variable;
+use anyhow::{Result};
 use seija_asset::{Handle, Assets};
 use wgpu::{Operations, Color, CommandEncoder};
 use crate::{IUpdateNode, RenderContext, query::QuerySystem, 
@@ -47,7 +48,7 @@ impl Default for DrawPassNode {
 }
 
 impl IUpdateNode for DrawPassNode {
-    fn update_params(&mut self,params:Vec<Variable>) {
+    fn update_params(&mut self,params:Vec<Variable>) -> Result<()> {
        if let Some(index) = params[0].cast_int() {
           self.query_index = index as usize;
        }
@@ -69,6 +70,8 @@ impl IUpdateNode for DrawPassNode {
         if let Some(pass_name) = params[4].cast_string() {
             self.pass_name = pass_name.borrow().clone();
         }
+
+        Ok(())
     }
 
     fn update(&mut self,world:&mut World,ctx:&mut RenderContext) {

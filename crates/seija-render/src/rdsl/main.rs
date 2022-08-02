@@ -90,8 +90,9 @@ impl RenderMain {
         if added_cameras.iter(world).count() > 0 {
             self.script_ctx.set_script_global(ctx, &mut self.main_ctx, world);
         }
-        for (e,add_camera) in added_cameras.iter(world) {
-            self.main_ctx.path_list.add_render_path(&add_camera.path, &mut self.script_ctx,add_camera,world,ctx,e);   
+        let clone_iter:Vec<_> = added_cameras.iter(world).map(|e| (e.0,e.1.path.clone(),e.1.target.clone() )).collect();
+        for (e,path,target) in clone_iter {
+            self.main_ctx.path_list.add_render_path(&path, &mut self.script_ctx,target,world,ctx,e);   
         }
     }
 
