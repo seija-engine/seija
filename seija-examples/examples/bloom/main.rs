@@ -29,14 +29,11 @@ fn start(mut commands:Commands,window:Res<AppWindow>,mut meshs: ResMut<Assets<Me
     {
         let light = PBRLight::directional(Vec3::new(1f32, 1f32, 1f32)  , 62000f32);
         let mut t = Transform::default();
-        let r = Quat::from_euler(glam::EulerRot::default()  , 90f32.to_radians(),  45f32.to_radians(), 0f32.to_radians());
+        let r = Quat::from_euler(glam::EulerRot::default()  , 180f32.to_radians(),  0f32.to_radians(), 0f32.to_radians());
         t.local.rotation = r;
         let mut l = commands.spawn();
         l.insert(light);
         l.insert(t);
-        let mut shadow_light = ShadowLight::default();
-        shadow_light.bias = 0.005f32;
-        l.insert(shadow_light);
     }
         //sphere
         {
@@ -49,7 +46,7 @@ fn start(mut commands:Commands,window:Res<AppWindow>,mut meshs: ResMut<Assets<Me
             }).unwrap();
     
             let mut t = Transform::default();
-            t.local.position = Vec3::new(0f32, 0f32, 0f32);
+            t.local.position = Vec3::new(0f32, 0f32, -1f32);
             t.local.rotation = Quat::from_euler(glam::EulerRot::XYZ, 0f32, 0f32.to_radians(), 0f32);
             let shadow = Shadow {cast_shadow:true,receive_shadow:true };
             commands.spawn().insert(hmesh).insert(hmat).insert(t).insert(shadow );

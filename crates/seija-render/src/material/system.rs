@@ -118,14 +118,14 @@ impl BufferInfo {
     }
 
     pub fn update_size(&mut self,new_count:usize,resources:&mut RenderResources) {
-        if self.cur_count > new_count || new_count == 0 {
+        if self.cur_count >= new_count || new_count == 0 {
             return;
         }
         self.cur_count = (((new_count as u32) + 3u32) & !3u32) as usize;
         let alloc_size = self.cur_count * self.item_size;
         
         let buffer = resources.create_buffer(&wgpu::BufferDescriptor { 
-            label:None,
+            label:Some("material"),
             size:alloc_size as u64,
             usage:BufferUsage::COPY_SRC | BufferUsage::MAP_WRITE,
             mapped_at_creation:false 

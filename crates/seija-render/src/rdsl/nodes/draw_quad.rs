@@ -6,7 +6,7 @@ use seija_transform::Transform;
 use smol_str::SmolStr;
 use wgpu::{Operations, Color, CommandEncoder};
 
-use crate::{IUpdateNode, rdsl::atom::Atom, resource::{RenderResourceId, shape::Quad, Mesh, Texture, RenderResources}, material::{MaterialStorage, Material}, RenderContext, pipeline::PipelineCache};
+use crate::{IUpdateNode, rdsl::atom::Atom, resource::{RenderResourceId, shape::Quad, Mesh}, material::{MaterialStorage, Material}, RenderContext, pipeline::PipelineCache};
 
 use super::{CommonError, create_render_pass};
 #[derive(Default)]
@@ -14,8 +14,9 @@ pub struct DrawQuadNode {
     material_name:SmolStr,
     textures:Vec<*mut Atom<RenderResourceId>>,
     depth:Option<*mut Atom<RenderResourceId>>,
-    texture:Option<Handle<Texture>>,
+    mat_textures:Vec<*mut Atom<RenderResourceId>>,
     operations:Operations<Color>,
+    pass_index:i32,
     quad_id:Option<Entity>
 }
 
@@ -35,15 +36,23 @@ impl IUpdateNode for DrawQuadNode {
         let param_2 = params.get(2).and_then(Variable::cast_userdata).ok_or(anyhow!("2"))?;
         self.depth = Some(param_2 as *mut Atom<RenderResourceId>);
 
-        let param_3 = params.get(3).and_then(Variable::cast_userdata).ok_or(anyhow!("3"))?;
-        let res_id = unsafe { &*(param_3 as *mut Atom<RenderResourceId>) }.inner();
-        if let RenderResourceId::Texture(texture) = res_id {
-            self.texture = Some(texture.clone());
+        let param_3 = params.get(3).and_then(Variable::cast_vec).ok_or(anyhow!("3"))?;
+        for item in param_3.borrow().iter() {
+            if let Some(u8_ptr) = item.cast_userdata() {
+                let ptr = u8_ptr as *mut Atom<RenderResourceId>;
+                 self.mat_textures.push(ptr);
+             }
+        }
+
+        if let Some(pass_index) = params.get(4).and_then(Variable::cast_int) {
+            self.pass_index = pass_index as i32;
+        } else {
+            self.pass_index = -1;
         }
         Ok(())
     }
 
-    fn init(&mut self,world:&mut World,ctx:&mut crate::RenderContext) -> anyhow::Result<()> {
+    fn init(&mut self,world:&mut World,_:&mut crate::RenderContext) -> anyhow::Result<()> {
         self.operations = wgpu::Operations {
             load:wgpu::LoadOp::Clear(Color {r:0f64,g:0f64,b:0f64,a:1f64 }),
             store:true  
@@ -51,7 +60,13 @@ impl IUpdateNode for DrawQuadNode {
         let hmat =  {
             let materials = world.get_resource::<MaterialStorage>().unwrap();
             materials.create_material_with(&self.material_name,|mat| {
-                mat.texture_props.set("mainTexture", self.texture.as_ref().unwrap().clone_weak());
+                for (index,tex) in self.mat_textures.iter().enumerate() {
+                    let atom_ref = unsafe { &**tex };
+                    if let RenderResourceId::Texture(texture) = atom_ref.inner() {
+                        mat.texture_props.set(&format!("texture{}",index) , texture.clone_weak());
+                    }
+                }
+               
             }).ok_or(anyhow!("create mat err:{}",&self.material_name))?
         };
         let hmesh = {
@@ -64,6 +79,7 @@ impl IUpdateNode for DrawQuadNode {
         commands.insert(hmesh);
         commands.insert(hmat);
         self.quad_id = Some(commands.id());
+        log::error!("init???");
         Ok(())
     }
 
@@ -101,9 +117,14 @@ impl DrawQuadNode {
             if let Some(pipelines)  = pipeline_cahce.get_pipeline(&material.def.name, mesh) {
               
                 if let Some(mesh_buffer_id)  = ctx.resources.get_render_resource(&hmesh.id, 0) {
-                   
+                    let mut cur_pass_index = 0;
+                    
                     for pipeline in pipelines.pipelines.iter() {
-                       
+                        if self.pass_index != -1 && self.pass_index != cur_pass_index {
+                            cur_pass_index += 1;
+                            continue;
+                        }
+                        cur_pass_index += 1;
                         let vert_buffer = ctx.resources.get_buffer_by_resid(&mesh_buffer_id).unwrap();
                         let oset_index = pipeline.set_binds(None, &quad_entity, &mut render_pass, &ctx.ubo_ctx);
                         if oset_index.is_none() { continue }

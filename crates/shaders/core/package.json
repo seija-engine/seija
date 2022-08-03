@@ -33,16 +33,6 @@
         "fs": "pures.texture_fs_main"
       },
       {
-        "name": "quadTexture",
-        "vertex": {
-          "POSITION": "require",
-          "UV0":"require"
-        },
-        "backend": [ "Camera3D", "Transform"],
-        "vs": "pures.texture_quadv_main",
-        "fs": "pures.texture_quadf_main"
-      },
-      {
         "name": "skinTexture",
         "vertex": {
           "POSITION": "require",
@@ -112,8 +102,48 @@
           "UV0":"require"
         },
         "backend": ["Transform"],
-        "vs": "postEffect.fxaa_vs_main",
+        "vs": "postEffect.vs_main",
         "fs": "postEffect.fxaa_fs_main"
+      },
+      {
+        "name": "bloom_prefilter",
+        "vertex": {
+          "POSITION": "require",
+          "UV0":"require"
+        },
+        "backend": ["Transform"],
+        "vs": "postEffect.vs_main",
+        "fs": "postEffect.fs_bloom_prefilter"
+      },
+      {
+        "name": "bloom_frag_hor",
+        "vertex": {
+          "POSITION": "require",
+          "UV0":"require"
+        },
+        "backend": ["Transform"],
+        "vs": "postEffect.vertBlurHorizontal",
+        "fs": "postEffect.fs_fragBlur"
+      },
+      {
+        "name": "bloom_frag_ver",
+        "vertex": {
+          "POSITION": "require",
+          "UV0":"require"
+        },
+        "backend": ["Transform"],
+        "vs": "postEffect.vertBlurVertical",
+        "fs": "postEffect.fs_fragBlur"
+      },
+      {
+        "name": "postEffectAdd2",
+        "vertex": {
+          "POSITION": "require",
+          "UV0":"require"
+        },
+        "backend": ["Transform"],
+        "vs": "postEffect.vs_main",
+        "fs": "postEffect.fs_add"
       }
     ]
 }

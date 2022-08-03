@@ -12,11 +12,7 @@
             :shader { :name "core.pbr"  } 
         }
 
-        {
-            :tag "ShadowCaster"
-            :targets []
-            :shader { :name "core.shadowDepth"  }
-        }
+       
         
     ]
 }
