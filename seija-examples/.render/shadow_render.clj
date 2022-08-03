@@ -1,11 +1,7 @@
-(require "core")
-(require "pbr")
+(require "all_uniform")
 
 (defn declare-uniforms [set]
-   (core/declare-core-uniform   set)
-   (pbr/declare-pbr-light      set 3)
-   (core/declare-skin-uniform   set 4)
-   (core/declare-shadow-uniform set 5)
+    (all_uniform/decl set)
 )
 
 (println "Enter New Render Clojure")

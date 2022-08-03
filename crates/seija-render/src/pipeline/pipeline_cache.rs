@@ -152,7 +152,8 @@ impl PipelineCache {
                                          .log_err(&format!("gen shader name prefix err:{}",&pass.shader_info.name))?;
        let vs_path = self.cfg.config_path.join(".render").join("shaders").join(&format!("{}.vert.spv",shader_name_prefix));
        let fs_path = self.cfg.config_path.join(".render").join("shaders").join(&format!("{}.frag.spv",shader_name_prefix));
-
+       log::info!("load shader vs :{:?}",vs_path);
+       log::info!("load shader fs :{:?}",fs_path);
        let vert_shader = Self::read_shader_module(&vs_path,&ctx.device)?;
        let frag_shader = Self::read_shader_module(fs_path,&ctx.device)?;
        

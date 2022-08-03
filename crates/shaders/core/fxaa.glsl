@@ -1,17 +1,16 @@
-float lumaColor(vec4 color) {
-   return 0.213 * color.r + 0.715 * color.g + 0.072 * color.b;
-}
+use core.math;
+
 
 vec4 fxaa_console(vec2 uv,texture2D mainTexture,sampler texSampler)
 {
     ivec2 texSize = textureSize(mainTexture,0);
     vec2 texelSize = 1.0 / texSize;
     vec4 origin = texture(sampler2D(mainTexture,texSampler),uv);
-    float m = lumaColor(origin);
-	float nw = lumaColor(texture(sampler2D(mainTexture,texSampler),uv + vec2(-texelSize.x,  texelSize.y) * 0.5));
-    float ne = lumaColor(texture(sampler2D(mainTexture,texSampler),uv + vec2(texelSize.x,  texelSize.y) * 0.5));
-    float sw = lumaColor(texture(sampler2D(mainTexture,texSampler),uv + vec2(-texelSize.x,  -texelSize.y) * 0.5));
-    float se = lumaColor(texture(sampler2D(mainTexture,texSampler),uv + vec2(texelSize.x,  -texelSize.y) * 0.5));
+    float m = luminance(origin);
+	  float nw = luminance(texture(sampler2D(mainTexture,texSampler),uv + vec2(-texelSize.x,  texelSize.y) * 0.5));
+    float ne = luminance(texture(sampler2D(mainTexture,texSampler),uv + vec2(texelSize.x,  texelSize.y) * 0.5));
+    float sw = luminance(texture(sampler2D(mainTexture,texSampler),uv + vec2(-texelSize.x,  -texelSize.y) * 0.5));
+    float se = luminance(texture(sampler2D(mainTexture,texSampler),uv + vec2(texelSize.x,  -texelSize.y) * 0.5));
 
     float maxLuma = max(max(nw, ne), max(sw, se));
 	float minLuma = min(min(nw, ne), min(sw, se));
@@ -38,7 +37,7 @@ vec4 fxaa_console(vec2 uv,texture2D mainTexture,sampler texSampler)
     vec4 n2 = texture(sampler2D(mainTexture,texSampler),uv - dir2 * texelSize);
     vec4 p2 = texture(sampler2D(mainTexture,texSampler),uv + dir2 * texelSize);
     vec4 result2 = result * 0.5 + (n2 + p2) * 0.25;
-    float newLum = lumaColor(result2);
+    float newLum = luminance(result2);
     if(newLum >= minLuma && newLum <= maxLuma) {
         result = result2;
     }
