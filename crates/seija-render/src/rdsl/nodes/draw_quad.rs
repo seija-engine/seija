@@ -79,7 +79,6 @@ impl IUpdateNode for DrawQuadNode {
         commands.insert(hmesh);
         commands.insert(hmat);
         self.quad_id = Some(commands.id());
-        log::error!("init???");
         Ok(())
     }
 

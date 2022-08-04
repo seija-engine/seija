@@ -116,7 +116,7 @@ impl DrawPassNode {
                     if let Some(mesh_buffer_id)  = ctx.resources.get_render_resource(&hmesh.id, 0) {
                         for pipeline in pipelines.pipelines.iter() {
 
-                            if pipeline.tag != self.pass_name {
+                            if pipeline.tag != self.pass_name || material.bind_group.is_none() || material.texture_props.bind_group.is_none() {
                                  //log::warn!("skip tag :{}",&pipeline.tag);
                                  continue; 
                             }
@@ -124,9 +124,9 @@ impl DrawPassNode {
                             let vert_buffer = ctx.resources.get_buffer_by_resid(&mesh_buffer_id).unwrap();
                            
                             let oset_index = pipeline.set_binds(self.camera_entity, entity, &mut render_pass, &ctx.ubo_ctx);
-                            if oset_index.is_none() { continue }
+                            if oset_index.is_none()  { continue }
                             let mut set_index = oset_index.unwrap();                
-                            if material.props.def.infos.len() > 0 {   
+                            if material.props.def.infos.len() > 0  {   
                                 render_pass.set_bind_group(set_index, material.bind_group.as_ref().unwrap(), &[]);
                                 set_index += 1;
                             }

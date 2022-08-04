@@ -15,29 +15,38 @@ use seija_transform::{Transform, TransformMatrix};
 pub fn load_gltf<P>(path:P,
                     mesh_assets:&mut Assets<Mesh>,
                     texture_assets:&mut Assets<Texture>,
-                    skeleton_assets:&mut Assets<Skeleton>,
-                    animation_set_assets:&mut Assets<AnimationSet>,
-                    skins:&mut Assets<Skin>) -> Result<GltfAsset,GltfError> where P:AsRef<Path> {
+                    skeleton_assets:Option<&mut Assets<Skeleton>>,
+                    animation_set_assets:Option<&mut Assets<AnimationSet>>,
+                    skins:Option<&mut Assets<Skin>>) -> Result<GltfAsset,GltfError> where P:AsRef<Path> {
     let path:&Path = path.as_ref();
+    log::info!("load gltf:{:?}",path);
     let import_data:ImportData = gltf::import(path).map_err(GltfError::LoadGltfError)?;
+   
     let textures = load_textures(&import_data,path,texture_assets)?;
+    
     let materials = load_materials(&import_data,&textures)?;
+   
     let meshs = load_meshs(&import_data,mesh_assets,&materials)?;
+   
     let mut nodes = load_nodes(&import_data)?;
+   
     let scenes = load_scenes(&import_data,&mut nodes)?;
     
+    
+
     let mut h_skeleton:Option<Handle<Skeleton>> = None;
     let mut h_animation:Option<Handle<AnimationSet>> = None;
     let mut h_skin:Option<Handle<Skin>> = None;
-    if let Some(skeleton)  = load_skeleton(&import_data)? {
-        h_skin = load_skin(&import_data,&skeleton).map(|s | skins.add(s));
-        if let Ok(anim_set) = load_animations(&import_data, &skeleton) {
-            h_animation = Some(animation_set_assets.add(anim_set));
+    if let (Some(skeletons),Some( animation_sets),Some(skins)) = (skeleton_assets,animation_set_assets,skins) {
+        if let Some(skeleton)  = load_skeleton(&import_data)? {
+            h_skin = load_skin(&import_data,&skeleton).map(|s | skins.add(s));
+            if let Ok(anim_set) = load_animations(&import_data, &skeleton) {
+                h_animation = Some(animation_sets.add(anim_set));
+            }
+            h_skeleton = Some(skeletons.add(skeleton));
         }
-        h_skeleton = Some(skeleton_assets.add(skeleton));
     }
-    
-    
+    log::info!("load gltf success:{:?}",path);
     Ok(GltfAsset {
         scenes,
         meshs,
@@ -158,7 +167,6 @@ fn load_materials(gltf:&ImportData,textures:&Vec<Handle<Texture>>) -> Result<Vec
            Some(textures[info.texture().index()].clone())
         } else { None };
         
-
         materials.push(Arc::new(GltfMaterial {
             base_color:pbr.base_color_factor(),
             base_color_texture

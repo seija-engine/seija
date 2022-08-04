@@ -30,7 +30,7 @@ TexVSOutput texture_vs_main() {
 
 vec4 texture_fs_main(TexVSOutput o) {
   vec4 texColor = texture(sampler2D(tex_mainTexture,tex_mainTextureSampler),o.uv);
- 
+  texColor = texColor * material.color;
   return texColor;
 }
 
