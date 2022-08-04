@@ -9,6 +9,7 @@ pub struct WinitWindow {
 
 unsafe impl HasRawWindowHandle for WinitWindow {
     fn raw_window_handle(&self) -> RawWindowHandle {
+        
         self.window.raw_window_handle()
     }
 }

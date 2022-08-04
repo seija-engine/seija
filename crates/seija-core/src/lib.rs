@@ -1,8 +1,6 @@
-use bevy_ecs::component::Component;
 use bevy_ecs::event::Events;
 use bevy_ecs::{prelude::*, schedule::RunOnce};
 use bevy_ecs::schedule::{StageLabel};
-
 use seija_app::{IModule,App};
 use time::{Time};
 use std::fmt::Debug;

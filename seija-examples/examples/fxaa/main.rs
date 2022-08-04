@@ -3,6 +3,7 @@ use glam::{Vec3, Quat};
 use seija_asset::Assets;
 use seija_core::{CoreStage, StartupStage, window::AppWindow};
 use seija_examples::{init_core_app, add_pbr_camera, load_material};
+use seija_input::{event::{KeyboardInput, KeyCode}, Input};
 use seija_pbr::lights::PBRLight;
 use seija_render::{resource::{Mesh, shape::{Cube, Sphere}}, material::MaterialStorage};
 use bevy_ecs::prelude::*;
@@ -10,6 +11,7 @@ use seija_transform::Transform;
 pub fn main() {
     let mut app = init_core_app("fxaa_render.clj");
     app.add_system2(CoreStage::Startup, StartupStage::PreStartup, start);
+    app.add_system(CoreStage::Update, on_update);
     app.run();
 }
 
@@ -44,4 +46,16 @@ fn start(mut commands:Commands,window:Res<AppWindow>,mut meshs: ResMut<Assets<Me
        
         commands.spawn().insert(hmesh).insert(hmat).insert(t);
     };
+}
+
+fn on_update(input:Res<Input>) {
+    if input.get_key_down(KeyCode::A) {
+        log::error!("key down A");
+    }
+    if input.get_key(KeyCode::A) {
+        log::error!("key A");
+    }
+    if input.get_key_up(KeyCode::A) {
+        log::error!("key up A");
+    }
 }

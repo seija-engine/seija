@@ -5,7 +5,10 @@ use seija_app::{IModule,App};
 use seija_core::{ window::{AppWindow, WindowConfig},AddCore};
 use seija_core::bevy_ecs::{event::{Events}};
 use window::WinitWindow;
-use winit::{event::{Event,WindowEvent}, event_loop::{ControlFlow, EventLoop, EventLoopWindowTarget}};
+use seija_input::event::{KeyboardInput as IKeyboardInput};
+use winit::{event::{Event,WindowEvent, KeyboardInput}, event_loop::{ControlFlow, EventLoop, EventLoopWindowTarget}};
+
+use crate::event::conv_keyboard_input;
 
 #[derive(Default)]
 pub struct WinitModule(pub WindowConfig);
@@ -35,12 +38,16 @@ fn winit_runner(event_loop:EventLoop<()>,mut app:App) {
                         *control_flow = ControlFlow::Exit
                     },
                     WindowEvent::Resized(new_size) => {
-                        
                         let mut resize_events = app.world.get_resource_mut::<Events<WindowResized>>().unwrap();
                         resize_events.send(WindowResized {
                             width: new_size.width as f32,
                             height: new_size.height as f32,
                         });
+                    },
+                    WindowEvent::KeyboardInput { device_id:_, input, is_synthetic:_ } => {
+                        if let Some(mut events) = app.world.get_resource_mut::<Events<IKeyboardInput>>() {
+                            events.send(conv_keyboard_input(input));
+                        }
                     }
                     _ => {}
                 }

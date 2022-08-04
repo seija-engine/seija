@@ -8,4 +8,5 @@ edition = "2018"
 raw-window-handle = "0.3.3"
 seija-app = {path = "../seija-app"}
 seija-core = {path = "../seija-core"}
+seija-input = {path = "../seija-input"}
 winit = "0.25.0"

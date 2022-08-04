@@ -116,7 +116,7 @@ impl DrawPassNode {
                     if let Some(mesh_buffer_id)  = ctx.resources.get_render_resource(&hmesh.id, 0) {
                         for pipeline in pipelines.pipelines.iter() {
 
-                            if pipeline.tag != self.pass_name || material.bind_group.is_none() || material.texture_props.bind_group.is_none() {
+                            if pipeline.tag != self.pass_name   {
                                  //log::warn!("skip tag :{}",&pipeline.tag);
                                  continue; 
                             }
@@ -126,13 +126,21 @@ impl DrawPassNode {
                             let oset_index = pipeline.set_binds(self.camera_entity, entity, &mut render_pass, &ctx.ubo_ctx);
                             if oset_index.is_none()  { continue }
                             let mut set_index = oset_index.unwrap();                
-                            if material.props.def.infos.len() > 0  {   
-                                render_pass.set_bind_group(set_index, material.bind_group.as_ref().unwrap(), &[]);
-                                set_index += 1;
+                            if material.props.def.infos.len() > 0 {
+                                if let Some(bind_group) = material.bind_group.as_ref() {
+                                    render_pass.set_bind_group(set_index, bind_group, &[]);
+                                    set_index += 1;
+                                } else {
+                                    continue;
+                                }
                             }
-                            if material.texture_props.textures.len() > 0 {
-                                render_pass.set_bind_group(set_index, material.texture_props.bind_group.as_ref().unwrap(), &[]);
-                            }
+                            if material.texture_props.textures.len() > 0  {
+                                if let Some(bind_group) = material.texture_props.bind_group.as_ref() {
+                                    render_pass.set_bind_group(set_index, bind_group, &[]);
+                                } else {
+                                    continue;
+                                }
+                            } 
                             render_pass.set_vertex_buffer(0, vert_buffer.slice(0..));
 
                             if let Some(idx_id) = ctx.resources.get_render_resource(&hmesh.id, 1) {

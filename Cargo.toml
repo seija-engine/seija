@@ -12,6 +12,7 @@ members = [
     "crates/seija-skeleton3d",
     "crates/seija-deferred",
     "crates/seija-geometry",
+    "crates/seija-input",
     #"crates/tools/material-compiler",
     "crates/tools/mc-cli",
     "seija-examples"
