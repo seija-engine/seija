@@ -1,5 +1,5 @@
-use winit::event::{KeyboardInput, ElementState};
-use seija_input::event::{KeyboardInput as IKeyboardInput,KeyboardInputState, KeyCode};
+use winit::event::{KeyboardInput, ElementState, MouseButton};
+use seija_input::{event::{KeyboardInput as IKeyboardInput,InputState, MouseInput,MouseButton as IMouseButton}, keycode::KeyCode};
 
 #[derive(Debug, Clone,Copy)]
 pub struct WindowResized {
@@ -23,8 +23,27 @@ pub(crate) fn conv_keyboard_input(key:KeyboardInput) -> IKeyboardInput {
         scan_code:key.scancode,
         state:match key.state {
             
-            ElementState::Pressed =>KeyboardInputState::Pressed,
-            ElementState::Released =>KeyboardInputState::Released,
+            ElementState::Pressed =>InputState::Pressed,
+            ElementState::Released =>InputState::Released,
         }
      }
+}
+
+fn conv_input_state(state:ElementState) -> InputState {
+    match state {
+        ElementState::Pressed => InputState::Pressed,
+        ElementState::Released => InputState::Released
+    }
+}
+
+pub(crate) fn conv_mouse_input(state:ElementState,button:MouseButton) -> MouseInput {
+    MouseInput {
+        state:conv_input_state(state),
+        button:match button {
+            MouseButton::Left => IMouseButton::Left,
+            MouseButton::Right => IMouseButton::Right,
+            MouseButton::Middle => IMouseButton::Middle,
+            MouseButton::Other(v) => IMouseButton::Other(v),
+        }
+    }
 }

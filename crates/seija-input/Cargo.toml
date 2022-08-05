@@ -7,3 +7,4 @@ edition = "2021"
 seija-app = {path = "../seija-app"}
 seija-core = {path = "../seija-core"}
 num_enum = "0.5.7"
+glam = "0.20.3"

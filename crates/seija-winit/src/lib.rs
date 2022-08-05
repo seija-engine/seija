@@ -1,12 +1,12 @@
 mod window;
 pub mod event;
-use event::{WindowCreated, WindowResized};
+use event::{WindowCreated, WindowResized, conv_mouse_input};
 use seija_app::{IModule,App};
 use seija_core::{ window::{AppWindow, WindowConfig},AddCore};
 use seija_core::bevy_ecs::{event::{Events}};
 use window::WinitWindow;
-use seija_input::event::{KeyboardInput as IKeyboardInput};
-use winit::{event::{Event,WindowEvent, KeyboardInput}, event_loop::{ControlFlow, EventLoop, EventLoopWindowTarget}};
+use seija_input::{event::{KeyboardInput as IKeyboardInput, MouseInput}, Input};
+use winit::{event::{Event,WindowEvent, KeyboardInput, MouseScrollDelta}, event_loop::{ControlFlow, EventLoop, EventLoopWindowTarget}};
 
 use crate::event::conv_keyboard_input;
 
@@ -49,6 +49,34 @@ fn winit_runner(event_loop:EventLoop<()>,mut app:App) {
                             events.send(conv_keyboard_input(input));
                         }
                     }
+                    WindowEvent::MouseInput {  state, button, .. } => {
+                        if let Some(mut events) = app.world.get_resource_mut::<Events<MouseInput>>() {
+                            let mouse_input = conv_mouse_input(state, button);
+                            events.send(mouse_input);
+                        }
+                    }
+                    WindowEvent::CursorMoved { position,.. } => {
+                        if let Some(mut input) = app.world.get_resource_mut::<Input>() {
+                            input.mouse_position.x = position.x as f32;
+                            input.mouse_position.y = position.y as f32;
+                        }
+                    }
+                    WindowEvent::MouseWheel { delta, .. } => {
+                        if let Some(mut input) = app.world.get_resource_mut::<Input>() {
+                            match delta {
+                                MouseScrollDelta::LineDelta(x,y) => {
+                                    input.mouse_wheel.x = x;
+                                    input.mouse_wheel.y = y;
+                                },
+                                MouseScrollDelta::PixelDelta(v) => {
+                                    input.mouse_wheel.x = v.x as f32;
+                                    input.mouse_wheel.y = v.y as f32;
+                                }
+                            }
+                            
+                        }
+                    }
+                
                     _ => {}
                 }
             },

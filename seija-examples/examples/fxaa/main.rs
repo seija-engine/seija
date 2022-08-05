@@ -3,7 +3,7 @@ use glam::{Vec3, Quat};
 use seija_asset::Assets;
 use seija_core::{CoreStage, StartupStage, window::AppWindow};
 use seija_examples::{init_core_app, add_pbr_camera, load_material};
-use seija_input::{event::{KeyboardInput, KeyCode}, Input};
+use seija_input::{event::{KeyboardInput, MouseButton},keycode::KeyCode, Input};
 use seija_pbr::lights::PBRLight;
 use seija_render::{resource::{Mesh, shape::{Cube, Sphere}}, material::MaterialStorage};
 use bevy_ecs::prelude::*;
@@ -49,13 +49,11 @@ fn start(mut commands:Commands,window:Res<AppWindow>,mut meshs: ResMut<Assets<Me
 }
 
 fn on_update(input:Res<Input>) {
-    if input.get_key_down(KeyCode::A) {
-        log::error!("key down A");
+    if input.get_mouse_down(MouseButton::Left) {
+        log::error!("left down");
     }
-    if input.get_key(KeyCode::A) {
-        log::error!("key A");
-    }
-    if input.get_key_up(KeyCode::A) {
-        log::error!("key up A");
+
+    if input.get_mouse_up(MouseButton::Left) {
+        log::error!("left up");
     }
 }

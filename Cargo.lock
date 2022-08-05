@@ -2428,6 +2428,7 @@ dependencies = [
 name = "seija-input"
 version = "0.1.0"
 dependencies = [
+ "glam",
  "num_enum",
  "seija-app",
  "seija-core",

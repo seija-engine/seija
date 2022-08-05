@@ -1,8 +1,8 @@
-use event::{KeyboardInput, KeyboardInputState};
+use event::{KeyboardInput, InputState, MouseInput};
 
 use seija_app::{IModule, App, ecs::{world::World, system::ResMut, prelude::EventReader}};
 use seija_core::{AddCore, CoreStage};
-
+pub mod keycode;
 pub mod event;
 mod input;
 pub use input::{Input};
@@ -12,6 +12,7 @@ impl IModule for InputModule {
     fn init(&mut self,app:&mut App) {
         app.init_resource::<Input>();
         app.add_event::<event::KeyboardInput>();
+        app.add_event::<event::MouseInput>();
         
         app.add_system(CoreStage::PreUpdate, input_system)
     }
@@ -21,22 +22,31 @@ impl IModule for InputModule {
     }
 }
 
-fn input_system(mut input:ResMut<Input>,mut key_inputs:EventReader<KeyboardInput>) {
+fn input_system(mut input:ResMut<Input>,mut key_inputs:EventReader<KeyboardInput>,mut mouse_inputs:EventReader<MouseInput>) {
     input.clear();
     for key in key_inputs.iter() {
         match key.state {
-            KeyboardInputState::Pressed => {
+            InputState::Pressed => {
                 if !input.key_pressing.contains(&key.key_code) {
                     input.frame_keydown.insert(key.key_code);
                     input.key_pressing.insert(key.key_code);
                 }
             },
-            KeyboardInputState::Released => {
+            InputState::Released => {
                 input.frame_keyup.insert(key.key_code);
                 input.key_pressing.remove(&key.key_code);
             }
         }
     }
 
-   
+    for mouse in mouse_inputs.iter() {
+        match mouse.state {
+            InputState::Pressed =>  {
+                input.frame_mousedown.insert(mouse.button);
+            },
+            InputState::Released => {
+                input.frame_mouseup.insert(mouse.button);
+            }
+        }
+    }
 }
