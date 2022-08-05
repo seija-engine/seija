@@ -1,3 +1,5 @@
+use glam::Vec2;
+
 use crate::keycode::KeyCode;
 
 
@@ -20,6 +22,12 @@ pub struct MouseInput {
     pub button:MouseButton,
     pub state:InputState
 }
+
+#[derive(Debug, Clone, Default)]
+pub struct MouseWheelInput {
+    pub delta:Vec2
+}
+
 
 #[derive(Debug, Hash, PartialEq, Eq, Clone, Copy)]
 pub enum MouseButton {

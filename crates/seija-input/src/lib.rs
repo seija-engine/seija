@@ -1,4 +1,4 @@
-use event::{KeyboardInput, InputState, MouseInput};
+use event::{KeyboardInput, InputState, MouseInput, MouseWheelInput};
 
 use seija_app::{IModule, App, ecs::{world::World, system::ResMut, prelude::EventReader}};
 use seija_core::{AddCore, CoreStage};
@@ -13,6 +13,7 @@ impl IModule for InputModule {
         app.init_resource::<Input>();
         app.add_event::<event::KeyboardInput>();
         app.add_event::<event::MouseInput>();
+        app.add_event::<event::MouseWheelInput>();
         
         app.add_system(CoreStage::PreUpdate, input_system)
     }
@@ -22,7 +23,9 @@ impl IModule for InputModule {
     }
 }
 
-fn input_system(mut input:ResMut<Input>,mut key_inputs:EventReader<KeyboardInput>,mut mouse_inputs:EventReader<MouseInput>) {
+fn input_system(mut input:ResMut<Input>,mut key_inputs:EventReader<KeyboardInput>,
+                                        mut mouse_inputs:EventReader<MouseInput>,
+                                        mut mouse_wheel_inputs:EventReader<MouseWheelInput>) {
     input.clear();
     for key in key_inputs.iter() {
         match key.state {
@@ -48,5 +51,9 @@ fn input_system(mut input:ResMut<Input>,mut key_inputs:EventReader<KeyboardInput
                 input.frame_mouseup.insert(mouse.button);
             }
         }
+    }
+
+    for mouse_wheel in mouse_wheel_inputs.iter() {
+        input.frame_mouse_wheel = Some(mouse_wheel.delta);
     }
 }

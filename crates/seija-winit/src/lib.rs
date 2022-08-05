@@ -5,8 +5,8 @@ use seija_app::{IModule,App};
 use seija_core::{ window::{AppWindow, WindowConfig},AddCore};
 use seija_core::bevy_ecs::{event::{Events}};
 use window::WinitWindow;
-use seija_input::{event::{KeyboardInput as IKeyboardInput, MouseInput}, Input};
-use winit::{event::{Event,WindowEvent, KeyboardInput, MouseScrollDelta}, event_loop::{ControlFlow, EventLoop, EventLoopWindowTarget}};
+use seija_input::{event::{KeyboardInput as IKeyboardInput, MouseInput, MouseWheelInput}, Input};
+use winit::{event::{Event,WindowEvent,  MouseScrollDelta}, event_loop::{ControlFlow, EventLoop, EventLoopWindowTarget}};
 
 use crate::event::conv_keyboard_input;
 
@@ -62,18 +62,19 @@ fn winit_runner(event_loop:EventLoop<()>,mut app:App) {
                         }
                     }
                     WindowEvent::MouseWheel { delta, .. } => {
-                        if let Some(mut input) = app.world.get_resource_mut::<Input>() {
-                            match delta {
+                        if let Some(mut events) = app.world.get_resource_mut::<Events<MouseWheelInput>>() {
+                            let mut mouse_wheel = MouseWheelInput::default();
+                             match delta {
                                 MouseScrollDelta::LineDelta(x,y) => {
-                                    input.mouse_wheel.x = x;
-                                    input.mouse_wheel.y = y;
+                                    mouse_wheel.delta.x = x;
+                                    mouse_wheel.delta.y = y;
                                 },
                                 MouseScrollDelta::PixelDelta(v) => {
-                                    input.mouse_wheel.x = v.x as f32;
-                                    input.mouse_wheel.y = v.y as f32;
+                                    mouse_wheel.delta.x = v.x as f32;
+                                    mouse_wheel.delta.y = v.y as f32;
                                 }
                             }
-                            
+                            events.send(mouse_wheel);
                         }
                     }
                 

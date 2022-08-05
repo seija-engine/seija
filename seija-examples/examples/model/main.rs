@@ -2,7 +2,7 @@ use bevy_ecs::system::{Commands, ResMut};
 use glam::{Vec3, Quat, Vec4};
 use seija_asset::Assets;
 use seija_core::{CoreStage, StartupStage, window::AppWindow};
-use seija_examples::{init_core_app, add_pbr_camera, load_material};
+use seija_examples::{init_core_app, add_pbr_camera, load_material, update_camera_trans_system};
 use seija_gltf::{load_gltf, create_gltf};
 use seija_pbr::lights::PBRLight;
 use seija_render::{resource::{Mesh,Texture}, material::MaterialStorage};
@@ -11,6 +11,7 @@ use seija_transform::Transform;
 pub fn main() {
     let mut app = init_core_app("model_render.clj");
     app.add_system2(CoreStage::Startup, StartupStage::PreStartup, start);
+    app.add_system(CoreStage::Update, update_camera_trans_system);
     app.run();
 }
 
