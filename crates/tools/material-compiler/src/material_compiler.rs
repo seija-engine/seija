@@ -1,11 +1,12 @@
-use std::{path::{PathBuf, Path}, fs, sync::Arc};
-
+use std::{path::{PathBuf, Path}, fs, sync::Arc, collections::{HashMap, hash_map::DefaultHasher, HashSet}};
+use std::hash::{Hash,Hasher};
 use anyhow::{Result, bail,anyhow};
 use glsl_pack_rtbase::shader::Shader;
 use glsl_pkg::PackageManager;
 use lite_clojure_eval::EvalRT;
 use seija_render::material::{read_material_def, PassDef, MaterialDef};
 use serde::{Deserialize};
+use smol_str::SmolStr;
 
 use crate::backend::{SeijaShaderBackend, ShaderTask};
 #[derive(Default,Deserialize)]
@@ -54,6 +55,7 @@ impl CompilerConfig {
 pub struct MaterialCompiler {
     pkg_mgr:PackageManager,
     backend:SeijaShaderBackend,
+    compiled:HashSet<u64>,
 }
 
 
@@ -63,10 +65,12 @@ impl MaterialCompiler {
         MaterialCompiler { 
             pkg_mgr: PackageManager::new(),
             backend:SeijaShaderBackend::new(),
+            compiled:HashSet::default()
         }
     }
 
     pub fn run(&mut self,config:&CompilerConfig) {
+        self.compiled.clear();
         for script_path in config.script_libs.iter() {
             self.backend.render_info.rsc.rt.add_search_path(script_path);
         }
@@ -95,37 +99,140 @@ impl MaterialCompiler {
 
     fn process_material(&mut self,path:&PathBuf) -> Result<()> {
         let mut rt = EvalRT::new();
-        let mat_def = read_material_def(&mut rt, &fs::read_to_string(path)?)?;
-        for pass_def in mat_def.pass_list.iter() {
-            self.process_material_pass(pass_def,&mat_def)?
+        let mat_def = read_material_def(&mut rt, &fs::read_to_string(path)?,true)?;
+        for (index,pass_def) in mat_def.pass_list.iter().enumerate() {
+            self.process_material_pass(pass_def,&mat_def,index)?
         }
         Ok(())
     }
 
-    fn process_material_pass(&mut self,pass_def:&PassDef,material_def:&MaterialDef) -> Result<()> {
+    fn process_material_pass(&mut self,pass_def:&PassDef,material_def:&MaterialDef,index:usize) -> Result<()> {
         let names:Vec<_> = pass_def.shader_info.name.split('.').collect();
         if names.len() != 2 { bail!("shader name err:{}",pass_def.shader_info.name) }
         let package = self.pkg_mgr.get_or_load_pkg(names[0])
                                                 .ok_or(anyhow!("not found shader package {}",names[0]))?;
         let shader:&Arc<Shader> = package.info.find_shader(&names[1])
                                               .ok_or(anyhow!("not found shader in package {}.{}",names[0],names[1]))?;
-        let macros = shader.get_macros(&pass_def.shader_info.features);
+        let mut macros = shader.get_macros(&pass_def.shader_info.features);
         let backends = shader.get_backends(&pass_def.shader_info.features);
+        if let Some(slot_string) = pass_def.shader_info.slots.as_ref() {
+            let mut hasher = DefaultHasher::default();
+            slot_string.hash(&mut hasher);
+            let hash_code = hasher.finish().to_string();
+            macros.push(hash_code.into());
+        }
         let shader_task = ShaderTask {
             pkg_name: names[0].to_string(),
             shader_name: names[1].to_string(), 
             macros: Arc::new(macros),
             prop_def:material_def.prop_def.clone(),
             tex_prop_def:material_def.tex_prop_def.clone(),
-            slots:pass_def.shader_info.slots.clone(),
+            slots: pass_def.shader_info.slots.as_ref().map(|v|Self::process_slot_string(v.as_str())).unwrap_or(HashMap::default()),
             backends
         };
+        let task_hash = shader_task.hash_code();
+        if self.compiled.contains(&task_hash) {
+            log::info!("skip {}.{}",&material_def.name,index);
+            return Ok(());
+        }
+       
         if self.pkg_mgr.compile(&shader_task.pkg_name, &shader_task.shader_name, &shader_task.macros, &self.backend,&shader_task) {
             log::info!("compile material success {}.{}",&shader_task.pkg_name,&shader_task.shader_name);
         }
-
+        self.compiled.insert(shader_task.hash_code());
         Ok(())
     }
 
+    fn process_slot_string(string:&str) -> HashMap<String,String> {
+        let mut glsl_func = GLSLFuncReader::default();
+        let mut slot_dict = HashMap::default();
+        glsl_func.reset();
+        for chr in string.chars() {
+           if glsl_func.on_char(chr) {
+              slot_dict.insert(glsl_func.fn_name.take().unwrap(), glsl_func.body.take().unwrap());
+              glsl_func.reset();
+           }
+        }
+        slot_dict
+    }
+
     
+}
+
+#[derive(Debug)]
+enum GLSLFuncState { None,ReadType, ReadTypeEnd, ReadName, ReadBody }
+impl Default for GLSLFuncState {
+    fn default() -> Self {  GLSLFuncState::None }
+}
+
+#[derive(Default,Debug)]
+struct GLSLFuncReader {
+    fn_name:Option<String>,
+    ret_type:Option<String>,
+    body:Option<String>,
+    state:GLSLFuncState,
+    wait_body_end:bool,
+    wait_count:u32
+}
+
+impl GLSLFuncReader {
+    fn reset(&mut self) {
+        self.wait_body_end = false;
+        self.state = GLSLFuncState::None;
+        self.fn_name = Some(String::default() );
+        self.ret_type = Some(String::default() );
+        self.body = Some(String::default() );
+        self.wait_count = 0u32;
+    }
+
+    fn on_char(&mut self,chr:char) -> bool {
+        match self.state {
+            GLSLFuncState::None => {
+                if !chr.is_whitespace() {
+                    self.body.as_mut().map(|s| s.push(chr));
+                    self.ret_type.as_mut().map(|s| s.push(chr));
+                    self.state = GLSLFuncState::ReadType; 
+                }
+            },
+            GLSLFuncState::ReadType => {
+                self.body.as_mut().map(|s| s.push(chr));
+                if chr.is_whitespace() {
+                    self.state = GLSLFuncState::ReadTypeEnd
+                } else {
+                    self.ret_type.as_mut().map(|s| s.push(chr));
+                }
+            },
+            GLSLFuncState::ReadTypeEnd => {
+                self.body.as_mut().map(|s| s.push(chr));
+                if !chr.is_whitespace() {
+                    self.fn_name.as_mut().map(|s| s.push(chr));
+                    self.state = GLSLFuncState::ReadName 
+                }
+            },
+            GLSLFuncState::ReadName => {
+                self.body.as_mut().map(|s| s.push(chr));
+                if chr == '(' {
+                    self.state = GLSLFuncState::ReadBody
+                } else {
+                    self.fn_name.as_mut().map(|s| s.push(chr));
+                }
+            }
+            GLSLFuncState::ReadBody => {
+                self.body.as_mut().map(|s| s.push(chr));
+                if chr == '{' {
+                    if !self.wait_body_end {
+                        self.wait_body_end = true;
+                    }
+                    self.wait_count += 1;
+                }
+                if chr == '}' {
+                    self.wait_count -= 1;
+                }
+                if self.wait_body_end && self.wait_count == 0 {
+                    return true;
+                }
+            }
+        }
+        false
+    }
 }

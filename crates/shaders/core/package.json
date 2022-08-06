@@ -29,6 +29,7 @@
           "UV0":"require"
         },
         "backend": [ "Camera3D", "Transform"],
+        "slots":["slot_vs_material","slot_fs_material"],
         "vs": "pures.texture_vs_main",
         "fs": "pures.texture_fs_main"
       },

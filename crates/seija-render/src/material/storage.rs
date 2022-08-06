@@ -66,7 +66,7 @@ impl MaterialStorage {
 
     pub fn load_material_def(&self,source:&str) -> bool {
         let mut vm = EvalRT::new();
-        match read_material_def(&mut vm, source) {
+        match read_material_def(&mut vm, source,false) {
             Ok(def) => {
                 self.add_def(def);
                 return true;

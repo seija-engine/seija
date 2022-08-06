@@ -295,6 +295,9 @@ fn get_shader_name_prefix(mesh:&Mesh,shader:&ShaderInfoDef,shaders:&RuntimeShade
     }
     let feature_macros = shader_info.get_macros(&shader.features);
     macros.extend(feature_macros);
+    if let Some(slot) = shader.slots.as_ref() {
+        macros.push(slot.into());
+    }
 
     let macro_group = MacroGroup::new(macros);
     let macro_string = macro_group.hash_base64();

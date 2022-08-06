@@ -16,21 +16,22 @@ vec4 color_fs_main(VSOutput ino) {
 }
 
 
-struct TexVSOutput {
+struct VSInput {
   vec2 uv;
 };
 
-TexVSOutput texture_vs_main() {
-  TexVSOutput o;
+VSInput texture_vs_main() {
+  VSInput o;
   o.uv = vert_uv0; 
   vec4 pos = getTransform() * vec4(vert_position, 1.0);
   gl_Position = getCameraProjView() * pos;
   return o;
 }
 
-vec4 texture_fs_main(TexVSOutput o) {
+vec4 texture_fs_main(VSInput o) {
   vec4 texColor = texture(sampler2D(tex_mainTexture,tex_mainTextureSampler),o.uv);
   texColor = texColor * material.color;
+  slot_fs_material(texColor);
   return texColor;
 }
 

@@ -1,4 +1,4 @@
-use std::{collections::{HashMap}, fmt::Write, sync::Arc};
+use std::{collections::{HashMap, hash_map::DefaultHasher}, fmt::Write, sync::Arc, hash::{Hash, Hasher}};
 use glsl_pack_rtbase::shader::Shader;
 use glsl_pkg::{IShaderBackend, backends::{BackendItem, Backends}};
 
@@ -40,6 +40,16 @@ pub struct ShaderTask {
    pub prop_def:Arc<UniformBufferDef>,
    pub tex_prop_def:Arc<TexturePropDef>,
    pub slots:HashMap<String,String>
+}
+
+impl ShaderTask {
+    pub fn hash_code(&self) -> u64 {
+        let mut hasher = DefaultHasher::default();
+        self.pkg_name.hash(&mut hasher);
+        self.shader_name.hash(&mut hasher);
+        self.macros.hash(&mut hasher);
+        hasher.finish()
+    }
 }
 
 

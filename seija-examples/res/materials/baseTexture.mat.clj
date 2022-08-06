@@ -8,7 +8,15 @@
     :pass [
        
         { 
-            :shader { :name "core.texture"  } 
+            :shader { 
+                :name "core.texture" 
+                :slot "
+                    void slot_fs_material(inout vec4 textureColor) {
+                        textureColor.r = 1;
+                    }
+                    
+                "
+            } 
         }
 
        

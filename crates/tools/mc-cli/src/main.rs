@@ -1,5 +1,3 @@
-use std::path::PathBuf;
-
 use clap::{App,Arg};
 use material_compiler::{CompilerConfig,MaterialCompiler};
 fn main() {

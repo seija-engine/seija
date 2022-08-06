@@ -1,6 +1,7 @@
-use std::{convert::{TryFrom}, sync::{Arc}, cell::Ref, collections::HashMap};
+use std::{convert::{TryFrom}, sync::{Arc}};
 use seija_core::{TypeUuid};
-use serde::{Serialize, Deserialize};
+use std::collections::hash_map::DefaultHasher;
+use std::hash::{Hash,Hasher};
 use smol_str::SmolStr;
 use wgpu::{FrontFace, PolygonMode};
 use super::{RenderOrder, errors::MaterialDefReadError, storage::DEFAULT_TEXTURES, texture_prop_def::TexturePropDef, types::{Cull, SFrontFace, SPolygonMode, ZTest, RenderPath, STextureFormat}, TexturePropInfo};
@@ -60,7 +61,7 @@ impl Default for PassDef {
 }
 
 
-pub fn read_material_def(vm:&mut EvalRT,file_string:&str) -> Result<MaterialDef,MaterialDefReadError>  {
+pub fn read_material_def(vm:&mut EvalRT,file_string:&str,read_slot:bool) -> Result<MaterialDef,MaterialDefReadError>  {
     let value:Value = vm.eval_string(String::default(), file_string).ok_or(MaterialDefReadError::LanguageError)?.into();
     let value_object = value.as_object().ok_or(MaterialDefReadError::FormatError)?;
     
@@ -78,10 +79,10 @@ pub fn read_material_def(vm:&mut EvalRT,file_string:&str) -> Result<MaterialDef,
     match json_pass {
         Value::Array(arr) => {
             for v in arr {
-                pass_list.push(read_pass(v)?);
+                pass_list.push(read_pass(v,read_slot)?);
             }
         },
-        Value::Object(_) => { pass_list.push(read_pass(json_pass)?); },
+        Value::Object(_) => { pass_list.push(read_pass(json_pass,read_slot)?); },
         _ => return Err(MaterialDefReadError::InvalidPass)
     }
 
@@ -143,7 +144,7 @@ fn read_texture_prop(json_value:&Value) -> Result<TexturePropDef,()> {
     Ok(texture_props)
 }
 
-fn read_pass(json_value:&Value) -> Result<PassDef,MaterialDefReadError> {
+fn read_pass(json_value:&Value,read_slot:bool) -> Result<PassDef,MaterialDefReadError> {
     let map = json_value.as_object().ok_or(MaterialDefReadError::InvalidPass)?;
     let mut pass_def = PassDef::default();
     if let Some(z_write) = map.get(":z-write").and_then(|v| v.as_bool()) {
@@ -171,7 +172,7 @@ fn read_pass(json_value:&Value) -> Result<PassDef,MaterialDefReadError> {
         pass_def.conservative = b;
     }
     let shader_value =  map.get(":shader").ok_or(MaterialDefReadError::InvalidPassProp("shader".into()))?;
-    pass_def.shader_info = ShaderInfoDef::try_from(shader_value)?;
+    pass_def.shader_info = read_shader_info(shader_value,read_slot)?;
     let mut targets:Vec<TargetInfo> = vec![];
     if let Some(json_targets) = map.get(":targets").and_then(Value::as_array) {
         for json_target in json_targets.iter() {
@@ -191,34 +192,38 @@ fn read_pass(json_value:&Value) -> Result<PassDef,MaterialDefReadError> {
 #[derive(Debug,Default)]
 pub struct ShaderInfoDef {
     pub name:String,
-    pub slots:HashMap<String,String>,
+    pub slots:Option<String>,
     pub features:Vec<SmolStr>
 }
 
-impl TryFrom<&Value> for ShaderInfoDef  {
-    type Error = MaterialDefReadError;
-    fn try_from(value: &Value) -> Result<Self, Self::Error> {
-        let object_value = value.as_object().ok_or(MaterialDefReadError::InvalidPassProp("shader".into()))?;
-        let name = object_value.get(":name").and_then(|v| v.as_str()).ok_or(MaterialDefReadError::InvalidPassProp("shader".into()))?;
-        let mut features = vec![];
-        if let Some(json_features) = object_value.get(":features") {
-            features = json_features.as_array().map(|arr| {
-               arr.iter().filter_map(|v| v.as_str()).map(SmolStr::new).collect()
-           }).unwrap_or(vec![]);
-        }
-        let mut slots:HashMap<String,String> = HashMap::default();
-        for (k,v) in object_value.iter() {
-            if let Some(s_value) = v.as_str() {
-                let string:String = k.chars().skip(1).collect();
-                slots.insert(string, s_value.to_string());
-            }
-        }
-        Ok(ShaderInfoDef {
-            name:name.to_string(),
-            slots,
-            features
-        })
+
+fn read_shader_info(value:&Value,read_slot:bool) -> Result<ShaderInfoDef,MaterialDefReadError> {
+    let object_value = value.as_object().ok_or(MaterialDefReadError::InvalidPassProp("shader".into()))?;
+    let name = object_value.get(":name").and_then(|v| v.as_str()).ok_or(MaterialDefReadError::InvalidPassProp("shader".into()))?;
+    let mut features = vec![];
+    if let Some(json_features) = object_value.get(":features") {
+        features = json_features.as_array().map(|arr| {
+           arr.iter().filter_map(|v| v.as_str()).map(SmolStr::new).collect()
+       }).unwrap_or(vec![]);
     }
+    let mut slots = None;
+    if read_slot {
+        if let Some(slot_string) = object_value.get(":slot").and_then(Value::as_str) {
+            slots = Some(slot_string.to_string())
+        }
+    } else {
+        if let Some(slot_string) = object_value.get(":slot").and_then(Value::as_str) {
+            let mut hasher = DefaultHasher::default();
+            slot_string.hash(&mut hasher);
+            hasher.finish();
+            slots = Some(hasher.finish().to_string());
+        }
+    }
+    Ok(ShaderInfoDef {
+        name:name.to_string(),
+        slots,
+        features
+    })
 }
 
 impl PassDef {

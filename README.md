@@ -29,7 +29,7 @@
         b. <del> 完成glsl-pack </del>  
         c. <del> 完成材质编译工具 </del>   
         d. <del> 重新整理uniform的结构，做成插件模式 </del>  
-        e. 除了Uniform外还需要支持贴图的Backend
+        e. <del> 除了Uniform外还需要支持贴图的Backend </del> 
 
   6. 使用新的材质系统重新梳理实现各种光照shader  
         a. <del> 重新实现Blinn-Phong光照模型和相关灯光处理</del>  
@@ -55,7 +55,7 @@
   11. 进行最后一次渲染管线框架重构  
       a. <del> 为了解决多摄像机，多渲染路径，多渲染目标问题。</del>   
       b. <del> 为了解决uniform和渲染节点在运行时动态的添加删除问题。 </del>    
-      c. 实现之前设计漏实现的的material slot机制。
+      c. <del> 实现之前设计漏实现的的material slot机制。</del>  
       
 
   12. 实现后处理的结构和一些基础后处理效果  
