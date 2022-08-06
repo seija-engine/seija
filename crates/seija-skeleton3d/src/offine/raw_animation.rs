@@ -1,4 +1,4 @@
-use glam::{Vec3, Quat, Vec4};
+use glam::{Vec3, Quat};
 
 #[derive(Default,Clone,Debug)]
 #[repr(C)]

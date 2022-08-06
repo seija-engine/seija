@@ -17,7 +17,7 @@ pub struct DeferredRenderModule {
 impl IModule for DeferredRenderModule {
     fn init(&mut self,_app:&mut seija_app::App) {}
 
-    fn start(&self, world:&mut World) {
+    fn start(&self, _world:&mut World) {
        /*
        match self.load_quad(world) {
            Ok(e) => {

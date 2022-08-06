@@ -1,5 +1,5 @@
 use bevy_ecs::prelude::World;
-use lite_clojure_eval::{EvalRT, Variable, ExecScope};
+use lite_clojure_eval::{EvalRT, Variable};
 use seija_asset::Assets;
 use seija_core::window::AppWindow;
 use crate::{UniformInfoSet, RenderContext, resource::Texture, query::QuerySystem, material::MaterialStorage};

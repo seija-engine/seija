@@ -1,7 +1,7 @@
 use std::{convert::{TryFrom, TryInto}, sync::Arc};
 
 use serde_json::{Value};
-use crate::{memory::{PropInfoList, UniformBufferDef}, pipeline::render_bindings::{BindGroupBuilder, BindGroupLayoutBuilder}};
+use crate::{memory::{PropInfoList, UniformBufferDef}, pipeline::render_bindings::{ BindGroupLayoutBuilder}};
 
 use super::texture_def::UniformTextureDef;
 #[derive(Debug,Clone, Copy)]

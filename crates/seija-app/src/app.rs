@@ -1,4 +1,4 @@
-use bevy_ecs::{ schedule::{Schedule, Stage, StageLabel, SystemDescriptor, IntoSystemDescriptor}, world::World};
+use bevy_ecs::{ schedule::{Schedule, Stage, StageLabel, IntoSystemDescriptor}, world::World};
 
 use crate::IModule;
 

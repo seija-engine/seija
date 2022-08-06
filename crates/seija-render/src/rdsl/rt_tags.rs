@@ -2,7 +2,7 @@ use std::collections::{HashMap, HashSet};
 
 use bevy_ecs::prelude::World;
 use bevy_ecs::event::{ManualEventReader, Events};
-
+#[allow(dead_code)]
 pub enum TagEvent {
     Start(usize),
     End(usize)

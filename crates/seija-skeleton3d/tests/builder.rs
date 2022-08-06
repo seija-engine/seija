@@ -13,7 +13,7 @@ lazy_static! {
     static ref ROT_RIGHT_DOWN:Quat = Quat::from_axis_angle(Vec3::X, fconst::FRAC_PI_2) * Quat::from_axis_angle(Vec3::Y, -fconst::FRAC_PI_2);
 }
 
-
+#[allow(dead_code)]
 struct MillipedeAnimation {
     slice_count:i32,
     kspin_length:f32,
@@ -44,7 +44,7 @@ impl MillipedeAnimation {
         let raw_skeleton = self.create_skeleton();
         let skeleton = SkeletonBuilder::build(&raw_skeleton);
         let raw_animation = self.create_animation(&skeleton);
-        let animation = AnimationBuilder::build(&raw_animation);
+        let _animation = AnimationBuilder::build(&raw_animation);
     }
 
     fn pre_compute_keys(&self) -> Vec<RawTranslationKey> {
@@ -247,6 +247,6 @@ impl MillipedeAnimation {
 
 #[test]
 fn test_builder() {
-    let mut ma = MillipedeAnimation::default();
+    let ma = MillipedeAnimation::default();
     ma.build();
 }

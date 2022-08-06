@@ -3,7 +3,7 @@ use glam::Vec3;
 use lite_clojure_eval::Variable;
 use seija_render::{IUpdateNode, RenderContext, UniformBuffer, UBOArrayCollect};
 use seija_transform::Transform;
-use anyhow::{Result,anyhow};
+use anyhow::{Result};
 
 use crate::lights::{PBRLight, PBRLightType};
 

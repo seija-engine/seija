@@ -61,7 +61,7 @@ impl IShaderBackend for SeijaShaderBackend {
         
     }
 
-    fn write_fs_head<W:Write>(&self, writer:&mut W) {
+    fn write_fs_head<W:Write>(&self, _writer:&mut W) {
         //writer.write_str("layout(location = 0) out vec4 _outColor;\r\n").unwrap();
       
     }

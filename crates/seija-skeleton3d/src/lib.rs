@@ -11,7 +11,6 @@ use render::animation_system::update_skeleton_system;
 use seija_app::{IModule, App};
 use seija_asset::AddAsset;
 use seija_core::{CoreStage};
-use bevy_ecs::{prelude::IntoSystem};
 pub use skeleton::{Skeleton};
 pub use animation_set::{AnimationSet};
 pub use render::{render_plugin::{create_skeleton_plugin},
@@ -29,6 +28,6 @@ impl IModule for Skeleton3dModule {
         app.add_asset::<RuntimeSkeleton>();
         app.add_asset::<Skin>();
 
-        app.add_system(CoreStage::PreUpdate, update_skeleton_system.system());
+        app.add_system(CoreStage::PreUpdate, update_skeleton_system);
     }
 }

@@ -4,6 +4,7 @@ mod frustum;
 use glam::{Mat4, Vec3};
 pub use sphere::{Sphere};
 pub use plane::{Plane};
+pub use frustum::{Frustum};
 
 
 pub fn proj_view_corners(proj_view:&Mat4) -> [Vec3;8] {

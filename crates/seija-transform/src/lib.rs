@@ -1,6 +1,4 @@
-use std::collections::HashSet;
-
-use bevy_ecs::{schedule::{SystemLabel, SystemStage,Schedule, ParallelSystemDescriptorCoercion, StageLabel},system::{IntoSystem}, prelude::Entity};
+use bevy_ecs::{schedule::{SystemLabel, ParallelSystemDescriptorCoercion}};
 use seija_app::IModule;
 use seija_app::App;
 
@@ -29,10 +27,10 @@ impl IModule for TransformModule {
         app.add_system2(CoreStage::Startup, StartupStage::PostStartup,
                        system::parent_update_system.label(TransformLabel::ParentUpdate));
         app.add_system2(CoreStage::Startup, StartupStage::PostStartup, 
-                       update_transform_system.system().label(TransformLabel::Propagate).after(TransformLabel::ParentUpdate));
+                       update_transform_system.label(TransformLabel::Propagate).after(TransformLabel::ParentUpdate));
         app.add_system(CoreStage::PreUpdate, 
-                           system::parent_update_system.system().label(TransformLabel::ParentUpdate));
+                           system::parent_update_system.label(TransformLabel::ParentUpdate));
         app.add_system(CoreStage::PreUpdate, 
-                           update_transform_system.system().label(TransformLabel::Propagate).after(TransformLabel::ParentUpdate));
+                           update_transform_system.label(TransformLabel::Propagate).after(TransformLabel::ParentUpdate));
     }
 }

@@ -1,7 +1,6 @@
 
 use bevy_ecs::prelude::Component;
-use glam::{Mat4, Quat, Vec2, Vec3};
-use crate::hierarchy::{Children, Parent};
+use glam::{Mat4, Quat, Vec3};
 use lazy_static::{lazy_static};
 
 lazy_static! {

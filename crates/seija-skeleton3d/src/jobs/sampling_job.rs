@@ -1,7 +1,4 @@
-use std::process::id;
-
-use crate::{Animation, Float3Key, offine::raw_animation::RawScaleKey};
-use glam::{Quat, Vec3};
+use crate::{Animation};
 use seija_transform::TransformMatrix;
 
 #[derive(Default)]
@@ -24,7 +21,7 @@ struct TrackKeyIndex {
     rotation_index: usize,
     scale_index: usize,
 }
-
+#[allow(dead_code)]
 impl SamplingJob {
     fn create(anim: &Animation) -> Self {
         let mut job = SamplingJob {
@@ -162,7 +159,9 @@ impl SamplingJob {
 }
 
 #[test]
-fn aaa() {
+fn test() {
+    use glam::{Vec3,Quat};
+    use crate::offine::raw_animation::RawScaleKey;
     use crate::offine::animation_builder::AnimationBuilder;
     use crate::offine::raw_animation::{
         RawAnimation, RawJointTrack, RawRotationKey, RawTranslationKey,

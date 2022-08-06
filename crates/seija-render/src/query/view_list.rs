@@ -60,7 +60,7 @@ pub struct ViewEntity {
     pub entity:Entity,
     pub order:f32
 }
-
+#[allow(dead_code)]
 impl ViewEntity {
     pub fn new(entity:Entity,order:f32) -> ViewEntity {
         ViewEntity {entity,order}

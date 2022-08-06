@@ -116,7 +116,7 @@ pub fn read_image_info(dyn_image:image::DynamicImage) -> ImageInfo {
 pub fn color_image_info(color:[u8;4],size:usize) -> ImageInfo {
     let pixel_len = size * size;
     let mut data:Vec<u8> = Vec::with_capacity(pixel_len * 4);
-    for idx in 0..pixel_len {
+    for _ in 0..pixel_len {
         data.extend_from_slice(&color);
     }
     

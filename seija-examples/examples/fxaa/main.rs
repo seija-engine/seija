@@ -1,11 +1,11 @@
 use bevy_ecs::system::{Commands, ResMut};
 use glam::{Vec3, Quat};
 use seija_asset::Assets;
-use seija_core::{CoreStage, StartupStage, window::AppWindow, time::Time};
+use seija_core::{CoreStage, StartupStage, window::AppWindow};
 use seija_examples::{init_core_app, add_pbr_camera, load_material, update_camera_trans_system};
-use seija_input::{event::{KeyboardInput, MouseButton},keycode::KeyCode, Input};
+
 use seija_pbr::lights::PBRLight;
-use seija_render::{resource::{Mesh, shape::{Cube, Sphere}}, material::MaterialStorage, camera::camera::Camera};
+use seija_render::{resource::{Mesh, shape::{Cube}}, material::MaterialStorage};
 use bevy_ecs::prelude::*;
 use seija_transform::Transform;
 pub fn main() {

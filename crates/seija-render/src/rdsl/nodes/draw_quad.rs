@@ -1,4 +1,4 @@
-use bevy_ecs::{world::World, prelude::Entity, system::Res};
+use bevy_ecs::{world::World, prelude::Entity};
 use lite_clojure_eval::Variable;
 use anyhow::{Result,anyhow};
 use seija_asset::{Assets, Handle};

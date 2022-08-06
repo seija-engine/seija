@@ -1,10 +1,10 @@
 use bevy_ecs::system::{Commands, ResMut};
-use glam::{Vec3, Quat, Vec4};
+use glam::{Vec3, Quat};
 use seija_asset::Assets;
 use seija_core::{CoreStage, StartupStage, window::AppWindow};
 use seija_examples::{init_core_app, add_pbr_camera, load_material};
 use seija_pbr::lights::PBRLight;
-use seija_render::{resource::{Mesh, shape::{Sphere, Cube, Plane}}, material::MaterialStorage, shadow::{ShadowLight, Shadow, ShadowCamera}};
+use seija_render::{resource::{Mesh, shape::{Sphere}}, material::MaterialStorage, shadow::{ Shadow, ShadowCamera}};
 use bevy_ecs::prelude::*;
 use seija_transform::Transform;
 pub fn main() {

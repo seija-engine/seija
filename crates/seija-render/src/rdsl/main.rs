@@ -43,7 +43,7 @@ impl RenderMain {
         app.add_event::<TagEvent>();
     }
 
-    pub fn init(&mut self,code_string:&str,lib_paths:&Vec<PathBuf>,render_path:&PathBuf,info_set:&mut UniformInfoSet) {
+    pub fn init(&mut self,code_string:&str,lib_paths:&Vec<PathBuf>,_render_path:&PathBuf,info_set:&mut UniformInfoSet) {
         for lib_path in lib_paths.iter() {
            
             self.script_ctx.rt.add_search_path(lib_path);
@@ -111,7 +111,7 @@ pub struct MainContext {
 }
 
 impl MainContext {
-    pub fn update(&mut self,ctx:&mut RenderContext,world:&mut World,sc:&mut ScriptContext) {
+    pub fn update(&mut self,ctx:&mut RenderContext,world:&mut World,_sc:&mut ScriptContext) {
         self.rt_tags.update(world);
         if self.rt_tags.dirtys.len() > 0 {
             self.update_dirty_tag(ctx);

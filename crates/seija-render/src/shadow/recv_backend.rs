@@ -1,11 +1,10 @@
-use crate::{UniformInfo, uniforms::UniformContext, UniformIndex};
+use crate::{uniforms::UniformContext, UniformIndex};
 use anyhow::{Result,anyhow};
 #[derive(Default)]
 pub struct ShadowRecvBackend {
     name_index:UniformIndex,
     bias_index:usize,
-    strength_index:usize,
-    shadow_map_index:usize
+    strength_index:usize
 }
 
 impl ShadowRecvBackend {
@@ -19,8 +18,7 @@ impl ShadowRecvBackend {
         Ok(ShadowRecvBackend {
             name_index,
             bias_index,
-            strength_index,
-            shadow_map_index:0
+            strength_index
         })
     }
 

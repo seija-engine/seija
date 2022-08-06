@@ -1,7 +1,7 @@
 use bevy_ecs::prelude::{World, Entity, Added, With};
 use glam::Vec4;
 use lite_clojure_eval::Variable;
-use anyhow::{Result,  bail,anyhow };
+use anyhow::{Result, anyhow };
 use seija_transform::Transform;
 
 use crate::{rdsl::node::IUpdateNode, UniformIndex, uniforms::backends::Camera3DBackend, RenderContext, camera::camera::Camera, memory::TypedUniformBuffer};

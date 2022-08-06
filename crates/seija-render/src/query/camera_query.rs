@@ -1,7 +1,4 @@
-use std::collections::{HashMap, HashSet};
-
-use bevy_ecs::{prelude::{World, Entity, Query, ResMut, Res, Added, RemovedComponents}};
-use parking_lot::RwLock;
+use bevy_ecs::{prelude::{Entity, Query, ResMut, Res, Added, RemovedComponents}};
 use seija_asset::Handle;
 use seija_core::info::EInfo;
 use seija_transform::Transform;
@@ -9,7 +6,7 @@ use seija_transform::Transform;
 
 use crate::{material::{MaterialStorage, Material}, camera::camera::Camera};
 
-use super::{view_list::{ViewList, ViewEntity}, QuerySystem, ViewQuery, system::IdOrName};
+use super::{view_list::{ViewEntity}, QuerySystem, ViewQuery, system::IdOrName};
 
 const CAMERA_TYPE:u32 = 1u32;
 

@@ -1,8 +1,6 @@
-use std::collections::HashMap;
-
 use bevy_ecs::prelude::{Entity, Mut, World};
 use fnv::FnvHashMap;
-use seija_asset::{Assets, Handle};
+use seija_asset::{Handle};
 use crate::{material::{storage::MaterialDefInfo}, pipeline::render_bindings::BindGroupLayoutBuilder, resource::{BufferId, RenderResources}};
 use wgpu::{BufferUsage, CommandEncoder, Device};
 use super::{Material, MaterialStorage};

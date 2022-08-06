@@ -1,4 +1,4 @@
-use std::collections::{HashMap, HashSet};
+use std::collections::{HashMap};
 use anyhow::{Result};
 use bevy_ecs::prelude::World;
 use lite_clojure_eval::{Variable, EvalRT};
@@ -10,11 +10,11 @@ use super::{main::MainContext, rt_tags::RuntimeTags};
 pub trait IUpdateNode {
     fn update_params(&mut self,params:Vec<Variable>) -> Result<()>;
 
-    fn init(&mut self,world:&mut World,ctx:&mut RenderContext) -> anyhow::Result<()> { Ok(()) }
+    fn init(&mut self,_world:&mut World,_ctx:&mut RenderContext) -> anyhow::Result<()> { Ok(()) }
 
-    fn prepare(&mut self,world:&mut World,ctx:&mut RenderContext) {}
+    fn prepare(&mut self,_world:&mut World,_ctx:&mut RenderContext) {}
 
-    fn update(&mut self,world:&mut World,ctx:&mut RenderContext) {}
+    fn update(&mut self,_world:&mut World,_ctx:&mut RenderContext) {}
 }
 
 pub struct UpdateNodeBox {

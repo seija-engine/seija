@@ -6,7 +6,6 @@ use glsl_pkg::PackageManager;
 use lite_clojure_eval::EvalRT;
 use seija_render::material::{read_material_def, PassDef, MaterialDef};
 use serde::{Deserialize};
-use smol_str::SmolStr;
 
 use crate::backend::{SeijaShaderBackend, ShaderTask};
 #[derive(Default,Deserialize)]

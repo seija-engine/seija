@@ -20,7 +20,7 @@ pub fn init_core_app(render_file:&str) -> App {
     let mut app = App::new();
     app.add_module(CoreModule);
     app.add_module(InputModule);
-    let mut win = WinitModule::default();
+    let win = WinitModule::default();
     //win.0.width = 480f32;
     //win.0.height = 320f32;
     app.add_module(win);
@@ -139,7 +139,7 @@ pub fn update_camera_trans_system(time:Res<Time>,
                               mut controller:Local<CameraTranController>,
                               mut cameras:Query<(Entity,&Camera,&mut Transform)>) {
     
-    if let Some((entity,camera,mut trans)) = cameras.iter_mut().next() {
+    if let Some((_entity,_camera,mut trans)) = cameras.iter_mut().next() {
         match controller.state {
             ControllerState::None => {
                 if let Some(delta) = input.get_mouse_wheel() {

@@ -3,7 +3,7 @@ use std::{sync::Arc, path::Path};
 use wgpu::{CommandEncoder, Device};
 
 use crate::{ material::{MaterialSystem, PassDef}, 
-resource::RenderResources,  rt_shaders::RuntimeShaderInfo, uniforms::{UniformContext}, graph_setting::GraphSetting, query::QuerySystem};
+resource::RenderResources,  rt_shaders::RuntimeShaderInfo, uniforms::{UniformContext}, graph_setting::GraphSetting};
 
 unsafe impl Send for RenderContext {}
 unsafe impl Sync for RenderContext {}

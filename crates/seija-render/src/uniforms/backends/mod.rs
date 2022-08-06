@@ -62,7 +62,7 @@ impl TransformBackend {
         buffer.write_bytes_(self.trans_idx,  mat.to_cols_array().as_bytes());
     }
 }
-
+#[allow(dead_code)]
 pub struct LightBackend {
     ambile_idx:usize,
     light_count_idx:usize,
@@ -76,7 +76,7 @@ pub struct LightBackend {
     lights_ex2_idx:usize,
     lights_ex3_idx:usize,
 }
-
+#[allow(dead_code)]
 impl LightBackend {
     pub fn from_def(def:&UniformBufferDef) -> Result<LightBackend,String> {
         let ambile_idx = def.get_offset("ambileColor", 0).ok_or("ambileColor".to_string())?;

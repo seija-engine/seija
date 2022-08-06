@@ -1,6 +1,5 @@
 use bevy_ecs::prelude::Component;
 use seija_asset::{Handle, Assets};
-use seija_transform::TransformMatrix;
 
 
 use crate::{Skeleton, AnimationSet, jobs::{SamplingJob, LocalToModelJob}};

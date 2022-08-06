@@ -10,11 +10,13 @@ pub struct ViewQuery {
 }
 
 #[derive(PartialEq,Eq,Hash,Clone)]
+
 pub enum IdOrName {
     Id(u64),
     Name(String)
 }
 
+#[allow(dead_code)]
 impl IdOrName {
     pub fn cast_id(&self) -> Option<u64> {
         match self {
