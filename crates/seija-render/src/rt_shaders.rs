@@ -13,7 +13,7 @@ impl RuntimeShaderInfo {
         if let Some(shader) = RuntimeShaders::read_from(path) {
             self.rt_shaders = shader;
         } else {
-            log::error!("load runtime shaders error {:?}",p.as_ref());
+            log::error!("load runtime shaders error {:?}",path);
         }  
     }
 

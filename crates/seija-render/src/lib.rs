@@ -108,7 +108,7 @@ impl RenderModule {
                 app_render.main.init(&code_string,&config.render_lib_paths,&config.config_path,&mut ctx.ubo_ctx.info);
             },
             Err(err) => {
-                log::error!("load {:?} error:{:?}",&script_path,err);
+                log::error!("load main render script:{:?} error:{:?}",&script_path,err);
             }
         }
 
