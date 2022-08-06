@@ -56,6 +56,7 @@ pub struct MaterialCompiler {
     pkg_mgr:PackageManager,
     backend:SeijaShaderBackend,
     compiled:HashSet<u64>,
+    cache_shaders:HashSet<u64>
 }
 
 
@@ -65,11 +66,16 @@ impl MaterialCompiler {
         MaterialCompiler { 
             pkg_mgr: PackageManager::new(),
             backend:SeijaShaderBackend::new(),
-            compiled:HashSet::default()
+            compiled:HashSet::default(),
+            cache_shaders:HashSet::default()
         }
     }
 
     pub fn run(&mut self,config:&CompilerConfig) {
+        let cache_path = format!("{}/cahce.json",config.out_path);
+        if let Ok(code_string) = std::fs::read_to_string(&cache_path) {
+            self.cache_shaders = serde_json::de::from_str(code_string.as_str()).unwrap();
+        }
         self.compiled.clear();
         for script_path in config.script_libs.iter() {
             self.backend.render_info.rsc.rt.add_search_path(script_path);
@@ -95,6 +101,8 @@ impl MaterialCompiler {
             }
         }
         self.pkg_mgr.write_rtinfos();
+        let ser_string = serde_json::ser::to_string(&self.cache_shaders).unwrap();
+        std::fs::write(&cache_path, &ser_string).unwrap();
     }
 
     fn process_material(&mut self,path:&PathBuf) -> Result<()> {
@@ -136,7 +144,11 @@ impl MaterialCompiler {
             return Ok(());
         }
        
-        if self.pkg_mgr.compile(&shader_task.pkg_name, &shader_task.shader_name, &shader_task.macros, &self.backend,&shader_task) {
+        if self.pkg_mgr.compile(&shader_task.pkg_name, 
+                                &shader_task.shader_name, 
+                                &shader_task.macros, 
+                      &mut self.cache_shaders,
+                               &self.backend,&shader_task) {
             log::info!("compile material success {}.{}",&shader_task.pkg_name,&shader_task.shader_name);
         }
         self.compiled.insert(shader_task.hash_code());
