@@ -53,13 +53,23 @@ impl RenderMain {
         self.main_ctx.global_env.borrow_mut().insert(Variable::Keyword(GcRefCell::new(":nodes".to_string())), 
                                                      Variable::UserData(global_node_ptr));
 
-        self.add_node_creator(&create_builtin_node_set());
+        self.add_render_plugin(&Self::create_core_plugin());
         self.script_ctx.init(code_string);
         self.script_ctx.exec_declare_uniform(info_set);
     }
 
+    fn create_core_plugin() -> RenderScriptPlugin {
+        let node_sets = create_builtin_node_set();
+        let mut rs = RenderScriptPlugin::new(node_sets);
+        rs.set_script_mod("core",include_str!("../../res/core.clj").to_string());
+        rs
+    }
+
     pub fn add_render_plugin(&mut self,plugin:&RenderScriptPlugin) {
         self.add_node_creator(&plugin.node_creators);
+        if let Some((mod_name,source)) = plugin.script_mod.as_ref() {
+            self.script_ctx.rt.add_module(mod_name.as_str(), source);
+        }
     }
 
     pub fn add_node_creator(&mut self,set:&NodeCreatorSet) {

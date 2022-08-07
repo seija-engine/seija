@@ -43,7 +43,7 @@ impl UpdateNodeBox {
         for param in self.params.iter() {
             match param {
                 Variable::Function(_) => { 
-                    match rt.invoke_func2(param, vec![]) {
+                    match rt.invoke_func2(&param, vec![]) {
                         Ok(v) => { new_params.push(v); },
                         Err(err) => { log::error!("{:?}",err); }
                     }
@@ -99,7 +99,7 @@ impl NodeCreatorSet {
 
 #[derive(Default)]
 pub struct NodeCreatorContext {
-   pub creators:Vec<NodeCreatorFn>
+   pub creators:Vec<NodeCreatorFn>,
 }
 
 impl NodeCreatorContext {

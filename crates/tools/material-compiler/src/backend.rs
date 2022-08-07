@@ -92,7 +92,7 @@ impl IShaderBackend for SeijaShaderBackend {
             writer.write_str(&format!("layout(set = {}, binding = 0) uniform Material {{\r\n",index)).unwrap();
             for prop in ex_data.prop_def.infos.iter() {
                 if let MemUniformInfo::Raw(raw) = prop {
-                    write_ubo_uniform_prop(raw, writer);
+                    write_ubo_uniform_prop(&raw, writer);
                 }
             }
             writer.write_str("} material;\r\n").unwrap();
@@ -215,7 +215,7 @@ fn write_ubo_uniform<W:Write>(info:&UniformInfo, writer:&mut W,index:usize) {
             writer.write_str(&format!("struct {}{} {{\r\n",&info.name,arr.name)).unwrap();
             for prop in arr.elem_def.infos.iter() {
                 if let MemUniformInfo::Raw(raw) = prop {
-                    write_ubo_uniform_prop(raw, writer);
+                    write_ubo_uniform_prop(&raw, writer);
                 }
             }
             writer.write_str("};\r\n").unwrap();
@@ -226,7 +226,7 @@ fn write_ubo_uniform<W:Write>(info:&UniformInfo, writer:&mut W,index:usize) {
     for prop in info.props.infos.iter() {
         match prop {
             MemUniformInfo::Raw(raw) => {
-                write_ubo_uniform_prop(raw, writer);
+                write_ubo_uniform_prop(&raw, writer);
             },
             MemUniformInfo::Array(arr) => {
                 writer.write_str(&format!("  {}{} {}[{}];\r\n",&info.name,&arr.name,&arr.name,arr.array_size)).unwrap();

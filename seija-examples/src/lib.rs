@@ -32,7 +32,7 @@ pub fn init_core_app(render_file:&str) -> App {
         script_name:render_file.into(),
         setting:Arc::new(GraphSetting::default() ),
         plugins:vec![create_pbr_plugin()],
-        render_lib_paths:vec!["../crates/seija-pbr/res".into(),"../crates/seija-render/res".into(),"examples".into()],
+        render_lib_paths:vec!["../crates/seija-pbr/res".into(),"examples".into()],
     };
     app.add_module(RenderModule(Arc::new(render_config)));
 
