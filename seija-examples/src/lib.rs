@@ -28,11 +28,11 @@ pub fn init_core_app(render_file:&str) -> App {
     app.add_module(AssetModule);
 
     let render_config = RenderConfig {
-        config_path:".render".into(),
-        script_name:render_file.into(),
+        config_path:".render/shaders".into(),
+        script_path:format!(".render/{}",render_file).into(),
         setting:Arc::new(GraphSetting::default() ),
         plugins:vec![create_pbr_plugin()],
-        render_lib_paths:vec!["../crates/seija-pbr/res".into(),"examples".into()],
+        render_lib_paths:vec!["../crates/seija-pbr/res".into(),"../crates/seija-render/res".into(),"examples".into()],
     };
     app.add_module(RenderModule(Arc::new(render_config)));
 

@@ -9,7 +9,7 @@ pub struct RuntimeShaderInfo {
 
 impl RuntimeShaderInfo {
     pub fn load<P:AsRef<Path>>(&mut self,p:P) {
-        let path = &p.as_ref().join("shaders/rt.json");
+        let path = &p.as_ref().join("rt.json");
         if let Some(shader) = RuntimeShaders::read_from(path) {
             self.rt_shaders = shader;
         } else {

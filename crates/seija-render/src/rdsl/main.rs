@@ -60,8 +60,8 @@ impl RenderMain {
 
     fn create_core_plugin() -> RenderScriptPlugin {
         let node_sets = create_builtin_node_set();
-        let mut rs = RenderScriptPlugin::new(node_sets);
-        rs.set_script_mod("core",include_str!("../../res/core.clj").to_string());
+        let rs = RenderScriptPlugin::new(node_sets);
+        //rs.set_script_mod("core",include_str!("../../res/core.clj").to_string());
         rs
     }
 

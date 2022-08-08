@@ -9,7 +9,6 @@ use seija_app::{App};
 use bevy_ecs::prelude::*;
 use seija_core::{CoreStage};
 extern crate serde_derive;
-use smol_str::SmolStr;
 pub use wgpu;
 mod graph_setting;
 pub mod rdsl;
@@ -46,7 +45,7 @@ pub enum RenderStage {
 #[derive(Default)]
 pub struct RenderConfig {
     pub config_path:PathBuf,
-    pub script_name:SmolStr,
+    pub script_path:PathBuf,
     pub setting:Arc<GraphSetting>,
     pub plugins:Vec<RenderScriptPlugin>,
     pub render_lib_paths:Vec<PathBuf>
@@ -70,7 +69,7 @@ impl IModule for RenderModule {
         RenderMain::add_system(app);
         query::init_system(app);
 
-        let render_system = self.get_render_system(&mut app.world,&self.0);
+        let render_system = self.get_render_system(&mut app.world,self.0.clone());
         app.schedule.add_stage_after(CoreStage::PostUpdate, RenderStage::AfterRender, SystemStage::parallel());
         app.schedule.add_stage_before(RenderStage::AfterRender, RenderStage::Render, SystemStage::single(render_system.exclusive_system()));
         app.schedule.add_stage_before(RenderStage::Render, RenderStage::PostRender, SystemStage::parallel());
@@ -82,7 +81,7 @@ impl IModule for RenderModule {
 
 
 impl RenderModule {
-    fn get_render_system(&self,w:&mut World,config:&RenderConfig) -> impl FnMut(&mut World) {
+    fn get_render_system(&self,w:&mut World,config:Arc<RenderConfig>) -> impl FnMut(&mut World) {
         let mut app_render = AppRender::new_sync(Config::default());
         let mut render_ctx = RenderContext::new(app_render.device.clone(),&self.0.config_path,self.0.setting.clone());
         //TODO 这里考虑把MaterialStorage的默认贴图删了
@@ -95,20 +94,20 @@ impl RenderModule {
         }
     }
 
-    fn init_render(&self,w:&mut World,mut ctx:RenderContext,app_render:&mut AppRender,config:&RenderConfig) {
+    fn init_render(&self,w:&mut World,mut ctx:RenderContext,app_render:&mut AppRender,config:Arc<RenderConfig>) {
         for plugin in self.0.plugins.iter() {
             app_render.main.add_render_plugin(plugin);
         }
-        w.insert_resource(PipelineCache::default());
+        w.insert_resource(PipelineCache::new(config.clone()));
         ctx.ubo_ctx.init(&mut ctx.resources);
         
-        let script_path = self.0.config_path.join(self.0.script_name.as_str());
-        match std::fs::read_to_string(&script_path) {
+      
+        match std::fs::read_to_string(&self.0.script_path) {
             Ok(code_string) => {
                 app_render.main.init(&code_string,&config.render_lib_paths,&config.config_path,&mut ctx.ubo_ctx.info);
             },
             Err(err) => {
-                log::error!("load main render script:{:?} error:{:?}",&script_path,err);
+                log::error!("load main render script:{:?} error:{:?}",&self.0.script_path,err);
             }
         }
 
