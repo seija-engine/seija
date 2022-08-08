@@ -6,6 +6,10 @@ struct VSOutput {
  #ifdef HAS_SHADOW
   vec4 outLightPos;
  #endif
+ #ifdef VERTEX_TANGENT
+  vec4 tangent;
+ #endif
+ vec2 uv;
 };
 
 VSOutput vs_main() {
@@ -16,9 +20,15 @@ VSOutput vs_main() {
   vec3 pos = vec3(trans * vec4(vert_position, 1.0));
   vsOutput.outPos = pos;
 #ifdef HAS_SHADOW
-  vsOutput.outLightPos =  getProjView() * vec4(vsOutput.outPos, 1.0); 
+  vsOutput.outLightPos =  getProjView() * vec4(vsOutput.outPos, 1.0);
 #endif
-  
+#ifdef VERTEX_UV0
+   vsOutput.uv = vert_uv0;
+#endif
+#ifdef VERTEX_TANGENT
+   vsOutput.tangent = vert_tangent;
+#endif
+ 
 
   gl_Position =  getCameraProjView() * vec4(pos, 1.0);
   return vsOutput;
@@ -59,11 +69,26 @@ vec4 fs_main(VSOutput ino) {
     
     MaterialInputs inputs;
     initMaterial(inputs);
-
     inputs.normal = normalize(ino.normal);
-    inputs.baseColor  = material.color;
-    inputs.metallic   = material.metallic;
     
+    #ifdef VERTEX_TANGENT
+      vec3 n = normalize(ino.normal);
+      vec3 t = normalize(ino.tangent.xyz);
+      vec3 b = cross(n, t) * ino.tangent.w;
+      mat3 tbn = mat3(t, b, n);
+      #ifdef HAS_NORMALMAP
+        vec4 normalColor = vec4(0,0,1,1); 
+        slot_fs_material(inputs,ino.uv,normalColor);
+        vec3 normal = normalColor.rgb * 2.0 - 1.0;
+        inputs.normal = normalize(tbn * normal);
+        ;
+      #elif
+        slot_fs_material(inputs,ino.uv);
+      #endif
+    #endif
+    
+    
+
     vec4 evalColor = evaluateMaterial(inputs,ino.outPos,viewDir);
     #ifdef HAS_SHADOW
       float shadow = shadowCalculation(ino.outLightPos);

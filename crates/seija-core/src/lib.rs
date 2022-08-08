@@ -13,6 +13,7 @@ pub mod type_uuid;
 pub use type_uuid::{TypeUuid,TypeUuidDynamic};
 pub use uuid;
 pub use bevy_ecs;
+pub use glam as math;
 
 #[derive(Debug, Hash, PartialEq, Eq, Clone,StageLabel )]
 pub enum CoreStage {

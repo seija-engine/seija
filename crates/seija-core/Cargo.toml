@@ -11,3 +11,4 @@ bevy_ecs = "0.7.0"
 seija-app = {path = "../seija-app"}
 bytemuck = "1.7.2"
 log = "0.4.14"
+glam = "0.20.3"
