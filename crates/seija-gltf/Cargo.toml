@@ -9,6 +9,8 @@ gltf = "1.0.0"
 log = "0.4.16"
 seija-render = {path = "../seija-render"}
 seija-asset = {path = "../seija-asset"}
+seija-core = {path = "../seija-core"}
+seija-app = {path = "../seija-app"}
 seija-transform = {path = "../seija-transform"}
 seija-skeleton3d = {path = "../seija-skeleton3d"}
 glam = "0.20.2"

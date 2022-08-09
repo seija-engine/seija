@@ -14,6 +14,8 @@ pub use type_uuid::{TypeUuid,TypeUuidDynamic};
 pub use uuid;
 pub use bevy_ecs;
 pub use glam as math;
+pub use smol;
+pub use anyhow;
 
 #[derive(Debug, Hash, PartialEq, Eq, Clone,StageLabel )]
 pub enum CoreStage {
@@ -75,6 +77,7 @@ impl AddCore for App {
 
 macro_rules! idgen {
     ($name:ident,$type:ty,$type2:ty) => {
+        #[derive(Debug)]
         pub struct $name {
             atom:$type
         }

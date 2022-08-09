@@ -1,3 +1,5 @@
+use std::time::{Instant, Duration};
+
 use bevy_ecs::{ schedule::{Schedule, Stage, StageLabel, IntoSystemDescriptor}, world::World};
 
 use crate::IModule;
@@ -7,15 +9,23 @@ pub struct App {
     pub schedule: Schedule,
     runner: Option<Box<dyn FnOnce(App)>>,
     modules:Vec<Box<dyn IModule>>,
+
+    pub last_call:Instant,
+    pub frame_duration:Duration,
+    fps:u32,
 }
 
 impl App {
     pub fn new() -> App {
+        let fps = 60u32;
         App {
             world:World::default(),
             schedule:Schedule::default(),
             runner:None,
-            modules:vec![]
+            modules:vec![],
+            fps,
+            last_call:Instant::now(),
+            frame_duration:Duration::from_secs(1) / fps
         }
     }
 
@@ -29,6 +39,11 @@ impl App {
             module.start(&mut self.world)   
         }
     }
+    
+    pub fn set_fps(&mut self,fps:u32) {
+        self.fps = fps;
+        self.frame_duration = Duration::from_secs(1) / fps;
+    }
 
     pub fn init_resource<T>(&mut self) where T:Default + Send + Sync  + 'static {
         self.world.insert_resource(T::default());
@@ -41,6 +56,7 @@ impl App {
    
 
     pub fn update(&mut self) {
+        self.last_call = Instant::now();
         self.schedule.run(&mut self.world);
     }
 

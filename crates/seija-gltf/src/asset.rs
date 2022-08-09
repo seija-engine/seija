@@ -1,4 +1,5 @@
 use std::{sync::Arc};
+use seija_core::{TypeUuid,uuid::Uuid};
 use seija_skeleton3d::{Skeleton, AnimationSet, Skin};
 use seija_transform::{Transform};
 use seija_asset::Handle;
@@ -7,7 +8,8 @@ use seija_render::{camera::camera::Projection, resource::{Mesh, Texture}};
 pub type NodeIndex = usize;
 pub type MeshIndex = usize;
 
-#[derive(Debug)]
+#[derive(Debug,Default,TypeUuid)]
+#[uuid = "9fb83fbe-b850-42e0-a58c-53da87bbbb05"]
 pub struct GltfAsset {
     pub scenes:Vec<GltfScene>,
     pub meshs:Vec<GltfMesh>,

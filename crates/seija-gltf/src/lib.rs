@@ -7,12 +7,23 @@ use asset::{GltfAsset, GltfNode,GltfMaterial};
 use bevy_ecs::prelude::{Commands, Entity};
 pub use errors::GltfError;
 use glam::Vec3;
+pub use gltf;
 pub use loader::{load_gltf};
 
 
-use seija_asset::Handle;
+use seija_app::{IModule, App};
+use seija_asset::{Handle, AddAsset};
 use seija_render::material::{Material};
 use seija_transform::{BuildChildren, Transform};
+
+pub struct GLTFModule;
+
+impl IModule for GLTFModule {
+    fn init(&mut self,app:&mut App) {
+        app.add_asset::<GltfAsset>();
+    }
+}
+
 
 type ImportData = (gltf::Document, Vec<gltf::buffer::Data>, Vec<gltf::image::Data>);
 

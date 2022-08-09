@@ -30,7 +30,13 @@ impl IModule for WinitModule {
 
 fn winit_runner(event_loop:EventLoop<()>,mut app:App) {
     let event_handle = move |event: Event<()>,_event_loop: &EventLoopWindowTarget<()>,control_flow: &mut ControlFlow| {
-        *control_flow = ControlFlow::Poll;
+        let t = app.last_call.elapsed();
+        if t > app.frame_duration {
+          *control_flow = ControlFlow::Poll;
+        } else {
+            let next = app.last_call + app.frame_duration;   
+            *control_flow = ControlFlow::WaitUntil(next);
+        }
         match event {
             Event::WindowEvent {event,..} => {
                 match event {
@@ -82,7 +88,9 @@ fn winit_runner(event_loop:EventLoop<()>,mut app:App) {
                 }
             },
             Event::MainEventsCleared => {
-                app.update();
+                if *control_flow == ControlFlow::Poll {
+                    app.update();
+                }
             }
             _ => {}
         }
