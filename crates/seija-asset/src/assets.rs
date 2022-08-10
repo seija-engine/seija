@@ -45,9 +45,10 @@ impl<T: Asset> Assets<T> {
         self.assets.insert(id, asset);
         self.events.send(AssetEvent::Created {
             handle: Handle::weak(id),
-        });
+        }); 
         self.make_handle(id)
     }
+
 
     pub fn get(&self, handle_id: &HandleId) -> Option<&T> {
         self.assets.get(handle_id)
@@ -106,12 +107,20 @@ impl<T: Asset> Assets<T> {
     }
 
     pub fn update_assets_system(server:Res<AssetServer>,mut assets:ResMut<Assets<T>>) {
-        let life_events = server.lifecycle_events.read();
+        let life_events = server.inner.lifecycle_events.read();
         if let Some(life_event) = life_events.get(&T::TYPE_UUID) {
             loop {
                 match life_event.receiver.try_recv() {
-                    Ok(LifecycleEvent::Create(_id)) => { },
+                    Ok(LifecycleEvent::Create(asset,id)) => {
+                        log::info!("create asset:{:?}",&id); 
+                        if let Ok(t_asset) = asset.downcast::<T>() {
+                            assets.set_untracked(id, *t_asset);
+                        } else {
+                            log::error!("{:?} type cast error",&id);
+                        }
+                    },
                     Ok(LifecycleEvent::Free(id)) => {
+                        log::info!("free asset:{:?}",&id); 
                         assets.remove(id);
                     },
                     Err(TryRecvError::Empty) => {

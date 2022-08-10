@@ -1,18 +1,18 @@
-use assets_loader::{update_assets_loader, AssetsLoader};
 use bevy_ecs::schedule::{StageLabel};
 use bevy_ecs::schedule::SystemStage;
-use bevy_ecs::prelude::*;
 use seija_app::{App, IModule};
 use seija_core::{AddCore, CoreStage};
 mod server;
 mod handle;
 mod asset;
 mod assets;
-mod assets_loader;
-pub use asset::{Asset};
+mod loader;
+pub use asset::{Asset,AssetLoader,AssetLoaderParams,AssetDynamic};
+pub use loader::{LoadingTrack,TrackState};
 pub use handle::{HandleId,HandleUntyped,Handle};
 pub use assets::{Assets,AssetEvent};
 pub use server::{AssetServer, RefEvent,LifecycleEvent};
+use uuid::Uuid;
 
 #[derive(Debug, Hash, PartialEq, Eq, Clone,StageLabel)]
 pub enum AssetStage {
@@ -26,12 +26,8 @@ pub struct AssetModule;
 impl IModule for AssetModule {
     fn init(&mut self,app:&mut seija_app::App) {
         app.add_resource(AssetServer::new());
-        app.add_resource(AssetsLoader::default());
         app.schedule.add_stage_before(CoreStage::PreUpdate, AssetStage::LoadAssets, SystemStage::parallel());
         app.schedule.add_stage_after(CoreStage::PostUpdate, AssetStage::AssetEvents, SystemStage::parallel());
-        app.schedule.add_stage_after(AssetStage::AssetEvents, 
-                                     AssetStage::AsyncLoader, 
-                                     SystemStage::single(update_assets_loader.exclusive_system()));
         app.add_system(CoreStage::PreUpdate, server::free_unused_assets_system);
     }
 }
@@ -39,6 +35,7 @@ impl IModule for AssetModule {
 
 pub trait AddAsset {
     fn add_asset<T>(&mut self)  where T: Asset;
+    fn add_asset_loader(&mut self,uuid:Uuid,loader:impl AssetLoader);
 }
 
 impl AddAsset for App {
@@ -50,5 +47,10 @@ impl AddAsset for App {
         self.add_system(AssetStage::LoadAssets, Assets::<T>::update_assets_system);
         //self.add_event::<AssetEvent<T>>();
         self.add_event::<AssetEvent<T>>();
+    }
+
+    fn add_asset_loader(&mut self,uuid:Uuid,loader:impl AssetLoader) {
+        let asset_server = self.world.get_resource::<AssetServer>().unwrap();
+        asset_server.register_loader(uuid, loader);
     }
 }

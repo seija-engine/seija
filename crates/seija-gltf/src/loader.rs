@@ -1,16 +1,25 @@
 use std::{path::Path, sync::Arc};
 use crate::anim_loader::{load_skeleton, load_animations, load_skin};
 use crate::{ImportData};
+use seija_core::anyhow::{Result, bail};
 use crate::{GltfError, asset::{GltfAsset, GltfCamera, GltfMaterial, GltfMesh, GltfNode, GltfPrimitive, GltfScene, NodeIndex}};
-use seija_asset::{Assets, Handle};
+use seija_asset::{Assets, Handle, AssetLoader, AssetServer, LoadingTrack, AssetLoaderParams, AssetDynamic, TrackState};
 use seija_render::resource::{Texture, TextureDescInfo};
 use seija_render::{camera::camera::{Orthographic, Perspective, Projection}, 
                    resource::{Indices, Mesh, MeshAttributeType, VertexAttributeValues}, 
                    wgpu, wgpu::{PrimitiveTopology}};
 use seija_skeleton3d::{Skeleton, AnimationSet, Skin};
 use seija_transform::{Transform, TransformMatrix};
-
-
+use async_trait::{async_trait};
+pub struct GLTFLoader;
+#[async_trait]
+impl AssetLoader for GLTFLoader {
+   async fn load(&self,_server:AssetServer,track:LoadingTrack,_path:&str,_:Option<Box<dyn AssetLoaderParams>>) -> Result<Box<dyn AssetDynamic>> {
+       
+       track.set_state(TrackState::Fail);
+       bail!("fail");
+   }
+}
 
 pub fn load_gltf<P>(path:P,
                     mesh_assets:&mut Assets<Mesh>,

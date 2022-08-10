@@ -15,3 +15,4 @@ seija-transform = {path = "../seija-transform"}
 seija-skeleton3d = {path = "../seija-skeleton3d"}
 glam = "0.20.2"
 bevy_ecs = "0.7.0"
+async-trait = "0.1.57"

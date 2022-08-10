@@ -120,12 +120,12 @@ impl MaterialStorage {
 
 pub fn material_storage_event(server:Res<AssetServer>,storage:ResMut<MaterialStorage>) {
     
-    let life_events = server.lifecycle_events.read();
+    let life_events = server.inner().lifecycle_events.read();
     let life_event = life_events.get(&Material::TYPE_UUID).unwrap();
     
     loop {
         match life_event.receiver.try_recv() {
-            Ok(LifecycleEvent::Create(_id)) => { },
+            Ok(LifecycleEvent::Create(_asset,_id)) => { },
             Ok(LifecycleEvent::Free(id)) => {
                 let mat = storage.mateials.write().remove(id).unwrap();
                 let mut name_map = storage.name_map.write();

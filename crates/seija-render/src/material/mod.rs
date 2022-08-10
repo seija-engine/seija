@@ -21,7 +21,7 @@ pub(crate) fn init_material(app:&mut App) {
     let server = app.world.get_resource::<AssetServer>().unwrap();
     server.register_type::<Material>();
     
-    let mut storage = MaterialStorage::new(server.ref_counter.channel.sender.clone());
+    let mut storage = MaterialStorage::new(server.get_ref_sender());
     storage.init(&mut app.world);
 
     app.add_resource(storage);
