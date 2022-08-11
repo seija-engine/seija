@@ -2,17 +2,18 @@
 pub mod asset;
 pub mod loader;
 mod errors;
-mod anim_loader;
+//mod anim_loader;
 use asset::{GltfAsset, GltfNode,GltfMaterial};
 use bevy_ecs::prelude::{Commands, Entity};
 pub use errors::GltfError;
 use glam::Vec3;
 pub use gltf;
-pub use loader::{load_gltf};
+use loader::GLTFLoader;
 
 
 use seija_app::{IModule, App};
 use seija_asset::{Handle, AddAsset};
+use seija_core::TypeUuid;
 use seija_render::material::{Material};
 use seija_transform::{BuildChildren, Transform};
 
@@ -21,6 +22,7 @@ pub struct GLTFModule;
 impl IModule for GLTFModule {
     fn init(&mut self,app:&mut App) {
         app.add_asset::<GltfAsset>();
+        app.add_asset_loader(GltfAsset::TYPE_UUID, GLTFLoader);
     }
 }
 

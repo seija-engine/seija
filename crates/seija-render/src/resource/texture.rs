@@ -1,7 +1,7 @@
 use std::{collections::HashSet};
 use bevy_ecs::prelude::World;
 use image::ImageError;
-use seija_asset::{Assets, AssetEvent, Handle, AssetLoader, AssetLoaderParams, AssetServer, LoadingTrack, AssetDynamic, TrackState};
+use seija_asset::{Assets, AssetEvent, Handle, AssetLoader, AssetLoaderParams, AssetServer, LoadingTrack, AssetDynamic};
 use uuid::Uuid;
 use seija_core::{TypeUuid, IDGenU32};
 use bevy_ecs::event::{ManualEventReader, Events};
@@ -23,14 +23,13 @@ impl AssetLoaderParams for TextureDescInfo {}
 pub(crate) struct TextureLoader;
 #[async_trait]
 impl AssetLoader for TextureLoader {
-    async fn load(&self,_server:AssetServer,track:LoadingTrack,path:&str,params:Option<Box<dyn AssetLoaderParams>>) ->Result<Box<dyn AssetDynamic>> {
+    async fn load(&self,_server:AssetServer,_:Option<LoadingTrack>,path:&str,params:Option<Box<dyn AssetLoaderParams>>) ->Result<Box<dyn AssetDynamic>> {
         let bytes = smol::fs::read(path).await?;
         let desc = params.and_then(|v| v.downcast::<TextureDescInfo>().ok())
                                           .map(|v| *v)
                                           .unwrap_or(Default::default());
         let texture = Texture::from_image_bytes(&bytes, desc)?;
         
-        track.set_state(TrackState::Success);
         Ok(Box::new(texture))
     }
 }

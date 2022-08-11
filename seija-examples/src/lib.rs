@@ -6,6 +6,7 @@ use lite_clojure_eval::EvalRT;
 use seija_app::App;
 use seija_asset::{Assets, Handle, AssetModule};
 use seija_core::{window::AppWindow, info::EInfo, CoreModule, time::Time};
+use seija_gltf::GLTFModule;
 use seija_input::{InputModule, Input, event::MouseButton};
 use seija_pbr::{PBRCameraInfo, create_pbr_plugin};
 use seija_render::{camera::{camera::Perspective,camera::Camera}, 
@@ -20,13 +21,14 @@ pub fn init_core_app(render_file:&str) -> App {
     let mut app = App::new();
     app.add_module(CoreModule);
     app.add_module(InputModule);
-    let win = WinitModule::default();
-    //win.0.width = 480f32;
-    //win.0.height = 320f32;
+    let mut win = WinitModule::default();
+    win.0.width = 480f32;
+    win.0.height = 320f32;
     app.add_module(win);
+    
     app.add_module(TransformModule);
     app.add_module(AssetModule);
-
+    app.add_module(GLTFModule);
     let render_config = RenderConfig {
         config_path:".render/shaders".into(),
         script_path:format!(".render/{}",render_file).into(),

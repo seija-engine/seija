@@ -15,7 +15,7 @@ impl<T> AssetDynamic for T where T: Send + Sync + 'static + TypeUuidDynamic {}
 
 #[async_trait]
 pub trait AssetLoader : Send + Sync + 'static {
-   async fn load(&self,server:AssetServer,track:LoadingTrack,path:&str,params:Option<Box<dyn AssetLoaderParams>>) -> Result<Box<dyn AssetDynamic>>;
+   async fn load(&self,server:AssetServer,track:Option<LoadingTrack>,path:&str,params:Option<Box<dyn AssetLoaderParams>>) -> Result<Box<dyn AssetDynamic>>;
 }
 
 pub trait AssetLoaderParams:DowncastSync {}

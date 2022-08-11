@@ -3,7 +3,7 @@ use std::{collections::HashMap, fmt::Debug};
 use bevy_ecs::prelude::{Res, ResMut};
 use crossbeam_channel::{Sender, TryRecvError};
 use bevy_ecs::event::{EventWriter, Events};
-use crate::{asset::Asset, handle::{Handle, HandleId}, server::{AssetServer, LifecycleEvent, RefEvent}};
+use crate::{asset::Asset, handle::{Handle, HandleId}, server::{AssetServer, LifecycleEvent, RefEvent}, TrackState};
 
 pub enum AssetEvent<T: Asset> {
     Created { handle: Handle<T> },
@@ -111,10 +111,11 @@ impl<T: Asset> Assets<T> {
         if let Some(life_event) = life_events.get(&T::TYPE_UUID) {
             loop {
                 match life_event.receiver.try_recv() {
-                    Ok(LifecycleEvent::Create(asset,id)) => {
+                    Ok(LifecycleEvent::Create(asset,id,track)) => {
                         log::info!("create asset:{:?}",&id); 
                         if let Ok(t_asset) = asset.downcast::<T>() {
                             assets.set_untracked(id, *t_asset);
+                            track.as_ref().map(|t| t.set_state(TrackState::Success));
                         } else {
                             log::error!("{:?} type cast error",&id);
                         }

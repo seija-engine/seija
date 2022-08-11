@@ -4,6 +4,7 @@ use seija_asset::{Assets, AssetServer, LoadingTrack};
 use seija_core::{CoreStage, StartupStage, window::AppWindow};
 use seija_examples::{init_core_app, add_pbr_camera, load_material, update_camera_trans_system};
 
+use seija_gltf::asset::GltfAsset;
 use seija_pbr::lights::PBRLight;
 use seija_render::{resource::{Mesh, shape::{Cube}, Texture}, material::MaterialStorage};
 use bevy_ecs::prelude::*;
@@ -11,7 +12,7 @@ use seija_transform::Transform;
 
 #[derive(Default)]
 pub struct LocalData {
-    loading_track:Option<LoadingTrack>
+    _loading_track:Option<LoadingTrack>
 }
 
 
@@ -25,7 +26,7 @@ pub fn main() {
 }
 
 
-fn start(mut commands:Commands,mut local_data:ResMut<LocalData>,assets:Res<AssetServer>,window:Res<AppWindow>,mut meshs: ResMut<Assets<Mesh>>,materials: Res<MaterialStorage>) {
+fn start(mut commands:Commands,mut _local_data:ResMut<LocalData>,assets:Res<AssetServer>,window:Res<AppWindow>,mut meshs: ResMut<Assets<Mesh>>,materials: Res<MaterialStorage>) {
     add_pbr_camera(&mut commands,&window,Vec3::new(0f32, 0f32, 2f32),Quat::IDENTITY,None);
     load_material("res/materials/pbrColor.mat.clj", &materials);
     //light
@@ -56,19 +57,10 @@ fn start(mut commands:Commands,mut local_data:ResMut<LocalData>,assets:Res<Asset
         commands.spawn().insert(hmesh).insert(hmat).insert(t);
     };
 
-    if let Some(track) = assets.load_async::<Texture>("res/texture/WoodFloor043_1K_Color.jpg", None) {
-       local_data.loading_track = Some(track);
-    }
+    assets.load_async::<Texture>("res/texture/WoodFloor043_1K_Color.jpg", None);
+    assets.load_async::<GltfAsset>("res/gltf/shiba/scene.gltf", None);
 }
 
-fn on_update(mut local_data:ResMut<LocalData>) {
-    if let Some(track) = local_data.loading_track.as_ref() {
-        if !track.is_finish() {
-            log::error!("{}",track.get_progress());
-        }
-        else  {
-            local_data.loading_track = None;
-            log::error!("loading success");
-        }
-    }
+fn on_update(mut _local_data:ResMut<LocalData>) {
+    
 }

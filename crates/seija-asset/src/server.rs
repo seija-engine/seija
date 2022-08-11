@@ -4,7 +4,7 @@ use crossbeam_channel::{self, Receiver, Sender, TryRecvError};
 use parking_lot::RwLock;
 use uuid::Uuid;
 use seija_core::smol;
-use crate::{Asset, Assets, HandleId, asset::{AssetLoader, AssetLoaderParams}, loader::{LoadingTrack, TrackState}, HandleUntyped, AssetDynamic};
+use crate::{Asset, Assets, HandleId, asset::{AssetLoader, AssetLoaderParams}, loader::{LoadingTrack, TrackState}, HandleUntyped, AssetDynamic, Handle};
 
 
 
@@ -49,36 +49,60 @@ impl AssetServer {
         self.inner.loaders.write().insert(uuid, Arc::new(loader));
     }
     
-    pub async fn _load_async<T:Asset>(server:AssetServer,path:&str,loading_track:LoadingTrack,params:Option<Box<dyn AssetLoaderParams>>) -> bool {
-        if let Some(loader) = server.inner.loaders.read().get(&T::TYPE_UUID) {
+    pub async fn load_async_<T:Asset>(&self,path:&str,params:Option<Box<dyn AssetLoaderParams>>) -> Handle<T> {
+        let track = self.make_track::<T>();
+        let handle = track.handle().clone();
+        self._load_async::<T>(path,track, params).await;
+        handle.typed()
+    }
+
+    async fn _load_async<T:Asset>(&self,path:&str,loading_track:LoadingTrack,params:Option<Box<dyn AssetLoaderParams>>) {
+        let loader = self.inner.loaders.read().get(&T::TYPE_UUID).cloned();
+        if let Some(loader) = loader {
             loading_track.set_state(TrackState::Loading);
-            match loader.clone().load(server.clone(),loading_track.clone(),path, params).await {
+            match loader.load(self.clone(),Some(loading_track.clone()),path, params).await {
                 Ok(asset) => {
-                    let events = server.inner.lifecycle_events.write();
-                    if let Some(event) = events.get(&T::TYPE_UUID) {
-                        event.sender.send(LifecycleEvent::Create(asset, loading_track.handle().id)).unwrap();
-                    }
+                    self.create_dyn_asset(&T::TYPE_UUID, asset, loading_track.handle().id,Some(loading_track));
                 },
                 Err(err) => {
                     loading_track.set_state(TrackState::Fail);
-                    log::error!("{}",err); 
+                    log::error!("load async {} error: {}",path,err); 
                 },
             }
         }
-        false
+    }
+
+    pub fn create_dyn_asset(&self,uuid:&Uuid,asset:Box<dyn AssetDynamic>,hid:HandleId,track:Option<LoadingTrack>) {
+        let events = self.inner.lifecycle_events.write();
+        if let Some(event) = events.get(uuid) {
+            event.sender.send(LifecycleEvent::Create(asset,hid,track)).unwrap();
+        }
+    }
+
+    pub fn create_asset<T:Asset>(&self,asset:T,track:Option<LoadingTrack>) -> Handle<T> {
+        let sender = self.inner.ref_counter.channel.sender.clone();
+        let h = Handle::<T>::strong(HandleId::random::<T>(), sender);
+        self.create_dyn_asset(&T::TYPE_UUID, Box::new(asset), h.id,track);
+        h
+    }
+
+    fn make_track<T:Asset>(&self) -> LoadingTrack {
+        let hid = HandleId::random::<T>();
+        let h_untyped = self.make_handle_untyped(hid);
+        LoadingTrack::new(h_untyped)
     }
 
     pub fn load_async<T:Asset>(&self,path:&str,params:Option<Box<dyn AssetLoaderParams>>) -> Option<LoadingTrack> {
         if !self.inner.loaders.read().contains_key(&T::TYPE_UUID) { return None; }
-        let hid = HandleId::random::<T>();
-        let h_untyped = self.make_handle_untyped(hid);
-        let loading_track = LoadingTrack::new(h_untyped);    
+
+        let loading_track = self.make_track::<T>();    
         let path_string = path.to_string();
         let clone_server = self.clone();
         let clone_track = loading_track.clone();
-        //smol::spawn(async move {
-        //    Self::_load_async(clone_server, &path_string, loading_track, params)
-        //}).detach();
+        
+        smol::spawn(async move {
+            clone_server._load_async::<T>( &path_string, loading_track, params).await;
+        }).detach();
         return Some(clone_track);
     }
 
@@ -166,7 +190,7 @@ impl Default for LifecycleEventChannel {
 }
 
 pub enum LifecycleEvent {
-    Create(Box<dyn AssetDynamic>,HandleId),
+    Create(Box<dyn AssetDynamic>,HandleId,Option<LoadingTrack>),
     Free(HandleId),
 } 
 

@@ -125,7 +125,7 @@ pub fn material_storage_event(server:Res<AssetServer>,storage:ResMut<MaterialSto
     
     loop {
         match life_event.receiver.try_recv() {
-            Ok(LifecycleEvent::Create(_asset,_id)) => { },
+            Ok(LifecycleEvent::Create(_asset,_id,_track)) => { },
             Ok(LifecycleEvent::Free(id)) => {
                 let mat = storage.mateials.write().remove(id).unwrap();
                 let mut name_map = storage.name_map.write();

@@ -66,6 +66,11 @@ impl LoadingTrack {
     pub fn is_finish(&self) -> bool {
         self.inner.state.load(Ordering::Relaxed) == 2u8
     }
+    
+    pub fn add_progress(&self) {
+        //log::debug!("track add progress {}",self.inner.progress.load(Ordering::Relaxed));
+        self.inner.progress.fetch_add(1, Ordering::SeqCst);
+    }
 
     pub fn get_progress(&self) -> u8 {
         self.inner.progress.load(Ordering::Relaxed)
