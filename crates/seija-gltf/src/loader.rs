@@ -24,17 +24,17 @@ impl AssetLoader for GLTFLoader {
        track.as_ref().map(|t| t.add_progress());
        let materials = load_materials(&import_data,&textures);
        track.as_ref().map(|t| t.add_progress());
-       let meshs = load_meshs(&server,&import_data,&materials)?;
+       let mut meshs = load_meshs(&server,&import_data,&materials)?;
        track.as_ref().map(|t| t.add_progress());
        let mut nodes = load_nodes(&import_data)?;
        track.as_ref().map(|t| t.add_progress());
-       let scenes = load_scenes(&import_data,&mut nodes);
+       let scenes = load_scenes(&import_data,&mut nodes,&mut meshs);
        track.as_ref().map(|t| t.add_progress());
        let _skeleton = load_skeleton(&import_data)?;
        track.as_ref().map(|t| t.add_progress());
+
        let mut skins = None;
        let mut anims = None;
-      
        if let Some(skeleton) = _skeleton.as_ref() {
           skins = load_skin(&import_data, &skeleton).map(|v| server.create_asset(v,None));
           track.as_ref().map(|t| t.add_progress());
@@ -156,7 +156,7 @@ fn load_meshs(server:&AssetServer,gltf:&ImportData,materials:&Vec<Arc<GltfMateri
                 material
             });
         }
-        meshs.push(GltfMesh { primitives });
+        meshs.push(GltfMesh { node_index:0,primitives });
     }
 
     Ok(meshs)
@@ -209,28 +209,28 @@ fn load_nodes(gltf:&ImportData) -> Result<Vec<GltfNode>> {
     Ok(nodes)
 }
 
-fn load_scenes(gltf:&ImportData,nodes:&mut Vec<GltfNode>) -> Vec<GltfScene> {
+fn load_scenes(gltf:&ImportData,nodes:&mut Vec<GltfNode>,meshs:&mut Vec<GltfMesh>) -> Vec<GltfScene> {
     let mut scenes = vec![];
    
     for scene in gltf.0.scenes() {
         let node_indexs = scene.nodes().map(|n| n.index() ).collect();
         scenes.push(GltfScene { nodes:node_indexs });
         for node in scene.nodes() {
-            load_node(&node,nodes,&TransformMatrix::default());
+            load_node(&node,nodes,&TransformMatrix::default(),meshs);
         }
     }
     scenes
 }
 
-
-
-
-fn load_node(node:&gltf::Node,nodes:&mut Vec<GltfNode>,p_t:&TransformMatrix) {
+fn load_node(node:&gltf::Node,nodes:&mut Vec<GltfNode>,p_t:&TransformMatrix,meshs:&mut Vec<GltfMesh>) {
     let cur_mat = p_t.mul_transform(&nodes[node.index()].transform.local);
     nodes[node.index()].transform.set_global(cur_mat.clone());
+    if let Some(mesh) = node.mesh() {
+        meshs[mesh.index()].node_index = node.index();
+    }
     let mut childrens:Vec<NodeIndex> = vec![];
     for child in node.children() {
-        load_node(&child, nodes,&cur_mat);
+        load_node(&child, nodes,&cur_mat,meshs);
         childrens.push(child.index());
     }
     nodes[node.index()].children = childrens;

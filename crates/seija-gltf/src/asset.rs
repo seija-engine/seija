@@ -52,6 +52,7 @@ pub struct GltfCamera {
 
 #[derive(Debug)]
 pub struct GltfMesh {
+    pub node_index:usize,
     pub primitives: Vec<GltfPrimitive>,
 }
 

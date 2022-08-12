@@ -43,17 +43,6 @@ fn start(mut commands:Commands,
         l.insert(light);
         l.insert(t);
     };
-    /* 
-    let _ = create_gltf(Vec3::new(0f32, 0f32,0f32), &asset, &mut commands,  &|gltf_mat| {
-        materials.create_material_with("baseTexture", |mat| {
-            mat.texture_props.set("mainTexture", gltf_mat.base_color_texture.as_ref().unwrap().clone());
-            
-            mat.props.set_float4("color", Vec4::from_slice(&gltf_mat.base_color), 0);
-            mat.props.set_float4("color", Vec4::new(0.7f32, 0.7f32, 0.7f32, 1f32), 0);
-        })
-    });*/
-   
-   
 }
 
 fn on_update(mut commands:Commands,mut data:ResMut<GameData>,gltfs:Res<Assets<GltfAsset>>,materials: Res<MaterialStorage>) {
@@ -62,7 +51,7 @@ fn on_update(mut commands:Commands,mut data:ResMut<GameData>,gltfs:Res<Assets<Gl
        data.shiba_asset = data.track.as_ref().map(|v| v.clone_typed_handle());
        data.track = None;
        if let Some(asset) = gltfs.get(&data.shiba_asset.as_ref().unwrap().id) {
-        let _ = create_gltf(Vec3::new(0f32, 0f32,0f32), &asset, &mut commands,  &|gltf_mat| {
+        let _ = create_gltf(&asset, &mut commands,  &|gltf_mat| {
             materials.create_material_with("baseTexture", |mat| {
                 mat.texture_props.set("mainTexture", gltf_mat.base_color_texture.as_ref().unwrap().clone());
                 

@@ -21,9 +21,9 @@ pub fn init_core_app(render_file:&str) -> App {
     let mut app = App::new();
     app.add_module(CoreModule);
     app.add_module(InputModule);
-    let mut win = WinitModule::default();
-    win.0.width = 480f32;
-    win.0.height = 320f32;
+    let win = WinitModule::default();
+    //win.0.width = 480f32;
+    //win.0.height = 320f32;
     app.add_module(win);
     
     app.add_module(TransformModule);
