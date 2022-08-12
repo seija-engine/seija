@@ -169,7 +169,11 @@ impl PipelineCache {
            primitive:cur_primstate,
            depth_stencil,
            multisample: Self::get_multisample_state(&ctx.setting),
-           fragment:Some(FragmentState { module:&frag_shader, entry_point:"main", targets:&targets })
+           fragment:Some(FragmentState { 
+                            module:&frag_shader, 
+                            entry_point:"main", 
+                            targets:&targets 
+                        })
        };
        let gpu_pipeline = ctx.device.create_render_pipeline(&render_pipeline_desc);
 

@@ -1,4 +1,6 @@
 use std::{sync::Arc};
+use glam::Vec4;
+use gltf::material::AlphaMode;
 use seija_core::{TypeUuid,uuid::Uuid};
 use seija_skeleton3d::{Skeleton, AnimationSet, Skin};
 use seija_transform::{Transform};
@@ -64,6 +66,13 @@ pub struct GltfPrimitive {
 
 #[derive(Debug)]
 pub struct GltfMaterial {
-    pub base_color:[f32;4],
-    pub base_color_texture:Option<Handle<Texture>>
+    pub base_color_factor:Vec4,
+    pub base_color_texture:Option<Handle<Texture>>,
+    pub normal_texture:Option<Handle<Texture>>,
+    pub metallic_roughness_texture:Option<Handle<Texture>>,
+    pub metallic_factor:f32,
+    pub roughness_factor:f32,
+    pub double_sided:bool,
+    pub alpha_cutoff:Option<f32>,
+    pub alpha_mode:AlphaMode
 }

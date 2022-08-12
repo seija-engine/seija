@@ -1,6 +1,6 @@
 use std::{path::Path, sync::Arc, collections::HashMap, fmt::Debug};
 use crate::{ImportData};
-use glam::{Mat4, Vec3};
+use glam::{Mat4, Vec3, Vec4};
 use gltf::{Document, Node, animation::{Channel, Property, Interpolation}};
 use seija_core::anyhow::{Result, anyhow};
 use crate::{asset::{GltfAsset, GltfCamera, GltfMaterial, GltfMesh, GltfNode, GltfPrimitive, GltfScene, NodeIndex}};
@@ -95,9 +95,30 @@ fn load_materials(gltf:&ImportData,textures:&Vec<Handle<Texture>>) -> Vec<Arc<Gl
            Some(textures[info.texture().index()].clone())
         } else { None };
         
+        let normal_texture:Option<Handle<Texture>> = if let Some(info) = material.normal_texture() {
+            Some(textures[info.texture().index()].clone())
+        } else { None };
+
+        let metallic_roughness_texture:Option<Handle<Texture>> = if let Some(info) = pbr.metallic_roughness_texture() {
+            Some(textures[info.texture().index()].clone())
+        } else { None };
+
+        let metallic_factor = pbr.metallic_factor();
+        let roughness_factor = pbr.roughness_factor();
+        
+        let double_sided = material.double_sided();
+        let alpha_cutoff = material.alpha_cutoff();
+        let alpha_mode = material.alpha_mode();
         materials.push(Arc::new(GltfMaterial {
-            base_color:pbr.base_color_factor(),
-            base_color_texture
+            base_color_factor:Vec4::from(pbr.base_color_factor()),
+            base_color_texture,
+            normal_texture,
+            metallic_roughness_texture,
+            metallic_factor,
+            roughness_factor,
+            double_sided,
+            alpha_cutoff,
+            alpha_mode
         }));
     }
     materials

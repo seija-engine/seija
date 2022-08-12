@@ -55,8 +55,8 @@ fn on_update(mut commands:Commands,mut data:ResMut<GameData>,gltfs:Res<Assets<Gl
             materials.create_material_with("baseTexture", |mat| {
                 mat.texture_props.set("mainTexture", gltf_mat.base_color_texture.as_ref().unwrap().clone());
                 
-                mat.props.set_float4("color", Vec4::from_slice(&gltf_mat.base_color), 0);
-                mat.props.set_float4("color", Vec4::new(0.7f32, 0.7f32, 0.7f32, 1f32), 0);
+                mat.props.set_float4("color", gltf_mat.base_color_factor, 0);
+                //mat.props.set_float4("color", Vec4::new(0.7f32, 0.7f32, 0.7f32, 1f32), 0);
             })
         });
        }
