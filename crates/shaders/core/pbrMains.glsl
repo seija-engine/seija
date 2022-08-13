@@ -71,20 +71,21 @@ vec4 fs_main(VSOutput ino) {
     initMaterial(inputs);
     inputs.normal = normalize(ino.normal);
     
+    vec4 normalColor = vec4(0,0,1,1);
     #ifdef VERTEX_TANGENT
       vec3 n = normalize(ino.normal);
       vec3 t = normalize(ino.tangent.xyz);
       vec3 b = cross(n, t) * ino.tangent.w;
       mat3 tbn = mat3(t, b, n);
       #ifdef HAS_NORMALMAP
-        vec4 normalColor = vec4(0,0,1,1); 
         slot_fs_material(inputs,ino.uv,normalColor);
         vec3 normal = normalColor.rgb * 2.0 - 1.0;
         inputs.normal = normalize(tbn * normal);
-        ;
-      #elif
-        slot_fs_material(inputs,ino.uv);
+      #else
+        slot_fs_material(inputs,ino.uv,normalColor);
       #endif
+    #else
+        slot_fs_material(inputs,ino.uv,normalColor);
     #endif
     
     
@@ -93,7 +94,7 @@ vec4 fs_main(VSOutput ino) {
     #ifdef HAS_SHADOW
       float shadow = shadowCalculation(ino.outLightPos);
     
-      evalColor = vec4(vec3( (1- shadow) * evalColor.xyz ), 1);
+      evalColor = vec4(vec3( (1- shadow) * evalColor.xyz ), inputs.baseColor.a);
     #endif
     return evalColor;
 }

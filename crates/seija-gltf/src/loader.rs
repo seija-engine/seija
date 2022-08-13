@@ -103,9 +103,13 @@ fn load_materials(gltf:&ImportData,textures:&Vec<Handle<Texture>>) -> Vec<Arc<Gl
             Some(textures[info.texture().index()].clone())
         } else { None };
 
+        let emissive_texture:Option<Handle<Texture>> = if let Some(info) = material.emissive_texture() {
+            Some(textures[info.texture().index()].clone())
+        } else { None };
+
         let metallic_factor = pbr.metallic_factor();
         let roughness_factor = pbr.roughness_factor();
-        
+        let emissive_factor =  Vec3::from(material.emissive_factor());
         let double_sided = material.double_sided();
         let alpha_cutoff = material.alpha_cutoff();
         let alpha_mode = material.alpha_mode();
@@ -114,11 +118,13 @@ fn load_materials(gltf:&ImportData,textures:&Vec<Handle<Texture>>) -> Vec<Arc<Gl
             base_color_texture,
             normal_texture,
             metallic_roughness_texture,
+            emissive_texture,
             metallic_factor,
             roughness_factor,
             double_sided,
             alpha_cutoff,
-            alpha_mode
+            alpha_mode,
+            emissive_factor
         }));
     }
     materials

@@ -1,5 +1,5 @@
 use std::{sync::Arc};
-use glam::Vec4;
+use glam::{Vec4, Vec3};
 use gltf::material::AlphaMode;
 use seija_core::{TypeUuid,uuid::Uuid};
 use seija_skeleton3d::{Skeleton, AnimationSet, Skin};
@@ -70,9 +70,18 @@ pub struct GltfMaterial {
     pub base_color_texture:Option<Handle<Texture>>,
     pub normal_texture:Option<Handle<Texture>>,
     pub metallic_roughness_texture:Option<Handle<Texture>>,
+    pub emissive_texture:Option<Handle<Texture>>,
     pub metallic_factor:f32,
     pub roughness_factor:f32,
     pub double_sided:bool,
     pub alpha_cutoff:Option<f32>,
-    pub alpha_mode:AlphaMode
+    pub alpha_mode:AlphaMode,
+    pub emissive_factor:Vec3
 }
+
+impl GltfMaterial {
+    pub fn is_opaque(&self) -> bool {
+        self.alpha_mode == AlphaMode::Opaque
+    }
+}
+

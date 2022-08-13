@@ -1,5 +1,5 @@
 use bevy_ecs::system::{Commands, ResMut};
-use glam::{Vec3, Quat, Vec4};
+use glam::{Vec3, Quat};
 use seija_asset::{Assets, AssetServer, LoadingTrack, Handle};
 use seija_core::{CoreStage, StartupStage, window::AppWindow};
 use seija_examples::{init_core_app, add_pbr_camera, load_material, update_camera_trans_system};

@@ -26,6 +26,7 @@ struct MaterialInputs {
     float metallic;
     float roughness;
     vec3  normal;
+    vec3  emissiveColor;
 };
 
 void initMaterial(out MaterialInputs inputs) {
@@ -33,6 +34,7 @@ void initMaterial(out MaterialInputs inputs) {
     inputs.metallic = 0.0;
     inputs.normal = vec3(0.0, 0.0, 1.0);
     inputs.roughness = 0.0;
+    inputs.emissiveColor = vec3(0.0);
 }
 
 vec3 computeF0(const vec4 baseColor, float metallic, float reflectance) {
@@ -106,14 +108,6 @@ Light getLight(const int index,vec3 vertPos,vec3 normal) {
     return light;
 }
 
-/*
-
-//光强随距离衰减公式
-
-
-*/
-
-
 void getPixelParams(const MaterialInputs inputs, out PixelParams pixel) {
    vec4 baseColor = inputs.baseColor;
    pixel.diffuseColor = baseColor.rgb * (1.0 - inputs.metallic);
@@ -163,10 +157,12 @@ vec4 evaluateLights(const MaterialInputs inputs,vec3 vertPos,vec3 viewDir) {
       float visibility = 1.0;
       color.rgb += surfaceShading(pixel, light, visibility,viewDir,inputs.normal);
    }
-   return vec4(color,1.0);
+   
+   return vec4(color,inputs.baseColor.a);
 }
 
-vec4 evaluateMaterial(const MaterialInputs inputs,vec3 vertPos,vec3 viewDir) {
+vec4 evaluateMaterial(MaterialInputs inputs,vec3 vertPos,vec3 viewDir) {
     vec4 color = evaluateLights(inputs,vertPos,viewDir);
+    color.rgb += inputs.emissiveColor;
     return color;
 }
