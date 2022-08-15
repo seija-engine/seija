@@ -23,8 +23,9 @@ impl AssetLoaderParams for TextureDescInfo {}
 pub(crate) struct TextureLoader;
 #[async_trait]
 impl AssetLoader for TextureLoader {
-    async fn load(&self,_server:AssetServer,_:Option<LoadingTrack>,path:&str,params:Option<Box<dyn AssetLoaderParams>>) ->Result<Box<dyn AssetDynamic>> {
-        let bytes = smol::fs::read(path).await?;
+    async fn load(&self,server:AssetServer,_:Option<LoadingTrack>,path:&str,params:Option<Box<dyn AssetLoaderParams>>) ->Result<Box<dyn AssetDynamic>> {
+        let full_path = server.inner().root_path.join(path);
+        let bytes = smol::fs::read(full_path).await?;
         let desc = params.and_then(|v| v.downcast::<TextureDescInfo>().ok())
                                           .map(|v| *v)
                                           .unwrap_or(Default::default());

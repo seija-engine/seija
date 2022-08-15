@@ -81,18 +81,18 @@ impl AssetServer {
 
     
     
-    async fn _load_async<T:Asset,P:AsRef<Path>>(&self,path:P,loading_track:LoadingTrack,params:Option<Box<dyn AssetLoaderParams>>) {
+    async fn _load_async<T:Asset>(&self,path:&str,loading_track:LoadingTrack,params:Option<Box<dyn AssetLoaderParams>>) {
         let loader = self.inner.loaders.read().get(&T::TYPE_UUID).cloned();
         if let Some(loader) = loader {
             loading_track.set_state(TrackState::Loading);
-            match loader.load(self.clone(),Some(loading_track.clone()),path.as_ref().to_str().unwrap(), params).await {
+            match loader.load(self.clone(),Some(loading_track.clone()),path, params).await {
                 Ok(asset) => {
                     self.create_dyn_asset(path,&T::TYPE_UUID, asset, loading_track.handle_id().clone(),Some(loading_track));
                 },
                 Err(err) => {
                     loading_track.set_state(TrackState::Fail);
                     self.remove_asset_meta(loading_track.handle_id());
-                    log::error!("load async {:?} error: {}",path.as_ref(),err); 
+                    log::error!("load async {:?} error: {}",path,err); 
                 },
             }
         }
@@ -100,40 +100,37 @@ impl AssetServer {
 
    
 
-    pub fn load_async<T:Asset>(&self,path:&str,params:Option<Box<dyn AssetLoaderParams>>) -> Option<LoadingTrack> {       
+    pub fn load_async<T:Asset>(&self,path:&str,params:Option<Box<dyn AssetLoaderParams>>) -> Option<LoadingTrack> {
         if let Some(track) = self.inner.assets.read().get(path).and_then(|info|info.track.clone()) {
             return Some(track);
         }
+        let normal_path = RelativePath::new(path).normalize();
         if !self.inner.loaders.read().contains_key(&T::TYPE_UUID) { return None; }
         let loading_track =  LoadingTrack::new(HandleId::random::<T>(),self.get_ref_sender());
         let clone_server = self.clone();
         let clone_track = loading_track.clone();
-        let full_path = RelativePath::from_path(path).ok()?.to_logical_path(&self.inner().root_path);
         self.add_asset_meta(path, loading_track.clone());
         smol::spawn(async move {
-            clone_server._load_async::<T,PathBuf>(full_path, loading_track, params).await;
+            clone_server._load_async::<T>(normal_path.as_str(), loading_track, params).await;
         }).detach();
         return Some(clone_track);
     }
 
-    fn create_dyn_asset<P:AsRef<Path>>(&self,p:P,uuid:&Uuid,asset:Box<dyn AssetDynamic>,hid:HandleId,track:Option<LoadingTrack>) {
-        
-        {
-            let strip_path = SmolStr::from(p.as_ref().strip_prefix(&self.inner().root_path).unwrap().to_str().unwrap());
-
+    fn create_dyn_asset(&self,path:&str,uuid:&Uuid,asset:Box<dyn AssetDynamic>,hid:HandleId,track:Option<LoadingTrack>) {
+        if !self.inner.assets.read().contains_key(path) {
+            let smol_path = SmolStr::from(path);
             let mut write_assets = self.inner().assets.write();
-            write_assets.insert(strip_path.clone(), AssetMeta::new(track.clone()));
+            write_assets.insert(smol_path.clone(), AssetMeta::new(track.clone()));
       
-            self.inner().handle_to_path.write().insert(hid, strip_path);
+            self.inner().handle_to_path.write().insert(hid, smol_path);
         };
         let events = self.inner.lifecycle_events.write();
         if let Some(event) = events.get(uuid) {
-            log::error!("send create:{:?}",p.as_ref());
             event.sender.try_send(LifecycleEvent::Create(asset,hid,track)).unwrap();
         }
     }
 
-    pub fn create_asset<T:Asset,P:AsRef<Path>>(&self,asset:T,path:P,track:Option<LoadingTrack>) -> Handle<T> {
+    pub fn create_asset<T:Asset>(&self,asset:T,path:&str,track:Option<LoadingTrack>) -> Handle<T> {
         let sender = self.inner.ref_counter.channel.sender.clone();
         let h = Handle::<T>::strong(HandleId::random::<T>(), sender);
         self.create_dyn_asset(path,&T::TYPE_UUID, Box::new(asset), h.id,track);
@@ -190,6 +187,7 @@ impl AssetServer {
             }
         }
     }
+    
 }
 
 
