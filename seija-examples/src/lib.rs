@@ -21,13 +21,13 @@ pub fn init_core_app(render_file:&str) -> App {
     let mut app = App::new();
     app.add_module(CoreModule);
     app.add_module(InputModule);
-    let win = WinitModule::default();
-    //win.0.width = 480f32;
-    //win.0.height = 320f32;
+    let mut win = WinitModule::default();
+    win.0.width = 480f32;
+    win.0.height = 320f32;
     app.add_module(win);
     
     app.add_module(TransformModule);
-    app.add_module(AssetModule);
+    app.add_module(AssetModule(std::env::current_dir().unwrap().join("res").into()));
     app.add_module(GLTFModule);
     let render_config = RenderConfig {
         config_path:".render/shaders".into(),

@@ -1,7 +1,8 @@
-use std::{path::Path, sync::Arc, collections::HashMap, fmt::Debug};
+use std::{path::{Path}, sync::Arc, collections::HashMap, fmt::Debug};
 use crate::{ImportData};
 use glam::{Mat4, Vec3, Vec4};
 use gltf::{Document, Node, animation::{Channel, Property, Interpolation}};
+use relative_path::RelativePathBuf;
 use seija_core::anyhow::{Result, anyhow};
 use crate::{asset::{GltfAsset, GltfCamera, GltfMaterial, GltfMesh, GltfNode, GltfPrimitive, GltfScene, NodeIndex}};
 use seija_asset::{Handle, AssetLoader, AssetServer, LoadingTrack, AssetLoaderParams, AssetDynamic};
@@ -9,7 +10,13 @@ use seija_render::resource::{Texture, TextureDescInfo};
 use seija_render::{camera::camera::{Orthographic, Perspective, Projection}, 
                    resource::{Indices, Mesh, MeshAttributeType, VertexAttributeValues}, 
                    wgpu, wgpu::{PrimitiveTopology}};
-use seija_skeleton3d::{Skeleton, AnimationSet, Skin, offine::{raw_skeleton::{RawSkeleton, RawJoint}, skeleton_builder::SkeletonBuilder, raw_animation::{RawAnimation, RawJointTrack, RawTranslationKey, RawScaleKey, RawRotationKey}, animation_builder::AnimationBuilder}, Animation};
+use seija_skeleton3d::{
+    Skeleton, AnimationSet, Skin, offine::{
+        raw_skeleton::{RawSkeleton, RawJoint}, 
+        skeleton_builder::SkeletonBuilder, 
+        raw_animation::{ RawAnimation, RawJointTrack, RawTranslationKey, RawScaleKey, RawRotationKey},
+        animation_builder::AnimationBuilder}, Animation
+};
 use seija_transform::{Transform, TransformMatrix};
 use async_trait::{async_trait};
 pub struct GLTFLoader;
@@ -17,14 +24,15 @@ pub struct GLTFLoader;
 #[async_trait]
 impl AssetLoader for GLTFLoader {
    async fn load(&self,server:AssetServer,track:Option<LoadingTrack>,path:&str,_:Option<Box<dyn AssetLoaderParams>>) -> Result<Box<dyn AssetDynamic>> {
+       log::info!("load gltf path:{}",path);
        track.as_ref().map(|t| t.add_progress());
-       let import_data:ImportData = gltf::import(path)?;
+       let import_data:ImportData = gltf::import(&path)?;
        track.as_ref().map(|t| t.add_progress());
-       let textures = load_textures(&server, &import_data, path.as_ref())?;
+       let textures = load_textures(&server, &import_data, path.as_ref()).await?;
        track.as_ref().map(|t| t.add_progress());
        let materials = load_materials(&import_data,&textures);
        track.as_ref().map(|t| t.add_progress());
-       let mut meshs = load_meshs(&server,&import_data,&materials)?;
+       let mut meshs = load_meshs(path,&server,&import_data,&materials)?;
        track.as_ref().map(|t| t.add_progress());
        let mut nodes = load_nodes(&import_data)?;
        track.as_ref().map(|t| t.add_progress());
@@ -36,13 +44,13 @@ impl AssetLoader for GLTFLoader {
        let mut skins = None;
        let mut anims = None;
        if let Some(skeleton) = _skeleton.as_ref() {
-          skins = load_skin(&import_data, &skeleton).map(|v| server.create_asset(v,None));
+          skins = load_skin(&import_data, &skeleton).map(|v| server.create_asset(v,format!("{}#skin",path),None));
           track.as_ref().map(|t| t.add_progress());
           let anim_set = load_animations(&import_data, &skeleton)?;
           track.as_ref().map(|t| t.add_progress());
-          anims = Some(server.create_asset(anim_set,None)) ;
+          anims = Some(server.create_asset(anim_set,format!("{}#animset",path),None)) ;
        }
-       let skeleton = _skeleton.map(|v| server.create_asset(v,None));
+       let skeleton = _skeleton.map(|v| server.create_asset(v,format!("{}#skeleton",path),None));
        track.as_ref().map(|t| t.add_progress());
        Ok(Box::new(GltfAsset {
         scenes,
@@ -57,9 +65,9 @@ impl AssetLoader for GLTFLoader {
    }
 }
 
-fn load_textures(server:&AssetServer,gltf:&ImportData,path:&Path) -> Result<Vec<Handle<Texture>>> {
+async fn load_textures(server:&AssetServer,gltf:&ImportData,path:&Path) -> Result<Vec<Handle<Texture>>> {
     let mut textures:Vec<Handle<Texture>> = vec![];
-    for json_texture in gltf.0.textures() {
+    for (index,json_texture) in gltf.0.textures().enumerate() {
         let source = json_texture.source().source();
         match source {
             gltf::image::Source::View { view, mime_type:_ } => {
@@ -69,16 +77,17 @@ fn load_textures(server:&AssetServer,gltf:&ImportData,path:&Path) -> Result<Vec<
                 let mut desc = TextureDescInfo::default();
                 desc.sampler_desc = get_texture_sampler(&json_texture);
                 let texture = Texture::from_image_bytes(buffer,desc)?;
-                let h_texture = server.create_asset(texture,None);
+                let h_texture = server.create_asset(texture,format!("{:?}#texture.{}",path,index),None);
                 textures.push(h_texture);
             },
             gltf::image::Source::Uri { uri, mime_type:_ } => {
-                let texture_path = path.parent().map(|p| p.join(uri)).ok_or(anyhow!("{}",uri))?;
-                let bytes = std::fs::read(texture_path)?;
+                let gltf_path = path.parent().unwrap();
+                let texture_path = RelativePathBuf::from_path(uri)?.to_logical_path(gltf_path);
+                let bytes:Vec<u8> = server.read_bytes(&texture_path).await?;
                 let mut desc = TextureDescInfo::default();
                 desc.sampler_desc = get_texture_sampler(&json_texture);
                 let texture = Texture::from_image_bytes(&bytes,desc)?;
-                let h_texture = server.create_asset(texture,None);
+                let h_texture = server.create_asset(texture,texture_path,None);
                 textures.push(h_texture);
             }
         }
@@ -130,11 +139,11 @@ fn load_materials(gltf:&ImportData,textures:&Vec<Handle<Texture>>) -> Vec<Arc<Gl
     materials
 }
 
-fn load_meshs(server:&AssetServer,gltf:&ImportData,materials:&Vec<Arc<GltfMaterial>>) -> Result<Vec<GltfMesh>> {
+fn load_meshs(path:&str,server:&AssetServer,gltf:&ImportData,materials:&Vec<Arc<GltfMaterial>>) -> Result<Vec<GltfMesh>> {
     let mut meshs:Vec<GltfMesh> = vec![];
-    for mesh in gltf.0.meshes() {
+    for (mesh_index,mesh) in gltf.0.meshes().enumerate() {
         let mut primitives:Vec<GltfPrimitive> = vec![];
-        for primitive in mesh.primitives() {
+        for (primitive_index,primitive)  in mesh.primitives().enumerate() {
             //dbg!(&primitive);
             let reader = primitive.reader(|buffer| Some(&gltf.1[buffer.index()]));
             let primitive_topology = get_primitive_topology(primitive.mode())?;
@@ -176,7 +185,7 @@ fn load_meshs(server:&AssetServer,gltf:&ImportData,materials:&Vec<Arc<GltfMateri
                 mesh.set_indices(Some(Indices::U32(indices.into_u32().collect())));
             };
             mesh.build();
-            let mesh_handle = server.create_asset::<Mesh>(mesh,None);
+            let mesh_handle = server.create_asset(mesh,format!("{}#mesh.{}.{}",path,mesh_index,primitive_index),None);
             let material = primitive.material().index().and_then(|idx| materials.get(idx)).map(|v|v.clone());
             primitives.push(GltfPrimitive { 
                 mesh: mesh_handle ,

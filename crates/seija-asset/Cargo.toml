@@ -6,7 +6,6 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-crossbeam-channel = "0.5.1"
 bevy_ecs = "0.7.0"
 seija-app = {path = "../seija-app"}
 seija-core = {path = "../seija-core"}
@@ -16,3 +15,4 @@ parking_lot = "0.11.1"
 log = "0.4.17"
 downcast-rs = "1.2.0"
 async-trait = "0.1.57"
+relative-path = "1.7.2"

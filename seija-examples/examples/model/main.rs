@@ -31,8 +31,9 @@ fn start(mut commands:Commands,
          materials: Res<MaterialStorage>) {
     add_pbr_camera(&mut commands,&window,Vec3::new(0f32, -0.2f32, 2f32),Quat::IDENTITY,None);
     load_material("res/materials/baseTexture.mat.clj", &materials);
-    let gltf = server.load_async::<GltfAsset>("res/gltf/shiba/scene.gltf", None).unwrap();
-    data.track = Some(gltf);
+    let track = server.load_async::<GltfAsset>("gltf/shiba/scene.gltf", None).unwrap();
+    data.track = Some(track);
+    
     //light
     {
         let light = PBRLight::directional(Vec3::new(1f32, 1f32, 1f32)  , 62000f32);
@@ -48,7 +49,7 @@ fn start(mut commands:Commands,
 fn on_update(mut commands:Commands,mut data:ResMut<GameData>,gltfs:Res<Assets<GltfAsset>>,materials: Res<MaterialStorage>) {
     let is_finish = data.track.as_ref().map(|v| v.is_finish()).unwrap_or(false);
     if is_finish {
-       data.shiba_asset = data.track.as_ref().map(|v| v.clone_typed_handle());
+       data.shiba_asset = data.track.as_ref().map(|v| v.take().typed());
        data.track = None;
        if let Some(asset) = gltfs.get(&data.shiba_asset.as_ref().unwrap().id) {
         let _ = create_gltf(&asset, &mut commands,  &|gltf_mat| {

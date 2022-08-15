@@ -1,3 +1,5 @@
+use std::path::PathBuf;
+
 use bevy_ecs::schedule::{StageLabel};
 use bevy_ecs::schedule::SystemStage;
 use seija_app::{App, IModule};
@@ -21,11 +23,11 @@ pub enum AssetStage {
     AsyncLoader
 }
 
-pub struct AssetModule;
+pub struct AssetModule(pub PathBuf);
 
 impl IModule for AssetModule {
-    fn init(&mut self,app:&mut seija_app::App) {
-        app.add_resource(AssetServer::new());
+    fn init(&mut self,app:&mut App) {
+        app.add_resource(AssetServer::new(self.0.clone()));
         app.schedule.add_stage_before(CoreStage::PreUpdate, AssetStage::LoadAssets, SystemStage::parallel());
         app.schedule.add_stage_after(CoreStage::PostUpdate, AssetStage::AssetEvents, SystemStage::parallel());
         app.add_system(CoreStage::PreUpdate, server::free_unused_assets_system);

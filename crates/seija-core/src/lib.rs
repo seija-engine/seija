@@ -16,6 +16,7 @@ pub use bevy_ecs;
 pub use glam as math;
 pub use smol;
 pub use anyhow;
+pub use smol_str;
 
 #[derive(Debug, Hash, PartialEq, Eq, Clone,StageLabel )]
 pub enum CoreStage {

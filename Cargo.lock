@@ -2379,6 +2379,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a3f87b73ce11b1619a3c6332f45341e0047173771e8b8b73f87bfeefb7b56244"
 
 [[package]]
+name = "relative-path"
+version = "1.7.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0df32d82cedd1499386877b062ebe8721f806de80b08d183c70184ef17dd1d42"
+
+[[package]]
 name = "renderdoc-sys"
 version = "0.7.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2391,6 +2397,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "284de9dae38774e2813aaabd7e947b4a6fe9b8c58c2309f754a487cdd50de1c2"
 dependencies = [
  "petgraph 0.5.1",
+]
+
+[[package]]
+name = "roxmltree"
+version = "0.14.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "921904a62e410e37e215c40381b7117f830d9d89ba60ab5236170541dd25646b"
+dependencies = [
+ "xmlparser",
 ]
 
 [[package]]
@@ -2455,11 +2470,11 @@ version = "0.1.0"
 dependencies = [
  "async-trait",
  "bevy_ecs",
- "crossbeam-channel",
  "downcast-rs",
  "log",
  "parking_lot 0.11.2",
  "rand",
+ "relative-path",
  "seija-app",
  "seija-core",
  "uuid",
@@ -2478,6 +2493,7 @@ dependencies = [
  "raw-window-handle 0.3.4",
  "seija-app",
  "smol",
+ "smol_str",
  "uuid",
 ]
 
@@ -2537,6 +2553,7 @@ dependencies = [
  "glam",
  "gltf",
  "log",
+ "relative-path",
  "seija-app",
  "seija-asset",
  "seija-core",
@@ -2576,7 +2593,6 @@ dependencies = [
  "async-trait",
  "bevy_ecs",
  "bitflags",
- "crossbeam-channel",
  "env_logger 0.9.0",
  "fixedbitset 0.4.2",
  "fnv",
@@ -2678,9 +2694,9 @@ dependencies = [
 
 [[package]]
 name = "shaderc"
-version = "0.7.4"
+version = "0.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d6e2c757b804157350d8d79d718c756899226016486aab07a11dddf8741111a0"
+checksum = "80e6fe602a861622769530a23bc40bfba31adbf186d0c8412e83f5519c5d6bee"
 dependencies = [
  "libc",
  "shaderc-sys",
@@ -2688,12 +2704,13 @@ dependencies = [
 
 [[package]]
 name = "shaderc-sys"
-version = "0.7.4"
+version = "0.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a36f3465fce5830d33a58846b9c924f510a1e92bac181834c13b38405efe983b"
+checksum = "3794498651f8173d0afbc0bb8aca45ced111098227e755dde4c0ef2888c8d0bf"
 dependencies = [
  "cmake",
  "libc",
+ "roxmltree",
 ]
 
 [[package]]
@@ -3432,3 +3449,9 @@ name = "xml-rs"
 version = "0.8.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d2d7d3948613f75c98fd9328cfdcc45acc4d360655289d0a7d4ec931392200a3"
+
+[[package]]
+name = "xmlparser"
+version = "0.13.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "114ba2b24d2167ef6d67d7d04c8cc86522b87f490025f39f0303b7db5bf5e3d8"

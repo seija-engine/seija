@@ -1,7 +1,7 @@
 use std::{collections::HashMap, fmt::Debug};
 
 use bevy_ecs::prelude::{Res, ResMut};
-use crossbeam_channel::{Sender, TryRecvError};
+use seija_core::smol::channel::{Sender, TryRecvError};
 use bevy_ecs::event::{EventWriter, Events};
 use crate::{asset::Asset, handle::{Handle, HandleId}, server::{AssetServer, LifecycleEvent, RefEvent}, TrackState};
 
@@ -127,7 +127,7 @@ impl<T: Asset> Assets<T> {
                     Err(TryRecvError::Empty) => {
                         break;
                     }
-                    Err(TryRecvError::Disconnected) => panic!("AssetChannel disconnected."),
+                    Err(TryRecvError::Closed) => panic!("AssetChannel disconnected."),
                 }
             }
         }

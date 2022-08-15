@@ -6,7 +6,7 @@ use seija_examples::{init_core_app, add_pbr_camera, load_material, update_camera
 
 use seija_gltf::asset::GltfAsset;
 use seija_pbr::lights::PBRLight;
-use seija_render::{resource::{Mesh, shape::{Cube}, Texture}, material::MaterialStorage};
+use seija_render::{resource::{Mesh, shape::{Cube}}, material::MaterialStorage};
 use bevy_ecs::prelude::*;
 use seija_transform::Transform;
 
@@ -57,8 +57,10 @@ fn start(mut commands:Commands,mut _local_data:ResMut<LocalData>,assets:Res<Asse
         commands.spawn().insert(hmesh).insert(hmat).insert(t);
     };
 
-    assets.load_async::<Texture>("res/texture/WoodFloor043_1K_Color.jpg", None);
-    assets.load_async::<GltfAsset>("res/gltf/shiba/scene.gltf", None);
+    //assets.load_async::<Texture>("res/texture/WoodFloor043_1K_Color.jpg", None);
+    //assets.load_async::<Texture>("res/texture/WoodFloor043_1K_Color.jpg", None);
+    assets.load_async::<GltfAsset>("gltf/shiba/scene.gltf", None);
+    assets.load_async::<GltfAsset>("gltf/shiba/scene.gltf", None);
 }
 
 fn on_update(mut _local_data:ResMut<LocalData>) {

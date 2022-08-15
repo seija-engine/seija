@@ -1,6 +1,6 @@
 use std::{collections::HashMap, sync::Arc};
 use bevy_ecs::prelude::{Res, ResMut, World};
-use crossbeam_channel::{Sender, TryRecvError};
+use seija_core::smol::channel::{Sender, TryRecvError};
 use lite_clojure_eval::EvalRT;
 use parking_lot::RwLock;
 use seija_asset::{ AssetServer, Assets, Handle, LifecycleEvent, RefEvent, HandleId};
@@ -136,7 +136,7 @@ pub fn material_storage_event(server:Res<AssetServer>,storage:ResMut<MaterialSto
             Err(TryRecvError::Empty) => {
                 break;
             }
-            Err(TryRecvError::Disconnected) => panic!("AssetChannel disconnected."),
+            Err(TryRecvError::Closed) => panic!("AssetChannel disconnected."),
         }
     }
 }

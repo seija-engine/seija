@@ -1,5 +1,7 @@
 use std::sync::{Arc, atomic::{AtomicU8, Ordering}};
-use crate::{HandleUntyped, Handle, Asset};
+use seija_core::smol::channel::Sender;
+
+use crate::{HandleUntyped,HandleId, RefEvent};
 /*
 pub enum LoadState {
     None,
@@ -32,26 +34,29 @@ pub struct LoadingTrack {
 }
 
 struct LoadingTrackInner {
-    handle:HandleUntyped,
+    sender:Sender<RefEvent>,
+    handle:HandleId,
     progress:AtomicU8,
     state:AtomicU8
 }
 
 impl LoadingTrack {
-    pub fn new(handle:HandleUntyped) -> Self {
+    pub fn new(handle:HandleId,sender:Sender<RefEvent>) -> Self {
         LoadingTrack { inner: Arc::new(LoadingTrackInner {
+            sender,
             handle,
             progress:AtomicU8::new(0u8),
             state:AtomicU8::new(0u8)
         })}
     }
 
-    pub fn handle(&self) -> &HandleUntyped {
-        &self.inner.handle
+    pub fn take(&self) -> HandleUntyped {
+        let sender = self.inner.sender.clone();
+        HandleUntyped::strong(self.handle_id().clone(), sender)
     }
 
-    pub fn clone_typed_handle<T:Asset>(&self) -> Handle<T> {
-        self.handle().clone().typed::<T>()
+    pub fn handle_id(&self) -> &HandleId {
+        &self.inner.handle
     }
 
     pub fn set_state(&self,state:TrackState) {

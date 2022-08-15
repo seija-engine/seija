@@ -1,6 +1,6 @@
 use std::{hash::{Hash, Hasher}, marker::PhantomData};
 use bevy_ecs::prelude::Component;
-use crossbeam_channel::Sender;
+use seija_core::smol::channel::Sender;
 use uuid::Uuid;
 
 use crate::{asset::Asset, server::RefEvent};
@@ -55,7 +55,7 @@ impl<T: Asset> Handle<T> {
     }
 
     pub fn strong(id:HandleId,ref_sender:Sender<RefEvent>) -> Handle<T> {
-        ref_sender.send(RefEvent::Increment(id)).unwrap();
+        ref_sender.try_send(RefEvent::Increment(id)).unwrap();
         Handle {
             id,
             ref_sender:Some(ref_sender),
@@ -75,7 +75,7 @@ impl<T: Asset> Handle<T> {
 impl<T: Asset> Drop for Handle<T> {
     fn drop(&mut self) {
         if let Some(ref_sender) = &self.ref_sender {
-            let _ =  ref_sender.send(RefEvent::Decrement(self.id));
+            let _ = ref_sender.try_send(RefEvent::Decrement(self.id));
         }
     }
 }
@@ -83,7 +83,7 @@ impl<T: Asset> Drop for Handle<T> {
 impl<T:Asset> Clone for Handle<T> {
     fn clone(&self) -> Self {
         self.ref_sender.as_ref().map(|sender| {
-            sender.send(RefEvent::Increment(self.id)).unwrap();
+            sender.try_send(RefEvent::Increment(self.id)).unwrap();
         });
 
         Self { id: self.id.clone(), ref_sender: self.ref_sender.clone(), marker: PhantomData }
@@ -113,7 +113,7 @@ impl HandleUntyped {
     }
 
     pub fn strong(id:HandleId,sender:Sender<RefEvent>) -> Self {
-        sender.send(RefEvent::Increment(id)).unwrap();
+        sender.try_send(RefEvent::Increment(id)).unwrap();
         HandleUntyped { id, sender:Some(sender) }
     }
 }
@@ -135,7 +135,7 @@ impl Eq for HandleUntyped {}
 impl Drop for HandleUntyped {
     fn drop(&mut self) {
         if let Some(ref_sender) = &self.sender {
-            let _ =  ref_sender.send(RefEvent::Decrement(self.id));
+           let _ = ref_sender.try_send(RefEvent::Decrement(self.id));
         }
     }
 }
@@ -143,7 +143,7 @@ impl Drop for HandleUntyped {
 impl Clone for HandleUntyped {
     fn clone(&self) -> Self {
         self.sender.as_ref().map(|sender| {
-            sender.send(RefEvent::Increment(self.id)).unwrap();
+            sender.try_send(RefEvent::Increment(self.id)).unwrap();
         });
 
         Self { id: self.id.clone(), sender: self.sender.clone() }

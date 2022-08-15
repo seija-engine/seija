@@ -1,6 +1,7 @@
 
 pub mod asset;
 pub mod loader;
+
 use asset::{GltfAsset, GltfMaterial};
 use bevy_ecs::prelude::{Commands, Entity};
 pub use gltf;
@@ -44,3 +45,4 @@ pub fn create_gltf<T>(asset:&GltfAsset,commands:&mut Commands,mat_fn:&T) -> Enti
     root.add_children(&mesh_list);
     root.id()
 }
+
