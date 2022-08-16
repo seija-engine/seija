@@ -1,0 +1,26 @@
+<Entity name="Root" layer="114514" >
+    <Components>
+        <Transform position="10,10,10" scale="1,1,1.5" />
+        <Mesh res="model/scene.gltf#mesh.0.0" />
+        <Material name="pbr" />
+        <Transform position="1,1,1" scale="1,1,1.5" />
+    </Components>
+    <Children>
+        <Entity name="Cube1">
+            <Components>
+                <Transform />
+                <Mesh res="model/scene.gltf#mesh.0.0" />
+            </Components>
+        </Entity>
+    
+        <Entity name="Cube2">
+            <Components>
+                <Transform />
+                <Mesh res="model/scene.gltf#mesh.0.0" />
+                <Label font="ff">文字文字</Label>
+            </Components>
+        </Entity>
+    </Children>
+    
+    
+</Entity>

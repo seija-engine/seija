@@ -104,8 +104,9 @@ impl AssetServer {
         if let Some(track) = self.inner.assets.read().get(path).and_then(|info|info.track.clone()) {
             return Some(track);
         }
-        let normal_path = RelativePath::new(path).normalize();
         if !self.inner.loaders.read().contains_key(&T::TYPE_UUID) { return None; }
+        let normal_path = RelativePath::new(path).normalize();
+        log::info!("load async:{}",normal_path.as_str());
         let loading_track =  LoadingTrack::new(HandleId::random::<T>(),self.get_ref_sender());
         let clone_server = self.clone();
         let clone_track = loading_track.clone();

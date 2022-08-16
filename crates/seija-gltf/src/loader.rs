@@ -24,10 +24,11 @@ pub struct GLTFLoader;
 #[async_trait]
 impl AssetLoader for GLTFLoader {
    async fn load(&self,server:AssetServer,track:Option<LoadingTrack>,path:&str,_:Option<Box<dyn AssetLoaderParams>>) -> Result<Box<dyn AssetDynamic>> {
-       log::info!("load gltf path:{}",path);
        let full_path = RelativePath::from_path(path)?.to_logical_path(&server.inner().root_path);
+       log::info!("load gltf path:{:?}",&full_path);
        track.as_ref().map(|t| t.add_progress());
-       let import_data:ImportData = gltf::import(&full_path)?;
+       //TODO 不能用Import应该用gltf::GLTF::from替换实现
+       let import_data:ImportData = gltf::import(&full_path)?;       
        track.as_ref().map(|t| t.add_progress());
        let mut track_textures = vec![];
        let textures = load_textures(&server, &import_data,path,&mut track_textures).await?;
@@ -88,7 +89,6 @@ async fn load_textures(server:&AssetServer,gltf:&ImportData,path:&str,tracks:&mu
             },
             gltf::image::Source::Uri { uri, mime_type:_ } => {
                 let texture_path = RelativePath::new(path).parent().ok_or(anyhow!("fail gltf texture path"))?.join(uri).normalize();
-                
                 let mut desc = TextureDescInfo::default();
                 desc.sampler_desc = get_texture_sampler(&json_texture);
                 let track = server.load_async::<Texture>(texture_path.as_str(),Some(Box::new(desc))).ok_or(anyhow!("fail load texture"))?;
