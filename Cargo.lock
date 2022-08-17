@@ -2542,6 +2542,7 @@ dependencies = [
  "seija-pbr",
  "seija-render",
  "seija-skeleton3d",
+ "seija-template",
  "seija-transform",
  "seija-winit",
 ]
@@ -2651,8 +2652,16 @@ dependencies = [
 name = "seija-template"
 version = "0.1.0"
 dependencies = [
- "anyhow",
+ "async-trait",
+ "downcast-rs",
+ "log",
+ "parking_lot 0.11.2",
  "quick-xml",
+ "seija-app",
+ "seija-asset",
+ "seija-core",
+ "seija-transform",
+ "smallvec",
  "smol_str",
 ]
 

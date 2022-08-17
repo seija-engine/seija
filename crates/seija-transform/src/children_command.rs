@@ -7,7 +7,16 @@ use crate::hierarchy::{Children, Parent};
 #[derive(Debug)]
 pub struct PushChildren {
     parent: Entity,
-    children: SmallVec<[Entity; 8]>,
+    pub children: SmallVec<[Entity; 8]>,
+}
+
+impl PushChildren {
+    pub fn new(entity:Entity) -> Self { 
+        PushChildren {
+            parent:entity,
+            children:SmallVec::default()
+        } 
+    }
 }
 
 impl Command for PushChildren {

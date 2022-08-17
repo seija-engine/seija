@@ -1,0 +1,13 @@
+<Entity name="Root" >
+    <Components>
+        <Transform position="0,0,0" />
+    </Components>
+    <Children>
+        <Entity name="Camera">
+            <Components>
+                <Transform position="0,0,0" />
+                <Camera  />
+            </Components>
+        </Entity>
+    </Children>
+</Entity>

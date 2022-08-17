@@ -1,8 +1,8 @@
 <Entity name="Root" layer="114514" >
     <Components>
         <Transform position="10,10,10" scale="1,1,1.5" />
-        <Mesh res="model/scene.gltf#mesh.0.0" />
-        <Material name="pbr" />
+        <Mesh res="res://model/scene.gltf#mesh.0.0" />
+        <Material res="res://pbrStand.mat.clj" />
         <Transform position="1,1,1" scale="1,1,1.5" />
     </Components>
     <Children>
@@ -21,6 +21,4 @@
             </Components>
         </Entity>
     </Children>
-    
-    
 </Entity>

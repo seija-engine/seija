@@ -1,20 +1,34 @@
-use crate::{TComponent, TEntity};
-use anyhow::{bail, Result,anyhow};
+use crate::{TComponent, TEntity, Template};
+use seija_core::anyhow::{bail,Result,anyhow};
+use seija_asset::{AssetLoader, AssetServer, LoadingTrack, AssetLoaderParams, AssetDynamic};
+use seija_core::smol;
 use quick_xml::events::{BytesStart, Event};
 use smol_str::SmolStr;
+use async_trait::{async_trait};
+pub struct TemplateLoader;
 
-fn read_tmpl_entity(xml_string: &str) -> Result<TEntity> {
+#[async_trait]
+impl AssetLoader for TemplateLoader {
+    async fn load(&self,server:AssetServer,_:Option<LoadingTrack>,path:&str,_:Option<Box<dyn AssetLoaderParams>>) -> Result<Box<dyn AssetDynamic>>  {
+        let full_path = server.full_path(path)?;
+        let xml_string = smol::fs::read_to_string(full_path).await?;
+        let template = Template::from_str(&xml_string)?;
+        Ok(Box::new(template))
+    }
+}
+
+
+pub fn read_tmpl_entity(xml_string: &str) -> Result<TEntity> {
     let mut xml_reader = quick_xml::Reader::from_str(xml_string);
     xml_reader.trim_text(true);
     let mut entity_stack:Vec<TEntity> = vec![];
     let mut in_components = false;
+    let mut cur_component:Option<Vec<u8>> = None;
    
     let mut buf = Vec::new();
     loop {
         match xml_reader.read_event(&mut buf) {
             Ok(Event::Start(ref e)) => {
-                let name: SmolStr = std::str::from_utf8(e.name())?.into();
-                println!("start:{}", name);
                 match e.name() {
                     b"Entity" => {
                         let mut now_entity = TEntity::default();
@@ -44,10 +58,9 @@ fn read_tmpl_entity(xml_string: &str) -> Result<TEntity> {
                         entity_stack.push(now_entity);
                     },
                     b"Components" => { in_components = true; }
-                    b"Children" => {  
-                        
-                    }
+                    b"Children" => {  }
                     _ if in_components => {
+                        cur_component = Some(e.name().to_vec());
                         let t = read_tmpl_component(&e)?;
                         entity_stack.last_mut().map(|v| v.components.push(t)); 
                     },
@@ -57,7 +70,15 @@ fn read_tmpl_entity(xml_string: &str) -> Result<TEntity> {
             Ok(Event::Empty(e)) if in_components => {
                 let t = read_tmpl_component(&e)?;
                 entity_stack.last_mut().map(|v| v.components.push(t)); 
-            }
+            },
+            Ok(Event::Text(txt)) => {
+                if cur_component.is_some() {
+                    let inner_string = txt.unescape_and_decode(&xml_reader)?;
+                    entity_stack.last_mut().and_then(|v| v.components.last_mut()).map(|c| {
+                        c.attrs.insert("innerText".into(), inner_string.into());
+                    });
+                }
+            },
             Ok(Event::End(ref e)) => match e.name() {
                 b"Components" => in_components = false,
                 b"Entity" => {
@@ -66,7 +87,9 @@ fn read_tmpl_entity(xml_string: &str) -> Result<TEntity> {
                       entity_stack.last_mut().unwrap().children.push(pop);
                    }
                 },
-                _ => {}
+                name => if Some(name) == cur_component.as_ref().map(|v| v.as_slice()) {  
+                   cur_component = None;
+                }
             },
             Ok(Event::Eof) => break,
             Err(e) => bail!(e),
@@ -88,10 +111,4 @@ fn read_tmpl_component<'a>(e: &BytesStart<'a>) -> Result<TComponent> {
         }
     }
     Ok(component)
-}
-#[test]
-fn test_xml() {
-    let xml_string = include_str!("../tests/test.xml");
-    let t_entity: TEntity = read_tmpl_entity(xml_string).unwrap();
-    dbg!(t_entity);
 }

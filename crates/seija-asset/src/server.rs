@@ -152,6 +152,10 @@ impl AssetServer {
         }
     }
 
+    pub fn full_path(&self,path:&str) -> Result<PathBuf> {
+        Ok(RelativePath::from_path(path)?.to_logical_path(&self.inner().root_path))
+    }
+
     pub fn free_unused_assets(&self) {
         let ref_receiver = &self.inner.ref_counter.channel.receiver;
         let mut ref_map = self.inner.ref_counter.ref_counts.write();
