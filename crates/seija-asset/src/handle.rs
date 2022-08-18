@@ -70,6 +70,17 @@ impl<T: Asset> Handle<T> {
     pub fn clone_weak_untyped(&self) -> HandleUntyped {
         HandleUntyped::weak(self.id)
     }
+
+    pub fn untyped(mut self) -> HandleUntyped {
+        let sender = self.ref_sender.clone();
+        self.ref_sender = None;
+        if let Some(sender) = sender {
+            HandleUntyped::strong(self.id, sender)
+        } else {
+            HandleUntyped::weak(self.id)
+        }
+       
+    }
 }
 
 impl<T: Asset> Drop for Handle<T> {

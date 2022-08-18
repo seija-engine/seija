@@ -5,7 +5,7 @@ use parking_lot::RwLock;
 use relative_path::{ RelativePath};
 use uuid::Uuid;
 use seija_core::{smol, smol_str::SmolStr};
-use crate::{Asset, Assets, HandleId, asset::{AssetLoader, AssetLoaderParams}, loader::{LoadingTrack, TrackState},  AssetDynamic, Handle};
+use crate::{Asset, Assets, HandleId, asset::{AssetLoader, AssetLoaderParams}, loader::{LoadingTrack, TrackState},  AssetDynamic, Handle, HandleUntyped};
 use seija_core::anyhow::Result;
 
 
@@ -15,12 +15,14 @@ pub struct AssetServer {
 }
 
 pub struct AssetMeta {
+    handle:Option<HandleUntyped>,
     track:Option<LoadingTrack>
 }
 
 impl AssetMeta {
     pub fn new(track:Option<LoadingTrack>) -> Self {
-        AssetMeta { 
+        AssetMeta {
+            handle:None,
             track
         }
     }
@@ -154,6 +156,26 @@ impl AssetServer {
 
     pub fn full_path(&self,path:&str) -> Result<PathBuf> {
         Ok(RelativePath::from_path(path)?.to_logical_path(&self.inner().root_path))
+    }
+
+    pub fn set_asset(&self,path:&str,handle:HandleUntyped) {
+        if self.inner.assets.read().contains_key(path) { return; }
+        let hid = handle.id;
+        let p:SmolStr = path.into();
+        self.inner.assets.write().insert(p.clone(), AssetMeta { handle:Some(handle),track:None });
+        self.inner.handle_to_path.write().insert(hid, p);
+    }
+
+    pub fn get_asset_handle(&self,path:&str) -> Option<HandleUntyped> {
+        if let Some(meta) = self.inner.assets.read().get(path) {
+            if let Some(handle) = &meta.handle {
+                return Some(handle.clone());
+            } else if let Some(track) = &meta.track {
+                return Some(track.take());
+            }
+           return None;
+        }
+        return None;
     }
 
     pub fn free_unused_assets(&self) {

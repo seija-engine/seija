@@ -12,6 +12,8 @@ use seija_pbr::{PBRCameraInfo, create_pbr_plugin};
 use seija_render::{camera::{camera::Perspective,camera::Camera}, 
                    material::{MaterialStorage, read_material_def}, resource::{Mesh, Texture, TextureDescInfo}
                   ,RenderConfig, GraphSetting, RenderModule};
+use seija_render_template::add_render_templates;
+use seija_template::TemplateModule;
 use seija_transform::{Transform, TransformModule};
 use seija_winit::WinitModule;
 
@@ -20,14 +22,15 @@ pub fn init_core_app(render_file:&str) -> App {
     env_logger::Builder::new().filter_level(log::LevelFilter::Info).try_init().unwrap();
     let mut app = App::new();
     app.add_module(CoreModule);
+    app.add_module(AssetModule(std::env::current_dir().unwrap().join("res").into()));
     app.add_module(InputModule);
     let mut win = WinitModule::default();
     win.0.width = 480f32;
     win.0.height = 320f32;
     app.add_module(win);
-    
     app.add_module(TransformModule);
-    app.add_module(AssetModule(std::env::current_dir().unwrap().join("res").into()));
+    app.add_module(TemplateModule);
+    add_render_templates(&mut app.world).unwrap();
     app.add_module(GLTFModule);
     let render_config = RenderConfig {
         config_path:".render/shaders".into(),

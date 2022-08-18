@@ -4,9 +4,12 @@ use material::MaterialStorage;
 use pipeline::{PipelineCache, update_pipeline_cache};
 use rdsl::{RenderMain};
 use render::{AppRender, Config };
+use resource::Mesh;
+use resource::shape::{Cube, Sphere, Plane, Quad};
 use seija_app::IModule;
 use seija_app::{App};
 use bevy_ecs::prelude::*;
+use seija_asset::{AssetServer, Assets};
 use seija_core::{CoreStage};
 extern crate serde_derive;
 pub use wgpu;
@@ -68,13 +71,14 @@ impl IModule for RenderModule {
         light::init_light(app);
         RenderMain::add_system(app);
         query::init_system(app);
+        Self::init_buildin_assets(&mut app.world);
 
         let render_system = self.get_render_system(&mut app.world,self.0.clone());
         app.schedule.add_stage_after(CoreStage::PostUpdate, RenderStage::AfterRender, SystemStage::parallel());
         app.schedule.add_stage_before(RenderStage::AfterRender, RenderStage::Render, SystemStage::single(render_system.exclusive_system()));
         app.schedule.add_stage_before(RenderStage::Render, RenderStage::PostRender, SystemStage::parallel());
 
-
+        
         app.add_system(RenderStage::AfterRender, update_pipeline_cache);
     }
 }
@@ -111,10 +115,21 @@ impl RenderModule {
             }
         }
 
-       
-
         app_render.main.start(w, &mut ctx);
-        w.insert_resource(ctx);
-       
+        w.insert_resource(ctx);       
+    }
+
+    fn init_buildin_assets(world:&mut World) {
+        let mut meshs = world.get_resource_mut::<Assets<Mesh>>().unwrap();
+        let h_cube = meshs.add(Cube::new(1f32).into());
+        let h_sphere = meshs.add(Sphere::new(0.5f32).into());
+        let h_plane = meshs.add(Plane::new(10f32,10).into());
+        let h_quad = meshs.add(Quad::new(1f32).into());
+        if let Some(assets) = world.get_resource::<AssetServer>() {
+            assets.set_asset("buildin#cube", h_cube.untyped());
+            assets.set_asset("buildin#sphere", h_sphere.untyped());
+            assets.set_asset("buildin#plane", h_plane.untyped());
+            assets.set_asset("buildin#quad", h_quad.untyped());
+        }
     }
 }

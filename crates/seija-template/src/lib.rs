@@ -2,7 +2,7 @@ mod types;
 mod loader;
 mod inst;
 mod creator;
-use creator::{IFromTComponent, TComponentCreator};
+pub use creator::{IFromTComponent,TComponentCreator};
 use loader::TemplateLoader;
 use seija_app::{IModule, App};
 use seija_asset::AddAsset;
@@ -28,7 +28,7 @@ pub trait AddTComponent {
 
 impl AddTComponent for App {
     fn add_t_component<T>(&mut self,name:&str) where T:IFromTComponent + Default {
-        let mut data = self.world.get_resource_mut::<TComponentCreator>().unwrap();
+        let mut data = self.world.get_resource_mut::<creator::TComponentCreator>().unwrap();
         data.add(name,T::default());
     }
 }

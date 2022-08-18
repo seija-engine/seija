@@ -12,6 +12,3 @@ seija-asset = {path = "../seija-asset"}
 seija-transform = {path = "../seija-transform"}
 async-trait = "0.1.57"
 log = "0.4.16"
-smallvec = "1.6.1"
-parking_lot = "0.11.1"
-downcast-rs = "1.2.0"

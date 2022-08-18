@@ -1,0 +1,10 @@
+[package]
+name = "seija-render-template"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+seija-core = {path = "../seija-core"}
+seija-render = {path = "../seija-render"}
+seija-template = {path = "../seija-template"}
+seija-asset = {path = "../seija-asset"}

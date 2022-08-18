@@ -122,7 +122,7 @@ impl Default for Perspective {
             fov: 60f32.to_radians(),
             near: 0.01f32,
             far: 100.0,
-            aspect_ratio: 1.0,
+            aspect_ratio: 4.0 / 3.0,
             dir:FovDirection::Ver
         }
     }

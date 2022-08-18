@@ -52,6 +52,10 @@ impl TComponent {
     pub fn new(typ:SmolStr) -> Self {
         TComponent { typ, attrs:HashMap::default() }
     }
+    
+    pub fn read_float(&self,name:&str,default:f32) -> f32 {
+        self.attrs.get(name).and_then(|v| v.parse().ok()).unwrap_or(default)
+    }
 
     pub fn read_v3(&self,name:&str) -> Option<Vec3> {
         if let Some(str) = self.attrs.get(name) {
