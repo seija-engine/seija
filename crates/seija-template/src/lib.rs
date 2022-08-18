@@ -2,7 +2,7 @@ mod types;
 mod loader;
 mod inst;
 mod creator;
-pub use creator::{IFromTComponent,TComponentCreator};
+pub use creator::{TComponentCreator,FromTComponentFunc};
 use loader::TemplateLoader;
 use seija_app::{IModule, App};
 use seija_asset::AddAsset;
@@ -18,17 +18,17 @@ impl IModule for TemplateModule {
         app.add_asset::<Template>();
         app.add_asset_loader(Template::TYPE_UUID, TemplateLoader);
         app.init_resource::<creator::TComponentCreator>();
-        app.add_t_component::<creator::TransformCreator>("Transform");
+        app.add_t_component("Transform",creator::tcomponent_transform);
     }
 }
 
 pub trait AddTComponent {
-    fn add_t_component<T>(&mut self,name:&str) where T:IFromTComponent + Default;
+    fn add_t_component(&mut self,name:&str,func:FromTComponentFunc);
 }
 
 impl AddTComponent for App {
-    fn add_t_component<T>(&mut self,name:&str) where T:IFromTComponent + Default {
+    fn add_t_component(&mut self,name:&str,func:FromTComponentFunc) {
         let mut data = self.world.get_resource_mut::<creator::TComponentCreator>().unwrap();
-        data.add(name,T::default());
+        data.add(name,func);
     }
 }

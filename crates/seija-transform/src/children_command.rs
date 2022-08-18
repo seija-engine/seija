@@ -6,7 +6,7 @@ use crate::hierarchy::{Children, Parent};
 
 #[derive(Debug)]
 pub struct PushChildren {
-    parent: Entity,
+    pub parent: Entity,
     pub children: SmallVec<[Entity; 8]>,
 }
 

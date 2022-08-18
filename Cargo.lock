@@ -2638,6 +2638,7 @@ version = "0.1.0"
 dependencies = [
  "seija-asset",
  "seija-core",
+ "seija-pbr",
  "seija-render",
  "seija-template",
 ]
@@ -2670,6 +2671,7 @@ dependencies = [
  "seija-asset",
  "seija-core",
  "seija-transform",
+ "smallvec",
  "smol_str",
 ]
 

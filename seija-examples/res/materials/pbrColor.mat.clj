@@ -9,7 +9,17 @@
     :pass [
        
         { 
-            :shader { :name "core.pbr"  } 
+            :shader 
+            { 
+                :name "core.pbr"  
+                :slot "
+                    void slot_fs_material(inout MaterialInputs inputs,vec2 uv,inout vec4 normal) {
+                        inputs.baseColor  = material.color;
+                        inputs.metallic   = material.metallic;
+                    }
+                "
+            
+            }
         }
 
        

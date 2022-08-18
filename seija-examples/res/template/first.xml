@@ -5,14 +5,26 @@
     <Children>
         <Entity name="Camera">
             <Components>
-                <Transform position="0,0,2" />
-                <Camera type="Perspective" fov="60" aspect="1.333" near="0.01" far="100" />
+                <Transform position="0,3.09,6.18" rotation="-30.78,0,0" />
+                <PBRCameraInfo />
+                <Camera type="Perspective" fov="60" aspect="1.333" near="0.01" far="1000" />
             </Components>
         </Entity>
 
         <Entity name="Sphere0">
             <Components>
-                <Transform  />
+                <Transform position="0,0.5,0" />
+                <Mesh res="res://buildin#sphere"/>
+                <Material res="res://materials/pbrColor.mat.clj" 
+                          metallic="float:0.5" 
+                          roughness="float:0.5"
+                          color="float4:0.5,1,1,1" />
+            </Components>
+        </Entity>
+
+        <Entity name="Cube0">
+            <Components>
+                <Transform position="1.5,0,-3" rotation="0,0,0"/>
                 <Mesh res="res://buildin#cube"/>
                 <Material res="res://materials/pbrColor.mat.clj" 
                           metallic="float:0.5" 
@@ -20,5 +32,18 @@
                           color="float4:0.5,1,1,1" />
             </Components>
         </Entity>
+
+        <Entity name="Plane0">
+            <Components>
+                <Transform position="0,0,0" rotation="0,0,0" />
+                <Mesh res="res://buildin#plane"/>
+                <Material res="res://materials/pbrColor.mat.clj" 
+                          metallic="float:0.5" 
+                          roughness="float:0.5"
+                          color="float4:0.5,1,1,1" />
+            </Components>
+        </Entity>
+
+
     </Children>
 </Entity>
