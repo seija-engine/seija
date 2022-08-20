@@ -1,9 +1,10 @@
+use bevy_ecs::world::World;
 use downcast_rs::{DowncastSync,impl_downcast, Downcast};
 use async_trait::async_trait;
 use seija_core::type_uuid::{TypeUuid, TypeUuidDynamic};
-use seija_core::{anyhow::{Result}};
+use seija_core::{anyhow::{Result,anyhow},smol};
 
-use crate::AssetServer;
+use crate::{AssetServer, Assets, HandleUntyped};
 use crate::loader::LoadingTrack;
 pub trait Asset : TypeUuid + AssetDynamic { }
 
@@ -15,7 +16,16 @@ impl<T> AssetDynamic for T where T: Send + Sync + 'static + TypeUuidDynamic {}
 
 #[async_trait]
 pub trait AssetLoader : Send + Sync + 'static {
+  
    async fn load(&self,server:AssetServer,track:Option<LoadingTrack>,path:&str,params:Option<Box<dyn AssetLoaderParams>>) -> Result<Box<dyn AssetDynamic>>;
+   
+   fn load_sync(&self,path:&str,asset_server:AssetServer,params:Option<Box<dyn AssetLoaderParams>>) -> Result<Box<dyn AssetDynamic>> { 
+      smol::block_on(async move {
+         self.load(asset_server, None, path, params).await
+      })
+   }
+
+   
 }
 
 pub trait AssetLoaderParams:DowncastSync {}

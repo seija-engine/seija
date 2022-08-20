@@ -49,7 +49,6 @@ impl<T: Asset> Assets<T> {
         self.make_handle(id)
     }
 
-
     pub fn get(&self, handle_id: &HandleId) -> Option<&T> {
         self.assets.get(handle_id)
     }

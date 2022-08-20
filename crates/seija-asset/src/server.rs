@@ -1,6 +1,6 @@
 use std::{collections::HashMap, sync::{Arc}, path::{PathBuf, Path}};
-use bevy_ecs::prelude::Res;
-use seija_core::smol::channel::{ Receiver, Sender, TryRecvError};
+use bevy_ecs::{prelude::Res, world::World};
+use seija_core::{smol::channel::{ Receiver, Sender, TryRecvError}, LogResult};
 use parking_lot::RwLock;
 use relative_path::{ RelativePath};
 use uuid::Uuid;
@@ -117,6 +117,31 @@ impl AssetServer {
             clone_server._load_async::<T>(normal_path.as_str(), loading_track, params).await;
         }).detach();
         return Some(clone_track);
+    }
+
+    pub fn load_sync<T:Asset>(&self,world:&mut World,path:&str,params:Option<Box<dyn AssetLoaderParams>>) -> Option<Handle<T>> {
+        if let Some(track) = self.inner.assets.read().get(path).and_then(|info|info.track.clone()) {
+            if track.is_finish() {
+                return Some(track.take().typed::<T>());
+            } else {
+               return smol::block_on(async move { track.await } ).map(|v| v.typed::<T>())
+            }
+        }
+        if let Some(loader) = self.inner.loaders.read().get(&T::TYPE_UUID).cloned() {
+            match loader.load_sync(path, self.clone(), params).log_err().ok() {
+                Some(dyn_asset) => {
+                    if let (Ok(asset),Some(mut assets))  = (dyn_asset.downcast::<T>(), world.get_resource_mut::<Assets<T>>()) {
+                       return Some(assets.add(*asset));
+                    } else {
+                        log::error!("cast type or Assets<T> error:{:?}",&T::TYPE_UUID);
+                        return None;
+                    }
+                },
+                None => {},
+            };
+        }
+        log::error!("not found loader:{:?}",&T::TYPE_UUID);
+        None
     }
 
     fn create_dyn_asset(&self,path:&str,uuid:&Uuid,asset:Box<dyn AssetDynamic>,hid:HandleId,track:Option<LoadingTrack>) {
