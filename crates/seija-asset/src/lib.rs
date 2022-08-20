@@ -47,7 +47,6 @@ impl AddAsset for App {
         self.add_resource(assets);
         self.add_system(AssetStage::AssetEvents, Assets::<T>::asset_event_system);
         self.add_system(AssetStage::LoadAssets, Assets::<T>::update_assets_system);
-        //self.add_event::<AssetEvent<T>>();
         self.add_event::<AssetEvent<T>>();
     }
 

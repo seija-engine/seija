@@ -66,13 +66,11 @@ impl ScriptContext {
     
             let mut query_system = world.get_resource_unchecked_mut::<QuerySystem>().unwrap();
             let query_system_mut = query_system.as_mut();
-
-            let mut materials = world.get_resource_unchecked_mut::<MaterialStorage>().unwrap();
-            let materials_mut = materials.as_mut();
+            
            
-            self.set_userdata("*MATERIALS*", materials_mut);
             self.set_userdata("*TEXTURES*", textures_mut);
             self.set_userdata("*QUERY*",  query_system_mut);
+            self.set_userdata("*WORLD*", world);
             self.set_userdata("*RENDER_CTX*", ctx);
             self.set_userdata("*MAIN_CTX*", main_ctx);
         }

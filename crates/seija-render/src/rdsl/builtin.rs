@@ -1,5 +1,6 @@
 use std::sync::Arc;
 use std::convert::{TryFrom};
+use bevy_ecs::world::World;
 use lite_clojure_eval::{ExecScope, Variable, GcRefCell};
 use seija_asset::Assets;
 use serde_json::Value;
@@ -290,7 +291,8 @@ pub fn _is_tag(scope:&mut ExecScope,args:Vec<Variable>) -> Result<Variable,i32> 
 
 pub fn load_material(scope:&mut ExecScope,args:Vec<Variable>) -> Variable {
    handle_error("load-material", scope, args, |scope,args| {
-    let materials = find_userdata::<MaterialStorage>(scope, "*MATERIALS*").ok_or(0)?;
+    let world = find_userdata::<World>(scope, "*WORLD*").ok_or(0)?;
+        let materials = world.get_resource::<MaterialStorage>().ok_or(3)?;
         let path = args.get(0).and_then(Variable::cast_string).ok_or(1)?;
         let material_string = std::fs::read_to_string(path.borrow().as_str()).ok().ok_or(2)?;
         
