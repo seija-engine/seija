@@ -6,7 +6,6 @@ use parking_lot::RwLock;
 use seija_asset::{ AssetServer, Assets, Handle, LifecycleEvent, RefEvent, HandleId};
 use seija_core::{TypeUuid};
 use once_cell::sync::Lazy;
-use smol_str::SmolStr;
 
 
 use crate::{material::Material, resource::{color_texture, Texture}};
@@ -23,12 +22,11 @@ pub struct MaterialDefInfo {
    pub def:Arc<MaterialDef>,
    pub mat_count:usize
 }
-
+#[deprecated]
 pub struct MaterialStorage {
     pub default_textures:Vec<Handle<Texture>>,
     pub mateials:RwLock<Assets<Material>>,
     pub(crate) name_map:RwLock<HashMap<String,MaterialDefInfo>>,
-    pub(crate) path_to_def_name:RwLock<HashMap<SmolStr,SmolStr>>
 }
 
 impl MaterialStorage {
@@ -36,7 +34,6 @@ impl MaterialStorage {
         MaterialStorage {
             mateials:RwLock::new(Assets::new(ref_sender.clone())),
             name_map:RwLock::new(HashMap::default()),
-            path_to_def_name:RwLock::new(HashMap::default()),
             default_textures:Vec::new()
         }
     }

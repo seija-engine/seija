@@ -16,14 +16,16 @@ pub struct AssetServer {
 
 pub struct AssetMeta {
     handle:Option<HandleUntyped>,
-    track:Option<LoadingTrack>
+    track:Option<LoadingTrack>,
+    tag:Option<SmolStr>
 }
 
 impl AssetMeta {
     pub fn new(track:Option<LoadingTrack>) -> Self {
         AssetMeta {
             handle:None,
-            track
+            track,
+            tag:None
         }
     }
 }
@@ -34,7 +36,8 @@ pub struct AssetServerInner {
     pub lifecycle_events:RwLock<HashMap<Uuid,LifecycleEventChannel>>,
     loaders:RwLock<HashMap<Uuid,Arc<dyn AssetLoader>>>,
     assets:RwLock<HashMap<SmolStr,AssetMeta>>,
-    handle_to_path:RwLock<HashMap<HandleId,SmolStr>>
+    handle_to_path:RwLock<HashMap<HandleId,SmolStr>>,
+    tag_to_path:RwLock<HashMap<SmolStr,SmolStr>>
 }
 
 impl AssetServer {
@@ -49,6 +52,7 @@ impl AssetServer {
                     loaders:RwLock::new(HashMap::default()),
                     assets:RwLock::new(HashMap::default()),
                     handle_to_path:RwLock::new(HashMap::default()),
+                    tag_to_path:RwLock::new(HashMap::default())
                 }
             )
         }
@@ -175,7 +179,14 @@ impl AssetServer {
 
     fn remove_asset_meta(&self,id:&HandleId) {
         if let Some(path) = self.inner.handle_to_path.write().remove(id) {
-            self.inner.assets.write().remove(path.as_str());
+           if let Some(meta) = self.inner.assets.write().remove(path.as_str()) {
+               if let Some(tag) = meta.tag {
+                 let key = self.inner.tag_to_path.read().iter().find(|v| v.0 == &tag).map(|v| v.0.clone());
+                 key.map(|k| {
+                    self.inner.tag_to_path.write().remove(&k);
+                 });
+               }
+           }
         }
     }
 
@@ -187,7 +198,7 @@ impl AssetServer {
         if self.inner.assets.read().contains_key(path) { return; }
         let hid = handle.id;
         let p:SmolStr = path.into();
-        self.inner.assets.write().insert(p.clone(), AssetMeta { handle:Some(handle),track:None });
+        self.inner.assets.write().insert(p.clone(), AssetMeta { handle:Some(handle),track:None,tag:None });
         self.inner.handle_to_path.write().insert(hid, p);
     }
 
@@ -201,6 +212,19 @@ impl AssetServer {
            return None;
         }
         return None;
+    }
+
+    
+    pub fn set_tag_asset(&self,path:&str,tag:&str) {
+        let tag_string = SmolStr::new(tag);
+        if let Some(meta) = self.inner.assets.write().get_mut(path) {
+            meta.tag = Some(tag.into())
+        }
+        self.inner.tag_to_path.write().insert(tag_string, path.into());
+    }
+
+    pub fn get_tag_asset(&self,tag:&str) -> Option<HandleUntyped> {
+        self.inner.tag_to_path.read().get(tag).and_then(|v| self.get_asset_handle(v))
     }
 
     pub fn free_unused_assets(&self) {

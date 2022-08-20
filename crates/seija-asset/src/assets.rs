@@ -79,6 +79,7 @@ impl<T: Asset> Assets<T> {
         }
     }
 
+
     pub fn remove(&mut self, handle_id: HandleId) -> Option<T> {
         let asset = self.assets.remove(&handle_id);
         if asset.is_some() {

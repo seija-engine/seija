@@ -4,7 +4,7 @@ use material::MaterialStorage;
 use pipeline::{PipelineCache, update_pipeline_cache};
 use rdsl::{RenderMain};
 use render::{AppRender, Config };
-use resource::Mesh;
+use resource::{Mesh, Texture, color_texture};
 use resource::shape::{Cube, Sphere, Plane, Quad};
 use seija_app::IModule;
 use seija_app::{App};
@@ -87,8 +87,9 @@ impl IModule for RenderModule {
 impl RenderModule {
     fn get_render_system(&self,w:&mut World,config:Arc<RenderConfig>) -> impl FnMut(&mut World) {
         let mut app_render = AppRender::new_sync(Config::default());
-        let mut render_ctx = RenderContext::new(app_render.device.clone(),&self.0.config_path,self.0.setting.clone());
-        //TODO 这里考虑把MaterialStorage的默认贴图删了
+        let assets = w.get_resource::<AssetServer>().unwrap();
+        let mut render_ctx = RenderContext::new(app_render.device.clone(),&self.0.config_path,self.0.setting.clone(),assets);
+       
         render_ctx.resources.default_textures = w.get_resource::<MaterialStorage>().unwrap().default_textures.clone();
         self.init_render(w,render_ctx,&mut app_render,config); 
         move |_w| {
@@ -121,15 +122,25 @@ impl RenderModule {
 
     fn init_buildin_assets(world:&mut World) {
         let mut meshs = world.get_resource_mut::<Assets<Mesh>>().unwrap();
+        
         let h_cube = meshs.add(Cube::new(1f32).into());
         let h_sphere = meshs.add(Sphere::new(0.5f32).into());
         let h_plane = meshs.add(Plane::new(10f32,10).into());
         let h_quad = meshs.add(Quad::new(1f32).into());
+
+        let mut textures = world.get_resource_mut::<Assets<Texture>>().unwrap();
+        let h_white = textures.add(color_texture([255,255,255,255], 16));
+        let h_blue  = textures.add(color_texture([0,0,255,255], 16));
+        let h_black = textures.add(color_texture([0,0,0,255], 16));
         if let Some(assets) = world.get_resource::<AssetServer>() {
-            assets.set_asset("buildin#cube", h_cube.untyped());
-            assets.set_asset("buildin#sphere", h_sphere.untyped());
-            assets.set_asset("buildin#plane", h_plane.untyped());
-            assets.set_asset("buildin#quad", h_quad.untyped());
+            assets.set_asset("mesh:cube", h_cube.untyped());
+            assets.set_asset("mesh:sphere", h_sphere.untyped());
+            assets.set_asset("mesh:plane", h_plane.untyped());
+            assets.set_asset("mesh:quad", h_quad.untyped());
+
+            assets.set_asset("texture:white", h_white.untyped());
+            assets.set_asset("texture:blue", h_blue.untyped());
+            assets.set_asset("texture:black", h_black.untyped());
         }
     }
 }

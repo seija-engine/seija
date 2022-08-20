@@ -1,5 +1,6 @@
 use std::{sync::Arc, path::Path};
 
+use seija_asset::AssetServer;
 use wgpu::{CommandEncoder, Device};
 
 use crate::{ material::{MaterialSystem, PassDef}, 
@@ -30,13 +31,13 @@ impl RenderContext {
         Some(ret)
     }
 
-    pub fn new<P:AsRef<Path>>(device:Arc<Device>,config_path:P,setting:Arc<GraphSetting>) -> Self {
+    pub fn new<P:AsRef<Path>>(device:Arc<Device>,config_path:P,setting:Arc<GraphSetting>,assets:&AssetServer) -> Self {
         let mut shaders = RuntimeShaderInfo::default();
         shaders.load(config_path);
         let ctx = RenderContext {
             device:device.clone(),
             command_encoder:None,
-            resources:RenderResources::new(device.clone()),
+            resources:RenderResources::new(device.clone(),assets),
             material_sys:MaterialSystem::new(&device),
             shaders,
             ubo_ctx:UniformContext::default(),

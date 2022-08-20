@@ -1,12 +1,9 @@
 mod render_plugin;
 //mod deferred_light_pass;
-use anyhow::{Result,anyhow};
+use anyhow::{Result};
 use bevy_ecs::prelude::{World, Entity};
 pub use render_plugin::{create_deferred_plugin};
 use seija_app::IModule;
-use seija_asset::{Assets};
-use seija_render::{material::{MaterialStorage}, errors::RenderErrors, resource::{Mesh, shape::Quad}};
-use seija_transform::Transform;
 
 pub struct DeferredQuad(pub Entity);
 
@@ -32,7 +29,8 @@ impl IModule for DeferredRenderModule {
 }
 
 impl DeferredRenderModule {
-    pub fn load_quad(&self,world:&mut World) -> Result<Entity> {
+    pub fn load_quad(&self,_:&mut World) -> Result<Entity> {
+        /* 
         let mats = world.get_resource::<MaterialStorage>().ok_or(RenderErrors::NotFoundMaterialStorage)?;
         let mat_string = std::fs::read_to_string(self.mat_path.as_str())?;
         mats.load_material_def(mat_string.as_str());
@@ -49,7 +47,8 @@ impl DeferredRenderModule {
         commands.insert(t);
         commands.insert(h_quad);
         commands.insert(h_mat);
-        Ok(commands.id())
+        Ok(commands.id())*/
+        todo!()
     }
 
 }

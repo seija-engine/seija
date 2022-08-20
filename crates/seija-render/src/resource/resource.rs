@@ -1,5 +1,5 @@
 use std::{collections::HashMap, num::NonZeroU32, ops::Range, sync::Arc};
-use seija_asset::{HandleId, Handle};
+use seija_asset::{HandleId, Handle, AssetServer};
 use seija_core::IDGenU64;
 use wgpu::{BufferUsage, SwapChainError, TextureView, util::DeviceExt};
 
@@ -73,7 +73,8 @@ pub struct RenderResources {
 }
 
 impl RenderResources {
-    pub fn new(device:Arc<wgpu::Device>) -> RenderResources {
+    pub fn new(device:Arc<wgpu::Device>,assets:&AssetServer) -> RenderResources {
+       let h_white = assets.get_asset_handle("texture:white").unwrap();
         RenderResources {
             device,
             main_surface:None,
@@ -87,7 +88,7 @@ impl RenderResources {
             texture_views:HashMap::default(),
             samplers:HashMap::default(),
             sampler_id_gen:IDGenU64::new(),
-            default_textures:Vec::new()
+            default_textures:vec![h_white.typed()]
         }
     }
 

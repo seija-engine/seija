@@ -1,10 +1,10 @@
-use bevy_ecs::world::World;
+
 use downcast_rs::{DowncastSync,impl_downcast, Downcast};
 use async_trait::async_trait;
 use seija_core::type_uuid::{TypeUuid, TypeUuidDynamic};
-use seija_core::{anyhow::{Result,anyhow},smol};
+use seija_core::{anyhow::{Result},smol};
 
-use crate::{AssetServer, Assets, HandleUntyped};
+use crate::{AssetServer};
 use crate::loader::LoadingTrack;
 pub trait Asset : TypeUuid + AssetDynamic { }
 

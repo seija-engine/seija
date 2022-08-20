@@ -10,8 +10,7 @@ use serde_json::{Value};
 use uuid::Uuid;
 use crate::{memory::UniformBufferDef};
 
-#[derive(Debug,TypeUuid)]
-#[uuid = "58ee0320-a01e-4a1b-9d07-ade19767853b"]
+#[derive(Debug)]
 pub struct MaterialDef {
     pub name:String,
     pub path:RenderPath,
@@ -19,6 +18,12 @@ pub struct MaterialDef {
     pub pass_list:Vec<PassDef>,
     pub prop_def:Arc<UniformBufferDef>,
     pub tex_prop_def:Arc<TexturePropDef>,
+}
+
+#[derive(Debug,TypeUuid)]
+#[uuid = "58ee0320-a01e-4a1b-9d07-ade19767853b"]
+pub struct MaterialDefineAsset {
+    pub define:Arc<MaterialDef>
 }
 
 #[derive(Debug)]
