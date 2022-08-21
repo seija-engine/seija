@@ -1,12 +1,12 @@
 use bevy_ecs::{world::World, prelude::Entity};
 use lite_clojure_eval::Variable;
-use anyhow::{Result,anyhow};
-use seija_asset::{Assets, Handle};
+use anyhow::{Result,anyhow, Context};
+use seija_asset::{Assets, Handle, AssetServer};
 use seija_transform::Transform;
 use smol_str::SmolStr;
 use wgpu::{Operations, Color, CommandEncoder};
 
-use crate::{IUpdateNode, rdsl::atom::Atom, resource::{RenderResourceId, shape::Quad, Mesh}, material::{MaterialStorage, Material}, RenderContext, pipeline::PipelineCache};
+use crate::{IUpdateNode, rdsl::atom::Atom, resource::{RenderResourceId, shape::Quad, Mesh}, material::{Material, MaterialDefineAsset}, RenderContext, pipeline::PipelineCache};
 
 use super::{CommonError, create_render_pass};
 #[derive(Default)]
@@ -57,17 +57,21 @@ impl IUpdateNode for DrawQuadNode {
             load:wgpu::LoadOp::Clear(Color {r:0f64,g:0f64,b:0f64,a:1f64 }),
             store:true  
         };
-        let hmat =  {
-            let materials = world.get_resource::<MaterialStorage>().unwrap();
-            materials.create_material_with(&self.material_name,|mat| {
-                for (index,tex) in self.mat_textures.iter().enumerate() {
-                    let atom_ref = unsafe { &**tex };
-                    if let RenderResourceId::Texture(texture) = atom_ref.inner() {
-                        mat.texture_props.set(&format!("texture{}",index) , texture.clone_weak());
-                    }
+        let hmat:Handle<Material> =  {
+            let server = world.get_resource::<AssetServer>().context(0)?;
+            let h_def = server.get_asset_handle(&self.material_name)
+                                                      .context(1)?
+                                                      .typed::<MaterialDefineAsset>();
+            let defs = world.get_resource::<Assets<MaterialDefineAsset>>().context(2)?;
+            let define = defs.get(&h_def.id).context(4)?.define.clone();
+            let mut material = Material::from_def_new(define, server).context(5)?;
+            for (index,tex) in self.mat_textures.iter().enumerate() {
+                let atom_ref = unsafe { &**tex };
+                if let RenderResourceId::Texture(texture) = atom_ref.inner() {
+                    material.texture_props.set(&format!("texture{}",index) , texture.clone_weak());
                 }
-               
-            }).ok_or(anyhow!("create mat err:{}",&self.material_name))?
+            };
+            world.get_resource_mut::<Assets<Material>>().context(6)?.add(material)
         };
         let hmesh = {
             let mut meshs = world.get_resource_mut::<Assets<Mesh>>().ok_or(anyhow!("0"))?;
@@ -100,15 +104,14 @@ impl DrawQuadNode {
     pub fn draw(&self,world:&mut World,ctx:&mut RenderContext,command:&mut CommandEncoder) -> Result<u32,CommonError> {
         let mut draw_count:u32 = 0;
         let meshs = world.get_resource::<Assets<Mesh>>().unwrap();
-        let materials = world.get_resource::<MaterialStorage>().unwrap();
-        let mats = materials.mateials.read();
+        let materials = world.get_resource::<Assets<Material>>().unwrap();
         let pipeline_cahce = world.get_resource::<PipelineCache>().unwrap();
         if let Some(quad_entity) = self.quad_id {
             let quad_ref = world.entity(quad_entity);
             let hmesh = quad_ref.get::<Handle<Mesh>>().ok_or(CommonError::MissMesh)?;
             let hmat = quad_ref.get::<Handle<Material>>().ok_or(CommonError::MissMaterial)?;
             let mesh = meshs.get(&hmesh.id).ok_or(CommonError::MissMesh)?;
-            let material = mats.get(&hmat.id).ok_or(CommonError::MissMaterial)?;
+            let material = materials.get(&hmat.id).ok_or(CommonError::MissMaterial)?;
 
             if !material.is_ready(&ctx.resources) { return Ok(0); }
             

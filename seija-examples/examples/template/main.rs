@@ -4,7 +4,6 @@ use seija_core::{CoreStage, StartupStage};
 use seija_examples::{init_core_app, update_camera_trans_system, load_material};
 use bevy_ecs::prelude::*;
 use seija_pbr::lights::PBRLight;
-use seija_render::material::MaterialStorage;
 use seija_template::{Template, instance_template_sync};
 use seija_transform::Transform;
 pub fn main() {
@@ -15,7 +14,7 @@ pub fn main() {
 }
 
 fn start(world:&mut World) {
-    load_material("res/materials/pbrColor.mat.clj", &world.get_resource::<MaterialStorage>().as_ref().unwrap());
+    load_material("res/materials/pbrColor.mat.clj", world);
 
      //light
      {

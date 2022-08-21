@@ -1,6 +1,5 @@
 use std::path::{PathBuf, Path};
 use std::sync::Arc;
-use material::MaterialStorage;
 use pipeline::{PipelineCache, update_pipeline_cache};
 use rdsl::{RenderMain};
 use render::{AppRender, Config };
@@ -88,9 +87,8 @@ impl RenderModule {
     fn get_render_system(&self,w:&mut World,config:Arc<RenderConfig>) -> impl FnMut(&mut World) {
         let mut app_render = AppRender::new_sync(Config::default());
         let assets = w.get_resource::<AssetServer>().unwrap();
-        let mut render_ctx = RenderContext::new(app_render.device.clone(),&self.0.config_path,self.0.setting.clone(),assets);
+        let render_ctx = RenderContext::new(app_render.device.clone(),&self.0.config_path,self.0.setting.clone(),assets);
        
-        render_ctx.resources.default_textures = w.get_resource::<MaterialStorage>().unwrap().default_textures.clone();
         self.init_render(w,render_ctx,&mut app_render,config); 
         move |_w| {
             _w.resource_scope(|world:&mut World,mut ctx:Mut<RenderContext>| {

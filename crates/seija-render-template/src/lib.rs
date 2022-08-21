@@ -1,7 +1,7 @@
 use seija_asset::AssetServer;
 use seija_core::{bevy_ecs::{system::{CommandQueue, Insert}, world::World, prelude::Entity}, anyhow::{Result,anyhow, bail}};
 use seija_pbr::PBRCameraInfo;
-use seija_render::{camera::camera::{Camera, Perspective, Projection}, resource::Mesh, material::MaterialStorage};
+use seija_render::{camera::camera::{Camera, Perspective, Projection}, resource::Mesh};
 use seija_template::{TComponent,TComponentCreator};
 
 
@@ -55,12 +55,12 @@ fn t_component_mesh<'w,'s,'a>(world:&mut World,entity:Entity,component:&TCompone
     Err(anyhow!("Mesh need res"))
 }
 
-fn t_component_material<'w,'s,'a>(world:&mut World,entity:Entity,_:&TComponent,queue:&mut CommandQueue) -> Result<()> {
+fn t_component_material<'w,'s,'a>(_:&mut World,_:Entity,_:&TComponent,_:&mut CommandQueue) -> Result<()> {
     //let _ = world.get_resource::<AssetServer>().ok_or(anyhow!("asset server"))?;
     
-    let materials = world.get_resource::<MaterialStorage>().unwrap();
-    let mat = materials.create_material("pbrColor").ok_or(anyhow!(".."))?;
-    queue.push(Insert {entity,component:mat });
+    //let materials = world.get_resource::<MaterialStorage>().unwrap();
+    //let mat = materials.create_material("pbrColor").ok_or(anyhow!(".."))?;
+    //queue.push(Insert {entity,component:mat });
     Ok(())
 }
 

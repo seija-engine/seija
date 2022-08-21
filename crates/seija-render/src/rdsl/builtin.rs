@@ -2,9 +2,9 @@ use std::sync::Arc;
 use std::convert::{TryFrom};
 use bevy_ecs::world::World;
 use lite_clojure_eval::{ExecScope, Variable, GcRefCell};
-use seija_asset::Assets;
+use seija_asset::{Assets, AssetServer};
 use serde_json::Value;
-use crate::material::{STextureDescriptor, MaterialStorage};
+use crate::material::{STextureDescriptor, MaterialDefineAsset};
 use crate::query::{QuerySystem, IdOrName};
 use crate::rdsl::main::DynUniformItem;
 use crate::rdsl::nodes::CameraNode;
@@ -198,9 +198,10 @@ pub fn _atom_texture(scope:&mut ExecScope, args:Vec<Variable>) -> Result<Variabl
     let texture_desc = STextureDescriptor::try_from(&value).map_err(|_|1)?;
     let mut desc_info = TextureDescInfo::default();
     desc_info.desc = texture_desc.0;
-    let textures_mut:&mut Assets<Texture> = find_userdata(scope, "*TEXTURES*").ok_or(2)?;
+    let world:&mut World = find_userdata(scope, "*WORLD*").ok_or(2)?;
+    let mut textures = world.get_resource_mut::<Assets<Texture>>().unwrap();
     let texture = Texture::create_by_desc(desc_info);
-    let h_texture = textures_mut.add(texture);
+    let h_texture = textures.add(texture);
     let atom_texture = Box::new(Atom::new(RenderResourceId::Texture(h_texture)));
     let atom_ptr = Box::into_raw(atom_texture) as *mut u8;
     Ok(Variable::UserData( atom_ptr))
@@ -291,15 +292,10 @@ pub fn _is_tag(scope:&mut ExecScope,args:Vec<Variable>) -> Result<Variable,i32> 
 
 pub fn load_material(scope:&mut ExecScope,args:Vec<Variable>) -> Variable {
    handle_error("load-material", scope, args, |scope,args| {
-    let world = find_userdata::<World>(scope, "*WORLD*").ok_or(0)?;
-        let materials = world.get_resource::<MaterialStorage>().ok_or(3)?;
-        let path = args.get(0).and_then(Variable::cast_string).ok_or(1)?;
-        let material_string = std::fs::read_to_string(path.borrow().as_str()).ok().ok_or(2)?;
-        
-        let is_succ = materials.load_material_def(&material_string);
-        if is_succ {
-            log::info!("load_material:{}",path.borrow().as_str());
-        }
-        Ok(Variable::Bool(is_succ))
+        let world = find_userdata::<World>(scope, "*WORLD*").ok_or(0)?;
+        let server = world.get_resource::<AssetServer>().ok_or(1)?.clone();
+        let path = args.get(0).and_then(Variable::cast_string).ok_or(2)?;
+        let ret = server.load_sync::<MaterialDefineAsset>(world, path.borrow().as_str(), None,false);
+        Ok(Variable::Bool(ret.is_some()))
    })
 }

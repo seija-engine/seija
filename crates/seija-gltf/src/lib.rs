@@ -25,8 +25,8 @@ impl IModule for GLTFModule {
 
 type ImportData = (gltf::Document, Vec<gltf::buffer::Data>, Vec<gltf::image::Data>);
 
-pub fn create_gltf<T>(asset:&GltfAsset,commands:&mut Commands,mat_fn:&T) -> Entity  
-             where T: Fn(&GltfMaterial) -> Option<Handle<Material>> {
+pub fn create_gltf<T>(asset:&GltfAsset,commands:&mut Commands,mut mat_fn:T) -> Entity  
+             where T: FnMut(&GltfMaterial) -> Option<Handle<Material>> {
     let mut mesh_list:Vec<Entity> = vec![];
     for mesh in asset.meshs.iter() {
         let mesh_mat = asset.nodes[mesh.node_index].transform.global();

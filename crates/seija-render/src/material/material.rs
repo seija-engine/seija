@@ -1,12 +1,11 @@
 use std::sync::Arc;
-use super::{MaterialDef, RenderOrder};
+use super::{MaterialDef, RenderOrder, MaterialDefineAsset};
 
-use bevy_ecs::prelude::Component;
-use seija_asset::{Handle, AssetServer};
+use bevy_ecs::prelude::{Component, World};
+use seija_asset::{Handle, AssetServer, Assets};
 use seija_core::{TypeUuid};
-use wgpu::{BufferUsage, Device};
 use crate::pipeline::render_bindings::{BindGroupBuilder};
-use crate::resource::{BufferId, RenderResources, Texture};
+use crate::resource::{RenderResources, Texture};
 use crate::{memory::{TypedUniformBuffer}};
 use uuid::Uuid;
 
@@ -17,24 +16,10 @@ pub struct Material {
     pub order:RenderOrder,
     pub props:TypedUniformBuffer,
     pub texture_props:TextureProps,
-    pub buffer:Option<BufferId>,
     pub bind_group:Option<wgpu::BindGroup>
 }
 
 impl Material {
-    #[deprecated]
-    pub fn from_def(def:Arc<MaterialDef>,default_textures:&Vec<Handle<Texture>>) -> Material {
-        let props = TypedUniformBuffer::from_def(def.prop_def.clone());
-        let texture_props = TextureProps::from_def(&def,default_textures);
-        Material {
-            order:def.order,
-            def,
-            props,
-            buffer:None,
-            bind_group:None,
-            texture_props
-        }
-    }
 
     pub fn from_def_new(def:Arc<MaterialDef>,server:&AssetServer) -> Option<Material> {
         let props = TypedUniformBuffer::from_def(def.prop_def.clone());
@@ -43,27 +28,23 @@ impl Material {
             order:def.order,
             def,
             props,
-            buffer:None,
             bind_group:None,
             texture_props
         })
+    }
+
+    pub fn from_world(world:&World,define:&str) -> Option<Material> {
+        let server = world.get_resource::<AssetServer>()?;
+        let h_define = server.get_asset_handle(define)?.typed::<MaterialDefineAsset>();
+        let define = world.get_resource::<Assets<MaterialDefineAsset>>()?.get(&h_define.id)?.define.clone();
+        Material::from_def_new(define, server)
     }
 
     pub fn is_ready(&self,resources:&RenderResources) -> bool {
        self.texture_props.is_ready(resources)
     }
 
-    pub fn update(&mut self,resources:&mut RenderResources,device:&Device,mat_layout:&wgpu::BindGroupLayout,texture_layout:Option<&wgpu::BindGroupLayout>) {
-        if self.buffer.is_none() && self.props.def.infos.len() > 0 {
-            let buffer = resources.create_buffer_with_data(BufferUsage::COPY_DST | BufferUsage::UNIFORM, self.props.get_buffer());
-            self.buffer = Some(buffer.clone());
-            let mut bind_group_builder = BindGroupBuilder::new();
-            bind_group_builder.add_buffer(buffer);
-            self.bind_group = Some(bind_group_builder.build(mat_layout, device, resources) );
-            self.props.clear_dirty();
-        }
-        self.texture_props.update(resources,texture_layout);
-    }
+ 
 
 }
 
@@ -76,24 +57,11 @@ pub struct TextureProps {
 }
 
 impl TextureProps {
-    #[deprecated]
-    pub fn from_def(def:&Arc<MaterialDef>,default_textures:&Vec<Handle<Texture>>) -> TextureProps {
-        let mut textures:Vec<Handle<Texture>> = Vec::with_capacity(def.tex_prop_def.indexs.len());
-        for (_,info) in def.tex_prop_def.indexs.iter() {
-            textures.push(default_textures[info.def_index].clone_weak());
-        }
-        TextureProps {
-            is_dirty:true,
-            def:def.clone(),
-            textures,
-            bind_group:None
-        }
-    }
-
+   
     pub fn from_def_new(def:&Arc<MaterialDef>,server:&AssetServer) -> Option<TextureProps> {
         let mut textures:Vec<Handle<Texture>> = Vec::with_capacity(def.tex_prop_def.indexs.len());
         for (_,info) in def.tex_prop_def.indexs.iter() {
-            let handle = server.get_asset_handle("texture:white")?;
+            let handle = server.get_asset_handle(info.def_asset.as_str())?;
             textures.push(handle.typed().clone_weak());
         }
         Some(TextureProps {

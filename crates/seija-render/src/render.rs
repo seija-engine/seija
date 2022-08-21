@@ -94,7 +94,7 @@ impl AppRender {
         let _ = ctx.resources.next_swap_chain_texture();
         ctx.ubo_ctx.update(&mut ctx.resources,ctx.command_encoder.as_mut().unwrap());
        
-        ctx.material_sys.update(world, &ctx.device, ctx.command_encoder.as_mut().unwrap(),&mut ctx.resources);
+        ctx.mat_system.update(world, &mut ctx.resources, ctx.command_encoder.as_mut().unwrap());
        
         
         resource::update_mesh_system(world,&mut self.mesh_event_reader,ctx);

@@ -10,7 +10,7 @@
 
 (defn on-render-start [globalEnv]
     (println "on-render-start")
-    (load-material "res/materials/fxaa.mat.clj")
+    (load-material "materials/fxaa.mat.clj")
 
     (add-uniform  "ObjectBuffer")
     (add-uniform  "CameraBuffer")
@@ -34,7 +34,7 @@
             (add-node env nil WINSIZE_TEXTURE [(env :depth) (env :targetView)])
             (add-node env nil DRAW_PASS (env :camera-query) (env :camera-id) [(env :postEffect)] (env :depth) "Foward")
 
-            (add-node env nil DRAW_QUAD "fxaa" [(env :targetView)] (env :depth) [(env :postEffect)])
+            (add-node env nil DRAW_QUAD "materials/fxaa.mat.clj" [(env :targetView)] (env :depth) [(env :postEffect)])
             (println "add foward success")
         )
     })

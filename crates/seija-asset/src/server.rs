@@ -123,7 +123,7 @@ impl AssetServer {
         return Some(clone_track);
     }
 
-    pub fn load_sync<T:Asset>(&self,world:&mut World,path:&str,params:Option<Box<dyn AssetLoaderParams>>) -> Option<Handle<T>> {
+    pub fn load_sync<T:Asset>(&self,world:&mut World,path:&str,params:Option<Box<dyn AssetLoaderParams>>,auto_release:bool) -> Option<Handle<T>> {
         if let Some(track) = self.inner.assets.read().get(path).and_then(|info|info.track.clone()) {
             if track.is_finish() {
                 return Some(track.take().typed::<T>());
@@ -135,7 +135,14 @@ impl AssetServer {
             match loader.load_sync(world,path, self.clone(), params).log_err().ok() {
                 Some(dyn_asset) => {
                     if let (Ok(asset),Some(mut assets))  = (dyn_asset.downcast::<T>(), world.get_resource_mut::<Assets<T>>()) {
-                       return Some(assets.add(*asset));
+                       let h_asset = assets.add(*asset);
+                       if auto_release {
+                            self.set_asset(path, h_asset.clone_weak().untyped());
+                       } else {
+                            self.set_asset(path, h_asset.clone().untyped());
+                       }
+                       
+                       return Some(h_asset);
                     } else {
                         log::error!("cast type or Assets<T> error:{:?}",&T::TYPE_UUID);
                         return None;

@@ -1,8 +1,7 @@
 use bevy_ecs::prelude::World;
 use lite_clojure_eval::{EvalRT, Variable};
-use seija_asset::Assets;
 use seija_core::window::AppWindow;
-use crate::{UniformInfoSet, RenderContext, resource::Texture, query::QuerySystem};
+use crate::{UniformInfoSet, RenderContext, query::QuerySystem};
 
 use super::{builtin::*, main::{MainContext}};
 
@@ -61,14 +60,11 @@ impl ScriptContext {
 
     pub fn set_script_global(&mut self,ctx:&mut RenderContext,main_ctx:&mut MainContext,world:&mut World) {
         unsafe {
-            let mut textures = world.get_resource_unchecked_mut::<Assets<Texture>>().unwrap();
-            let textures_mut = textures.as_mut();
-    
+           
             let mut query_system = world.get_resource_unchecked_mut::<QuerySystem>().unwrap();
             let query_system_mut = query_system.as_mut();
             
            
-            self.set_userdata("*TEXTURES*", textures_mut);
             self.set_userdata("*QUERY*",  query_system_mut);
             self.set_userdata("*WORLD*", world);
             self.set_userdata("*RENDER_CTX*", ctx);

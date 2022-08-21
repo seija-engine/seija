@@ -4,7 +4,7 @@ use std::collections::hash_map::DefaultHasher;
 use std::hash::{Hash,Hasher};
 use smol_str::SmolStr;
 use wgpu::{FrontFace, PolygonMode};
-use super::{RenderOrder, errors::MaterialDefReadError, storage::DEFAULT_TEXTURES, texture_prop_def::TexturePropDef, types::{Cull, SFrontFace, SPolygonMode, ZTest, RenderPath, STextureFormat}, TexturePropInfo};
+use super::{RenderOrder, errors::MaterialDefReadError, texture_prop_def::TexturePropDef, types::{Cull, SFrontFace, SPolygonMode, ZTest, RenderPath, STextureFormat}, TexturePropInfo};
 use lite_clojure_eval::EvalRT;
 use serde_json::{Value};
 use uuid::Uuid;
@@ -114,15 +114,16 @@ fn read_texture_prop(json_value:&Value) -> Result<TexturePropDef,()> {
             let prop_type = map.get(":type").and_then(|v| v.as_str()).ok_or(())?;
             let prop_name = map.get(":name").and_then(|v| v.as_str()).ok_or(())?;
             let def_name = map.get(":default").and_then(|v| v.as_str());
-            let mut def_index = 0;
+            let mut def_asset = SmolStr::new("texture:white");
             if let Some(def_name) = def_name {
-                let idx = DEFAULT_TEXTURES.get(def_name).map(|s| *s).unwrap_or(0);
-                def_index = idx;
+                let mut s = String::from("texture:");
+                s.push_str(def_name);
+                def_asset = s.into();
             }
             let mut texture_prop = TexturePropInfo {
                 name:prop_name.to_string(),
                 index:texture_index,
-                def_index:def_index,
+                def_asset,
                 is_cube_map:false
             };
             match prop_type {

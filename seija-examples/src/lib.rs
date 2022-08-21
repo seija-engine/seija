@@ -1,16 +1,15 @@
 use std::sync::Arc;
 
-use bevy_ecs::{prelude::{Commands, Entity}, system::{EntityCommands, Res, Local, Query}};
-use glam::{Quat, Vec3, Vec4, Vec2};
-use lite_clojure_eval::EvalRT;
+use bevy_ecs::{prelude::{Commands, Entity, World}, system::{EntityCommands, Res, Local, Query}};
+use glam::{Quat, Vec3, Vec2};
 use seija_app::App;
-use seija_asset::{Assets, Handle, AssetModule};
+use seija_asset::{Assets, Handle, AssetModule, AssetServer};
 use seija_core::{window::AppWindow, info::EInfo, CoreModule, time::Time};
 use seija_gltf::GLTFModule;
 use seija_input::{InputModule, Input, event::MouseButton};
 use seija_pbr::{PBRCameraInfo, create_pbr_plugin};
 use seija_render::{camera::{camera::Perspective,camera::Camera}, 
-                   material::{MaterialStorage, read_material_def}, resource::{Mesh, Texture, TextureDescInfo}
+                   material::{MaterialDefineAsset}, resource::{Texture, TextureDescInfo}
                   ,RenderConfig, GraphSetting, RenderModule};
 use seija_render_template::add_render_templates;
 use seija_template::TemplateModule;
@@ -70,13 +69,6 @@ pub fn add_pbr_camera(commands:&mut Commands,window:&AppWindow,pos:Vec3,r:Quat,f
     camera_entity.id()
 }
 
-pub fn load_material(path:&str,mats:&MaterialStorage) {
-    println!("load_material:{}",path);
-    let code_string = std::fs::read_to_string(path).unwrap();
-    let mut vm = EvalRT::new();
-    let mat_def = read_material_def(&mut vm, &code_string,false).unwrap();
-    mats.add_def(mat_def);
-}
 
 
 pub fn load_texture(textures:&mut Assets<Texture>,path:&str) -> Handle<Texture> {
@@ -84,33 +76,10 @@ pub fn load_texture(textures:&mut Assets<Texture>,path:&str) -> Handle<Texture> 
     textures.add(texture)
 }
 
-pub fn add_render_mesh(
-                       commands:&mut Commands,
-                       mesh:Handle<Mesh>,
-                       texture:Handle<Texture>,
-                       mat_name:&str,
-                       pos:Vec3,
-                       mats:&MaterialStorage) -> Entity {
-   
-    let mut elem = commands.spawn();
-    let mut t = Transform::default();
-    t.local.position = pos;
-    t.local.rotation = Quat::from_rotation_y(45f32);
-    elem.insert(t);
-    
-    elem.insert(mesh);
 
-    let material = mats.create_material(mat_name).unwrap();
-   
-    
-    let mut mats = mats.mateials.write();
-    let mat = mats.get_mut(&material.id).unwrap();
-    elem.insert(material);
-    mat.texture_props.set("mainTexture", texture);
-    mat.props.set_float4("color", Vec4::new(1f32, 1f32, 1f32, 1f32), 0);
-    
-    
-    elem.id()
+pub fn load_material(path:&str,world:&mut World) {
+   let server = world.get_resource::<AssetServer>().unwrap().clone();
+   server.load_sync::<MaterialDefineAsset>(world, path, None,false);
 }
 
 

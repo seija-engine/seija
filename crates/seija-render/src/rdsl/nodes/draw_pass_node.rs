@@ -5,7 +5,7 @@ use seija_asset::{Handle, Assets};
 use wgpu::{Operations, Color, CommandEncoder};
 use crate::{IUpdateNode, RenderContext, query::QuerySystem, 
             resource::{Mesh, RenderResourceId, RenderResources}, 
-            material::{Material, MaterialStorage}, pipeline::PipelineCache, rdsl::atom::Atom};
+            material::{Material}, pipeline::PipelineCache, rdsl::atom::Atom};
 
 #[derive(Debug,PartialEq, Eq)] 
 pub enum PassError {
@@ -95,8 +95,8 @@ impl DrawPassNode {
     pub fn draw(&self,world:&mut World,ctx:&mut RenderContext,command:&mut CommandEncoder) -> Result<u32,PassError> {
         let mut render_query = world.query::<(&Handle<Mesh>,&Handle<Material>)>();
         let meshs = world.get_resource::<Assets<Mesh>>().unwrap();
-        let material_storages = world.get_resource::<MaterialStorage>().unwrap();
-        let mats = material_storages.mateials.read();
+        let materials = world.get_resource::<Assets<Material>>().unwrap();
+       
         let query_system = world.get_resource::<QuerySystem>().unwrap();
         let pipeline_cahce = world.get_resource::<PipelineCache>().unwrap();
         let view_query = query_system.querys[self.query_index].read();
@@ -108,7 +108,7 @@ impl DrawPassNode {
         for entity in view_query.list.iter() {
             if let Ok((hmesh,hmat)) = render_query.get(world, *entity) { 
                 let mesh = meshs.get(&hmesh.id).ok_or(PassError::MissMesh)?;
-                let material = mats.get(&hmat.id).ok_or(PassError::MissMaterial)?;
+                let material = materials.get(&hmat.id).ok_or(PassError::MissMaterial)?;
                 
                 if !material.is_ready(&ctx.resources) { continue }
                
@@ -120,12 +120,13 @@ impl DrawPassNode {
                                  //log::warn!("skip tag :{}",&pipeline.tag);
                                  continue; 
                             }
-                            
+                           
                             let vert_buffer = ctx.resources.get_buffer_by_resid(&mesh_buffer_id).unwrap();
                            
                             let oset_index = pipeline.set_binds(self.camera_entity, entity, &mut render_pass, &ctx.ubo_ctx);
                             if oset_index.is_none()  { continue }
-                            let mut set_index = oset_index.unwrap();                
+                            let mut set_index = oset_index.unwrap();   
+                                   
                             if material.props.def.infos.len() > 0 {
                                 if let Some(bind_group) = material.bind_group.as_ref() {
                                     render_pass.set_bind_group(set_index, bind_group, &[]);

@@ -40,7 +40,7 @@ impl AssetLoader for MaterialLoader {
         let json_value:Value = serde_json::from_slice(&bytes)?;
         let json_map = json_value.as_object().context(0)?;
         let material_def_path = json_map.get("material").and_then(Value::as_str).context(1)?;
-        let h_def = server.load_sync::<MaterialDefineAsset>(world, material_def_path, None).context(2)?;
+        let h_def = server.load_sync::<MaterialDefineAsset>(world, material_def_path, None,false).context(2)?;
         let defs = world.get_resource::<Assets<MaterialDefineAsset>>().context(3)?;
         let def_asset = defs.get(&h_def.id).context(4)?;
         let material = Material::from_def_new(def_asset.define.clone(), &server).context(5)?;
