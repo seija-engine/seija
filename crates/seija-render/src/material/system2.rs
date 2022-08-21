@@ -116,13 +116,19 @@ impl MaterialSystem {
             for define in self.datas.values_mut() {
                 let mut cur_has_dirty = false;
                 for (_, item) in define.items.iter_mut() {
+                    
                     if let Some(dirty_id) = item.dirty_hid.as_ref() {
                         if let Some(mat) = materials.get(dirty_id) {
                             if cur_has_dirty == false {
                                 res.map_buffer(&define.cache_buffer, wgpu::MapMode::Write);
+                                log::error!("map!!!!!!!!!!");
+                                cur_has_dirty = true;
+                            }
 
+                            if cur_has_dirty {
                                 let start = item.index as u64 * define.buffer_item_size;
                                 let buffer = mat.props.get_buffer();
+                                log::error!("write");
                                 res.write_mapped_buffer(
                                     &define.cache_buffer,
                                     start..(start + buffer.len() as u64),
@@ -131,21 +137,23 @@ impl MaterialSystem {
                                     },
                                 );
                             }
-                            cur_has_dirty = true;
-                        }
-                        if cur_has_dirty {
-                            res.unmap_buffer(&define.cache_buffer);
-                            res.copy_buffer_to_buffer(
-                                commands,
-                                &define.cache_buffer,
-                                0,
-                                &define.gpu_buffer,
-                                0,
-                                define.cap as u64 * define.buffer_item_size,
-                            );
+                            
                         }
                         item.dirty_hid = None;
                     }
+                    
+                }
+                if cur_has_dirty {
+                    log::error!("unmap!!!!!!!!!!");
+                    res.unmap_buffer(&define.cache_buffer);
+                    res.copy_buffer_to_buffer(
+                        commands,
+                        &define.cache_buffer,
+                        0,
+                        &define.gpu_buffer,
+                        0,
+                        define.cap as u64 * define.buffer_item_size,
+                    );
                 }
             }
         });

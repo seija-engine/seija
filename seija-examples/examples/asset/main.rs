@@ -48,6 +48,25 @@ fn on_start(world:&mut World) {
         world.spawn().insert(hmesh).insert(hmat).insert(t);
     };
 
+    //Cube
+    {
+        let mut meshs = world.get_resource_mut::<Assets<Mesh>>().unwrap();
+        let mesh =  Cube::new(1f32);
+        let hmesh = meshs.add(mesh.into());
+
+        let mut material = Material::from_world(world, "materials/pbrColor.mat.clj").unwrap();
+        material.props.set_float4("color", Vec4::ONE, 0);
+        let mut materials = world.get_resource_mut::<Assets<Material>>().unwrap();
+        let hmat = materials.add(material);
+
+        let mut t = Transform::default();
+        t.local.scale = Vec3::new(2f32, 1f32, 1f32);
+        t.local.position = Vec3::new(1f32, 0f32, -0.5f32);
+        t.local.rotation = Quat::from_euler(glam::EulerRot::XYZ, 0f32, -31f32.to_radians(), 0f32);
+       
+        world.spawn().insert(hmesh).insert(hmat).insert(t);
+    };
+
 }
 
 fn pre_start(mut commands:Commands,mut _local_data:ResMut<LocalData>,_:Res<AssetServer>,window:Res<AppWindow>) {
