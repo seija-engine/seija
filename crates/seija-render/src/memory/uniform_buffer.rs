@@ -118,7 +118,7 @@ impl TypedUniformBuffer {
         for info in clone_def.infos.iter() {
             match info {
                 UniformInfo::Raw(raw) => {
-                    self.set_default_raw(0,raw);
+                    self.set_default_raw(0,&raw);
                 },
                 UniformInfo::Array(arr) => {
                     for uinfo in arr.elem_def.infos.iter() {
@@ -126,7 +126,7 @@ impl TypedUniformBuffer {
                            
                             for idx in 0..arr.array_size {
                                 let offset = arr.offset + idx * arr.stride;
-                                self.set_default_raw(offset * 4,raw_info);
+                                self.set_default_raw(offset * 4,&raw_info);
                             }
                         }
                     }

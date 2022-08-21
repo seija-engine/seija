@@ -112,7 +112,7 @@ impl DrawPassNode {
                 
                 if !material.is_ready(&ctx.resources) { continue }
                
-                if let Some(pipelines)  = pipeline_cahce.get_pipeline(&material.def.name, mesh) {
+                if let Some(pipelines)  = pipeline_cahce.get_pipeline(material.def.name.as_str(), mesh) {
                     if let Some(mesh_buffer_id)  = ctx.resources.get_render_resource(&hmesh.id, 0) {
                         for pipeline in pipelines.pipelines.iter() {
 

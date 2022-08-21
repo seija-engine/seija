@@ -25,7 +25,7 @@ use crate::{material::{MaterialDef, PassDef}, resource::Mesh};
 
 
 #[derive(Hash,PartialEq, Eq,Debug)]
-pub struct PipelineKey<'a>(&'a String,u64);
+pub struct PipelineKey<'a>(&'a str,u64);
 
 pub struct RenderPipelines {
    pub pipelines:Vec<RenderPipeline>
@@ -87,7 +87,7 @@ impl PipelineCache {
 impl PipelineCache {
 
 
-    pub fn get_pipeline(&self,def_name:&String,mesh:&Mesh) -> Option<&RenderPipelines> {
+    pub fn get_pipeline(&self,def_name:&str,mesh:&Mesh) -> Option<&RenderPipelines> {
         let mut hasher = FnvHasher::default();
         PipelineKey(def_name,mesh.layout_hash_u64()).hash(&mut hasher);
         let key = hasher.finish();
@@ -96,7 +96,7 @@ impl PipelineCache {
 
     pub fn update(&mut self,mesh:&Mesh,mat_def:&MaterialDef,ctx:&RenderContext) {
         let mut hasher = FnvHasher::default();
-        PipelineKey(&mat_def.name,mesh.layout_hash_u64()).hash(&mut hasher);
+        PipelineKey(mat_def.name.as_str(),mesh.layout_hash_u64()).hash(&mut hasher);
         let key = hasher.finish();
         if !self.cache_pipelines.contains_key(&key) {
             let pipes = self.compile_pipelines(mesh, mat_def,ctx);
@@ -218,7 +218,7 @@ impl PipelineCache {
             layouts.push(&ctx.material_sys.layout);
         }
         if mat_def.tex_prop_def.indexs.len() > 0 {
-            if let Some(texture_layout) = ctx.material_sys.texture_layouts.get(&mat_def.name) {
+            if let Some(texture_layout) = ctx.material_sys.texture_layouts.get(mat_def.name.as_str()) {
                 layouts.push(texture_layout);
             }
         }

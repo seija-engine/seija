@@ -73,9 +73,9 @@ impl MaterialSystem {
             if !mat_ref.is_ready(resources) {
                 continue;
             }
-            mat_ref.update(resources,device,&self.layout,self.texture_layouts.get(&mat_ref.def.name));
+            mat_ref.update(resources,device,&self.layout,self.texture_layouts.get(mat_ref.def.name.as_str()));
             if mat_ref.props.is_dirty() && mat_ref.props.def.infos.len() > 0  {
-                let buffer_info = self.buffers.get_mut(&mat_ref.def.name).unwrap();  
+                let buffer_info = self.buffers.get_mut(mat_ref.def.name.as_str()).unwrap();  
                 buffer_info.update(mat_ref, &e,resources,commands);
                 mat_ref.props.clear_dirty();
             }   

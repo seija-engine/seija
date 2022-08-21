@@ -12,7 +12,7 @@ use crate::{memory::UniformBufferDef};
 
 #[derive(Debug)]
 pub struct MaterialDef {
-    pub name:String,
+    pub name:SmolStr,
     pub path:RenderPath,
     pub order:RenderOrder,
     pub pass_list:Vec<PassDef>,
@@ -95,7 +95,7 @@ pub fn read_material_def(vm:&mut EvalRT,file_string:&str,read_slot:bool) -> Resu
     let buffer_def = UniformBufferDef::try_from(prop_value).map_err(|_| MaterialDefReadError::InvalidProp)?;
     let texture_prop_def = read_texture_prop(prop_value).map_err(|_| MaterialDefReadError::InvalidProp)?;
     Ok(MaterialDef {
-        name:def_name.to_string(),
+        name:def_name.into(),
         path,
         order,
         pass_list,

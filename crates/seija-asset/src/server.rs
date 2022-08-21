@@ -132,7 +132,7 @@ impl AssetServer {
             }
         }
         if let Some(loader) = self.inner.loaders.read().get(&T::TYPE_UUID).cloned() {
-            match loader.load_sync(path, self.clone(), params).log_err().ok() {
+            match loader.load_sync(world,path, self.clone(), params).log_err().ok() {
                 Some(dyn_asset) => {
                     if let (Ok(asset),Some(mut assets))  = (dyn_asset.downcast::<T>(), world.get_resource_mut::<Assets<T>>()) {
                        return Some(assets.add(*asset));

@@ -73,7 +73,9 @@ pub struct ArrayObject {
     len:usize,
     buffer_item_size:u64,
     cache_buffer:Option<BufferId>,
-    buffer:Option<BufferId>
+    buffer:Option<BufferId>,
+
+    buffer_dirty:bool
 }
 
 impl ArrayObject {
@@ -89,7 +91,8 @@ impl ArrayObject {
             len:0,
             buffer_item_size,
             cache_buffer:None,
-            buffer:None
+            buffer:None,
+            buffer_dirty:false
         }
     }
 
@@ -129,7 +132,7 @@ impl ArrayObject {
     fn alloc_buffer(&mut self,count:usize,res:&mut RenderResources) {
         if self.cap == 0 { self.cap = 4; }
         while self.cap < count { self.cap *= 2; }
-
+        log::info!("array object alloc:{}",self.cap);
         let cache_buffer = res.create_buffer(&wgpu::BufferDescriptor {
             label:None,
             size: self.cap as u64 * self.buffer_item_size as u64,
@@ -145,6 +148,7 @@ impl ArrayObject {
             mapped_at_creation:false
         });
         self.buffer = Some(uniform_buffer);
+        self.buffer_dirty = true;
     }
 
     pub fn update(&mut self,res:&mut RenderResources,cmd:&mut CommandEncoder) {
@@ -152,16 +156,23 @@ impl ArrayObject {
         //update bind group
         for object in self.infos.values_mut().chain(self.free_items.iter_mut()) {
             if object.buffer.is_dirty() { is_buffer_changed = true; }
-
-            if !res.is_textures_ready(&object.textures) || !object.texture_dirty { continue; }
-            if let Some(bufferid) = self.buffer.as_ref() {
-                object.update_bind_group(self.buffer_item_size,bufferid,res,&self.layout);
+            if self.buffer_dirty {
+                if let Some(bufferid) = self.buffer.as_ref() {
+                    object.update_bind_group(self.buffer_item_size,bufferid,res,&self.layout);
+                }
+                is_buffer_changed = true;                
+            } else {
+                if !res.is_textures_ready(&object.textures) || !object.texture_dirty { continue; }
+                if let Some(bufferid) = self.buffer.as_ref() {
+                    object.update_bind_group(self.buffer_item_size,bufferid,res,&self.layout);
+                }
             }
         }
 
         if is_buffer_changed {
             self.update_buffer(res, cmd);
         }
+        self.buffer_dirty = false;
     }
 
     pub fn update_buffer(&mut self,res:&mut RenderResources,cmd:&mut CommandEncoder) {

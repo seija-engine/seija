@@ -102,7 +102,7 @@ impl BindGroupBuilder {
         for item in self.entrys.iter() {
             match item {
                 BindGroupItem::ResId(RenderResourceId::Buffer(buffer_id)) => {
-                    let buffer = resources.get_buffer(buffer_id).unwrap();
+                    let buffer = resources.get_buffer(&buffer_id).unwrap();
                     entrys.push(BindGroupEntry {
                         binding:index,
                         resource:wgpu::BindingResource::Buffer(wgpu::BufferBinding {
@@ -114,7 +114,7 @@ impl BindGroupBuilder {
                     index += 1;
                 },
                 BindGroupItem::ResId(RenderResourceId::BufferAddr(buffer_id,start,count)) => {
-                    let buffer = resources.get_buffer(buffer_id).unwrap();
+                    let buffer = resources.get_buffer(&buffer_id).unwrap();
                     entrys.push(BindGroupEntry {
                         binding:index,
                         resource:wgpu::BindingResource::Buffer(wgpu::BufferBinding {

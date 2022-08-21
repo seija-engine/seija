@@ -2,7 +2,7 @@ use std::sync::Arc;
 use super::{MaterialDef, RenderOrder};
 
 use bevy_ecs::prelude::Component;
-use seija_asset::Handle;
+use seija_asset::{Handle, AssetServer};
 use seija_core::{TypeUuid};
 use wgpu::{BufferUsage, Device};
 use crate::pipeline::render_bindings::{BindGroupBuilder};
@@ -22,6 +22,7 @@ pub struct Material {
 }
 
 impl Material {
+    #[deprecated]
     pub fn from_def(def:Arc<MaterialDef>,default_textures:&Vec<Handle<Texture>>) -> Material {
         let props = TypedUniformBuffer::from_def(def.prop_def.clone());
         let texture_props = TextureProps::from_def(&def,default_textures);
@@ -33,6 +34,19 @@ impl Material {
             bind_group:None,
             texture_props
         }
+    }
+
+    pub fn from_def_new(def:Arc<MaterialDef>,server:&AssetServer) -> Option<Material> {
+        let props = TypedUniformBuffer::from_def(def.prop_def.clone());
+        let texture_props = TextureProps::from_def_new(&def,server)?;
+        Some(Material {
+            order:def.order,
+            def,
+            props,
+            buffer:None,
+            bind_group:None,
+            texture_props
+        })
     }
 
     pub fn is_ready(&self,resources:&RenderResources) -> bool {
@@ -48,7 +62,7 @@ impl Material {
             self.bind_group = Some(bind_group_builder.build(mat_layout, device, resources) );
             self.props.clear_dirty();
         }
-        self.texture_props.update(resources,device,texture_layout);
+        self.texture_props.update(resources,texture_layout);
     }
 
 }
@@ -62,6 +76,7 @@ pub struct TextureProps {
 }
 
 impl TextureProps {
+    #[deprecated]
     pub fn from_def(def:&Arc<MaterialDef>,default_textures:&Vec<Handle<Texture>>) -> TextureProps {
         let mut textures:Vec<Handle<Texture>> = Vec::with_capacity(def.tex_prop_def.indexs.len());
         for (_,info) in def.tex_prop_def.indexs.iter() {
@@ -73,6 +88,20 @@ impl TextureProps {
             textures,
             bind_group:None
         }
+    }
+
+    pub fn from_def_new(def:&Arc<MaterialDef>,server:&AssetServer) -> Option<TextureProps> {
+        let mut textures:Vec<Handle<Texture>> = Vec::with_capacity(def.tex_prop_def.indexs.len());
+        for (_,info) in def.tex_prop_def.indexs.iter() {
+            let handle = server.get_asset_handle("texture:white")?;
+            textures.push(handle.typed().clone_weak());
+        }
+        Some(TextureProps {
+            is_dirty:true,
+            def:def.clone(),
+            textures,
+            bind_group:None
+        })
     }
 
     pub fn is_dirty(&self) -> bool { self.is_dirty }
@@ -97,7 +126,7 @@ impl TextureProps {
         true
     }
 
-    pub fn update(&mut self,resources:&mut RenderResources,device:&Device,texture_layout:Option<&wgpu::BindGroupLayout>) {
+    pub fn update(&mut self,resources:&mut RenderResources,texture_layout:Option<&wgpu::BindGroupLayout>) {
         if self.textures.is_empty() {
             return;
         }
@@ -106,7 +135,7 @@ impl TextureProps {
             for texture in self.textures.iter() {
                 bind_group_builder.add_texture(texture.clone_weak());
             }
-            let bind_group = bind_group_builder.build(texture_layout.unwrap(), device, resources);
+            let bind_group = bind_group_builder.build(texture_layout.unwrap(), &resources.device, resources);
             self.bind_group = Some(bind_group);
             self.is_dirty = false;
         }

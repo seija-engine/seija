@@ -56,11 +56,11 @@ fn t_component_mesh<'w,'s,'a>(world:&mut World,entity:Entity,component:&TCompone
 }
 
 fn t_component_material<'w,'s,'a>(world:&mut World,entity:Entity,_:&TComponent,queue:&mut CommandQueue) -> Result<()> {
-    let assets = world.get_resource::<AssetServer>().ok_or(anyhow!("asset server"))?;
+    //let _ = world.get_resource::<AssetServer>().ok_or(anyhow!("asset server"))?;
     
-    //let materials = world.get_resource::<MaterialStorage>().unwrap();
-    //let mat = materials.create_material("pbrColor").ok_or(anyhow!(".."))?;
-    //queue.push(Insert {entity,component:mat });
+    let materials = world.get_resource::<MaterialStorage>().unwrap();
+    let mat = materials.create_material("pbrColor").ok_or(anyhow!(".."))?;
+    queue.push(Insert {entity,component:mat });
     Ok(())
 }
 

@@ -52,13 +52,13 @@ impl MaterialStorage {
 
 impl MaterialStorage {
     pub fn add_def(&self,mat_def:MaterialDef) {
-        if  self.name_map.read().contains_key(&mat_def.name) {
+        if  self.name_map.read().contains_key(mat_def.name.as_str()) {
             return;
         }
         
         let clone_name = mat_def.name.clone();
         let mut name_map_write = self.name_map.write();
-        name_map_write.insert(clone_name, MaterialDefInfo {
+        name_map_write.insert(clone_name.into(), MaterialDefInfo {
             def:Arc::new(mat_def),
             mat_count:0
         });
@@ -129,7 +129,7 @@ pub fn material_storage_event(server:Res<AssetServer>,storage:ResMut<MaterialSto
             Ok(LifecycleEvent::Free(id)) => {
                 let mat = storage.mateials.write().remove(id).unwrap();
                 let mut name_map = storage.name_map.write();
-                if let Some(info) = name_map.get_mut(&mat.def.name) {
+                if let Some(info) = name_map.get_mut(mat.def.name.as_str()) {
                     info.mat_count -= 1;
                 }
             },
