@@ -13,15 +13,14 @@
 
         <Entity name="Sphere0">
             <Components>
-                <Transform position="0,0.5,0" />
+                <Transform position="0,0.5,0" scale="2,2,2"/>
                 <Mesh res="res://mesh:sphere"/>
                 <Material res="res://mats/pbr_red.json"  />
             </Components>
         </Entity>
-
         <Entity name="Cube0">
             <Components>
-                <Transform position="1.5,0.5,-3" rotation="0,0,0"/>
+                <Transform position="-1.5,0.5,-4.5" rotation="0,0,0"/>
                 <Mesh res="res://mesh:cube"/>
                 <Material res="res://mats/pbr_red.json" />
             </Components>
@@ -29,7 +28,7 @@
 
         <Entity name="Cube0">
             <Components>
-                <Transform position="1.5,0.5,-3" rotation="0,0,0"/>
+                <Transform position="-2.5,0.5,-4.5" rotation="0,0,0"/>
                 <Mesh res="res://mesh:cube"/>
                 <Material res="res://mats/pbr_red.json" />
             </Components>
@@ -37,7 +36,55 @@
 
         <Entity name="Cube0">
             <Components>
-                <Transform position="1.5,0.5,-3" rotation="0,0,0"/>
+                <Transform position="-3.5,0.5,-4.5" rotation="0,0,0"/>
+                <Mesh res="res://mesh:cube"/>
+                <Material res="res://mats/pbr_red.json" />
+            </Components>
+        </Entity>
+
+        <Entity name="Cube0">
+            <Components>
+                <Transform position="-4.5,0.5,-4.5" rotation="0,0,0"/>
+                <Mesh res="res://mesh:cube"/>
+                <Material res="res://mats/pbr_red.json" />
+            </Components>
+        </Entity>
+
+        <Entity name="Cube0">
+            <Components>
+                <Transform position="-0.5,0.5,-4.5" rotation="0,0,0"/>
+                <Mesh res="res://mesh:cube"/>
+                <Material res="res://mats/pbr_red.json" />
+            </Components>
+        </Entity>
+
+        <Entity name="Cube0">
+            <Components>
+                <Transform position="0.5,0.5,-4.5" rotation="0,0,0"/>
+                <Mesh res="res://mesh:cube"/>
+                <Material res="res://mats/pbr_red.json" />
+            </Components>
+        </Entity>
+
+        <Entity name="Cube0">
+            <Components>
+                <Transform position="1.5,0.5,-4.5" rotation="0,0,0"/>
+                <Mesh res="res://mesh:cube"/>
+                <Material res="res://mats/pbr_red.json" />
+            </Components>
+        </Entity>
+
+        <Entity name="Cube0">
+            <Components>
+                <Transform position="2.5,0.5,-4.5" rotation="0,0,0"/>
+                <Mesh res="res://mesh:cube"/>
+                <Material res="res://mats/pbr_red.json" />
+            </Components>
+        </Entity>
+
+        <Entity name="Cube0">
+            <Components>
+                <Transform position="3.5,0.5,-4.5" rotation="0,0,0"/>
                 <Mesh res="res://mesh:cube"/>
                 <Material res="res://mats/pbr_red.json"/>
             </Components>
@@ -45,7 +92,7 @@
 
         <Entity name="Cube0">
             <Components>
-                <Transform position="1.5,0.5,-3" rotation="0,0,0"/>
+                <Transform position="4.5,0.5,-4.5" rotation="0,0,0"/>
                 <Mesh res="res://mesh:cube"/>
                 <Material res="res://mats/pbr_red.json" />
             </Components>

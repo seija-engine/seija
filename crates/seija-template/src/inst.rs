@@ -18,7 +18,7 @@ pub fn instance_template_sync(world:&mut World,template:&Template) -> Result<Ent
 }
 
 fn instance_entity_sync(world:&mut World,t_entity:&TEntity,creator:&TComponentCreator,queue:&mut CommandQueue) -> Result<Entity> {
-    println!("create entity:{:?}",t_entity);
+    //println!("create entity:{:?}",t_entity);
     let mut childrens:SmallVec<[Entity;8]> = SmallVec::new();
     for child in t_entity.children.iter() {
         childrens.push(instance_entity_sync(world,child,creator,queue)?);

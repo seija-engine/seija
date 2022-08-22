@@ -98,7 +98,7 @@ impl MaterialSystem {
                 for (_, item) in define.items.iter_mut() {
                     
                     if let Some(dirty_id) = item.dirty_hid.as_ref() {
-                        if let Some(mat) = materials.get(dirty_id) {
+                        if let Some(mat) = materials.get_mut(dirty_id) {
                             if cur_has_dirty == false {
                                 res.map_buffer(&define.cache_buffer, wgpu::MapMode::Write);
                                 cur_has_dirty = true;
@@ -114,6 +114,7 @@ impl MaterialSystem {
                                         bytes[0..buffer.len()].copy_from_slice(buffer);
                                     },
                                 );
+                                mat.props.clear_dirty();
                             }
                             
                         }
@@ -252,5 +253,6 @@ impl MaterialDefine {
                 item.dirty_hid = dirty_hid;
             }
         }
+
     }
 }
