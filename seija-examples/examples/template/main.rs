@@ -14,7 +14,7 @@ pub fn main() {
 }
 
 fn start(world:&mut World) {
-    load_material("res/materials/pbrColor.mat.clj", world);
+    load_material("materials/pbrColor.mat.clj", world);
 
      //light
      {

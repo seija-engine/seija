@@ -1,169 +1,256 @@
-use bevy_ecs::prelude::{Entity, Mut, World};
-use fnv::FnvHashMap;
-use seija_asset::{Handle};
-use crate::{material::{storage::MaterialDefInfo}, pipeline::render_bindings::BindGroupLayoutBuilder, resource::{BufferId, RenderResources}};
-use wgpu::{BufferUsage, CommandEncoder, Device};
-use super::{Material, MaterialStorage};
+use std::{
+    collections::{HashMap},
+    sync::Arc,
+};
 
+use super::{Material, MaterialDef};
+use crate::{
+    memory::align_num_to,
+    pipeline::render_bindings::{BindGroupBuilder, BindGroupLayoutBuilder},
+    resource::{BufferId, RenderResources},
+};
+use bevy_ecs::{
+    change_detection::Mut,
+    entity::Entity,
+    prelude::{World},
+};
+use seija_asset::{Assets, Handle, HandleId};
+use smol_str::SmolStr;
+use wgpu::CommandEncoder;
 
 pub struct MaterialSystem {
-    buffers:FnvHashMap<String,BufferInfo>,
-    pub layout:wgpu::BindGroupLayout,
-    pub texture_layouts:FnvHashMap<String,wgpu::BindGroupLayout>,
-
+    common_buffer_layout: wgpu::BindGroupLayout,
+    datas: HashMap<SmolStr, MaterialDefine>,
 }
 
 impl MaterialSystem {
-
-    pub fn new(device:&Device) -> MaterialSystem {
-        let mut material_layout_builder = BindGroupLayoutBuilder::new();
-        material_layout_builder.add_uniform(wgpu::ShaderStage::VERTEX_FRAGMENT);
+    pub fn new(device: &wgpu::Device) -> Self {
+        let mut layout_builder = BindGroupLayoutBuilder::new();
+        layout_builder.add_uniform(wgpu::ShaderStage::VERTEX_FRAGMENT);
+        let common_buffer_layout = layout_builder.build(device);
         MaterialSystem {
-            buffers:fnv::FnvHashMap::default(),
-            layout:material_layout_builder.build(device),
-            texture_layouts:FnvHashMap::default()
+            common_buffer_layout,
+            datas: HashMap::default(),
         }
     }
 
-
-    pub fn update(&mut self,world:&mut World,device:&Device,commands: &mut CommandEncoder,resources:&mut RenderResources) {
-        world.resource_scope(|w,mut storage:Mut<MaterialStorage>| {
-            self.update_material_texture_layout(&mut storage,device);
-            self.update_material_props(w,device, storage,commands,resources);
-        });
+    pub fn get_texture_layout(&self, name: &str) -> Option<&wgpu::BindGroupLayout> {
+        self.datas.get(name).map(|v| &v.texture_layout)
     }
 
-    fn update_material_texture_layout(&mut self,storage:&mut Mut<MaterialStorage>,device:&Device) {
-        let name_map_ref = storage.name_map.read();
-        for (def_name,mat_def_info) in  name_map_ref.iter() {
-            if self.texture_layouts.contains_key(def_name) { 
-                continue; 
-            }
-            let layout = mat_def_info.def.tex_prop_def.layout_builder.build(device);
-            self.texture_layouts.insert(def_name.clone(), layout);
-        }
+    fn add_material_define(&mut self, define: Arc<MaterialDef>, res: &mut RenderResources) {
+        log::info!("add_material_define:{}",define.name.as_str());
+        self.datas.insert(define.name.clone(), MaterialDefine::new(define, res));
     }
-    
-    fn update_material_props(&mut self,world:&mut World,device:&Device,storage:Mut<MaterialStorage>,commands: &mut CommandEncoder,resources:&mut RenderResources) {
+
+    pub fn get_buffer_layout(&self) -> &wgpu::BindGroupLayout {
+        &self.common_buffer_layout
+    }
+
+    pub fn update(
+        &mut self,
+        world: &mut World,
+        res: &mut RenderResources,
+        commands: &mut CommandEncoder,
+    ) {
         {
-            let rm_list:Vec<Entity> = world.removed::<Handle<Material>>().collect();
-            let name_map_ref = storage.name_map.read();
-            for (def_name,mat_def) in  name_map_ref.iter() {
-                if mat_def.def.prop_def.infos.len() == 0 { continue; }
-                let buffer = if let Some(buffer) = self.buffers.get_mut(def_name) {
-                    buffer.update_size(mat_def.mat_count, resources);
-                    buffer
-                } else {
-                    let new_buffer = BufferInfo::new(mat_def,resources);
-                    self.buffers.insert(def_name.clone(), new_buffer);
-                    self.buffers.get_mut(def_name).unwrap()
-                };
-
+            let rm_list: Vec<Entity> = world.removed::<Handle<Material>>().collect();
+            for define in self.datas.values_mut() {
                 for rm_entity in rm_list.iter() {
-                    buffer.remove_mat(rm_entity.id())
+                    define.remove_material(rm_entity.id())
                 }
             }
-        }
-        
-        
-        let mut query = world.query::<(Entity,&Handle<Material>)>();
-        let mut mats = storage.mateials.write();
-        for (e,mat_handle) in query.iter(world) {
-            let mat_ref = mats.get_mut(&mat_handle.id).unwrap();
-            if !mat_ref.is_ready(resources) {
-                continue;
+        };
+   
+
+        let mut query = world.query::<(Entity, &Handle<Material>)>();
+        world.resource_scope(|w, mut materials: Mut<Assets<Material>>| {
+            //update material
+            for (e, h_mat) in query.iter(w) {
+                let h_mat: &Handle<Material> = h_mat;
+                if let Some(mat) = materials.get_mut(&h_mat.id) {
+                    if !self.datas.contains_key(mat.def.name.as_str()) {
+                        self.add_material_define(mat.def.clone(), res);
+                    }
+                    
+                    if let Some(define) = self.datas.get_mut(mat.def.name.as_str()) {
+                        if mat.is_ready(res) {
+                            mat.texture_props.update(res, Some(&define.texture_layout));
+                        }
+
+                        if !define.items.contains_key(&e.id()) {
+                            define.add_material(e.id(), res);
+                        }
+
+                        let did = if mat.props.is_dirty() {
+                            Some(h_mat.id.clone())
+                        } else {
+                            None
+                        };
+                        define.update_buffer(e.id(), res, &self.common_buffer_layout, mat, did);
+                    } 
+                 
+                }
             }
-            mat_ref.update(resources,device,&self.layout,self.texture_layouts.get(mat_ref.def.name.as_str()));
-            if mat_ref.props.is_dirty() && mat_ref.props.def.infos.len() > 0  {
-                let buffer_info = self.buffers.get_mut(mat_ref.def.name.as_str()).unwrap();  
-                buffer_info.update(mat_ref, &e,resources,commands);
-                mat_ref.props.clear_dirty();
-            }   
+
+            for define in self.datas.values_mut() {
+                let mut cur_has_dirty = false;
+                for (_, item) in define.items.iter_mut() {
+                    
+                    if let Some(dirty_id) = item.dirty_hid.as_ref() {
+                        if let Some(mat) = materials.get(dirty_id) {
+                            if cur_has_dirty == false {
+                                res.map_buffer(&define.cache_buffer, wgpu::MapMode::Write);
+                                cur_has_dirty = true;
+                            }
+
+                            if cur_has_dirty {
+                                let start = item.index as u64 * define.buffer_item_size;
+                                let buffer = mat.props.get_buffer();
+                                res.write_mapped_buffer(
+                                    &define.cache_buffer,
+                                    start..(start + buffer.len() as u64),
+                                    &mut |bytes, _| {
+                                        bytes[0..buffer.len()].copy_from_slice(buffer);
+                                    },
+                                );
+                            }
+                            
+                        }
+                        item.dirty_hid = None;
+                    }
+                    
+                }
+                if cur_has_dirty {
+                    res.unmap_buffer(&define.cache_buffer);
+                    res.copy_buffer_to_buffer(
+                        commands,
+                        &define.cache_buffer,
+                        0,
+                        &define.gpu_buffer,
+                        0,
+                        define.cap as u64 * define.buffer_item_size,
+                    );
+                }
+            }
+        });
+    }
+}
+
+#[derive(Debug)]
+struct DefineItem {
+    index: usize,
+    dirty_hid: Option<HandleId>,
+}
+
+impl DefineItem {
+    pub fn new(index: usize) -> Self {
+        DefineItem {
+            index,
+            dirty_hid: None,
         }
-    }   
+    }
 }
 
+#[derive(Debug)]
+pub struct MaterialDefine {
+    buffer_item_size: u64,
+    cap: usize,
+    len: usize,
+    texture_layout: wgpu::BindGroupLayout,
+    cache_buffer: BufferId,
+    gpu_buffer: BufferId,
 
+    items: fnv::FnvHashMap<u32, DefineItem>,
+    free_items: Vec<DefineItem>,
 
-pub struct BufferInfo {
-    item_size:usize,
-    cur_count:usize,
-    buffer:Option<BufferId>,
-    len:usize,
-    indices:FnvHashMap<u32,usize>,
-    free_indices:Vec<usize>
+    buffer_dirty: bool,
 }
 
-impl BufferInfo {
-    pub fn new(def_info:&MaterialDefInfo,resources:&mut RenderResources) -> BufferInfo {
-        let mut info = BufferInfo {
-            item_size:def_info.def.prop_def.size(), 
-            cur_count:0, 
-            buffer:None,
-            indices:FnvHashMap::default(),
-            free_indices:Vec::new(),
-            len:0
-         };
-        
-        info.update_size(def_info.mat_count,resources);
-        info
+impl MaterialDefine {
+    pub fn new(define: Arc<MaterialDef>, res: &mut RenderResources) -> Self {
+        let buffer_item_size: u64 =
+            align_num_to(define.prop_def.size() as u64, wgpu::BIND_BUFFER_ALIGNMENT);
+        let texture_layout = define.tex_prop_def.layout_builder.build(&res.device);
+        let default_cap = 4;
+        let (cache_buffer, gpu_buffer) = Self::alloc_buffer(default_cap, buffer_item_size, res);
+        MaterialDefine {
+            buffer_item_size,
+            texture_layout,
+            cache_buffer,
+            gpu_buffer,
+            cap: default_cap,
+            len: 0,
+            items: Default::default(),
+            free_items: Default::default(),
+            buffer_dirty: true,
+        }
     }
 
-    pub fn remove_mat(&mut self,eid:u32) {
-       if let Some(rm_idx) = self.indices.remove(&eid) {
-           self.free_indices.push(rm_idx);
-       }
+    fn alloc_buffer(cap: usize, item_size: u64, res: &mut RenderResources) -> (BufferId, BufferId) {
+        let cache_buffer = res.create_buffer(&wgpu::BufferDescriptor {
+            label: None,
+            size: cap as u64 * item_size as u64,
+            usage: wgpu::BufferUsage::COPY_SRC | wgpu::BufferUsage::MAP_WRITE,
+            mapped_at_creation: false,
+        });
+
+        let uniform_buffer = res.create_buffer(&wgpu::BufferDescriptor {
+            label: None,
+            size: cap as u64 * item_size as u64,
+            usage: wgpu::BufferUsage::COPY_DST | wgpu::BufferUsage::UNIFORM,
+            mapped_at_creation: false,
+        });
+
+        (cache_buffer, uniform_buffer)
     }
 
-    pub fn update_size(&mut self,new_count:usize,resources:&mut RenderResources) {
-        if self.cur_count >= new_count || new_count == 0 {
+    pub fn add_material(&mut self, id: u32, res: &mut RenderResources) {
+        if self.items.contains_key(&id) {
             return;
         }
-        self.cur_count = (((new_count as u32) + 3u32) & !3u32) as usize;
-        let alloc_size = self.cur_count * self.item_size;
-        
-        let buffer = resources.create_buffer(&wgpu::BufferDescriptor { 
-            label:Some("material"),
-            size:alloc_size as u64,
-            usage:BufferUsage::COPY_SRC | BufferUsage::MAP_WRITE,
-            mapped_at_creation:false 
-        }); 
-        self.buffer = Some(buffer);
+        if let Some(free_item) = self.free_items.pop() {
+            self.items.insert(id, free_item);
+            return;
+        }
+        self.len += 1;
+        if self.cap < self.len {
+            while self.cap < self.len {
+                self.cap *= 2;
+            }
+            let (cache_buffer, buffer) = Self::alloc_buffer(self.cap, self.buffer_item_size, res);
+            self.cache_buffer = cache_buffer;
+            self.gpu_buffer = buffer;
+            self.buffer_dirty = true;
+        }
+
+        let index = self.len - 1;
+
+        self.items.insert(id, DefineItem::new(index));
     }
 
-    pub fn update(&mut self,mat:&Material,e:&Entity,resources:&mut RenderResources,commands:&mut CommandEncoder) {
-        let idx = self.get_or_insert_idx(e.id());
-        let buffer_id = self.buffer.as_ref().unwrap();
-        log::info!("set:{:?}",&mat.props.get_buffer());
-        let start = idx * self.item_size;
-        let end = start + self.item_size;
-        resources.map_buffer(buffer_id, wgpu::MapMode::Write);
-
-        resources.write_mapped_buffer(buffer_id, start as u64..end as u64, &mut |data,_| {
-            data[0..self.item_size].copy_from_slice(mat.props.get_buffer());
-        });
-        resources.unmap_buffer(buffer_id);
-
-        resources.copy_buffer_to_buffer(commands, 
-                                          buffer_id, 
-                                          start as u64, 
-                                      mat.buffer.as_ref().unwrap(), 
-                                      0, self.item_size as u64)
+    pub fn remove_material(&mut self, id: u32) {
+        if let Some(rm_item) = self.items.remove(&id) {
+            self.free_items.push(rm_item);
+        }
     }
 
-    fn get_or_insert_idx(&mut self,eid:u32) -> usize {
-        if let Some(idx) = self.indices.get(&eid) {
-            *idx
-        } else if self.free_indices.len() > 0 {
-            let free_idx = self.free_indices.pop().unwrap();
-            self.indices.insert(eid, free_idx);
-            free_idx
-        } 
-        else  {
-            let v = self.len;
-            self.len += 1;
-            self.indices.insert(eid, v);
-            v
+    pub fn update_buffer(
+        &mut self,
+        id: u32,
+        res: &mut RenderResources,
+        layout: &wgpu::BindGroupLayout,
+        material: &mut Material,
+        dirty_hid: Option<HandleId>,
+    ) {
+        if self.buffer_dirty || material.bind_group.is_none() {
+            if let Some(item) = self.items.get_mut(&id) {
+                let mut build_group_builder = BindGroupBuilder::new();
+                let start: u64 = item.index as u64 * self.buffer_item_size;
+                build_group_builder.add_buffer_addr(self.gpu_buffer, start, self.buffer_item_size);
+                material.bind_group = Some(build_group_builder.build(layout, &res.device, res));
+                item.dirty_hid = dirty_hid;
+            }
         }
     }
 }

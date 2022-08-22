@@ -1,7 +1,7 @@
 mod material_def;
 mod material;
 mod types;
-mod system2;
+mod system;
 mod texture_prop_def;
 pub mod loader;
 pub mod errors;
@@ -11,7 +11,7 @@ use seija_app::App;
 use seija_asset::{AddAsset};
 pub use types::{RenderOrder,Cull,ZTest,RenderPath,STextureDescriptor};
 pub use texture_prop_def::{TexturePropDef,TexturePropInfo};
-pub use system2::{MaterialSystem};
+pub use system::{MaterialSystem};
 use seija_core::TypeUuid;
 
 use self::loader::{MaterialDefineAssetLoader, MaterialLoader};

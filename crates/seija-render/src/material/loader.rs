@@ -8,7 +8,7 @@ use seija_core::{anyhow::{Result},smol};
 use async_trait::{async_trait};
 use serde_json::Value;
 
-use crate::material::Material;
+use crate::{MemUniformInfo,material::Material, UniformType};
 
 use super::{read_material_def, material_def::MaterialDefineAsset};
 pub(crate) struct MaterialDefineAssetLoader;
@@ -43,7 +43,16 @@ impl AssetLoader for MaterialLoader {
         let h_def = server.load_sync::<MaterialDefineAsset>(world, material_def_path, None,false).context(2)?;
         let defs = world.get_resource::<Assets<MaterialDefineAsset>>().context(3)?;
         let def_asset = defs.get(&h_def.id).context(4)?;
-        let material = Material::from_def_new(def_asset.define.clone(), &server).context(5)?;
+        let mut material = Material::from_def(def_asset.define.clone(), &server).context(5)?;
+        let props = json_map.get("props").and_then(Value::as_object).context(6)?;
+        for (k,v) in props.iter() {
+           if let Some(MemUniformInfo::Raw(info)) = material.def.prop_def.get_info(k) {
+                match info.typ {
+                    UniformType::BOOL(_) => {},
+                    _ => {},
+                }
+           }
+        }
         Ok(Box::new(material))
     }
 }

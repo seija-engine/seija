@@ -1,7 +1,7 @@
 use seija_asset::AssetServer;
 use seija_core::{bevy_ecs::{system::{CommandQueue, Insert}, world::World, prelude::Entity}, anyhow::{Result,anyhow, bail}};
 use seija_pbr::PBRCameraInfo;
-use seija_render::{camera::camera::{Camera, Perspective, Projection}, resource::Mesh};
+use seija_render::{camera::camera::{Camera, Perspective, Projection}, resource::Mesh, material::Material};
 use seija_template::{TComponent,TComponentCreator};
 
 
@@ -55,12 +55,13 @@ fn t_component_mesh<'w,'s,'a>(world:&mut World,entity:Entity,component:&TCompone
     Err(anyhow!("Mesh need res"))
 }
 
-fn t_component_material<'w,'s,'a>(_:&mut World,_:Entity,_:&TComponent,_:&mut CommandQueue) -> Result<()> {
-    //let _ = world.get_resource::<AssetServer>().ok_or(anyhow!("asset server"))?;
-    
-    //let materials = world.get_resource::<MaterialStorage>().unwrap();
-    //let mat = materials.create_material("pbrColor").ok_or(anyhow!(".."))?;
-    //queue.push(Insert {entity,component:mat });
+fn t_component_material<'w,'s,'a>(world:&mut World,entity:Entity,component:&TComponent,queue:&mut CommandQueue) -> Result<()> {
+    let server = world.get_resource::<AssetServer>().ok_or(anyhow!("asset server"))?.clone();
+    if let Some(res_path) = component.attrs.get("res") {
+        let real_path = res_path.strip_prefix("res://").ok_or(anyhow!("mesh res path err"))?;
+        let h_mat = server.load_sync::<Material>(world, real_path, None, true).ok_or(anyhow!("load_sync material err"))?;
+        queue.push(Insert {entity,component:h_mat });
+    }
     Ok(())
 }
 

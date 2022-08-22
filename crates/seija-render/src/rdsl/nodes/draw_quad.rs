@@ -64,7 +64,7 @@ impl IUpdateNode for DrawQuadNode {
                                                       .typed::<MaterialDefineAsset>();
             let defs = world.get_resource::<Assets<MaterialDefineAsset>>().context(2)?;
             let define = defs.get(&h_def.id).context(4)?.define.clone();
-            let mut material = Material::from_def_new(define, server).context(5)?;
+            let mut material = Material::from_def(define, server).context(5)?;
             for (index,tex) in self.mat_textures.iter().enumerate() {
                 let atom_ref = unsafe { &**tex };
                 if let RenderResourceId::Texture(texture) = atom_ref.inner() {

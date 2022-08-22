@@ -21,7 +21,7 @@ pub struct Material {
 
 impl Material {
 
-    pub fn from_def_new(def:Arc<MaterialDef>,server:&AssetServer) -> Option<Material> {
+    pub fn from_def(def:Arc<MaterialDef>,server:&AssetServer) -> Option<Material> {
         let props = TypedUniformBuffer::from_def(def.prop_def.clone());
         let texture_props = TextureProps::from_def_new(&def,server)?;
         Some(Material {
@@ -37,7 +37,7 @@ impl Material {
         let server = world.get_resource::<AssetServer>()?;
         let h_define = server.get_asset_handle(define)?.typed::<MaterialDefineAsset>();
         let define = world.get_resource::<Assets<MaterialDefineAsset>>()?.get(&h_define.id)?.define.clone();
-        Material::from_def_new(define, server)
+        Material::from_def(define, server)
     }
 
     pub fn is_ready(&self,resources:&RenderResources) -> bool {

@@ -58,7 +58,7 @@ fn on_update(mut commands:Commands,mut mats:ResMut<Assets<Material>>,
        data.track = None;
        if let Some(asset) = gltfs.get(&data.shiba_asset.as_ref().unwrap().id) {
         let _ = create_gltf(&asset, &mut commands,  |gltf_mat| {
-            let mut mat = Material::from_def_new(define.clone(), &server).unwrap();
+            let mut mat = Material::from_def(define.clone(), &server).unwrap();
             mat.texture_props.set("mainTexture", gltf_mat.base_color_texture.as_ref().unwrap().clone());
             mat.props.set_float4("color", gltf_mat.base_color_factor, 0);
             mats.add(mat).into()

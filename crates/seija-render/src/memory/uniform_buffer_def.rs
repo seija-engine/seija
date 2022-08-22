@@ -126,6 +126,10 @@ impl UniformBufferDef {
         None
     }
 
+    pub fn get_info(&self,name:&str) -> Option<&UniformInfo> {
+        self.names.get(name).map(|index| &self.infos[*index])
+    }
+
     pub fn size(&self) -> usize {
         self.size
     }
