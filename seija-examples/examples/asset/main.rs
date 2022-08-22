@@ -1,11 +1,11 @@
 use bevy_ecs::system::{Commands, ResMut};
-use glam::{Vec3, Quat, Vec4};
-use seija_asset::{Assets, AssetServer, LoadingTrack};
+use glam::{Vec3, Quat};
+use seija_asset::{Assets, AssetServer, LoadingTrack, Handle};
 use seija_core::{CoreStage, StartupStage, window::AppWindow};
 use seija_examples::{init_core_app, add_pbr_camera,  update_camera_trans_system};
 
 use seija_pbr::lights::PBRLight;
-use seija_render::{resource::{Mesh, shape::{Cube}}, material::{Material, MaterialDefineAsset}};
+use seija_render::{resource::{Mesh, shape::{Cube}, Texture}, material::{Material, MaterialDefineAsset}};
 use bevy_ecs::prelude::*;
 use seija_transform::Transform;
 
@@ -26,10 +26,13 @@ pub fn main() {
 }
 
 fn on_start(world:&mut World) {
+    
     let server = world.get_resource::<AssetServer>().unwrap().clone();
     server.load_sync::<MaterialDefineAsset>(world, "materials/pbrColor.mat.clj", None,false);
-   
-    //Cube
+    server.load_sync::<MaterialDefineAsset>(world, "materials/baseTexture.mat.clj", None,false);
+    let h_texture:Handle<Texture> = server.load_sync::<Texture>(world,"texture/b.jpg", None,false).unwrap();
+    //Cube 
+    /* 
     {
         let mut meshs = world.get_resource_mut::<Assets<Mesh>>().unwrap();
         let mesh =  Cube::new(1f32);
@@ -46,7 +49,7 @@ fn on_start(world:&mut World) {
         t.local.rotation = Quat::from_euler(glam::EulerRot::XYZ, 0f32, -31f32.to_radians(), 0f32);
        
         world.spawn().insert(hmesh).insert(hmat).insert(t);
-    };
+    };*/
 
     //Cube
     {
@@ -54,8 +57,8 @@ fn on_start(world:&mut World) {
         let mesh =  Cube::new(1f32);
         let hmesh = meshs.add(mesh.into());
 
-        let mut material = Material::from_world(world, "materials/pbrColor.mat.clj").unwrap();
-        material.props.set_float4("color", Vec4::ONE, 0);
+        let mut material = Material::from_world(world, "materials/baseTexture.mat.clj").unwrap();
+        material.texture_props.set("mainTexture", h_texture.clone());
         let mut materials = world.get_resource_mut::<Assets<Material>>().unwrap();
         let hmat = materials.add(material);
 

@@ -1,9 +1,9 @@
 use std::{
-    collections::{HashMap, HashSet},
+    collections::{HashMap},
     sync::Arc,
 };
 
-use super::{Material, MaterialDef, MaterialDefineAsset};
+use super::{Material, MaterialDef};
 use crate::{
     memory::align_num_to,
     pipeline::render_bindings::{BindGroupBuilder, BindGroupLayoutBuilder},
@@ -12,15 +12,13 @@ use crate::{
 use bevy_ecs::{
     change_detection::Mut,
     entity::Entity,
-    event::{Events, ManualEventReader},
     prelude::{World},
 };
-use seija_asset::{AssetEvent, Assets, Handle, HandleId};
+use seija_asset::{Assets, Handle, HandleId};
 use smol_str::SmolStr;
 use wgpu::CommandEncoder;
 
 pub struct MaterialSystem {
-    define_reader: ManualEventReader<AssetEvent<MaterialDefineAsset>>,
     common_buffer_layout: wgpu::BindGroupLayout,
     datas: HashMap<SmolStr, MaterialDefine>,
 }
@@ -31,7 +29,6 @@ impl MaterialSystem {
         layout_builder.add_uniform(wgpu::ShaderStage::VERTEX_FRAGMENT);
         let common_buffer_layout = layout_builder.build(device);
         MaterialSystem {
-            define_reader: Default::default(),
             common_buffer_layout,
             datas: HashMap::default(),
         }
@@ -42,8 +39,8 @@ impl MaterialSystem {
     }
 
     fn add_material_define(&mut self, define: Arc<MaterialDef>, res: &mut RenderResources) {
-        self.datas
-            .insert(define.name.clone(), MaterialDefine::new(define, res));
+        log::info!("add_material_define:{}",define.name.as_str());
+        self.datas.insert(define.name.clone(), MaterialDefine::new(define, res));
     }
 
     pub fn get_buffer_layout(&self) -> &wgpu::BindGroupLayout {
@@ -64,29 +61,7 @@ impl MaterialSystem {
                 }
             }
         };
-        //update define
-        if let Some(define_events) = world.get_resource::<Events<AssetEvent<MaterialDefineAsset>>>()
-        {
-            let mut frame_add_defines: HashSet<Handle<MaterialDefineAsset>> = HashSet::default();
-            for define_event in self.define_reader.iter(define_events) {
-                match define_event {
-                    AssetEvent::Created { handle } => {
-                        frame_add_defines.insert(handle.clone_weak());
-                    }
-                    AssetEvent::Removed { handle } => {
-                        frame_add_defines.remove(handle);
-                    }
-                    _ => {}
-                }
-            }
-            if let Some(assets) = world.get_resource::<Assets<MaterialDefineAsset>>() {
-                for define in frame_add_defines.iter() {
-                    if let Some(def_asset) = assets.get(&define.id) {
-                        self.add_material_define(def_asset.define.clone(), res);
-                    }
-                }
-            }
-        }
+   
 
         let mut query = world.query::<(Entity, &Handle<Material>)>();
         world.resource_scope(|w, mut materials: Mut<Assets<Material>>| {
@@ -94,6 +69,10 @@ impl MaterialSystem {
             for (e, h_mat) in query.iter(w) {
                 let h_mat: &Handle<Material> = h_mat;
                 if let Some(mat) = materials.get_mut(&h_mat.id) {
+                    if !self.datas.contains_key(mat.def.name.as_str()) {
+                        self.add_material_define(mat.def.clone(), res);
+                    }
+                    
                     if let Some(define) = self.datas.get_mut(mat.def.name.as_str()) {
                         if mat.is_ready(res) {
                             mat.texture_props.update(res, Some(&define.texture_layout));
@@ -109,7 +88,8 @@ impl MaterialSystem {
                             None
                         };
                         define.update_buffer(e.id(), res, &self.common_buffer_layout, mat, did);
-                    }
+                    } 
+                 
                 }
             }
 
@@ -121,14 +101,12 @@ impl MaterialSystem {
                         if let Some(mat) = materials.get(dirty_id) {
                             if cur_has_dirty == false {
                                 res.map_buffer(&define.cache_buffer, wgpu::MapMode::Write);
-                                log::error!("map!!!!!!!!!!");
                                 cur_has_dirty = true;
                             }
 
                             if cur_has_dirty {
                                 let start = item.index as u64 * define.buffer_item_size;
                                 let buffer = mat.props.get_buffer();
-                                log::error!("write");
                                 res.write_mapped_buffer(
                                     &define.cache_buffer,
                                     start..(start + buffer.len() as u64),
@@ -144,7 +122,6 @@ impl MaterialSystem {
                     
                 }
                 if cur_has_dirty {
-                    log::error!("unmap!!!!!!!!!!");
                     res.unmap_buffer(&define.cache_buffer);
                     res.copy_buffer_to_buffer(
                         commands,

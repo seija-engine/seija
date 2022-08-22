@@ -5,6 +5,7 @@ use std::io;
 use std::hash::{Hash, Hasher};
 use std::fs;
 use std::path::Path;
+use anyhow::Context;
 use bevy_ecs::prelude::Entity;
 use seija_core::{LogOption};
 use smol_str::SmolStr;
@@ -21,6 +22,7 @@ use crate::uniforms::{UBOApplyType, UniformContext};
 use crate::{RenderContext, RenderConfig, GraphSetting, UniformIndex};
 use crate::material::ShaderInfoDef;
 use crate::{material::{MaterialDef, PassDef}, resource::Mesh};
+use seija_core::anyhow::{Result,anyhow};
 
 
 
@@ -99,31 +101,41 @@ impl PipelineCache {
         PipelineKey(mat_def.name.as_str(),mesh.layout_hash_u64()).hash(&mut hasher);
         let key = hasher.finish();
         if !self.cache_pipelines.contains_key(&key) {
-            let pipes = self.compile_pipelines(mesh, mat_def,ctx);
-            log::info!("create pipeline success {}",&mat_def.name);
-            self.cache_pipelines.insert(key, pipes);
+            if let Some(pipes)  = self.compile_pipelines(mesh, mat_def,ctx) {
+                log::info!("create pipeline success {}",&mat_def.name);
+                self.cache_pipelines.insert(key, pipes);
+            }
+            
         }
     }
 
     
 
-    fn compile_pipelines<'m>(&mut self,mesh:&Mesh,mat_def:&'m MaterialDef,ctx:&RenderContext) -> RenderPipelines {
+    fn compile_pipelines<'m>(&mut self,mesh:&Mesh,mat_def:&'m MaterialDef,ctx:&RenderContext) -> Option<RenderPipelines> {
         let mut pipes:Vec<RenderPipeline> = Vec::new();
       
         for pass in  mat_def.pass_list.iter() {
-           if let Some(pipe) = self.compile_pipeline(mesh,pass,ctx,mat_def) {
-               pipes.push(pipe);
-           } else {
-               log::error!("material compile pipeline fail {}",&mat_def.name);
-           }
+            match self.compile_pipeline(mesh,pass,ctx,mat_def) {
+                Ok(None) => {
+                    log::info!("wait create {}",mat_def.name.as_str());
+                    return None;
+                },
+                Ok(Some(pipe)) => {
+                    pipes.push(pipe);
+                }
+                Err(err) => {
+                    log::error!("create pipeline fail {} {:?}",mat_def.name,err);
+                    return None;
+                },
+            }
         }
-        RenderPipelines::new(pipes)
+        Some(RenderPipelines::new(pipes))
     }
 
     fn compile_pipeline(&mut self,
                         mesh:&Mesh,pass:&PassDef,
                         ctx:&RenderContext,
-                        mat_def:&MaterialDef) -> Option<RenderPipeline> {
+                        mat_def:&MaterialDef) -> Result<Option<RenderPipeline>> {
         let mut cur_primstate = mesh.primitive_state().clone();
         cur_primstate.cull_mode = (&pass.cull).into();
         cur_primstate.front_face = pass.front_face.0;
@@ -149,22 +161,23 @@ impl PipelineCache {
        });
 
        let shader_name_prefix = get_shader_name_prefix(mesh, &pass.shader_info,&ctx.shaders)
-                                         .log_err(&format!("gen shader name prefix err:{}",&pass.shader_info.name))?;
+                                        .context(format!("gen shader name prefix err:{}",&pass.shader_info.name))?;
        let vs_path = self.cfg.config_path.join(&format!("{}.vert.spv",shader_name_prefix));
       
        let fs_path = self.cfg.config_path.join(&format!("{}.frag.spv",shader_name_prefix));
        log::info!("load shader vs :{:?}",vs_path);
        log::info!("load shader fs :{:?}",fs_path);
-       let vert_shader = Self::read_shader_module(&vs_path,&ctx.device)?;
-       let frag_shader = Self::read_shader_module(fs_path,&ctx.device)?;
+       let vert_shader = Self::read_shader_module(&vs_path,&ctx.device).context("read shader error")?;
+       let frag_shader = Self::read_shader_module(fs_path,&ctx.device).context("read shader error")?;
        
-      let pipeline_layout = self.create_pipeline_layout(ctx,pass,mat_def).log_err("create pipeline layout fail")?;
-
+      let pipeline_layout = self.create_pipeline_layout(ctx,pass,mat_def)?;
+      if pipeline_layout.is_none() { return Ok(None); }
+      
       let targets = pass.get_color_targets();
 
        let render_pipeline_desc = RenderPipelineDescriptor {
            label:None,
-           layout:Some(&pipeline_layout),
+           layout:pipeline_layout.as_ref(),
            vertex:VertexState {  module:&vert_shader, entry_point:"main", buffers:&[mesh.vert_layout()] },
            primitive:cur_primstate,
            depth_stencil,
@@ -177,14 +190,17 @@ impl PipelineCache {
        };
        let gpu_pipeline = ctx.device.create_render_pipeline(&render_pipeline_desc);
 
-       let rt_shader = ctx.shaders.find_shader(&pass.shader_info.name)?;
+       let rt_shader = ctx.shaders.find_shader(&pass.shader_info.name).context("find_shader")?;
        let backends = rt_shader.get_backends(&pass.shader_info.features);
        let ubo_names = ctx.ubo_ctx.info.get_ubos_by_backends(&backends);
 
        let mut ubos:Vec<UniformIndex> = vec![];
        for (ubo_name,_) in ubo_names.iter() {
-           let name_index = ctx.ubo_ctx.get_index(ubo_name).log_err(&format!("not found ubo: {}",ubo_name))?;
-           ubos.push(name_index);
+           if let Some(name_index) = ctx.ubo_ctx.get_index(ubo_name) {
+                ubos.push(name_index);
+           } else {
+              return Err(anyhow!("not found ubo:{}",ubo_name.as_str()));
+           }
        }
       
        let render_pipeline = RenderPipeline {
@@ -192,7 +208,7 @@ impl PipelineCache {
            ubos,
            pipeline:gpu_pipeline
        };
-       Some(render_pipeline)
+       Ok(Some(render_pipeline))
     }
 
     fn get_multisample_state(setting:&GraphSetting) -> MultisampleState {
@@ -211,15 +227,19 @@ impl PipelineCache {
         }
     }
 
-    fn create_pipeline_layout(&mut self,ctx:&RenderContext,pass_def:&PassDef,mat_def:&MaterialDef) -> Option<PipelineLayout> {
+    fn create_pipeline_layout(&mut self,ctx:&RenderContext,pass_def:&PassDef,mat_def:&MaterialDef) -> Result<Option<PipelineLayout>> {
        
-        let mut layouts = ctx.create_bind_group_layouts(pass_def)?;
+        let mut layouts = ctx.create_bind_group_layouts(pass_def).context("create_bind_group_layouts")?;
         if mat_def.prop_def.infos.len() > 0 {
             layouts.push(&ctx.mat_system.get_buffer_layout());
+        } else {
+            return Ok(None);
         }
         if mat_def.tex_prop_def.indexs.len() > 0 {
             if let Some(texture_layout) = ctx.mat_system.get_texture_layout(mat_def.name.as_str()) {
                 layouts.push(texture_layout);
+            } else {
+                return Ok(None);
             }
         }
        
@@ -228,7 +248,7 @@ impl PipelineCache {
             bind_group_layouts:&layouts,
             push_constant_ranges:&[],
         };
-        Some(ctx.device.create_pipeline_layout(&layout_desc)) 
+        Ok(Some(ctx.device.create_pipeline_layout(&layout_desc))) 
     }
 
     fn read_shader_module<P:AsRef<Path>>(path:P,device:&Device) -> Option<ShaderModule> {
