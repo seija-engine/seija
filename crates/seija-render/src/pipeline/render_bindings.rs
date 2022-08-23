@@ -26,12 +26,12 @@ impl BindGroupLayoutBuilder {
         let entry = wgpu::BindGroupLayoutEntry {
             binding:self.layout_entrys.len() as u32,
             visibility:ShaderStage::VERTEX_FRAGMENT,
-            //TODO filtering??
             ty:wgpu::BindingType::Sampler {comparison: false, filtering },
             count:None
         };
         self.layout_entrys.push(entry);
     }
+
 
     pub fn add_texture(&mut self,is_cube_map:bool,sample_type:Option<wgpu::TextureSampleType>) {
         let texture_entry = wgpu::BindGroupLayoutEntry {

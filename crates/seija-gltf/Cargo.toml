@@ -17,4 +17,4 @@ glam = "0.20.2"
 bevy_ecs = "0.7.0"
 async-trait = "0.1.57"
 relative-path = "1.7.2"
-base64 = { version = "0.13" }
+base64 = { version = "0.12.3" }

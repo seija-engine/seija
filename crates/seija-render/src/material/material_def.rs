@@ -37,7 +37,7 @@ pub struct PassDef {
     pub clamp_depth:bool,
     pub shader_info:ShaderInfoDef,
     pub targets:Vec<TargetInfo>,
-    pub tag:Option<String>
+    pub tag:Option<SmolStr>
    
 }
 
@@ -113,6 +113,7 @@ fn read_texture_prop(json_value:&Value) -> Result<TexturePropDef,()> {
         if let Some(map) = item.as_object() {
             let prop_type = map.get(":type").and_then(|v| v.as_str()).ok_or(())?;
             let prop_name = map.get(":name").and_then(|v| v.as_str()).ok_or(())?;
+            let filtering = map.get(":filtering").and_then(Value::as_bool).unwrap_or(true);
             let def_name = map.get(":default").and_then(|v| v.as_str());
             let mut def_asset = SmolStr::new("texture:white");
             if let Some(def_name) = def_name {
@@ -128,9 +129,8 @@ fn read_texture_prop(json_value:&Value) -> Result<TexturePropDef,()> {
             };
             match prop_type {
                 "Texture" => {
-                    //TODO 这里需要根据贴图变化布局
                     texture_props.layout_builder.add_texture(false,None);
-                    texture_props.layout_builder.add_sampler(true);
+                    texture_props.layout_builder.add_sampler(filtering);
                     texture_prop.is_cube_map = false;
                     texture_props.indexs.insert(prop_name.to_string(), texture_prop);
                    
@@ -138,7 +138,7 @@ fn read_texture_prop(json_value:&Value) -> Result<TexturePropDef,()> {
                 },
                 "CubeMap" => {
                     texture_props.layout_builder.add_texture(true,None);
-                    texture_props.layout_builder.add_sampler(true);
+                    texture_props.layout_builder.add_sampler(filtering);
                     texture_prop.is_cube_map = true;
                     texture_props.indexs.insert(prop_name.to_string(), texture_prop);
                     texture_index += 1;

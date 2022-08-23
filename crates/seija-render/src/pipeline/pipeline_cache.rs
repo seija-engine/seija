@@ -40,8 +40,7 @@ impl RenderPipelines {
 }
 
 pub struct RenderPipeline {
-    //TODO 优化 考虑把这个String换成Clojure的真正的keyworld
-    pub tag:String,
+    pub tag:SmolStr,
     pub ubos:Vec<UniformIndex>,
     pub pipeline:wgpu::RenderPipeline
 }
