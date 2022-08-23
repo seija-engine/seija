@@ -1,10 +1,10 @@
-use std::{sync::Arc, collections::HashMap, fmt::Debug};
-use crate::{ImportData};
+use std::{sync::Arc, collections::HashMap, fmt::Debug, path::{Path}};
+use crate::{import::Scheme, asset::GltfAsset};
 use glam::{Mat4, Vec3, Vec4};
-use gltf::{Document, Node, animation::{Channel, Property, Interpolation}};
+use gltf::{Document, Node, animation::{Channel, Property, Interpolation}, Gltf};
 use relative_path::RelativePath;
-use seija_core::anyhow::{Result, anyhow};
-use crate::{asset::{GltfAsset, GltfCamera, GltfMaterial, GltfMesh, GltfNode, GltfPrimitive, GltfScene, NodeIndex}};
+use seija_core::{anyhow::{Result, anyhow, bail, Context},smol};
+use crate::{asset::{ GltfCamera, GltfMaterial, GltfMesh, GltfNode, GltfPrimitive, GltfScene, NodeIndex}};
 use seija_asset::{Handle, AssetLoader, AssetServer, LoadingTrack, AssetLoaderParams, AssetDynamic};
 use seija_render::resource::{Texture, TextureDescInfo};
 use seija_render::{camera::camera::{Orthographic, Perspective, Projection}, 
@@ -25,39 +25,41 @@ pub struct GLTFLoader;
 impl AssetLoader for GLTFLoader {
    async fn load(&self,server:AssetServer,track:Option<LoadingTrack>,path:&str,_:Option<Box<dyn AssetLoaderParams>>) -> Result<Box<dyn AssetDynamic>> {
        let full_path = RelativePath::from_path(path)?.to_logical_path(&server.inner().root_path);
-       log::info!("load gltf path:{:?}",&full_path);
+       log::info!("load gltf p&ath:{:?}",&full_path);
        track.as_ref().map(|t| t.add_progress());
-       //TODO 不能用Import应该用gltf::GLTF::from替换实现
-       let import_data:ImportData = gltf::import(&full_path)?;       
+       let bytes = smol::fs::read(&full_path).await?;
+       let mut gltf_data = Gltf::from_slice(&bytes)?;
+       track.as_ref().map(|t| t.add_progress());
+       let full_base_path = full_path.parent().context(1)?;
+       let buffers = import_buffer_data(&mut gltf_data,full_base_path)?;
        track.as_ref().map(|t| t.add_progress());
        let mut track_textures = vec![];
-       let textures = load_textures(&server, &import_data,path,&mut track_textures).await?;
+       let textures = load_textures(&server, path,&gltf_data, &buffers,&mut track_textures).await?;
        track.as_ref().map(|t| t.add_progress());
-       let materials = load_materials(&import_data,&textures);
+       let materials = load_materials(&gltf_data,&textures);
        track.as_ref().map(|t| t.add_progress());
-       let mut meshs = load_meshs(path,&server,&import_data,&materials)?;
+       let mut meshs = load_meshs(path,&server,&gltf_data,&buffers,&materials)?;
        track.as_ref().map(|t| t.add_progress());
-       let mut nodes = load_nodes(&import_data)?;
+       let mut nodes = load_nodes(&gltf_data)?;
        track.as_ref().map(|t| t.add_progress());
-       let scenes = load_scenes(&import_data,&mut nodes,&mut meshs);
+       let _skeleton = load_skeleton(&gltf_data)?;
        track.as_ref().map(|t| t.add_progress());
-       let _skeleton = load_skeleton(&import_data)?;
+       let scenes = load_scenes(&gltf_data,&mut nodes,&mut meshs);
        track.as_ref().map(|t| t.add_progress());
 
        let mut skins = None;
        let mut anims = None;
        if let Some(skeleton) = _skeleton.as_ref() {
-          skins = load_skin(&import_data, &skeleton).map(|v| server.create_asset(v,&format!("{}#skin",path),None));
-          track.as_ref().map(|t| t.add_progress());
-          let anim_set = load_animations(&import_data, &skeleton)?;
-          track.as_ref().map(|t| t.add_progress());
-          anims = Some(server.create_asset(anim_set,&format!("{}#animset",path),None)) ;
+           skins = load_skin(&gltf_data, &buffers,&skeleton).map(|v| server.create_asset(v,&format!("{}#skin",path),None));
+           track.as_ref().map(|t| t.add_progress());
+           let anim_set = load_animations(&gltf_data,&buffers, &skeleton)?;
+           track.as_ref().map(|t| t.add_progress());
+           anims = Some(server.create_asset(anim_set,&format!("{}#animset",path),None)) ;
        }
        let skeleton = _skeleton.map(|v| server.create_asset(v,&format!("{}#skeleton",path),None));
        track.as_ref().map(|t| t.add_progress());
-
        for track in track_textures.drain(..) {
-            let _ = track.await;
+          let _ = track.await;
        }
        Ok(Box::new(GltfAsset {
         scenes,
@@ -72,28 +74,73 @@ impl AssetLoader for GLTFLoader {
    }
 }
 
-async fn load_textures(server:&AssetServer,gltf:&ImportData,path:&str,tracks:&mut Vec<LoadingTrack>) -> Result<Vec<Handle<Texture>>> {
+fn import_buffer_data(data:&mut gltf::Gltf,full_base_path:&Path) -> Result<Vec<gltf::buffer::Data>> {
+    let mut buffers:Vec<gltf::buffer::Data> = Vec::new();
+    for buffer in data.document.buffers() {
+        let mut bytes = match buffer.source() {
+            gltf::buffer::Source::Bin => {  data.blob.take().ok_or(gltf::Error::MissingBlob)? },
+            gltf::buffer::Source::Uri(uri) => { crate::import::Scheme::read(uri,full_base_path)? }
+        };
+        if bytes.len() < buffer.length() {
+            bail!(gltf::Error::BufferLength {
+                buffer: buffer.index(),
+                expected: buffer.length(),
+                actual: bytes.len(),
+            });
+        }
+        while bytes.len() % 4 != 0 {
+            bytes.push(0);
+        }
+        buffers.push(gltf::buffer::Data(bytes));
+    }
+
+    Ok(buffers)
+}
+
+async fn load_textures(server:&AssetServer,path:&str,gltf_data:&gltf::Gltf,buffers:&Vec<gltf::buffer::Data>,tracks:&mut Vec<LoadingTrack>) -> Result<Vec<Handle<Texture>>> {
     let mut textures:Vec<Handle<Texture>> = vec![];
-    for (index,json_texture) in gltf.0.textures().enumerate() {
+    for (index,json_texture) in gltf_data.textures().enumerate() {
         let source = json_texture.source().source();
+        let mut desc = TextureDescInfo::default();
+        desc.sampler_desc = get_texture_sampler(&json_texture);
         match source {
             gltf::image::Source::View { view, mime_type:_ } => {
                 let start = view.offset() as usize;
                 let end = (view.offset() + view.length()) as usize;
-                let buffer = &gltf.1[view.buffer().index()][start..end];
-                let mut desc = TextureDescInfo::default();
-                desc.sampler_desc = get_texture_sampler(&json_texture);
+                let buffer = &buffers[view.buffer().index()][start..end];
                 let texture = Texture::from_image_bytes(buffer,desc)?;
                 let h_texture = server.create_asset(texture,&format!("{:?}#texture.{}",path,index),None);
                 textures.push(h_texture);
-            },
-            gltf::image::Source::Uri { uri, mime_type:_ } => {
-                let texture_path = RelativePath::new(path).parent().ok_or(anyhow!("fail gltf texture path"))?.join(uri).normalize();
-                let mut desc = TextureDescInfo::default();
-                desc.sampler_desc = get_texture_sampler(&json_texture);
-                let track = server.load_async::<Texture>(texture_path.as_str(),Some(Box::new(desc))).ok_or(anyhow!("fail load texture"))?;
-                textures.push(track.take().typed());
-                tracks.push(track);
+            }
+           
+            gltf::image::Source::Uri { uri, .. } => {
+                match Scheme::parse(uri) {
+                    Scheme::Data(_, base64) => {
+                        let image_bytes = base64::decode(&base64)?;
+                        let texture = Texture::from_image_bytes(&image_bytes, desc)?;
+                        let h_texture = server.create_asset(texture,&format!("{:?}#texture.{}",path,index),None);
+                        textures.push(h_texture);
+                        continue;
+                    },
+                    Scheme::File(file_path)  => { 
+                        let bytes = smol::fs::read(file_path).await?;
+                        let texture = Texture::from_image_bytes(&bytes, desc)?;
+                        let h_texture = server.create_asset(texture,&format!("{:?}#texture.{}",path,index),None);
+                        textures.push(h_texture);
+                     },
+                    Scheme::Relative => { 
+                        let texture_path = RelativePath::new(path).parent().ok_or(anyhow!("fail gltf texture path"))?.join(uri).normalize();
+                        let track = server.load_async::<Texture>(texture_path.as_str(),Some(Box::new(desc))).ok_or(anyhow!("fail load texture"))?;
+                        textures.push(track.take().typed());
+                        tracks.push(track);
+                    }
+                    _ => {
+                        log::error!("gltf texture error:{}",uri);
+                        continue 
+                    },
+                }
+
+
             }
         }
     }
@@ -101,9 +148,9 @@ async fn load_textures(server:&AssetServer,gltf:&ImportData,path:&str,tracks:&mu
 }
 
 
-fn load_materials(gltf:&ImportData,textures:&Vec<Handle<Texture>>) -> Vec<Arc<GltfMaterial>> {
+fn load_materials(gltf:&gltf::Gltf,textures:&Vec<Handle<Texture>>) -> Vec<Arc<GltfMaterial>> {
     let mut materials:Vec<Arc<GltfMaterial>> = vec![];
-    for material in gltf.0.materials() {
+    for material in gltf.materials() {
         let pbr = material.pbr_metallic_roughness();
         let base_color_texture = if let Some(info) = pbr.base_color_texture() {
            Some(textures[info.texture().index()].clone())
@@ -144,13 +191,13 @@ fn load_materials(gltf:&ImportData,textures:&Vec<Handle<Texture>>) -> Vec<Arc<Gl
     materials
 }
 
-fn load_meshs(path:&str,server:&AssetServer,gltf:&ImportData,materials:&Vec<Arc<GltfMaterial>>) -> Result<Vec<GltfMesh>> {
+fn load_meshs(path:&str,server:&AssetServer,gltf:&gltf::Gltf,buffers:&Vec<gltf::buffer::Data>,materials:&Vec<Arc<GltfMaterial>>) -> Result<Vec<GltfMesh>> {
     let mut meshs:Vec<GltfMesh> = vec![];
-    for (mesh_index,mesh) in gltf.0.meshes().enumerate() {
+    for (mesh_index,mesh) in gltf.meshes().enumerate() {
         let mut primitives:Vec<GltfPrimitive> = vec![];
         for (primitive_index,primitive)  in mesh.primitives().enumerate() {
             //dbg!(&primitive);
-            let reader = primitive.reader(|buffer| Some(&gltf.1[buffer.index()]));
+            let reader = primitive.reader(|buffer| Some(&buffers[buffer.index()]));
             let primitive_topology = get_primitive_topology(primitive.mode())?;
             let mut mesh = Mesh::new(primitive_topology);
             if let Some(verts) = reader.read_positions().map(|iter| VertexAttributeValues::Float3(iter.collect())) {
@@ -203,9 +250,9 @@ fn load_meshs(path:&str,server:&AssetServer,gltf:&ImportData,materials:&Vec<Arc<
     Ok(meshs)
 }
 
-fn load_nodes(gltf:&ImportData) -> Result<Vec<GltfNode>> {
+fn load_nodes(gltf:&gltf::Gltf) -> Result<Vec<GltfNode>> {
     let mut nodes:Vec<GltfNode> = vec![];
-    for node in gltf.0.nodes() {
+    for node in gltf.nodes() {
        let mesh = node.mesh().map(|m| m.index());
        let transform = match node.transform() {
            gltf::scene::Transform::Matrix {matrix} => {
@@ -250,10 +297,10 @@ fn load_nodes(gltf:&ImportData) -> Result<Vec<GltfNode>> {
     Ok(nodes)
 }
 
-fn load_scenes(gltf:&ImportData,nodes:&mut Vec<GltfNode>,meshs:&mut Vec<GltfMesh>) -> Vec<GltfScene> {
+fn load_scenes(gltf:&gltf::Gltf,nodes:&mut Vec<GltfNode>,meshs:&mut Vec<GltfMesh>) -> Vec<GltfScene> {
     let mut scenes = vec![];
    
-    for scene in gltf.0.scenes() {
+    for scene in gltf.scenes() {
         let node_indexs = scene.nodes().map(|n| n.index() ).collect();
         scenes.push(GltfScene { nodes:node_indexs });
         for node in scene.nodes() {
@@ -334,18 +381,18 @@ fn texture_address_mode(gltf_address_mode: &gltf::texture::WrappingMode) -> wgpu
     }
 }
 
-pub fn load_skeleton(gltf:&ImportData) -> Result<Option<Skeleton>> {
-    let cur_scene = if let Some(scene) = gltf.0.default_scene() {
+pub fn load_skeleton(gltf:&gltf::Gltf) -> Result<Option<Skeleton>> {
+    let cur_scene = if let Some(scene) = gltf.default_scene() {
         scene
     } else { 
-        if let Some(fst) = gltf.0.scenes().next() { fst } else { return Ok(None) }
+        if let Some(fst) = gltf.scenes().next() { fst } else { return Ok(None) }
     };
     if cur_scene.nodes().len() == 0 { return Ok(None) }
-    let skins = get_skins_for_scene(&cur_scene,&gltf.0);
+    let skins = get_skins_for_scene(&cur_scene,&gltf);
     let mut roots = if skins.len() == 0 {
         cur_scene.nodes().collect::<Vec<_>>()
     } else {
-        find_skin_root_joint(&skins,&gltf.0)
+        find_skin_root_joint(&skins,&gltf)
     };
     roots.sort_by(|a,b|a.index().cmp(&b.index()));
     roots.dedup_by(|a,b|a.index() == b.index());
@@ -450,14 +497,14 @@ fn import_node_to_joint(node:&Node) -> RawJoint {
     raw_joint
 }
 
-pub fn load_skin(gltf:&ImportData,skeleton:&Skeleton) -> Option<Skin> {
-    let fst_skin = gltf.0.skins().next()?;
+pub fn load_skin(gltf:&gltf::Gltf,buffers:&Vec<gltf::buffer::Data>,skeleton:&Skeleton) -> Option<Skin> {
+    let fst_skin = gltf.skins().next()?;
     let joint_count = fst_skin.joints().count();
     let mat4s = if let Some(inverse_mats) = fst_skin.inverse_bind_matrices() {
         let view = inverse_mats.view()?;
         let start = view.offset() + inverse_mats.offset();
         let end = start + (view.stride().unwrap_or(0) * inverse_mats.count());
-        let buffer = &gltf.1[view.buffer().index()][start..end];
+        let buffer = &buffers[view.buffer().index()][start..end];
         let key_values:&[[f32;16]] =  unsafe { std::slice::from_raw_parts(buffer.as_ptr() as * const [f32;16], inverse_mats.count()) };
         let mats  = key_values.iter().map(Mat4::from_cols_array).collect::<Vec<_>>();
         mats
@@ -476,16 +523,16 @@ pub fn load_skin(gltf:&ImportData,skeleton:&Skeleton) -> Option<Skin> {
     Some(Skin::new(mat4s))
 }
 
-pub fn load_animations(data:&ImportData,skeleton:&Skeleton) -> Result<AnimationSet> {
+pub fn load_animations(data:&gltf::Gltf,buffers:&Vec<gltf::buffer::Data>,skeleton:&Skeleton) -> Result<AnimationSet> {
     let mut anim_set = AnimationSet::default();
-    for gltf_anim in data.0.animations() {
-       let animation = import_animation(data,&gltf_anim, skeleton)?;
+    for gltf_anim in data.animations() {
+       let animation = import_animation(buffers,&gltf_anim, skeleton)?;
        anim_set.add(animation);
     }
     Ok(anim_set)
 }
 
-fn import_animation(data:&ImportData,animation:&gltf::Animation,skeleton:&Skeleton) -> Result<Animation> {
+fn import_animation(buffers:&Vec<gltf::buffer::Data>,animation:&gltf::Animation,skeleton:&Skeleton) -> Result<Animation> {
     let mut raw_animation = RawAnimation::default();
     raw_animation.name = animation.name().unwrap_or("none").to_string();
     raw_animation.duration = 0f32;
@@ -506,7 +553,7 @@ fn import_animation(data:&ImportData,animation:&gltf::Animation,skeleton:&Skelet
         if let Some(name)  = skeleton.joint_names[index].as_ref() {
             if let Some(channels) = channels_per_joint.get(name.as_str()) {
                 for channel in channels {
-                    sample_animation_channel(data,&mut raw_animation.duration, channel,&mut new_track,30f32)?;
+                    sample_animation_channel(buffers,&mut raw_animation.duration, channel,&mut new_track,30f32)?;
                 }
             }
         }
@@ -529,7 +576,7 @@ fn import_animation(data:&ImportData,animation:&gltf::Animation,skeleton:&Skelet
     Ok(animation)
 }
 
-fn sample_animation_channel(data:&ImportData,duration:&mut f32,channel:&Channel,track:&mut RawJointTrack,rate:f32) -> Result<()> {
+fn sample_animation_channel(buffers:&Vec<gltf::buffer::Data>,duration:&mut f32,channel:&Channel,track:&mut RawJointTrack,rate:f32) -> Result<()> {
     let sampler = channel.sampler();
     let input = sampler.input();
     let output = sampler.output();
@@ -546,14 +593,14 @@ fn sample_animation_channel(data:&ImportData,duration:&mut f32,channel:&Channel,
     
     let start = buffer_view.offset() + input.offset() as usize ;
     let end = start + (istride * input.count());
-    let buffer = &data.1[buffer_view.buffer().index()][start..end];
+    let buffer = &buffers[buffer_view.buffer().index()][start..end];
     let timestamps:&[f32] =  unsafe { std::slice::from_raw_parts(buffer.as_ptr() as * const f32, input.count()) };
    
     let out_buffer_view = output.view().ok_or(anyhow!("view nil"))?;
     let ostride = out_buffer_view.stride().unwrap_or(0);
     let out_buffer_start:usize = out_buffer_view.offset() + output.offset()  as usize;
     let out_buffer_end:usize = out_buffer_start + (ostride * output.count());
-    let out_buffer:&[u8] = &data.1[out_buffer_view.buffer().index()][out_buffer_start..out_buffer_end];
+    let out_buffer:&[u8] = &buffers[out_buffer_view.buffer().index()][out_buffer_start..out_buffer_end];
 
     match channel.target().property() {
         Property::Translation => {

@@ -1,4 +1,4 @@
-
+mod import;
 pub mod asset;
 pub mod loader;
 
@@ -22,8 +22,6 @@ impl IModule for GLTFModule {
         app.add_asset_loader(GltfAsset::TYPE_UUID, GLTFLoader);
     }
 }
-
-type ImportData = (gltf::Document, Vec<gltf::buffer::Data>, Vec<gltf::image::Data>);
 
 pub fn create_gltf<T>(asset:&GltfAsset,commands:&mut Commands,mut mat_fn:T) -> Entity  
              where T: FnMut(&GltfMaterial) -> Option<Handle<Material>> {
