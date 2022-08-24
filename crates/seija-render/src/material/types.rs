@@ -249,3 +249,80 @@ impl TryFrom<&Value> for STextureDescriptor {
         Ok(STextureDescriptor(default_value))
     }
 }
+
+pub struct SBlendFactor(pub wgpu::BlendFactor);
+
+impl TryFrom<&Value> for SBlendFactor {
+    type Error = ();
+    fn try_from(value: &Value) -> Result<Self, Self::Error> {
+        let factor = match value.as_str().ok_or(())? {
+            "Zero" => wgpu::BlendFactor::Zero,
+            "One" => wgpu::BlendFactor::One,
+            "Src" => wgpu::BlendFactor::Src,
+            "OneMinusSrc" => wgpu::BlendFactor::OneMinusSrc,
+            "SrcAlpha" => wgpu::BlendFactor::SrcAlpha,
+            "OneMinusSrcAlpha" => wgpu::BlendFactor::OneMinusSrcAlpha,
+            "Dst" => wgpu::BlendFactor::Dst,
+            "OneMinusDst" => wgpu::BlendFactor::OneMinusDst,
+            "DstAlpha" => wgpu::BlendFactor::DstAlpha,
+            "OneMinusDstAlpha" => wgpu::BlendFactor::OneMinusDstAlpha,
+            "SrcAlphaSaturated" => wgpu::BlendFactor::SrcAlphaSaturated,
+            "Constant" => wgpu::BlendFactor::Constant,
+            "OneMinusConstant" => wgpu::BlendFactor::OneMinusConstant,
+            _ => { return Err(()); },
+        };
+        Ok(SBlendFactor(factor))
+    }
+}
+
+
+pub struct SBlendComponent(pub wgpu::BlendComponent);
+
+impl TryFrom<&Value> for SBlendComponent {
+    type Error = ();
+    fn try_from(value: &Value) -> Result<Self, Self::Error> {
+        let mut arr = value.as_array().ok_or(())?.iter();
+        let e1 = arr.next().ok_or(())?;
+        let e2 = arr.next().ok_or(())?;
+        let e3 = arr.next().ok_or(())?;
+        let fa = SBlendFactor::try_from(e1)?;
+        let fb = SBlendFactor::try_from(e3)?;
+        let o = SBlendOperation::try_from(e2)?;
+        let blend = wgpu::BlendComponent {src_factor:fa.0,dst_factor:fb.0,operation:o.0 };
+        Ok(SBlendComponent(blend))
+    }
+}
+
+pub struct SBlendOperation(pub wgpu::BlendOperation);
+
+impl TryFrom<&Value> for SBlendOperation {
+    type Error = ();
+    fn try_from(value: &Value) -> Result<Self, Self::Error> {
+        let operation = match value.as_str().ok_or(())? {
+            "+" => wgpu::BlendOperation::Add,
+            "-" => wgpu::BlendOperation::Subtract,
+            "r-" => wgpu::BlendOperation::ReverseSubtract,
+            "min" => wgpu::BlendOperation::Min,
+            "max" => wgpu::BlendOperation::Max,
+            _ => return Err(())
+        };
+        Ok(SBlendOperation(operation))
+    }
+}
+
+pub struct SBlendState(pub wgpu::BlendState);
+
+impl TryFrom<&Value> for SBlendState {
+    type Error = ();
+    fn try_from(value: &Value) -> Result<Self, Self::Error> {
+        let json_map = value.as_object().ok_or(())?;
+        let color = json_map.get(":color").ok_or(())?;
+        let alpha = json_map.get(":alpha").ok_or(())?;
+        let blend_color = SBlendComponent::try_from(color)?;
+        let blend_alpha = SBlendComponent::try_from(alpha)?;
+        Ok(SBlendState(wgpu::BlendState {
+            color:blend_color.0,
+            alpha:blend_alpha.0
+        }))
+    }
+}

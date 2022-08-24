@@ -15,6 +15,12 @@
             :tag "ShadowCaster"
             :targets []
             :shader { :name "core.shadowDepth" }
+            :targets [
+                        {
+                            :format "Bgra8UnormSrgb" 
+                            :blend { :color ["src" "-" "src"] :alpha nil } 
+                        }
+                     ]
         }
     ]
 }
