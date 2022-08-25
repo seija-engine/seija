@@ -2486,6 +2486,7 @@ dependencies = [
  "relative-path",
  "seija-app",
  "seija-core",
+ "thiserror",
  "uuid",
 ]
 
