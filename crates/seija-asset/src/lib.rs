@@ -10,6 +10,7 @@ mod asset;
 mod assets;
 mod loader;
 mod new_server;
+mod loading_queue;
 pub use asset::{Asset,AssetLoader,AssetLoaderParams,AssetDynamic};
 pub use loader::{LoadingTrack,TrackState};
 pub use handle::{HandleId,HandleUntyped,Handle};
