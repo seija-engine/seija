@@ -3,7 +3,7 @@ use bevy_ecs::prelude::Component;
 use seija_core::smol::channel::Sender;
 use uuid::Uuid;
 
-use crate::{asset::Asset, server::RefEvent};
+use crate::{asset::Asset, RefEvent};
 
 #[derive(Debug,Clone, Copy,PartialEq, Eq,Hash)]
 pub struct  HandleId {
@@ -30,7 +30,7 @@ impl HandleId {
 #[derive(Debug,Component)]
 pub struct Handle<T> where T:Asset {
     pub id:HandleId,
-    ref_sender:Option<Sender<RefEvent>>,
+    sender:Option<Sender<RefEvent>>,
     marker: PhantomData<T>
 }
 
@@ -51,14 +51,14 @@ impl<T: Asset> Eq for Handle<T> {}
 
 impl<T: Asset> Handle<T> {
     pub fn weak(id: HandleId) -> Handle<T> {
-        Handle { id, marker:PhantomData,ref_sender:None }
+        Handle { id, marker:PhantomData,sender:None }
     }
 
     pub fn strong(id:HandleId,ref_sender:Sender<RefEvent>) -> Handle<T> {
         ref_sender.try_send(RefEvent::Increment(id)).unwrap();
         Handle {
             id,
-            ref_sender:Some(ref_sender),
+            sender:Some(ref_sender),
             marker:PhantomData
         }
     }
@@ -72,20 +72,22 @@ impl<T: Asset> Handle<T> {
     }
 
     pub fn untyped(mut self) -> HandleUntyped {
-        let sender = self.ref_sender.clone();
-        self.ref_sender = None;
+        let sender = self.sender.clone();
+        self.sender = None;
         if let Some(sender) = sender {
             HandleUntyped::strong(self.id, sender)
         } else {
             HandleUntyped::weak(self.id)
         }
-       
+    }
+    pub fn forget(&mut self) {
+        self.sender = None;
     }
 }
 
 impl<T: Asset> Drop for Handle<T> {
     fn drop(&mut self) {
-        if let Some(ref_sender) = &self.ref_sender {
+        if let Some(ref_sender) = &self.sender {
             let _ = ref_sender.try_send(RefEvent::Decrement(self.id));
         }
     }
@@ -93,11 +95,11 @@ impl<T: Asset> Drop for Handle<T> {
 
 impl<T:Asset> Clone for Handle<T> {
     fn clone(&self) -> Self {
-        self.ref_sender.as_ref().map(|sender| {
+        self.sender.as_ref().map(|sender| {
             sender.try_send(RefEvent::Increment(self.id)).unwrap();
         });
 
-        Self { id: self.id.clone(), ref_sender: self.ref_sender.clone(), marker: PhantomData }
+        Self { id: self.id.clone(), sender: self.sender.clone(), marker: PhantomData }
     }
 }
 
@@ -113,7 +115,7 @@ impl HandleUntyped {
     pub fn typed<T:Asset>(mut self) -> Handle<T> {
         let sender = self.sender.clone();
         self.sender = None;
-        Handle { id:self.id,ref_sender:sender,marker:PhantomData }
+        Handle { id:self.id,sender,marker:PhantomData }
     }
 
     pub fn weak(id: HandleId) -> Self {
@@ -126,6 +128,10 @@ impl HandleUntyped {
     pub fn strong(id:HandleId,sender:Sender<RefEvent>) -> Self {
         sender.try_send(RefEvent::Increment(id)).unwrap();
         HandleUntyped { id, sender:Some(sender) }
+    }
+
+    pub fn forget(&mut self) {
+        self.sender = None;
     }
 }
 

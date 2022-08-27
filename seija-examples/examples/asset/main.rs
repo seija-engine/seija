@@ -28,9 +28,11 @@ pub fn main() {
 fn on_start(world:&mut World) {
     
     let server = world.get_resource::<AssetServer>().unwrap().clone();
-    server.load_sync::<MaterialDefineAsset>(world, "materials/pbrColor.mat.clj", None,false);
-    server.load_sync::<MaterialDefineAsset>(world, "materials/baseTexture.mat.clj", None,false);
-    let h_texture:Handle<Texture> = server.load_sync::<Texture>(world,"texture/b.jpg", None,false).unwrap();
+    server.load_sync::<MaterialDefineAsset>(world, "materials/pbrColor.mat.clj")
+                     .map(|mut v| v.forget()).unwrap();
+    server.load_sync::<MaterialDefineAsset>(world, "materials/baseTexture.mat.clj")
+                    .map(|mut v| v.forget()).unwrap();
+    let h_texture:Handle<Texture> = server.load_sync::<Texture>(world,"texture/b.jpg").unwrap();
     //Cube 
     /* 
     {

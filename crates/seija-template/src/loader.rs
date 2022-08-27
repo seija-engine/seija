@@ -1,10 +1,10 @@
-use crate::{TComponent, TEntity, Template};
+use crate::{TComponent, TEntity,};
 use seija_core::anyhow::{bail,Result,anyhow};
-use seija_asset::{AssetLoader, AssetServer, LoadingTrack, AssetLoaderParams, AssetDynamic};
-use seija_core::smol;
+
 use quick_xml::events::{BytesStart, Event};
 use smol_str::SmolStr;
-use async_trait::{async_trait};
+
+/*
 pub struct TemplateLoader;
 
 #[async_trait]
@@ -17,7 +17,7 @@ impl AssetLoader for TemplateLoader {
     }
 }
 
-
+*/
 pub fn read_tmpl_entity(xml_string: &str) -> Result<TEntity> {
     let mut xml_reader = quick_xml::Reader::from_str(xml_string);
     xml_reader.trim_text(true);

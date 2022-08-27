@@ -3,14 +3,15 @@ use std::sync::Arc;
 use anyhow::Context;
 use bevy_ecs::prelude::World;
 use lite_clojure_eval::EvalRT;
-use seija_asset::{AssetLoader, AssetServer, LoadingTrack, AssetLoaderParams, AssetDynamic, Assets};
+use seija_asset::{AssetServer, LoadingTrack, AssetLoaderParams, AssetDynamic, Assets};
 use seija_core::{anyhow::{Result,anyhow},smol, bytes::AsBytes};
-use async_trait::{async_trait};
+
 use serde_json::Value;
 
 use crate::{MemUniformInfo,material::Material, UniformType, RawUniformInfo};
 
 use super::{read_material_def, material_def::MaterialDefineAsset};
+/*
 pub(crate) struct MaterialDefineAssetLoader;
 
 #[async_trait]
@@ -50,7 +51,7 @@ impl AssetLoader for MaterialLoader {
         Ok(Box::new(material))
     }
 }
-
+*/
 
 fn set_material_props(material:&mut Material,value:&Value) -> Result<()> {
     let props = value.as_object().context(1)?;

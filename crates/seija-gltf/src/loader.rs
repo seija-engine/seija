@@ -5,7 +5,7 @@ use gltf::{Document, Node, animation::{Channel, Property, Interpolation}, Gltf};
 use relative_path::RelativePath;
 use seija_core::{anyhow::{Result, anyhow, bail, Context},smol};
 use crate::{asset::{ GltfCamera, GltfMaterial, GltfMesh, GltfNode, GltfPrimitive, GltfScene, NodeIndex}};
-use seija_asset::{Handle, AssetLoader, AssetServer, LoadingTrack, AssetLoaderParams, AssetDynamic};
+use seija_asset::{Handle,  AssetServer, LoadingTrack, AssetLoaderParams, AssetDynamic, AssetRequest};
 use seija_render::resource::{Texture, TextureDescInfo};
 use seija_render::{camera::camera::{Orthographic, Perspective, Projection}, 
                    resource::{Indices, Mesh, MeshAttributeType, VertexAttributeValues}, 
@@ -18,9 +18,9 @@ use seija_skeleton3d::{
         animation_builder::AnimationBuilder}, Animation
 };
 use seija_transform::{Transform, TransformMatrix};
-use async_trait::{async_trait};
-pub struct GLTFLoader;
 
+
+/*
 #[async_trait]
 impl AssetLoader for GLTFLoader {
    async fn load(&self,server:AssetServer,track:Option<LoadingTrack>,path:&str,_:Option<Box<dyn AssetLoaderParams>>) -> Result<Box<dyn AssetDynamic>> {
@@ -72,7 +72,7 @@ impl AssetLoader for GLTFLoader {
         skins
      }))
    }
-}
+}*/
 
 fn import_buffer_data(data:&mut gltf::Gltf,full_base_path:&Path) -> Result<Vec<gltf::buffer::Data>> {
     let mut buffers:Vec<gltf::buffer::Data> = Vec::new();
@@ -97,7 +97,7 @@ fn import_buffer_data(data:&mut gltf::Gltf,full_base_path:&Path) -> Result<Vec<g
     Ok(buffers)
 }
 
-async fn load_textures(server:&AssetServer,path:&str,gltf_data:&gltf::Gltf,buffers:&Vec<gltf::buffer::Data>,tracks:&mut Vec<LoadingTrack>) -> Result<Vec<Handle<Texture>>> {
+async fn load_textures(server:&AssetServer,path:&str,gltf_data:&gltf::Gltf,buffers:&Vec<gltf::buffer::Data>,tracks:&mut Vec<AssetRequest>) -> Result<Vec<Handle<Texture>>> {
     let mut textures:Vec<Handle<Texture>> = vec![];
     for (index,json_texture) in gltf_data.textures().enumerate() {
         let source = json_texture.source().source();
@@ -109,7 +109,7 @@ async fn load_textures(server:&AssetServer,path:&str,gltf_data:&gltf::Gltf,buffe
                 let end = (view.offset() + view.length()) as usize;
                 let buffer = &buffers[view.buffer().index()][start..end];
                 let texture = Texture::from_image_bytes(buffer,desc)?;
-                let h_texture = server.create_asset(texture,&format!("{:?}#texture.{}",path,index),None);
+                let h_texture = server.create_asset(texture,&format!("{:?}#texture.{}",path,index));
                 textures.push(h_texture);
             }
            
@@ -118,21 +118,23 @@ async fn load_textures(server:&AssetServer,path:&str,gltf_data:&gltf::Gltf,buffe
                     Scheme::Data(_, base64) => {
                         let image_bytes = base64::decode(&base64)?;
                         let texture = Texture::from_image_bytes(&image_bytes, desc)?;
-                        let h_texture = server.create_asset(texture,&format!("{:?}#texture.{}",path,index),None);
+                        let h_texture = server.create_asset(texture,&format!("{:?}#texture.{}",path,index));
                         textures.push(h_texture);
                         continue;
                     },
                     Scheme::File(file_path)  => { 
                         let bytes = smol::fs::read(file_path).await?;
                         let texture = Texture::from_image_bytes(&bytes, desc)?;
-                        let h_texture = server.create_asset(texture,&format!("{:?}#texture.{}",path,index),None);
+                        let h_texture = server.create_asset(texture,&format!("{:?}#texture.{}",path,index));
                         textures.push(h_texture);
                      },
                     Scheme::Relative => { 
-                        let texture_path = RelativePath::new(path).parent().ok_or(anyhow!("fail gltf texture path"))?.join(uri).normalize();
-                        let track = server.load_async::<Texture>(texture_path.as_str(),Some(Box::new(desc))).ok_or(anyhow!("fail load texture"))?;
-                        textures.push(track.take().typed());
-                        tracks.push(track);
+                        let texture_path = RelativePath::new(path).parent()
+                                                                      .ok_or(anyhow!("fail gltf texture path"))?
+                                                                      .join(uri).normalize();
+                        let req = server.load_async::<Texture>(texture_path.as_str(),Some(Box::new(desc)))?;
+                        textures.push(req.make_handle().typed());
+                        tracks.push(req);
                     }
                     _ => {
                         log::error!("gltf texture error:{}",uri);
@@ -237,7 +239,7 @@ fn load_meshs(path:&str,server:&AssetServer,gltf:&gltf::Gltf,buffers:&Vec<gltf::
                 mesh.set_indices(Some(Indices::U32(indices.into_u32().collect())));
             };
             mesh.build();
-            let mesh_handle = server.create_asset(mesh,&format!("{}#mesh.{}.{}",path,mesh_index,primitive_index),None);
+            let mesh_handle = server.create_asset(mesh,&format!("{}#mesh.{}.{}",path,mesh_index,primitive_index));
             let material = primitive.material().index().and_then(|idx| materials.get(idx)).map(|v|v.clone());
             primitives.push(GltfPrimitive { 
                 mesh: mesh_handle ,

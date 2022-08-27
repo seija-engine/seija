@@ -47,8 +47,8 @@ fn t_component_mesh<'w,'s,'a>(world:&mut World,entity:Entity,component:&TCompone
     let assets = world.get_resource::<AssetServer>().ok_or(anyhow!("not found asset server"))?;
     if let Some(res_path) = component.attrs.get("res") {
        let real_path = res_path.strip_prefix("res://").ok_or(anyhow!("mesh res path err"))?;
-       let handle = assets.get_asset_handle(real_path).ok_or(anyhow!("not found mesh res:{}",real_path))?;
-       let h_mesh = handle.typed::<Mesh>();
+       let handle = assets.get_asset(real_path).ok_or(anyhow!("not found mesh res:{}",real_path))?;
+       let h_mesh = handle.make_handle().typed::<Mesh>();
        queue.push(Insert {entity,component:h_mesh });
        return Ok(());
     }
@@ -59,7 +59,7 @@ fn t_component_material<'w,'s,'a>(world:&mut World,entity:Entity,component:&TCom
     let server = world.get_resource::<AssetServer>().ok_or(anyhow!("asset server"))?.clone();
     if let Some(res_path) = component.attrs.get("res") {
         let real_path = res_path.strip_prefix("res://").ok_or(anyhow!("mesh res path err"))?;
-        let h_mat = server.load_sync::<Material>(world, real_path, None, true).ok_or(anyhow!("load_sync material err"))?;
+        let h_mat = server.load_sync::<Material>(world, real_path)?;
         queue.push(Insert {entity,component:h_mat });
     }
     Ok(())

@@ -3,7 +3,7 @@ use std::{collections::HashMap, fmt::Debug};
 use bevy_ecs::prelude::{Res, ResMut};
 use seija_core::smol::channel::{Sender, TryRecvError};
 use bevy_ecs::event::{EventWriter, Events};
-use crate::{asset::Asset, handle::{Handle, HandleId}, server::{AssetServer, LifecycleEvent, RefEvent}, TrackState};
+use crate::{asset::Asset, handle::{Handle, HandleId}, server::{AssetServer}, RefEvent, LifecycleEvent};
 
 pub enum AssetEvent<T: Asset> {
     Created { handle: Handle<T> },
@@ -46,7 +46,13 @@ impl<T: Asset> Assets<T> {
         self.events.send(AssetEvent::Created {
             handle: Handle::weak(id),
         }); 
-        self.make_handle(id)
+        Handle::strong(id, self.ref_sender.clone())
+    }
+
+    pub fn add_weak(&mut self,asset:T) -> Handle<T> {
+        let id = HandleId::random::<T>();
+        self.assets.insert(id, asset);
+        Handle::weak(id)
     }
 
     pub fn get(&self, handle_id: &HandleId) -> Option<&T> {
@@ -55,11 +61,6 @@ impl<T: Asset> Assets<T> {
 
     pub fn get_mut(&mut self, handle_id: &HandleId) -> Option<&mut T> {
         self.assets.get_mut(handle_id)
-    }
-
-
-    fn make_handle(&self, id: HandleId) -> Handle<T> {
-        Handle::strong(id, self.ref_sender.clone())
     }
 
 
@@ -78,7 +79,6 @@ impl<T: Asset> Assets<T> {
             });
         }
     }
-
 
     pub fn remove(&mut self, handle_id: HandleId) -> Option<T> {
         let asset = self.assets.remove(&handle_id);
@@ -107,15 +107,14 @@ impl<T: Asset> Assets<T> {
     }
 
     pub fn update_assets_system(server:Res<AssetServer>,mut assets:ResMut<Assets<T>>) {
-        let life_events = server.inner.lifecycle_events.read();
+        let life_events = server.inner.life_cycle.lifecycle_events.read();
         if let Some(life_event) = life_events.get(&T::TYPE_UUID) {
             loop {
                 match life_event.receiver.try_recv() {
-                    Ok(LifecycleEvent::Create(asset,id,track)) => {
-                        log::info!("create asset:{:?}",&id); 
+                    Ok(LifecycleEvent::Create(asset,id,info)) => {
                         if let Ok(t_asset) = asset.downcast::<T>() {
                             assets.set_untracked(id, *t_asset);
-                            track.as_ref().map(|t| t.set_state(TrackState::Success));
+                            info.set_finish();
                         } else {
                             log::error!("{:?} type cast error",&id);
                         }

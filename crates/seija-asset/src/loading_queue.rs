@@ -1,12 +1,13 @@
-use std::{collections::VecDeque, sync::Arc};
+use std::{sync::Arc};
 
 use bevy_ecs::world::World;
 use downcast_rs::DowncastSync;
 use seija_core::smol::Task;
 use seija_core::smol_str::SmolStr;
 use seija_core::{smol,anyhow::Result};
-use crate::{AssetDynamic, Assets, HandleId};
-use crate::{new_server::{TypeLoader,AssetServer}};
+use crate::asset::TypeLoader;
+use crate::{AssetDynamic, HandleId};
+use crate::{server::{AssetServer}};
 
 pub(crate) struct LoadContext {
     hid:HandleId,
@@ -31,13 +32,14 @@ impl LoadContext {
         }
     }
 }
-
+#[derive(Default)]
 pub(crate) struct AssetLoadingQueue {
     loadings:Vec<LoadContext>,
 }
 
 impl AssetLoadingQueue {
-    pub fn push_uri(&mut self,uri:SmolStr,hid:HandleId,server:AssetServer,loader:Arc<TypeLoader>,world:&mut World) {
+    pub fn push_uri(&mut self,uri:SmolStr,hid:HandleId,loader:Arc<TypeLoader>,world:&mut World) {
+        let server = world.get_resource::<AssetServer>().unwrap().clone();
         let mut load_context = LoadContext::new(uri,hid,loader.clone());
         if let Some(touch) = loader.async_touch {
             let touch_task = smol::spawn(touch(server));
@@ -55,7 +57,7 @@ impl AssetLoadingQueue {
     }
 
 
-    pub fn update(&mut self,server:&AssetServer,world:&mut World) {
+    pub fn update(&mut self,world:&mut World) {
         let mut count:i32 = self.loadings.len() as i32 - 1;
         while count >= 0 {
             let load_ctx = &mut self.loadings[count as usize];
@@ -67,7 +69,7 @@ impl AssetLoadingQueue {
                     perpare(world,Some(&mut touch_data));
                 }
                 load_ctx.touch_data = Some(touch_data);
-
+                let server = world.get_resource::<AssetServer>().unwrap();
                 let load_fn = load_ctx.loader.async_load;
                 let load_task = smol::spawn(load_fn(server.clone(),load_ctx.touch_data.as_mut()));
                 load_ctx.load_task = Some(load_task);
@@ -79,7 +81,9 @@ impl AssetLoadingQueue {
                 let asset_data = smol::block_on(task);
                 match asset_data {
                     Ok(dyn_asset) => {
-                        server.add_dyn_asset(&load_ctx.loader.typ,load_ctx.hid, dyn_asset);
+                        if let Some(server) = world.get_resource::<AssetServer>() {
+                            server.add_dyn_asset(&load_ctx.uri,&load_ctx.loader.typ,load_ctx.hid, dyn_asset);
+                        }
                         load_ctx.is_finish = true;
                     },
                     Err(err) => {

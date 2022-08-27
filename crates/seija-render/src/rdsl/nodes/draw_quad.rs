@@ -59,9 +59,9 @@ impl IUpdateNode for DrawQuadNode {
         };
         let hmat:Handle<Material> =  {
             let server = world.get_resource::<AssetServer>().context(0)?;
-            let h_def = server.get_asset_handle(&self.material_name)
+            let h_def = server.get_asset(&self.material_name)
                                                       .context(1)?
-                                                      .typed::<MaterialDefineAsset>();
+                                                      .make_handle().typed::<MaterialDefineAsset>();
             let defs = world.get_resource::<Assets<MaterialDefineAsset>>().context(2)?;
             let define = defs.get(&h_def.id).context(4)?.define.clone();
             let mut material = Material::from_def(define, server).context(5)?;

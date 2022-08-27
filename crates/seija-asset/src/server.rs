@@ -1,322 +1,184 @@
-use std::{collections::HashMap, sync::{Arc}, path::{PathBuf, Path}};
-use bevy_ecs::{prelude::Res, world::World};
-use seija_core::{smol::channel::{ Receiver, Sender, TryRecvError}, LogResult};
+use crate::{
+    Asset, Assets, lifecycle::AssetLifeCycle, HandleId, RefEvent, 
+    asset::TypeLoader, AssetDynamic, Handle, errors::AssetError, HandleUntyped, LifecycleEvent, AssetLoaderParams,
+};
+use bevy_ecs::{prelude::{Res, World}};
 use parking_lot::RwLock;
-use relative_path::{ RelativePath};
+use relative_path::RelativePath;
+use seija_core::{anyhow::Result, smol_str::SmolStr, smol::channel::Sender};
 use uuid::Uuid;
-use seija_core::{smol, smol_str::SmolStr};
-use crate::{Asset, Assets, HandleId, asset::{AssetLoader, AssetLoaderParams}, loader::{LoadingTrack, TrackState},  AssetDynamic, Handle, HandleUntyped};
-use seija_core::anyhow::Result;
+use std::{
+    path::{PathBuf},
+    sync::{Arc, atomic::{AtomicU8,Ordering}}, collections::{HashMap, VecDeque}};
 
+
+pub struct AssetInfo {
+    handle_id:HandleId,
+    state:AtomicU8,
+    sender:Sender<RefEvent>
+}
+
+impl AssetInfo {
+    pub(crate) fn new<T:Asset>(sender:Sender<RefEvent>) -> Self {
+        let id = HandleId::random::<T>();
+        AssetInfo { handle_id:id, state: AtomicU8::new(0),sender }
+    }
+
+    pub(crate) fn new_id(id:HandleId,sender:Sender<RefEvent>) -> Self {
+        AssetInfo { handle_id: id, state: AtomicU8::new(0),sender }
+    }
+
+    pub(crate) fn set_finish(&self) {
+        self.state.store(1, Ordering::SeqCst);
+    }
+
+    pub(crate) fn is_finish(&self) -> bool {
+        self.state.load(Ordering::SeqCst) == 1
+    }
+
+    pub fn make_handle(&self) -> HandleUntyped {
+        HandleUntyped::strong(self.handle_id, self.sender.clone())
+    }
+
+    pub fn make_weak_handle(&self) -> HandleUntyped {
+        HandleUntyped::weak(self.handle_id)
+    }
+}
+
+pub struct AssetRequest {
+    asset:Arc<AssetInfo>
+}
+
+impl AssetRequest {
+    pub(crate) fn new(asset:Arc<AssetInfo>) -> Self {
+        AssetRequest { asset }
+    }
+
+    pub fn is_finish(&self) -> bool {
+        self.asset.is_finish()
+    }
+
+    pub fn make_handle(&self) -> HandleUntyped {
+        self.asset.make_handle()
+    }
+
+    pub fn make_weak_handle(&self) -> HandleUntyped {
+        self.asset.make_weak_handle()
+    }
+    
+}
 
 #[derive(Clone)]
 pub struct AssetServer {
-   pub inner:Arc<AssetServerInner>
+    pub inner: Arc<AssetServerInner>,
+    
 }
 
-pub struct AssetMeta {
-    handle:Option<HandleUntyped>,
-    track:Option<LoadingTrack>,
-    tag:Option<SmolStr>
-}
-
-impl AssetMeta {
-    pub fn new(track:Option<LoadingTrack>) -> Self {
-        AssetMeta {
-            handle:None,
-            track,
-            tag:None
-        }
-    }
-}
 
 pub struct AssetServerInner {
-    pub root_path:PathBuf,
-    pub ref_counter:AssetRefCounter,
-    pub lifecycle_events:RwLock<HashMap<Uuid,LifecycleEventChannel>>,
-    loaders:RwLock<HashMap<Uuid,Arc<dyn AssetLoader>>>,
-    assets:RwLock<HashMap<SmolStr,AssetMeta>>,
-    handle_to_path:RwLock<HashMap<HandleId,SmolStr>>,
-    tag_to_path:RwLock<HashMap<SmolStr,SmolStr>>
+    pub root_path: PathBuf,
+    pub(crate) life_cycle:AssetLifeCycle,
+    assets:RwLock<HashMap<SmolStr,Arc<AssetInfo>>>,
+    loaders:RwLock<HashMap<Uuid,Arc<TypeLoader>>>,
+    pub(crate) request_list:Arc<RwLock<VecDeque<(SmolStr,HandleId,Arc<TypeLoader>)>>>
 }
 
 impl AssetServer {
-    pub fn new(root_path:PathBuf) -> AssetServer {
-        log::info!("init asset server:{:?}",root_path.as_path());
+    pub fn new(root_path: PathBuf) -> AssetServer {
+        log::info!("init asset server:{:?}", root_path.as_path());
+        
         AssetServer {
-            inner:Arc::new(
-                AssetServerInner {
-                    root_path,
-                    ref_counter:AssetRefCounter::default(),
-                    lifecycle_events:Default::default(),
-                    loaders:RwLock::new(HashMap::default()),
-                    assets:RwLock::new(HashMap::default()),
-                    handle_to_path:RwLock::new(HashMap::default()),
-                    tag_to_path:RwLock::new(HashMap::default())
-                }
-            )
+            inner: Arc::new(AssetServerInner {
+                root_path,
+                life_cycle:Default::default(),
+                assets:RwLock::new(HashMap::default()),
+                loaders:Default::default(),
+                request_list:Default::default()
+            }),
         }
     }
-    
-    pub fn inner(&self) -> &AssetServerInner {
-        &self.inner
+
+    pub fn register_type<T: Asset>(&self) -> Assets<T> {
+        self.inner.life_cycle.register(&T::TYPE_UUID);
+        Assets::new(self.inner.life_cycle.sender())
     }
 
-    pub fn register_type<T:Asset>(&self) -> Assets<T> {
-        self.inner.lifecycle_events.write().insert(T::TYPE_UUID, LifecycleEventChannel::default());
-        Assets::new(self.get_ref_sender())
+    pub fn register_loader<T:Asset>(&self,loader:TypeLoader) {
+        self.inner.loaders.write().insert(T::TYPE_UUID.clone(), Arc::new(loader));
     }
 
-    pub fn get_ref_sender(&self) -> Sender<RefEvent> {
-        self.inner.ref_counter.channel.sender.clone()
+    pub fn full_path(&self, path: &str) -> Result<PathBuf> {
+        Ok(RelativePath::from_path(path)?.to_logical_path(&self.inner.root_path))
     }
 
-    pub fn register_loader(&self,uuid:Uuid,loader:impl AssetLoader) {
-        self.inner.loaders.write().insert(uuid, Arc::new(loader));
+    pub fn set_asset(&self,path:&str,id:HandleId) {
+       let asset_info = AssetInfo::new_id(id,self.inner.life_cycle.sender());
+       self.inner.assets.write().insert(SmolStr::new(path), Arc::new(asset_info));
     }
 
-    pub async fn read_bytes<P:AsRef<Path>>(&self,path:P) -> Result<Vec<u8>> {
-        if path.as_ref().is_relative() {
-            let path = RelativePath::from_path(path.as_ref())?;
-            let full_path = path.to_logical_path(&self.inner().root_path);
-            smol::fs::read(full_path).await.map_err(|e| e.into())
+    pub fn get_asset(&self,path:&str) -> Option<Arc<AssetInfo>> {
+        self.inner.assets.read().get(path).cloned()
+    }
+
+    pub fn add_dyn_asset(&self,path:&str,typ:&Uuid,hid:HandleId,asset:Box<dyn AssetDynamic>) {
+        let info = if let Some(info) = self.inner.assets.read().get(path) {
+            info.clone()
         } else {
-            smol::fs::read(path).await.map_err(|e| e.into())
-        }
-    }
-
-    
-    
-    async fn _load_async<T:Asset>(&self,path:&str,loading_track:LoadingTrack,params:Option<Box<dyn AssetLoaderParams>>) {
-        let loader = self.inner.loaders.read().get(&T::TYPE_UUID).cloned();
-        if let Some(loader) = loader {
-            loading_track.set_state(TrackState::Loading);
-            match loader.load(self.clone(),Some(loading_track.clone()),path, params).await {
-                Ok(asset) => {
-                    self.create_dyn_asset(path,&T::TYPE_UUID, asset, loading_track.handle_id().clone(),Some(loading_track));
-                },
-                Err(err) => {
-                    loading_track.set_state(TrackState::Fail);
-                    self.remove_asset_meta(loading_track.handle_id());
-                    log::error!("load async {:?} error: {}",path,err); 
-                },
-            }
-        }
-    }
-
-   
-
-    pub fn load_async<T:Asset>(&self,path:&str,params:Option<Box<dyn AssetLoaderParams>>) -> Option<LoadingTrack> {
-        if let Some(track) = self.inner.assets.read().get(path).and_then(|info|info.track.clone()) {
-            return Some(track);
-        }
-        if !self.inner.loaders.read().contains_key(&T::TYPE_UUID) { return None; }
-        let normal_path = RelativePath::new(path).normalize();
-        log::info!("load async:{}",normal_path.as_str());
-        let loading_track =  LoadingTrack::new(HandleId::random::<T>(),self.get_ref_sender());
-        let clone_server = self.clone();
-        let clone_track = loading_track.clone();
-        self.add_asset_meta(path, loading_track.clone());
-        smol::spawn(async move {
-            clone_server._load_async::<T>(normal_path.as_str(), loading_track, params).await;
-        }).detach();
-        return Some(clone_track);
-    }
-
-    pub fn load_sync<T:Asset>(&self,world:&mut World,path:&str,params:Option<Box<dyn AssetLoaderParams>>,auto_release:bool) -> Option<Handle<T>> {
-        if let Some(track) = self.inner.assets.read().get(path).and_then(|info|info.track.clone()) {
-            if track.is_finish() {
-                return Some(track.take().typed::<T>());
-            } else {
-               return smol::block_on(async move { track.await } ).map(|v| v.typed::<T>())
-            }
-        }
-        if let Some(loader) = self.inner.loaders.read().get(&T::TYPE_UUID).cloned() {
-            match loader.load_sync(world,path, self.clone(), params).log_err().ok() {
-                Some(dyn_asset) => {
-                    if let (Ok(asset),Some(mut assets))  = (dyn_asset.downcast::<T>(), world.get_resource_mut::<Assets<T>>()) {
-                       let h_asset = assets.add(*asset);
-                       if auto_release {
-                            self.set_asset(path, h_asset.clone_weak().untyped());
-                       } else {
-                            self.set_asset(path, h_asset.clone().untyped());
-                       }
-                       
-                       return Some(h_asset);
-                    } else {
-                        log::error!("cast type or Assets<T> error:{:?}",&T::TYPE_UUID);
-                        return None;
-                    }
-                },
-                None => {},
-            };
-        }
-        log::error!("not found loader:{:?}",&T::TYPE_UUID);
-        None
-    }
-
-    fn create_dyn_asset(&self,path:&str,uuid:&Uuid,asset:Box<dyn AssetDynamic>,hid:HandleId,track:Option<LoadingTrack>) {
-        if !self.inner.assets.read().contains_key(path) {
-            let smol_path = SmolStr::from(path);
-            let mut write_assets = self.inner().assets.write();
-            write_assets.insert(smol_path.clone(), AssetMeta::new(track.clone()));
-      
-            self.inner().handle_to_path.write().insert(hid, smol_path);
+            let info = Arc::new(AssetInfo::new_id(hid, self.inner.life_cycle.sender()));
+            self.inner.assets.write().insert(SmolStr::new(path), info.clone());
+            info
         };
-        let events = self.inner.lifecycle_events.write();
-        if let Some(event) = events.get(uuid) {
-            event.sender.try_send(LifecycleEvent::Create(asset,hid,track)).unwrap();
+        let events = self.inner.life_cycle.lifecycle_events.write();
+        if let Some(event) = events.get(typ) {
+            event.sender.try_send(LifecycleEvent::Create(asset,hid,info)).unwrap();
         }
     }
 
-    pub fn create_asset<T:Asset>(&self,asset:T,path:&str,track:Option<LoadingTrack>) -> Handle<T> {
-        let sender = self.inner.ref_counter.channel.sender.clone();
-        let h = Handle::<T>::strong(HandleId::random::<T>(), sender);
-        self.create_dyn_asset(path,&T::TYPE_UUID, Box::new(asset), h.id,track);
+    pub fn create_asset<T:Asset>(&self,asset:T,path:&str) -> Handle<T> {
+        let h = Handle::<T>::strong(HandleId::random::<T>(), self.inner.life_cycle.sender());
+        self.add_dyn_asset(path,&T::TYPE_UUID,h.id,Box::new(asset));
         h
     }
 
-    fn add_asset_meta(&self,path:&str,track:LoadingTrack) {
-        let hid = track.handle_id().clone();
-        let mut write_assets = self.inner().assets.write();
-        let path = SmolStr::new(path);
-        write_assets.insert(path.clone(), AssetMeta::new(Some(track)));
-        self.inner().handle_to_path.write().insert(hid, path);
-    }
-
-    fn remove_asset_meta(&self,id:&HandleId) {
-        if let Some(path) = self.inner.handle_to_path.write().remove(id) {
-           if let Some(meta) = self.inner.assets.write().remove(path.as_str()) {
-               if let Some(tag) = meta.tag {
-                 let key = self.inner.tag_to_path.read().iter().find(|v| v.0 == &tag).map(|v| v.0.clone());
-                 key.map(|k| {
-                    self.inner.tag_to_path.write().remove(&k);
-                 });
-               }
-           }
-        }
-    }
-
-    pub fn full_path(&self,path:&str) -> Result<PathBuf> {
-        Ok(RelativePath::from_path(path)?.to_logical_path(&self.inner().root_path))
-    }
-
-    pub fn set_asset(&self,path:&str,handle:HandleUntyped) {
-        if self.inner.assets.read().contains_key(path) { return; }
-        let hid = handle.id;
-        let p:SmolStr = path.into();
-        self.inner.assets.write().insert(p.clone(), AssetMeta { handle:Some(handle),track:None,tag:None });
-        self.inner.handle_to_path.write().insert(hid, p);
-    }
-
-    pub fn get_asset_handle(&self,path:&str) -> Option<HandleUntyped> {
-        if let Some(meta) = self.inner.assets.read().get(path) {
-            if let Some(handle) = &meta.handle {
-                return Some(handle.clone());
-            } else if let Some(track) = &meta.track {
-                return Some(track.take());
+    pub fn load_sync<T:Asset>(&self,world:&mut World,path:&str) -> Result<Handle<T>> {
+        if let Some(info) = self.inner.assets.read().get(path) {
+            if info.is_finish() {
+                return Ok(info.make_handle().typed::<T>());
             }
-           return None;
-        }
-        return None;
-    }
-
-    
-    pub fn set_tag_asset(&self,path:&str,tag:&str) {
-        let tag_string = SmolStr::new(tag);
-        if let Some(meta) = self.inner.assets.write().get_mut(path) {
-            meta.tag = Some(tag.into())
-        }
-        self.inner.tag_to_path.write().insert(tag_string, path.into());
-    }
-
-    pub fn get_tag_asset(&self,tag:&str) -> Option<HandleUntyped> {
-        self.inner.tag_to_path.read().get(tag).and_then(|v| self.get_asset_handle(v))
-    }
-
-    pub fn free_unused_assets(&self) {
-        let ref_receiver = &self.inner.ref_counter.channel.receiver;
-        let mut ref_map = self.inner.ref_counter.ref_counts.write();
-        let mut free_list:Vec<HandleId> = Vec::new();
-        loop {
-            let ref_event = match ref_receiver.try_recv() {
-                Ok(v) => v,
-                Err(TryRecvError::Empty) => break,
-                Err(TryRecvError::Closed) => panic!("RefChange channel disconnected."),
-            };
-            match ref_event {
-                RefEvent::Increment(id) => {
-                    *ref_map.entry(id).or_insert(0) += 1;
-                },
-                RefEvent::Decrement(id) => {
-                    let entry = ref_map.entry(id).or_insert(0);
-                    *entry -= 1;
-                    if *entry == 0 {
-                       free_list.push(id);
-                    }
+            let mut wait = parking_lot_core::SpinWait::default();
+            loop {
+                if info.is_finish() {
+                    return Ok(info.make_handle().typed::<T>());
                 }
+                wait.spin();
             }
         }
+        let loader = self.inner.loaders.read().get(&T::TYPE_UUID).ok_or(AssetError::NotFoundLoader)?.clone();
+        let func = loader.sync_load;
+        let load_asset = func(world,path,self)?;
+        let boxed_asset = load_asset.downcast::<T>().map_err(|_| AssetError::TypeCastError)?;
+        let mut assets = world.get_resource_mut::<Assets<T>>().ok_or(AssetError::TypeCastError)?;
+        let handle = assets.add(*boxed_asset);
+        let info = Arc::new( AssetInfo::new_id(handle.id, self.inner.life_cycle.sender()));
+        self.inner.assets.write().insert(SmolStr::new(path), info);
+        Ok(handle)
+    }
 
-        if !free_list.is_empty() {
-            let lifecycle_events = self.inner.lifecycle_events.read();
-            for id in free_list {
-                if ref_map.get(&id).cloned().unwrap_or(0) == 0 {
-                     if  let Some(channel) = lifecycle_events.get(id.typ()) {
-                         channel.sender.try_send(LifecycleEvent::Free(id)).unwrap();
-                         self.remove_asset_meta(&id);
-                     }
-                }
-            }
+    pub fn load_async<T:Asset>(&self,path:&str,params:Option<Box<dyn AssetLoaderParams>>) -> Result<AssetRequest> {
+        if let Some(info) = self.inner.assets.read().get(path) {
+            return Ok(AssetRequest::new(info.clone()));
         }
-    }
-    
-}
+        let asset_info = Arc::new(AssetInfo::new::<T>(self.inner.life_cycle.sender()));
+        self.inner.assets.write().insert(path.into(), asset_info.clone());
 
-
-pub enum RefEvent {
-    Increment(HandleId),
-    Decrement(HandleId),
-}
-
-
-pub struct AssetRefCounter {
-    pub channel:Arc<RefEventChannel>,
-    ref_counts:RwLock<HashMap<HandleId,usize>>
-}
-
-pub struct RefEventChannel {
-    pub sender:Sender<RefEvent>,
-    receiver:Receiver<RefEvent>,
-}
-
-impl Default for AssetRefCounter {
-    fn default() -> Self {
-        let (sender, receiver) = smol::channel::unbounded();
-        Self {
-            channel: Arc::new(RefEventChannel {sender,receiver}),
-            ref_counts: Default::default() 
-        }  
+        let loader = self.inner.loaders.read().get(&T::TYPE_UUID).ok_or(AssetError::NotFoundLoader)?.clone();
+        self.inner.request_list.write().push_back((SmolStr::new(path),asset_info.handle_id,loader));
+        Ok(AssetRequest::new(asset_info))
     }
 }
 
-pub struct LifecycleEventChannel {
-    pub sender:Sender<LifecycleEvent>,
-    pub receiver:Receiver<LifecycleEvent>,
-}
 
-impl Default for LifecycleEventChannel {
-    fn default() -> Self {
-        let (sender, receiver) = smol::channel::unbounded();
-        Self {sender,receiver}
-    }
-}
-
-pub enum LifecycleEvent {
-    Create(Box<dyn AssetDynamic>,HandleId,Option<LoadingTrack>),
-    Free(HandleId),
-} 
 
 pub fn free_unused_assets_system(asset_server: Res<AssetServer>) {
-    asset_server.free_unused_assets();
+    asset_server.inner.life_cycle.free_unused_assets();
 }

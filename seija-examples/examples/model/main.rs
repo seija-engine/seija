@@ -1,6 +1,6 @@
 use bevy_ecs::system::{Commands, ResMut, CommandQueue};
 use glam::{Vec3, Quat};
-use seija_asset::{Assets, AssetServer, LoadingTrack, Handle};
+use seija_asset::{Assets, AssetServer,  Handle, AssetRequest};
 use seija_core::{CoreStage, StartupStage, window::AppWindow};
 use seija_examples::{init_core_app, add_pbr_camera, load_material, update_camera_trans_system};
 use seija_gltf::{create_gltf, asset::GltfAsset};
@@ -12,7 +12,7 @@ use seija_transform::Transform;
 #[derive(Default)]
 struct GameData {
     shiba_asset:Option<Handle<GltfAsset>>,
-    track:Option<LoadingTrack>
+    track:Option<AssetRequest>
 }
 
 pub fn main() {
@@ -52,9 +52,9 @@ fn on_update(mut commands:Commands,mut mats:ResMut<Assets<Material>>,
     server:Res<AssetServer>,mut data:ResMut<GameData>,gltfs:Res<Assets<GltfAsset>>,defs: Res<Assets<MaterialDefineAsset>>) {
     let is_finish = data.track.as_ref().map(|v| v.is_finish()).unwrap_or(false);
     if is_finish {
-       let h_def = server.get_asset_handle("materials/baseTexture.mat.clj").unwrap().typed::<MaterialDefineAsset>();
+       let h_def = server.get_asset("materials/baseTexture.mat.clj").unwrap().make_handle().typed::<MaterialDefineAsset>();
        let define = defs.get(&h_def.id).unwrap().define.clone();
-       data.shiba_asset = data.track.as_ref().map(|v| v.take().typed());
+       data.shiba_asset = data.track.as_ref().map(|v| v.make_handle().typed());
        data.track = None;
        if let Some(asset) = gltfs.get(&data.shiba_asset.as_ref().unwrap().id) {
         let _ = create_gltf(&asset, &mut commands,  |gltf_mat| {

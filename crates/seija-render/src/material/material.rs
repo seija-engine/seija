@@ -35,7 +35,7 @@ impl Material {
 
     pub fn from_world(world:&World,define:&str) -> Option<Material> {
         let server = world.get_resource::<AssetServer>()?;
-        let h_define = server.get_asset_handle(define)?.typed::<MaterialDefineAsset>();
+        let h_define = server.get_asset(define)?.make_handle().typed::<MaterialDefineAsset>();
         let define = world.get_resource::<Assets<MaterialDefineAsset>>()?.get(&h_define.id)?.define.clone();
         Material::from_def(define, server)
     }
@@ -61,8 +61,8 @@ impl TextureProps {
     pub fn from_def_new(def:&Arc<MaterialDef>,server:&AssetServer) -> Option<TextureProps> {
         let mut textures:Vec<Handle<Texture>> = Vec::with_capacity(def.tex_prop_def.indexs.len());
         for (_,info) in def.tex_prop_def.indexs.iter() {
-            let handle = server.get_asset_handle(info.def_asset.as_str())?;
-            textures.push(handle.typed().clone_weak());
+            let handle = server.get_asset(info.def_asset.as_str())?;
+            textures.push(handle.make_weak_handle().typed().clone_weak());
         }
         Some(TextureProps {
             is_dirty:true,

@@ -1,11 +1,11 @@
 use std::{collections::HashSet};
 use bevy_ecs::prelude::World;
 use image::ImageError;
-use seija_asset::{Assets, AssetEvent, Handle, AssetLoader, AssetLoaderParams, AssetServer, LoadingTrack, AssetDynamic};
+use seija_asset::{Assets, AssetEvent, Handle,  AssetLoaderParams, AssetServer, LoadingTrack, AssetDynamic};
 use uuid::Uuid;
 use seija_core::{TypeUuid, IDGenU32};
 use bevy_ecs::event::{ManualEventReader, Events};
-use async_trait::async_trait;
+
 use once_cell::sync::Lazy;
 use crate::{resource::{read_image_info, image_info::color_image_info}, RenderContext};
 use seija_core::{smol,anyhow::{Result}};
@@ -20,6 +20,7 @@ pub struct Texture {
     desc:TextureDescInfo
 }
 impl AssetLoaderParams for TextureDescInfo {}
+/*
 pub(crate) struct TextureLoader;
 #[async_trait]
 impl AssetLoader for TextureLoader {
@@ -34,7 +35,7 @@ impl AssetLoader for TextureLoader {
         Ok(Box::new(texture))
     }
 }
-
+*/
 
 #[derive(Debug)]
 pub enum TextureType {

@@ -127,18 +127,18 @@ impl RenderModule {
         let h_quad = meshs.add(Quad::new(1f32).into());
 
         let mut textures = world.get_resource_mut::<Assets<Texture>>().unwrap();
-        let h_white = textures.add(color_texture([255,255,255,255], 16));
-        let h_blue  = textures.add(color_texture([0,0,255,255], 16));
-        let h_black = textures.add(color_texture([0,0,0,255], 16));
+        let h_white = textures.add_weak(color_texture([255,255,255,255], 16));
+        let h_blue  = textures.add_weak(color_texture([0,0,255,255], 16));
+        let h_black = textures.add_weak(color_texture([0,0,0,255], 16));
         if let Some(assets) = world.get_resource::<AssetServer>() {
-            assets.set_asset("mesh:cube", h_cube.untyped());
-            assets.set_asset("mesh:sphere", h_sphere.untyped());
-            assets.set_asset("mesh:plane", h_plane.untyped());
-            assets.set_asset("mesh:quad", h_quad.untyped());
+            assets.set_asset("mesh:cube", h_cube.id);
+            assets.set_asset("mesh:sphere", h_sphere.id);
+            assets.set_asset("mesh:plane", h_plane.id);
+            assets.set_asset("mesh:quad", h_quad.id);
 
-            assets.set_asset("texture:white", h_white.untyped());
-            assets.set_asset("texture:blue", h_blue.untyped());
-            assets.set_asset("texture:black", h_black.untyped());
+            assets.set_asset("texture:white", h_white.id);
+            assets.set_asset("texture:blue", h_blue.id);
+            assets.set_asset("texture:black", h_black.id);
         }
     }
 }

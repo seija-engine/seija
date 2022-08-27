@@ -33,4 +33,3 @@ glsl-pack-rtbase = {path = "../../../glsl-pack/glsl-pack-rtbase"}
 fixedbitset = "0.4.1"
 anyhow = "1.0.58"
 smol_str = "*"
-async-trait = "0.1.57"

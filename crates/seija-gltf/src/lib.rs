@@ -5,8 +5,6 @@ pub mod loader;
 use asset::{GltfAsset, GltfMaterial};
 use bevy_ecs::prelude::{Commands, Entity};
 pub use gltf;
-use loader::GLTFLoader;
-
 
 use seija_app::{IModule, App};
 use seija_asset::{Handle, AddAsset};
@@ -19,7 +17,8 @@ pub struct GLTFModule;
 impl IModule for GLTFModule {
     fn init(&mut self,app:&mut App) {
         app.add_asset::<GltfAsset>();
-        app.add_asset_loader(GltfAsset::TYPE_UUID, GLTFLoader);
+        //TODO
+        //app.add_asset_loader(GltfAsset::TYPE_UUID, GLTFLoader);
     }
 }
 

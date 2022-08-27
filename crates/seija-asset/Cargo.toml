@@ -3,7 +3,6 @@ name = "seija-asset"
 version = "0.1.0"
 edition = "2018"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
 bevy_ecs = "0.7.0"
@@ -12,8 +11,8 @@ seija-core = {path = "../seija-core"}
 uuid = "0.8.2"
 rand = "0.8.0"
 parking_lot = "0.11.1"
+parking_lot_core = "0.8.5"
 log = "0.4.17"
 downcast-rs = "1.2.0"
-async-trait = "0.1.57"
 relative-path = "1.7.2"
 thiserror = "1.0.25"

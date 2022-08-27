@@ -27,6 +27,10 @@ impl AssetInfo {
     pub(crate) fn set_finish(&self) {
         self.state.store(1, Ordering::SeqCst);
     }
+
+    pub(crate) fn is_finish(&self) -> bool {
+        self.state.load(Ordering::SeqCst) == 1
+    }
 }
 
 struct AssetRequest {
@@ -37,22 +41,13 @@ impl AssetRequest {
     pub(crate) fn new(asset:Arc<AssetInfo>) -> Self {
         AssetRequest { asset }
     }
+
+    pub fn is_finish(&self) -> bool {
+        self.is_finish()
+    }
 }
 
-pub type AssetTouchFn = fn(server:AssetServer) -> Pin<Box<dyn Future<Output = Box<dyn DowncastSync>> + Send>>;
-pub type AssetPerpareFn = fn(world:&mut World,touch_data:Option<&mut Box<dyn DowncastSync>>) -> Option<Box<dyn DowncastSync>>;
-pub type AssetAsyncLoadFn = fn(server:AssetServer,touch_data:Option<&mut Box<dyn DowncastSync>>) -> Pin<Box<dyn Future<Output = Result<Box<dyn AssetDynamic>>> + Send>>;
-pub struct TypeLoader {
-    pub typ:Uuid,
-    pub sync_loader:fn(w:&mut World) -> Result<Box<dyn AssetDynamic>>,
-    /*
-        async fn run(_self: &Type) { }
-        Box::pin(run(self))
-    */
-    pub async_touch:Option<AssetTouchFn>,
-    pub perpare:Option<AssetPerpareFn>,
-    pub async_load:AssetAsyncLoadFn
-}
+
 
 
 
