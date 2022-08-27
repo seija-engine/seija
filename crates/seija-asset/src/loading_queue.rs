@@ -5,22 +5,24 @@ use downcast_rs::DowncastSync;
 use seija_core::smol::Task;
 use seija_core::smol_str::SmolStr;
 use seija_core::{smol,anyhow::Result};
-use crate::asset::TypeLoader;
-use crate::{AssetDynamic, HandleId};
+use crate::asset::AssetLoader;
+use crate::{AssetDynamic, HandleId, AssetLoaderParams};
 use crate::{server::{AssetServer}};
 
 pub(crate) struct LoadContext {
     hid:HandleId,
     uri:SmolStr,
-    loader:Arc<TypeLoader>,
-    pub(crate) touch_task:Option<Task<Box<dyn DowncastSync>>>,
+    loader:Arc<AssetLoader>,
+    pub(crate) touch_task:Option<Task<Result<Box<dyn DowncastSync>>>>,
     pub(crate) touch_data:Option<Box<dyn DowncastSync>>,
     pub(crate) load_task:Option<Task<Result<Box<dyn AssetDynamic>>>>,
     pub is_finish:bool,
+    pub is_fail:bool,
+    pub params:Option<Box<dyn AssetLoaderParams>>
 }
 
 impl LoadContext {
-    pub fn new(uri:SmolStr,hid:HandleId,loader:Arc<TypeLoader>) -> Self {
+    pub fn new(uri:SmolStr,hid:HandleId,loader:Arc<AssetLoader>,params:Option<Box<dyn AssetLoaderParams>>) -> Self {
         LoadContext {
             hid,
             uri,
@@ -28,7 +30,9 @@ impl LoadContext {
             touch_task:None,
             touch_data:None,
             load_task:None,
-            is_finish:false
+            is_finish:false,
+            is_fail:false,
+            params
         }
     }
 }
@@ -38,11 +42,12 @@ pub(crate) struct AssetLoadingQueue {
 }
 
 impl AssetLoadingQueue {
-    pub fn push_uri(&mut self,uri:SmolStr,hid:HandleId,loader:Arc<TypeLoader>,world:&mut World) {
+    pub fn push_uri(&mut self,uri:SmolStr,hid:HandleId,loader:Arc<AssetLoader>,world:&mut World,params:Option<Box<dyn AssetLoaderParams>>) {
         let server = world.get_resource::<AssetServer>().unwrap().clone();
-        let mut load_context = LoadContext::new(uri,hid,loader.clone());
+        let mut load_context = LoadContext::new(uri,hid,loader.clone(),params);
         if let Some(touch) = loader.async_touch {
-            let touch_task = smol::spawn(touch(server));
+            let touch_task = smol::spawn(touch(server,load_context.uri.clone()));
+            
             load_context.touch_task = Some(touch_task);
             self.loadings.push(load_context);
             return;
@@ -51,7 +56,9 @@ impl AssetLoadingQueue {
             load_context.touch_data = prepare(world,None);   
         }
         let load_fn = loader.async_load;
-        let load_task = smol::spawn(load_fn(server,load_context.touch_data.as_mut()));
+        let params = load_context.params.take();
+        let load_task = smol::spawn(load_fn(server,load_context.uri.clone()
+                                                                                   ,load_context.touch_data.take(),params));
         load_context.load_task = Some(load_task);
         self.loadings.push(load_context);
     }
@@ -64,14 +71,27 @@ impl AssetLoadingQueue {
 
             if  load_ctx.touch_task.as_ref().map(|v| v.is_finished()).unwrap_or(false) {
                 let task = load_ctx.touch_task.take().unwrap();
-                let mut touch_data = smol::block_on(task);
-                if let Some(perpare) = load_ctx.loader.perpare {
-                    perpare(world,Some(&mut touch_data));
+                match smol::block_on(task) {
+                    Ok(touch_data) => {
+                        if let Some(perpare) = load_ctx.loader.perpare {
+                            load_ctx.touch_data = perpare(world,Some(touch_data));
+                        } else {
+                            load_ctx.touch_data = Some(touch_data);
+                        }
+                        
+                    },
+                    Err(err) => {
+                        log::error!("async touch error:{:?}",err);
+                        load_ctx.is_fail = true;
+                        continue;
+                    },
                 }
-                load_ctx.touch_data = Some(touch_data);
+               
+                
                 let server = world.get_resource::<AssetServer>().unwrap();
                 let load_fn = load_ctx.loader.async_load;
-                let load_task = smol::spawn(load_fn(server.clone(),load_ctx.touch_data.as_mut()));
+                let params = load_ctx.params.take();
+                let load_task = smol::spawn(load_fn(server.clone(),load_ctx.uri.clone(),load_ctx.touch_data.take(),params));
                 load_ctx.load_task = Some(load_task);
                 continue;
             }
@@ -88,11 +108,19 @@ impl AssetLoadingQueue {
                     },
                     Err(err) => {
                         log::error!("load asset error:{:?}",err);
+                        load_ctx.is_fail = true;
                     },
                 }
             }
-            if load_ctx.is_finish {
+            if load_ctx.is_finish || load_ctx.is_fail {
+                if load_ctx.is_fail {
+                   let server = world.get_resource::<AssetServer>().unwrap();
+                   if let Some(info) = server.get_asset(&load_ctx.uri) {
+                        info.set_fail();
+                   }
+                }
                 self.loadings.remove(count as usize);
+                
             }
             count -= 1;
         }

@@ -59,7 +59,7 @@ fn t_component_material<'w,'s,'a>(world:&mut World,entity:Entity,component:&TCom
     let server = world.get_resource::<AssetServer>().ok_or(anyhow!("asset server"))?.clone();
     if let Some(res_path) = component.attrs.get("res") {
         let real_path = res_path.strip_prefix("res://").ok_or(anyhow!("mesh res path err"))?;
-        let h_mat = server.load_sync::<Material>(world, real_path)?;
+        let h_mat = server.load_sync::<Material>(world, real_path,None)?;
         queue.push(Insert {entity,component:h_mat });
     }
     Ok(())

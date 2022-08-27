@@ -4,6 +4,7 @@ mod texture;
 mod image_info;
 mod cube_map;
 pub mod shape;
+mod loader;
 pub use texture::{Texture,TextureDescInfo,TextureType,color_texture,update_texture_system};
 pub use image_info::{ImageInfo,read_image_info,load_image_info};
 pub use cube_map::{CubeMapBuilder};
@@ -17,6 +18,5 @@ use seija_asset::{AddAsset};
 pub(crate) fn init_resource(app:&mut App) {
     app.add_asset::<Mesh>();
     app.add_asset::<Texture>();
-    //TODO
-    //app.add_asset_loader(Texture::TYPE_UUID,TextureLoader);
+    app.add_asset_loader::<Texture>(loader::new_texture_loader());
 }

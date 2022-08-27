@@ -1,14 +1,14 @@
 use std::{collections::HashSet};
 use bevy_ecs::prelude::World;
 use image::ImageError;
-use seija_asset::{Assets, AssetEvent, Handle,  AssetLoaderParams, AssetServer, LoadingTrack, AssetDynamic};
+use seija_asset::{Assets, AssetEvent, Handle};
 use uuid::Uuid;
 use seija_core::{TypeUuid, IDGenU32};
 use bevy_ecs::event::{ManualEventReader, Events};
 
 use once_cell::sync::Lazy;
 use crate::{resource::{read_image_info, image_info::color_image_info}, RenderContext};
-use seija_core::{smol,anyhow::{Result}};
+use seija_core::{anyhow::{Result}};
 use super::{ImageInfo, RenderResourceId};
 
 static IDGEN_TEXTURE:Lazy<IDGenU32> = Lazy::new(|| { IDGenU32::new() });
@@ -19,23 +19,7 @@ pub struct Texture {
     pub texture:TextureType,
     desc:TextureDescInfo
 }
-impl AssetLoaderParams for TextureDescInfo {}
-/*
-pub(crate) struct TextureLoader;
-#[async_trait]
-impl AssetLoader for TextureLoader {
-    async fn load(&self,server:AssetServer,_:Option<LoadingTrack>,path:&str,params:Option<Box<dyn AssetLoaderParams>>) ->Result<Box<dyn AssetDynamic>> {
-        let full_path = server.inner().root_path.join(path);
-        let bytes = smol::fs::read(full_path).await?;
-        let desc = params.and_then(|v| v.downcast::<TextureDescInfo>().ok())
-                                          .map(|v| *v)
-                                          .unwrap_or(Default::default());
-        let texture = Texture::from_image_bytes(&bytes, desc)?;
-        
-        Ok(Box::new(texture))
-    }
-}
-*/
+
 
 #[derive(Debug)]
 pub enum TextureType {

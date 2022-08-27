@@ -74,7 +74,7 @@ impl IUpdateNode for ShadowNode {
                 //dbg!(p);
                 let view = Mat4::look_at_rh(-p * (orth.far - orth.near) * 0.5f32,Vec3::ZERO, Vec3::Y);
                 let light_proj_view = orth.proj_matrix() * view;
-                //debug
+               
                 //dbg!(-p * 5f32);
                 //let (s,r,p) = view.to_scale_rotation_translation();
                 //let rr = r.to_euler(glam::EulerRot::XYZ);

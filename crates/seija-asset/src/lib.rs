@@ -1,5 +1,4 @@
 use std::path::PathBuf;
-use asset::TypeLoader;
 use bevy_ecs::prelude::World;
 use bevy_ecs::schedule::{StageLabel};
 use bevy_ecs::schedule::SystemStage;
@@ -12,16 +11,15 @@ mod handle;
 mod asset;
 mod assets;
 pub mod errors;
-mod loader;
 mod lifecycle;
 mod loading_queue;
-pub use asset::{Asset,AssetLoaderParams,AssetDynamic};
-pub use loader::{LoadingTrack,TrackState};
+pub use asset::*;
 pub use handle::{HandleId,HandleUntyped,Handle};
 pub use assets::{Assets,AssetEvent};
 pub use server::{AssetServer,AssetRequest,AssetInfo};
 pub use lifecycle::{RefEvent,LifecycleEvent};
 use seija_core::bevy_ecs::change_detection::Mut;
+pub use downcast_rs;
 
 #[derive(Debug, Hash, PartialEq, Eq, Clone,StageLabel)]
 pub enum AssetStage {
@@ -46,7 +44,7 @@ impl IModule for AssetModule {
 
 pub trait AddAsset {
     fn add_asset<T>(&mut self)  where T: Asset;
-    fn add_asset_loader<T:Asset>(&mut self,loader:TypeLoader);
+    fn add_asset_loader<T:Asset>(&mut self,loader:AssetLoader);
 }
 
 impl AddAsset for App {
@@ -59,7 +57,7 @@ impl AddAsset for App {
         self.add_event::<AssetEvent<T>>();
     }
 
-    fn add_asset_loader<T:Asset>(&mut self,loader:TypeLoader) {
+    fn add_asset_loader<T:Asset>(&mut self,loader:AssetLoader) {
         let asset_server = self.world.get_resource::<AssetServer>().unwrap();
         asset_server.register_loader::<T>(loader);
     }
@@ -70,12 +68,12 @@ fn update_asset_system(world:&mut World) {
     world.resource_scope(|w:&mut World,mut loading_queue:Mut<AssetLoadingQueue>| {
        if let Some(server) = w.get_resource::<AssetServer>() {
           server.inner.life_cycle.free_unused_assets();
-          let req_list = server.inner.request_list.read();
+          let mut req_list = server.inner.request_list.write();
           if req_list.len() > 0 {
-            let mut new_req_list = req_list.clone();
+            let mut new_req_list:Vec<_> = req_list.drain(..).collect();
             drop(req_list);
-            while let Some((uri,hid,loader)) = new_req_list.pop_front() {
-                loading_queue.push_uri(uri,hid,loader,w);
+            while let Some((uri,hid,params,loader)) = new_req_list.pop() {
+                loading_queue.push_uri(uri,hid,loader,w,params);
              }
           }
           

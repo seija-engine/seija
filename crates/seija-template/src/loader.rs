@@ -1,9 +1,14 @@
 use crate::{TComponent, TEntity,};
+use seija_asset::AssetLoader;
 use seija_core::anyhow::{bail,Result,anyhow};
 
 use quick_xml::events::{BytesStart, Event};
 use smol_str::SmolStr;
 
+pub(crate) fn create_template_loader() -> AssetLoader {
+
+    todo!()
+}
 /*
 pub struct TemplateLoader;
 

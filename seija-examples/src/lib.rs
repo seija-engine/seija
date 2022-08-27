@@ -79,7 +79,7 @@ pub fn load_texture(textures:&mut Assets<Texture>,path:&str) -> Handle<Texture> 
 
 pub fn load_material(path:&str,world:&mut World) {
    let server = world.get_resource::<AssetServer>().unwrap().clone();
-   let mut mat = server.load_sync::<MaterialDefineAsset>(world, path).unwrap();
+   let mut mat = server.load_sync::<MaterialDefineAsset>(world, path,None).unwrap();
    mat.forget();
 }
 

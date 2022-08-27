@@ -6,8 +6,6 @@ pub(crate) enum Scheme<'a> {
     Data(Option<&'a str>, &'a str),
 
     /// `file:[//]<absolute file path>`.
-    ///
-    /// Note: The file scheme does not implement authority.
     File(&'a str),
 
     /// `../foo`, etc.

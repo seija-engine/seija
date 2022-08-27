@@ -1,6 +1,6 @@
 use bevy_ecs::system::{Commands, ResMut};
 use glam::{Vec3, Quat};
-use seija_asset::{Assets, AssetServer, LoadingTrack, Handle};
+use seija_asset::{Assets, AssetServer, Handle, AssetRequest};
 use seija_core::{CoreStage, StartupStage, window::AppWindow};
 use seija_examples::{init_core_app, add_pbr_camera,  update_camera_trans_system};
 
@@ -11,7 +11,7 @@ use seija_transform::Transform;
 
 #[derive(Default)]
 pub struct LocalData {
-    _loading_track:Option<LoadingTrack>
+    _loading_track:Option<AssetRequest>
 }
 
 
@@ -28,11 +28,11 @@ pub fn main() {
 fn on_start(world:&mut World) {
     
     let server = world.get_resource::<AssetServer>().unwrap().clone();
-    server.load_sync::<MaterialDefineAsset>(world, "materials/pbrColor.mat.clj")
+    server.load_sync::<MaterialDefineAsset>(world, "materials/pbrColor.mat.clj",None)
                      .map(|mut v| v.forget()).unwrap();
-    server.load_sync::<MaterialDefineAsset>(world, "materials/baseTexture.mat.clj")
+    server.load_sync::<MaterialDefineAsset>(world, "materials/baseTexture.mat.clj",None)
                     .map(|mut v| v.forget()).unwrap();
-    let h_texture:Handle<Texture> = server.load_sync::<Texture>(world,"texture/b.jpg").unwrap();
+    let h_texture:Handle<Texture> = server.load_sync::<Texture>(world,"texture/b.jpg",None).unwrap();
     //Cube 
     /* 
     {

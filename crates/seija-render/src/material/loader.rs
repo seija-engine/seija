@@ -1,57 +1,129 @@
-use std::sync::Arc;
+use std::{sync::Arc, pin::Pin};
 
 use anyhow::Context;
 use bevy_ecs::prelude::World;
+use futures_lite::Future;
 use lite_clojure_eval::EvalRT;
-use seija_asset::{AssetServer, LoadingTrack, AssetLoaderParams, AssetDynamic, Assets};
+use seija_asset::{AssetServer, AssetLoaderParams, AssetDynamic, Assets, AssetLoader, downcast_rs::*, HandleId};
 use seija_core::{anyhow::{Result,anyhow},smol, bytes::AsBytes};
-
+use seija_core::TypeUuid;
 use serde_json::Value;
+use smol_str::SmolStr;
+
 
 use crate::{MemUniformInfo,material::Material, UniformType, RawUniformInfo};
 
-use super::{read_material_def, material_def::MaterialDefineAsset};
-/*
-pub(crate) struct MaterialDefineAssetLoader;
+use super::{read_material_def, material_def::MaterialDefineAsset, MaterialDef};
 
-#[async_trait]
-impl AssetLoader for MaterialDefineAssetLoader {
-    async fn load(&self,server:AssetServer,_:Option<LoadingTrack>,path:&str,_:Option<Box<dyn AssetLoaderParams>>) -> Result<Box<dyn AssetDynamic>> {
-        let full_path = server.full_path(path)?;
-        let code_string = smol::fs::read_to_string(&full_path).await?;
-        let mut vm = EvalRT::new();
-        let define = read_material_def(&mut vm, &code_string, false)?;
-        let asset = MaterialDefineAsset { define:Arc::new(define) };
-        Ok(Box::new(asset))
+pub(crate) fn material_define_loader() -> AssetLoader {
+    AssetLoader { 
+        typ: MaterialDefineAsset::TYPE_UUID,
+        sync_load: material_define_sync, 
+        async_touch: None, 
+        perpare: None, 
+        async_load: material_define_async
+    }
+}
+
+fn load_material_def(code_string:&str) -> Result<Box<dyn AssetDynamic>> {
+    let mut vm = EvalRT::new();
+    let define = read_material_def(&mut vm, &code_string, false)?;
+    let asset = MaterialDefineAsset { define:Arc::new(define) };
+    Ok(Box::new(asset))
+}
+
+fn material_define_sync(_:&mut World,path:&str,server:&AssetServer,_:Option<Box<dyn AssetLoaderParams>>) -> Result<Box<dyn AssetDynamic>> {
+    let full_path = server.full_path(path)?;
+    let code_string = std::fs::read_to_string(full_path)?;
+    load_material_def(&code_string)
+}
+
+fn material_define_async(server:AssetServer,path:SmolStr,t:Option<Box<dyn DowncastSync>>,_:Option<Box<dyn AssetLoaderParams>>) 
+  -> Pin<Box<dyn Future<Output = Result<Box<dyn AssetDynamic>>> + Send>> {
+    Box::pin(async move {
+        let full_path = server.full_path(&path)?;
+        let code_string = smol::fs::read_to_string(full_path).await?;
+        load_material_def(&code_string)
+    })
+}
+
+
+pub(crate) fn material_loader() -> AssetLoader {
+    AssetLoader {
+      typ:Material::TYPE_UUID,
+      sync_load:material_sync,
+      async_touch:Some(async_touch_material),
+      perpare:Some(async_material_perpare),
+      async_load:async_material
     }
 }
 
 
-pub(crate) struct MaterialLoader;
+fn material_sync(world:&mut World,path:&str,server:&AssetServer,_:Option<Box<dyn AssetLoaderParams>>) -> Result<Box<dyn AssetDynamic>> {
+    let full_path = server.full_path(path)?;
+    let bytes = std::fs::read(full_path)?;
+    let json_value:Value = serde_json::from_slice(&bytes)?;
+    let json_map = json_value.as_object().context(0)?;
+    let material_def_path = json_map.get("material").and_then(Value::as_str).context(1)?;
+    let h_def = server.load_sync::<MaterialDefineAsset>(world, material_def_path, None).context(2)?;
+    let defs = world.get_resource::<Assets<MaterialDefineAsset>>().context(3)?;
+    let def_asset = defs.get(&h_def.id).context(4)?;
+    let mut material = Material::from_def(def_asset.define.clone(), &server).context(5)?;
+    let json_props = json_map.get("props").context(6)?;
+    set_material_props(&mut material,json_props)?;
+    Ok(Box::new(material))
+}
 
-#[async_trait]
-impl AssetLoader for MaterialLoader {
-    async fn load(&self,_:AssetServer,_:Option<LoadingTrack>,_:&str,_:Option<Box<dyn AssetLoaderParams>>) -> Result<Box<dyn AssetDynamic>> {
-        unimplemented!()
-    }
+struct MaterialTouch {
+    json:Value,
+    define_id:HandleId,
+    rc_define:Option<Arc<MaterialDef>>
+}
 
-    fn load_sync(&self,world:&mut World, path:&str, server:AssetServer, _:Option<Box<dyn AssetLoaderParams>>) -> Result<Box<dyn AssetDynamic>> {
-        let full_path = server.full_path(path)?;
+
+fn async_touch_material(server:AssetServer,path:SmolStr)  -> Pin<Box<dyn Future<Output = Result<Box<dyn DowncastSync>>> + Send>> {
+    Box::pin(async move {
+        let full_path = server.full_path(&path)?;
         let bytes = std::fs::read(full_path)?;
-        let json_value:Value = serde_json::from_slice(&bytes)?;
-        let json_map = json_value.as_object().context(0)?;
+        let json:Value = serde_json::from_slice(&bytes)?;
+        let json_map = json.as_object().context(0)?;
         let material_def_path = json_map.get("material").and_then(Value::as_str).context(1)?;
-        let h_def = server.load_sync::<MaterialDefineAsset>(world, material_def_path, None,false).context(2)?;
-        let defs = world.get_resource::<Assets<MaterialDefineAsset>>().context(3)?;
-        let def_asset = defs.get(&h_def.id).context(4)?;
-        let mut material = Material::from_def(def_asset.define.clone(), &server).context(5)?;
+        let req = server.load_async::<MaterialDefineAsset>(material_def_path,None)?;
+        let define_id = req.wait().await.ok_or(anyhow!("load material define error"))?;
+        let touch = MaterialTouch { json,define_id,rc_define:None };
+        let ret:Box<dyn DowncastSync> = Box::new(touch);
+        Ok(ret)
+    })
+}
+
+fn async_material_perpare(world:&mut World,touch_data:Option<Box<dyn DowncastSync>>)   -> Option<Box<dyn DowncastSync>> {
+    if let Some(Ok(mut touch)) = touch_data.map(|v|v.into_any().downcast::<MaterialTouch>()) {
+        let mut_touch:&mut MaterialTouch = touch.as_mut();
+        let defines = world.get_resource::<Assets<MaterialDefineAsset>>().unwrap();
+        if let Some(define) = defines.get(&mut_touch.define_id) {
+            mut_touch.rc_define = Some(define.define.clone());
+        }
+        return Some(touch);
+    }
+    None
+}
+
+fn async_material(server:AssetServer,_:SmolStr,touch:Option<Box<dyn DowncastSync>>,_:Option<Box<dyn AssetLoaderParams>>) 
+  -> Pin<Box<dyn Future<Output = Result<Box<dyn AssetDynamic>>> + Send>> {
+    Box::pin(async move {
+        let touch = touch.ok_or(anyhow!("touch error"))?.into_any()
+                                                   .downcast::<MaterialTouch>()
+                                                   .map_err(|_|anyhow!("cast error"))?;
+
+        let define = touch.rc_define.ok_or(anyhow!("rc_define err"))?;
+        let mut material = Material::from_def(define, &server).context(5)?;
+        let json_map = touch.json.as_object().context(0)?;
         let json_props = json_map.get("props").context(6)?;
         set_material_props(&mut material,json_props)?;
-       
-        Ok(Box::new(material))
-    }
+        let ret:Box<dyn AssetDynamic> = Box::new(material);
+        Ok(ret)
+    })
 }
-*/
 
 fn set_material_props(material:&mut Material,value:&Value) -> Result<()> {
     let props = value.as_object().context(1)?;

@@ -5,7 +5,7 @@ use gltf::{Document, Node, animation::{Channel, Property, Interpolation}, Gltf};
 use relative_path::RelativePath;
 use seija_core::{anyhow::{Result, anyhow, bail, Context},smol};
 use crate::{asset::{ GltfCamera, GltfMaterial, GltfMesh, GltfNode, GltfPrimitive, GltfScene, NodeIndex}};
-use seija_asset::{Handle,  AssetServer, LoadingTrack, AssetLoaderParams, AssetDynamic, AssetRequest};
+use seija_asset::{Handle,  AssetServer, AssetLoaderParams, AssetDynamic, AssetRequest};
 use seija_render::resource::{Texture, TextureDescInfo};
 use seija_render::{camera::camera::{Orthographic, Perspective, Projection}, 
                    resource::{Indices, Mesh, MeshAttributeType, VertexAttributeValues}, 

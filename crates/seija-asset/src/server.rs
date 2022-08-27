@@ -1,39 +1,51 @@
 use crate::{
     Asset, Assets, lifecycle::AssetLifeCycle, HandleId, RefEvent, 
-    asset::TypeLoader, AssetDynamic, Handle, errors::AssetError, HandleUntyped, LifecycleEvent, AssetLoaderParams,
+    asset::AssetLoader, AssetDynamic, Handle, errors::AssetError, HandleUntyped, LifecycleEvent, AssetLoaderParams,
 };
 use bevy_ecs::{prelude::{Res, World}};
 use parking_lot::RwLock;
 use relative_path::RelativePath;
-use seija_core::{anyhow::Result, smol_str::SmolStr, smol::channel::Sender};
+use seija_core::{anyhow::{Result,anyhow}, smol_str::SmolStr, smol::channel::Sender};
 use uuid::Uuid;
 use std::{
     path::{PathBuf},
-    sync::{Arc, atomic::{AtomicU8,Ordering}}, collections::{HashMap, VecDeque}};
+    sync::{Arc, atomic::{AtomicU8,Ordering}, Mutex}, collections::{HashMap, VecDeque}, future::Future, task::{Waker, Poll}};
 
 
 pub struct AssetInfo {
     handle_id:HandleId,
     state:AtomicU8,
-    sender:Sender<RefEvent>
+    sender:Sender<RefEvent>,
+
+    pub(crate) waker:Mutex<Option<Waker>>
 }
+
+pub struct ArcAssetInfo(pub Arc<AssetInfo>);
 
 impl AssetInfo {
     pub(crate) fn new<T:Asset>(sender:Sender<RefEvent>) -> Self {
         let id = HandleId::random::<T>();
-        AssetInfo { handle_id:id, state: AtomicU8::new(0),sender }
+        AssetInfo { handle_id:id, state: AtomicU8::new(0),sender,waker:Default::default() }
     }
 
     pub(crate) fn new_id(id:HandleId,sender:Sender<RefEvent>) -> Self {
-        AssetInfo { handle_id: id, state: AtomicU8::new(0),sender }
+        AssetInfo { handle_id: id, state: AtomicU8::new(0),sender,waker:Default::default() }
     }
 
     pub(crate) fn set_finish(&self) {
         self.state.store(1, Ordering::SeqCst);
     }
 
+    pub(crate) fn set_fail(&self) {
+        self.state.store(2, Ordering::SeqCst);
+    }
+
     pub(crate) fn is_finish(&self) -> bool {
         self.state.load(Ordering::SeqCst) == 1
+    }
+
+    pub(crate) fn is_fail(&self) -> bool {
+        self.state.load(Ordering::SeqCst) == 2
     }
 
     pub fn make_handle(&self) -> HandleUntyped {
@@ -46,26 +58,45 @@ impl AssetInfo {
 }
 
 pub struct AssetRequest {
-    asset:Arc<AssetInfo>
+    asset:ArcAssetInfo
 }
 
 impl AssetRequest {
     pub(crate) fn new(asset:Arc<AssetInfo>) -> Self {
-        AssetRequest { asset }
+        AssetRequest { asset:ArcAssetInfo(asset) }
     }
 
     pub fn is_finish(&self) -> bool {
-        self.asset.is_finish()
+        self.asset.0.is_finish()
     }
 
     pub fn make_handle(&self) -> HandleUntyped {
-        self.asset.make_handle()
+        self.asset.0.make_handle()
     }
 
     pub fn make_weak_handle(&self) -> HandleUntyped {
-        self.asset.make_weak_handle()
+        self.asset.0.make_weak_handle()
     }
-    
+
+    pub async fn wait(self) -> Option<HandleId> { self.asset.await }
+}
+
+impl Future for ArcAssetInfo {
+    type Output = Option<HandleId>;
+    fn poll(self: std::pin::Pin<&mut Self>, cx: &mut std::task::Context<'_>) -> std::task::Poll<Self::Output> {
+        let waker = cx.waker().clone();
+        {
+            let mut waker_lock = self.0.waker.lock().unwrap();
+            *waker_lock = Some(waker);
+        };
+        if self.0.is_finish() {
+            Poll::Ready(Some(self.0.handle_id))
+        } else if self.0.is_fail() {
+            Poll::Ready(None)
+        } else {
+            Poll::Pending
+        }
+    }
 }
 
 #[derive(Clone)]
@@ -79,8 +110,8 @@ pub struct AssetServerInner {
     pub root_path: PathBuf,
     pub(crate) life_cycle:AssetLifeCycle,
     assets:RwLock<HashMap<SmolStr,Arc<AssetInfo>>>,
-    loaders:RwLock<HashMap<Uuid,Arc<TypeLoader>>>,
-    pub(crate) request_list:Arc<RwLock<VecDeque<(SmolStr,HandleId,Arc<TypeLoader>)>>>
+    loaders:RwLock<HashMap<Uuid,Arc<AssetLoader>>>,
+    pub(crate) request_list:Arc<RwLock<VecDeque<(SmolStr,HandleId,Option<Box<dyn AssetLoaderParams>>,Arc<AssetLoader>)>>>
 }
 
 impl AssetServer {
@@ -103,7 +134,7 @@ impl AssetServer {
         Assets::new(self.inner.life_cycle.sender())
     }
 
-    pub fn register_loader<T:Asset>(&self,loader:TypeLoader) {
+    pub fn register_loader<T:Asset>(&self,loader:AssetLoader) {
         self.inner.loaders.write().insert(T::TYPE_UUID.clone(), Arc::new(loader));
     }
 
@@ -140,22 +171,26 @@ impl AssetServer {
         h
     }
 
-    pub fn load_sync<T:Asset>(&self,world:&mut World,path:&str) -> Result<Handle<T>> {
+    pub fn load_sync<T:Asset>(&self,world:&mut World,path:&str,params:Option<Box<dyn AssetLoaderParams>>) -> Result<Handle<T>> {
         if let Some(info) = self.inner.assets.read().get(path) {
             if info.is_finish() {
                 return Ok(info.make_handle().typed::<T>());
             }
-            let mut wait = parking_lot_core::SpinWait::default();
-            loop {
-                if info.is_finish() {
-                    return Ok(info.make_handle().typed::<T>());
+            if !info.is_fail() {
+                let mut wait = parking_lot_core::SpinWait::default();
+                loop {
+                    if info.is_finish() {
+                        return Ok(info.make_handle().typed::<T>());
+                    } else if info.is_fail() {
+                        return Err(anyhow!("load fail"));
+                    }
+                    wait.spin();
                 }
-                wait.spin();
             }
         }
         let loader = self.inner.loaders.read().get(&T::TYPE_UUID).ok_or(AssetError::NotFoundLoader)?.clone();
         let func = loader.sync_load;
-        let load_asset = func(world,path,self)?;
+        let load_asset = func(world,path,self,params)?;
         let boxed_asset = load_asset.downcast::<T>().map_err(|_| AssetError::TypeCastError)?;
         let mut assets = world.get_resource_mut::<Assets<T>>().ok_or(AssetError::TypeCastError)?;
         let handle = assets.add(*boxed_asset);
@@ -166,13 +201,15 @@ impl AssetServer {
 
     pub fn load_async<T:Asset>(&self,path:&str,params:Option<Box<dyn AssetLoaderParams>>) -> Result<AssetRequest> {
         if let Some(info) = self.inner.assets.read().get(path) {
-            return Ok(AssetRequest::new(info.clone()));
+            if !info.is_fail() {
+                return Ok(AssetRequest::new(info.clone()));
+            }  
         }
         let asset_info = Arc::new(AssetInfo::new::<T>(self.inner.life_cycle.sender()));
         self.inner.assets.write().insert(path.into(), asset_info.clone());
 
         let loader = self.inner.loaders.read().get(&T::TYPE_UUID).ok_or(AssetError::NotFoundLoader)?.clone();
-        self.inner.request_list.write().push_back((SmolStr::new(path),asset_info.handle_id,loader));
+        self.inner.request_list.write().push_back((SmolStr::new(path),asset_info.handle_id,params,loader));
         Ok(AssetRequest::new(asset_info))
     }
 }
