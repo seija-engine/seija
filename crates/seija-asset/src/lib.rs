@@ -20,6 +20,7 @@ pub use server::{AssetServer,AssetRequest,AssetInfo};
 pub use lifecycle::{RefEvent,LifecycleEvent};
 use seija_core::bevy_ecs::change_detection::Mut;
 pub use downcast_rs;
+pub use async_trait;
 
 #[derive(Debug, Hash, PartialEq, Eq, Clone,StageLabel)]
 pub enum AssetStage {
@@ -44,7 +45,7 @@ impl IModule for AssetModule {
 
 pub trait AddAsset {
     fn add_asset<T>(&mut self)  where T: Asset;
-    fn add_asset_loader<T:Asset>(&mut self,loader:AssetLoader);
+    fn add_asset_loader<T:Asset,F:IAssetLoader + Default>(&mut self,);
 }
 
 impl AddAsset for App {
@@ -57,9 +58,9 @@ impl AddAsset for App {
         self.add_event::<AssetEvent<T>>();
     }
 
-    fn add_asset_loader<T:Asset>(&mut self,loader:AssetLoader) {
+    fn add_asset_loader<T:Asset,F:IAssetLoader + Default>(&mut self) {
         let asset_server = self.world.get_resource::<AssetServer>().unwrap();
-        asset_server.register_loader::<T>(loader);
+        asset_server.register_loader::<T,F>(Default::default());
     }
 }
 

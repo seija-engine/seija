@@ -1,11 +1,12 @@
 use std::{sync::Arc, collections::HashMap, fmt::Debug, path::{Path}};
 use crate::{import::Scheme, asset::GltfAsset};
+use bevy_ecs::prelude::World;
 use glam::{Mat4, Vec3, Vec4};
 use gltf::{Document, Node, animation::{Channel, Property, Interpolation}, Gltf};
 use relative_path::RelativePath;
-use seija_core::{anyhow::{Result, anyhow, bail, Context},smol};
+use seija_core::{anyhow::{Result, anyhow, bail, Context},smol,TypeUuid};
 use crate::{asset::{ GltfCamera, GltfMaterial, GltfMesh, GltfNode, GltfPrimitive, GltfScene, NodeIndex}};
-use seija_asset::{Handle,  AssetServer, AssetLoaderParams, AssetDynamic, AssetRequest};
+use seija_asset::{Handle,async_trait::async_trait,  AssetServer, AssetLoaderParams, AssetDynamic, AssetRequest, IAssetLoader, Assets};
 use seija_render::resource::{Texture, TextureDescInfo};
 use seija_render::{camera::camera::{Orthographic, Perspective, Projection}, 
                    resource::{Indices, Mesh, MeshAttributeType, VertexAttributeValues}, 
@@ -20,46 +21,102 @@ use seija_skeleton3d::{
 use seija_transform::{Transform, TransformMatrix};
 
 
-/*
+#[derive(Default)]
+pub(crate) struct GlTFLoader;
 #[async_trait]
-impl AssetLoader for GLTFLoader {
-   async fn load(&self,server:AssetServer,track:Option<LoadingTrack>,path:&str,_:Option<Box<dyn AssetLoaderParams>>) -> Result<Box<dyn AssetDynamic>> {
-       let full_path = RelativePath::from_path(path)?.to_logical_path(&server.inner().root_path);
-       log::info!("load gltf p&ath:{:?}",&full_path);
-       track.as_ref().map(|t| t.add_progress());
+impl IAssetLoader for GlTFLoader {
+    fn typ(&self) -> seija_core::uuid::Uuid { GltfAsset::TYPE_UUID }
+
+    fn sync_load(&self,w:&mut World,path:&str,server:&AssetServer,_:Option<Box<dyn AssetLoaderParams>>) -> Result<Box<dyn AssetDynamic>> {
+        let full_path = server.full_path(path)?;
+        let bytes = std::fs::read(&full_path)?;
+        let mut gltf_data = Gltf::from_slice(&bytes)?;
+        let full_base_path = full_path.parent().context(1)?;
+        let buffers = import_buffer_data(&mut gltf_data,full_base_path)?;
+        let textures = sync_load_textures(w,&gltf_data,&buffers,path)?;
+
+        let materials = load_materials(&gltf_data,&textures);
+        let mut meshs = load_meshs(path,&server,&gltf_data,&buffers,&materials)?;
+        let mut nodes = load_nodes(&gltf_data)?;
+        let mut _skeleton = load_skeleton(&gltf_data)?;
+        let scenes = load_scenes(&gltf_data,&mut nodes,&mut meshs);
+
+        let mut skins = None;
+        let mut anims = None;
+        let mut skeleton:Option<Handle<Skeleton>> = None;
+        if let Some(take_skeleton) = _skeleton.take() {
+           if let Some(skin) = load_skin(&gltf_data, &buffers, &take_skeleton) {
+              let mut assets = w.get_resource_mut::<Assets<Skin>>().unwrap();
+              let h_skin = assets.add(skin);
+              server.set_asset(&format!("{}#skin",path), h_skin.id);
+              skins = Some(h_skin);
+           }
+           
+           let anim_set = load_animations(&gltf_data,&buffers, &take_skeleton)?;
+           let mut assets = w.get_resource_mut::<Assets<AnimationSet>>().unwrap();
+           let h_anim = assets.add(anim_set);
+           server.set_asset(&format!("{}#animset",path), h_anim.id);
+           anims = Some(h_anim);
+
+           let mut assets = w.get_resource_mut::<Assets<Skeleton>>().unwrap();
+           let h_skeleton = assets.add(take_skeleton);
+           server.set_asset(&format!("{}#skeleton",path), h_skeleton.id);
+           skeleton = Some(h_skeleton);
+        }
+        
+
+        
+        Ok(Box::new(GltfAsset {
+            scenes,
+            meshs,
+            textures,
+            materials,
+            nodes,
+            skeleton,
+            anims,
+            skins
+         }))
+    }
+
+    async fn async_load(&self,server:AssetServer,path:seija_core::smol_str::SmolStr,
+                        _:Option<Box<dyn seija_asset::downcast_rs::DowncastSync>>,
+                        _:Option<Box<dyn AssetLoaderParams>>) -> Result<Box<dyn AssetDynamic>> {
+       let full_path = server.full_path(path.as_str())?;
+      
+      
        let bytes = smol::fs::read(&full_path).await?;
        let mut gltf_data = Gltf::from_slice(&bytes)?;
-       track.as_ref().map(|t| t.add_progress());
+      
        let full_base_path = full_path.parent().context(1)?;
        let buffers = import_buffer_data(&mut gltf_data,full_base_path)?;
-       track.as_ref().map(|t| t.add_progress());
+      
        let mut track_textures = vec![];
-       let textures = load_textures(&server, path,&gltf_data, &buffers,&mut track_textures).await?;
-       track.as_ref().map(|t| t.add_progress());
+       let textures = load_textures(&server, path.as_str(),&gltf_data, &buffers,&mut track_textures).await?;
+     
        let materials = load_materials(&gltf_data,&textures);
-       track.as_ref().map(|t| t.add_progress());
-       let mut meshs = load_meshs(path,&server,&gltf_data,&buffers,&materials)?;
-       track.as_ref().map(|t| t.add_progress());
+     
+       let mut meshs = load_meshs(path.as_str(),&server,&gltf_data,&buffers,&materials)?;
+      
        let mut nodes = load_nodes(&gltf_data)?;
-       track.as_ref().map(|t| t.add_progress());
+      
        let _skeleton = load_skeleton(&gltf_data)?;
-       track.as_ref().map(|t| t.add_progress());
+      
        let scenes = load_scenes(&gltf_data,&mut nodes,&mut meshs);
-       track.as_ref().map(|t| t.add_progress());
+       
 
        let mut skins = None;
        let mut anims = None;
        if let Some(skeleton) = _skeleton.as_ref() {
-           skins = load_skin(&gltf_data, &buffers,&skeleton).map(|v| server.create_asset(v,&format!("{}#skin",path),None));
-           track.as_ref().map(|t| t.add_progress());
+           skins = load_skin(&gltf_data, &buffers,&skeleton).map(|v| server.create_asset(v,&format!("{}#skin",path)));
+           
            let anim_set = load_animations(&gltf_data,&buffers, &skeleton)?;
-           track.as_ref().map(|t| t.add_progress());
-           anims = Some(server.create_asset(anim_set,&format!("{}#animset",path),None)) ;
+          
+           anims = Some(server.create_asset(anim_set,&format!("{}#animset",path)));
        }
-       let skeleton = _skeleton.map(|v| server.create_asset(v,&format!("{}#skeleton",path),None));
-       track.as_ref().map(|t| t.add_progress());
+       let skeleton = _skeleton.map(|v| server.create_asset(v,&format!("{}#skeleton",path)));
+      
        for track in track_textures.drain(..) {
-          let _ = track.await;
+          let _ = track.wait().await;
        }
        Ok(Box::new(GltfAsset {
         scenes,
@@ -71,8 +128,8 @@ impl AssetLoader for GLTFLoader {
         anims,
         skins
      }))
-   }
-}*/
+    }
+}
 
 fn import_buffer_data(data:&mut gltf::Gltf,full_base_path:&Path) -> Result<Vec<gltf::buffer::Data>> {
     let mut buffers:Vec<gltf::buffer::Data> = Vec::new();
@@ -97,7 +154,70 @@ fn import_buffer_data(data:&mut gltf::Gltf,full_base_path:&Path) -> Result<Vec<g
     Ok(buffers)
 }
 
-async fn load_textures(server:&AssetServer,path:&str,gltf_data:&gltf::Gltf,buffers:&Vec<gltf::buffer::Data>,tracks:&mut Vec<AssetRequest>) -> Result<Vec<Handle<Texture>>> {
+fn sync_load_textures(world:&mut World,gltf_data:&gltf::Gltf,buffers:&Vec<gltf::buffer::Data>,path:&str) -> Result<Vec<Handle<Texture>>> {
+    let mut textures:Vec<Handle<Texture>> = vec![];
+    for (index,json_texture) in gltf_data.textures().enumerate() {
+        let source = json_texture.source().source();
+        let mut desc = TextureDescInfo::default();
+        desc.sampler_desc = get_texture_sampler(&json_texture);
+        match source {
+            gltf::image::Source::View { view, mime_type:_ } => {
+                let start = view.offset() as usize;
+                let end = (view.offset() + view.length()) as usize;
+                let buffer = &buffers[view.buffer().index()][start..end];
+                let texture = Texture::from_image_bytes(buffer,desc)?;
+                let mut assets = world.get_resource_mut::<Assets<Texture>>().unwrap();
+                let h_texture = assets.add(texture);
+                let server = world.get_resource::<AssetServer>().unwrap();
+                server.set_asset(&format!("{:?}#texture.{}",path,index),h_texture.id);
+                textures.push(h_texture);
+            }
+           
+            gltf::image::Source::Uri { uri, .. } => {
+                match Scheme::parse(uri) {
+                    Scheme::Data(_, base64) => {
+                        let image_bytes = base64::decode(&base64)?;
+                        let texture = Texture::from_image_bytes(&image_bytes, desc)?;
+                        let mut assets = world.get_resource_mut::<Assets<Texture>>().unwrap();
+                        let h_texture = assets.add(texture);
+                        let server = world.get_resource::<AssetServer>().unwrap();
+                        server.set_asset(&format!("{:?}#texture.{}",path,index),h_texture.id);
+                        textures.push(h_texture);
+                        continue;
+                    },
+                    Scheme::File(file_path)  => { 
+                        let bytes = std::fs::read(file_path)?;
+                        let texture = Texture::from_image_bytes(&bytes, desc)?;
+                        let mut assets = world.get_resource_mut::<Assets<Texture>>().unwrap();
+                        let h_texture = assets.add(texture);
+                        let server = world.get_resource::<AssetServer>().unwrap();
+                        server.set_asset(&format!("{:?}#texture.{}",path,index),h_texture.id);
+                        textures.push(h_texture);
+                     },
+                    Scheme::Relative => { 
+                        let texture_path = RelativePath::new(path).parent()
+                                                                      .ok_or(anyhow!("fail gltf texture path"))?
+                                                                      .join(uri).normalize();
+                        let server = world.get_resource::<AssetServer>().unwrap().clone();
+                        let h_texture = server.load_sync::<Texture>(world, texture_path.as_str(), Some(Box::new(desc)))?;
+                        textures.push(h_texture);
+                    }
+                    _ => {
+                        log::error!("gltf texture error:{}",uri);
+                        continue 
+                    },
+                }
+
+
+            }
+        }
+    }
+    Ok(textures)
+}
+
+async fn load_textures(server:&AssetServer,path:&str,
+                       gltf_data:&gltf::Gltf,buffers:&Vec<gltf::buffer::Data>
+                       ,tracks:&mut Vec<AssetRequest>) -> Result<Vec<Handle<Texture>>> {
     let mut textures:Vec<Handle<Texture>> = vec![];
     for (index,json_texture) in gltf_data.textures().enumerate() {
         let source = json_texture.source().source();

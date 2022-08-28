@@ -13,13 +13,13 @@ pub use types::{RenderOrder,Cull,ZTest,RenderPath,STextureDescriptor};
 pub use texture_prop_def::{TexturePropDef,TexturePropInfo};
 pub use system::{MaterialSystem};
 
-use self::loader::{material_define_loader, material_loader};
+use self::loader::{MaterialDefineLoader, MaterialLoader};
 
 
 pub(crate) fn init_material(app:&mut App) {
 
     app.add_asset::<MaterialDefineAsset>();
     app.add_asset::<Material>();
-    app.add_asset_loader::<MaterialDefineAsset>(material_define_loader());
-    app.add_asset_loader::<Material>(material_loader());
+    app.add_asset_loader::<MaterialDefineAsset,MaterialDefineLoader>();
+    app.add_asset_loader::<Material,MaterialLoader>();
 }

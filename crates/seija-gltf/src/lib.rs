@@ -8,7 +8,7 @@ pub use gltf;
 
 use seija_app::{IModule, App};
 use seija_asset::{Handle, AddAsset};
-use seija_core::TypeUuid;
+
 use seija_render::material::{Material};
 use seija_transform::{BuildChildren, Transform};
 

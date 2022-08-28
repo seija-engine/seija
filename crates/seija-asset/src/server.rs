@@ -1,6 +1,6 @@
 use crate::{
-    Asset, Assets, lifecycle::AssetLifeCycle, HandleId, RefEvent, 
-    asset::AssetLoader, AssetDynamic, Handle, errors::AssetError, HandleUntyped, LifecycleEvent, AssetLoaderParams,
+    Asset, Assets, lifecycle::AssetLifeCycle, HandleId, RefEvent,
+    AssetDynamic, Handle, errors::AssetError, HandleUntyped, LifecycleEvent, AssetLoaderParams, IAssetLoader,
 };
 use bevy_ecs::{prelude::{Res, World}};
 use parking_lot::RwLock;
@@ -110,8 +110,8 @@ pub struct AssetServerInner {
     pub root_path: PathBuf,
     pub(crate) life_cycle:AssetLifeCycle,
     assets:RwLock<HashMap<SmolStr,Arc<AssetInfo>>>,
-    loaders:RwLock<HashMap<Uuid,Arc<AssetLoader>>>,
-    pub(crate) request_list:Arc<RwLock<VecDeque<(SmolStr,HandleId,Option<Box<dyn AssetLoaderParams>>,Arc<AssetLoader>)>>>
+    loaders:RwLock<HashMap<Uuid,Arc<dyn IAssetLoader>>>,
+    pub(crate) request_list:Arc<RwLock<VecDeque<(SmolStr,HandleId,Option<Box<dyn AssetLoaderParams>>,Arc<dyn IAssetLoader>)>>>
 }
 
 impl AssetServer {
@@ -134,7 +134,7 @@ impl AssetServer {
         Assets::new(self.inner.life_cycle.sender())
     }
 
-    pub fn register_loader<T:Asset>(&self,loader:AssetLoader) {
+    pub fn register_loader<T:Asset,F:IAssetLoader>(&self,loader:F) {
         self.inner.loaders.write().insert(T::TYPE_UUID.clone(), Arc::new(loader));
     }
 
@@ -189,8 +189,7 @@ impl AssetServer {
             }
         }
         let loader = self.inner.loaders.read().get(&T::TYPE_UUID).ok_or(AssetError::NotFoundLoader)?.clone();
-        let func = loader.sync_load;
-        let load_asset = func(world,path,self,params)?;
+        let load_asset = loader.sync_load(world,path,self,params)?;
         let boxed_asset = load_asset.downcast::<T>().map_err(|_| AssetError::TypeCastError)?;
         let mut assets = world.get_resource_mut::<Assets<T>>().ok_or(AssetError::TypeCastError)?;
         let handle = assets.add(*boxed_asset);

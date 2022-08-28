@@ -1,28 +1,35 @@
-use crate::{TComponent, TEntity,};
-use seija_asset::AssetLoader;
+use crate::{TComponent, TEntity, Template,};
+use seija_asset::{IAssetLoader,async_trait::async_trait};
 use seija_core::anyhow::{bail,Result,anyhow};
-
+use seija_core::TypeUuid;
+use seija_core::smol;
 use quick_xml::events::{BytesStart, Event};
 use smol_str::SmolStr;
 
-pub(crate) fn create_template_loader() -> AssetLoader {
-
-    todo!()
-}
-/*
-pub struct TemplateLoader;
+#[derive(Default)]
+pub(crate) struct TemplateLoader;
 
 #[async_trait]
-impl AssetLoader for TemplateLoader {
-    async fn load(&self,server:AssetServer,_:Option<LoadingTrack>,path:&str,_:Option<Box<dyn AssetLoaderParams>>) -> Result<Box<dyn AssetDynamic>>  {
+impl IAssetLoader for TemplateLoader {
+    fn typ(&self) -> seija_core::uuid::Uuid { Template::TYPE_UUID }
+
+    fn sync_load(&self,_:&mut seija_app::ecs::prelude::World,path:&str,server:&seija_asset::AssetServer,_:Option<Box<dyn seija_asset::AssetLoaderParams>>) -> Result<Box<dyn seija_asset::AssetDynamic>> {
         let full_path = server.full_path(path)?;
+        let xml_string = std::fs::read_to_string(full_path)?;
+        let template = Template::from_str(&xml_string)?;
+        Ok(Box::new(template))
+    }
+
+    async fn async_load(&self,server:seija_asset::AssetServer,path:SmolStr,
+                        _:Option<Box<dyn seija_asset::downcast_rs::DowncastSync>>,
+                        _:Option<Box<dyn seija_asset::AssetLoaderParams>>) -> Result<Box<dyn seija_asset::AssetDynamic>> {
+        let full_path = server.full_path(path.as_str())?;
         let xml_string = smol::fs::read_to_string(full_path).await?;
         let template = Template::from_str(&xml_string)?;
         Ok(Box::new(template))
     }
 }
 
-*/
 pub fn read_tmpl_entity(xml_string: &str) -> Result<TEntity> {
     let mut xml_reader = quick_xml::Reader::from_str(xml_string);
     xml_reader.trim_text(true);

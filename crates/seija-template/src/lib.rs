@@ -3,6 +3,7 @@ mod loader;
 mod inst;
 mod creator;
 pub use creator::{TComponentCreator,FromTComponentFunc};
+use loader::TemplateLoader;
 use seija_app::{IModule, App};
 use seija_asset::AddAsset;
 pub use types::{TComponent,TEntity,Template};
@@ -14,8 +15,7 @@ pub struct TemplateModule;
 impl IModule for TemplateModule {
     fn init(&mut self,app:&mut App) {
         app.add_asset::<Template>();
-        //TODO
-        //app.add_asset_loader(Template::TYPE_UUID, TemplateLoader);
+        app.add_asset_loader::<Template,TemplateLoader>();
         app.init_resource::<creator::TComponentCreator>();
         app.add_t_component("Transform",creator::tcomponent_transform);
     }
