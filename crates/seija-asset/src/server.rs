@@ -34,10 +34,16 @@ impl AssetInfo {
 
     pub(crate) fn set_finish(&self) {
         self.state.store(1, Ordering::SeqCst);
+        if let Ok(mut w) = self.waker.lock() {
+            w.take().map(|v| v.wake());
+        }
     }
 
     pub(crate) fn set_fail(&self) {
         self.state.store(2, Ordering::SeqCst);
+        if let Ok(mut w) = self.waker.lock() {
+            w.take().map(|v| v.wake());
+        }
     }
 
     pub(crate) fn is_finish(&self) -> bool {
@@ -152,8 +158,9 @@ impl AssetServer {
     }
 
     pub fn add_dyn_asset(&self,path:&str,typ:&Uuid,hid:HandleId,asset:Box<dyn AssetDynamic>) {
-        let info = if let Some(info) = self.inner.assets.read().get(path) {
-            info.clone()
+        let read_info = self.inner.assets.read().get(path).cloned();
+        let info = if let Some(info) = read_info {
+            info
         } else {
             let info = Arc::new(AssetInfo::new_id(hid, self.inner.life_cycle.sender()));
             self.inner.assets.write().insert(SmolStr::new(path), info.clone());
@@ -172,10 +179,14 @@ impl AssetServer {
     }
 
     pub fn load_sync<T:Asset>(&self,world:&mut World,path:&str,params:Option<Box<dyn AssetLoaderParams>>) -> Result<Handle<T>> {
-        if let Some(info) = self.inner.assets.read().get(path) {
+      
+        let info = self.inner.assets.read().get(path).cloned();
+        if let Some(info) = info {
+           
             if info.is_finish() {
                 return Ok(info.make_handle().typed::<T>());
             }
+            
             if !info.is_fail() {
                 let mut wait = parking_lot_core::SpinWait::default();
                 loop {
@@ -194,19 +205,20 @@ impl AssetServer {
         let mut assets = world.get_resource_mut::<Assets<T>>().ok_or(AssetError::TypeCastError)?;
         let handle = assets.add(*boxed_asset);
         let info = Arc::new( AssetInfo::new_id(handle.id, self.inner.life_cycle.sender()));
+        info.set_finish();
         self.inner.assets.write().insert(SmolStr::new(path), info);
         Ok(handle)
     }
 
     pub fn load_async<T:Asset>(&self,path:&str,params:Option<Box<dyn AssetLoaderParams>>) -> Result<AssetRequest> {
-        if let Some(info) = self.inner.assets.read().get(path) {
+        let read_info = self.inner.assets.read().get(path).cloned();
+        if let Some(info) = read_info {
             if !info.is_fail() {
-                return Ok(AssetRequest::new(info.clone()));
+                return Ok(AssetRequest::new(info.clone()))
             }  
         }
         let asset_info = Arc::new(AssetInfo::new::<T>(self.inner.life_cycle.sender()));
         self.inner.assets.write().insert(path.into(), asset_info.clone());
-
         let loader = self.inner.loaders.read().get(&T::TYPE_UUID).ok_or(AssetError::NotFoundLoader)?.clone();
         self.inner.request_list.write().push_back((SmolStr::new(path),asset_info.handle_id,params,loader));
         Ok(AssetRequest::new(asset_info))

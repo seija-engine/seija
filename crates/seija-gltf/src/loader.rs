@@ -22,9 +22,9 @@ use seija_transform::{Transform, TransformMatrix};
 
 
 #[derive(Default)]
-pub(crate) struct GlTFLoader;
+pub(crate) struct GLTFLoader;
 #[async_trait]
-impl IAssetLoader for GlTFLoader {
+impl IAssetLoader for GLTFLoader {
     fn typ(&self) -> seija_core::uuid::Uuid { GltfAsset::TYPE_UUID }
 
     fn sync_load(&self,w:&mut World,path:&str,server:&AssetServer,_:Option<Box<dyn AssetLoaderParams>>) -> Result<Box<dyn AssetDynamic>> {
@@ -81,29 +81,31 @@ impl IAssetLoader for GlTFLoader {
     async fn async_load(&self,server:AssetServer,path:seija_core::smol_str::SmolStr,
                         _:Option<Box<dyn seija_asset::downcast_rs::DowncastSync>>,
                         _:Option<Box<dyn AssetLoaderParams>>) -> Result<Box<dyn AssetDynamic>> {
+       
        let full_path = server.full_path(path.as_str())?;
       
       
        let bytes = smol::fs::read(&full_path).await?;
+       
        let mut gltf_data = Gltf::from_slice(&bytes)?;
       
        let full_base_path = full_path.parent().context(1)?;
        let buffers = import_buffer_data(&mut gltf_data,full_base_path)?;
-      
+       
        let mut track_textures = vec![];
        let textures = load_textures(&server, path.as_str(),&gltf_data, &buffers,&mut track_textures).await?;
-     
+       
        let materials = load_materials(&gltf_data,&textures);
-     
+       
        let mut meshs = load_meshs(path.as_str(),&server,&gltf_data,&buffers,&materials)?;
-      
+       
        let mut nodes = load_nodes(&gltf_data)?;
-      
+       
        let _skeleton = load_skeleton(&gltf_data)?;
       
        let scenes = load_scenes(&gltf_data,&mut nodes,&mut meshs);
        
-
+       
        let mut skins = None;
        let mut anims = None;
        if let Some(skeleton) = _skeleton.as_ref() {
@@ -114,10 +116,11 @@ impl IAssetLoader for GlTFLoader {
            anims = Some(server.create_asset(anim_set,&format!("{}#animset",path)));
        }
        let skeleton = _skeleton.map(|v| server.create_asset(v,&format!("{}#skeleton",path)));
-      
+       
        for track in track_textures.drain(..) {
           let _ = track.wait().await;
        }
+      
        Ok(Box::new(GltfAsset {
         scenes,
         meshs,
@@ -325,7 +328,6 @@ fn load_meshs(path:&str,server:&AssetServer,gltf:&gltf::Gltf,buffers:&Vec<gltf::
             if let Some(verts) = reader.read_positions().map(|iter| VertexAttributeValues::Float3(iter.collect())) {
                 mesh.set(MeshAttributeType::POSITION, verts);
             }
-
             if let Some(normals) = reader.read_normals().map(|iter| VertexAttributeValues::Float3(iter.collect())) {
                 mesh.set(MeshAttributeType::NORMAL, normals);
             }
@@ -368,7 +370,6 @@ fn load_meshs(path:&str,server:&AssetServer,gltf:&gltf::Gltf,buffers:&Vec<gltf::
         }
         meshs.push(GltfMesh { node_index:0,primitives });
     }
-
     Ok(meshs)
 }
 

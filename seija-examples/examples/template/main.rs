@@ -31,6 +31,7 @@ fn start(world:&mut World) {
     let tmpl_path = asset_server.full_path("template").unwrap().join("first.xml");
     let str_template = std::fs::read_to_string(&tmpl_path).unwrap();
     let tempalte = Template::from_str(&str_template).unwrap();
+    log::info!("start instance template");
     if let Err(err) = instance_template_sync(world, &tempalte) {
         log::error!("err:{:?}",err);
     }

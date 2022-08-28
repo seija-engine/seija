@@ -73,62 +73,59 @@ impl AssetLoadingQueue {
         let mut count:i32 = self.loadings.len() as i32 - 1;
         while count >= 0 {
             let load_ctx = &mut self.loadings[count as usize];
-            match load_ctx.loader.mode() {
-                AsyncLoadMode::Touch => {
-                    if  load_ctx.touch_task.as_ref().map(|v| v.is_finished()).unwrap_or(false) {
-                        let task = load_ctx.touch_task.take().unwrap();
-                        match smol::block_on(task) {
-                            Ok(touch_data) => {
-                                load_ctx.touch_data = load_ctx.loader.perpare(world,Some(touch_data));
-                                
-                            },
-                            Err(err) => {
-                                log::error!("async touch error:{:?}",err);
-                                load_ctx.is_fail = true;
-                                continue;
-                            },
-                        }
-                        let server = world.get_resource::<AssetServer>().unwrap();
-                        let params = load_ctx.params.take();
-                        let clone_loader = load_ctx.loader.clone();
-                        let clone_server = server.clone();
-                        let clone_uri = load_ctx.uri.clone();
-                        let touch_data = load_ctx.touch_data.take();
-                        load_ctx.load_task = Some(smol::spawn(async move {
-                            clone_loader.async_load(clone_server,clone_uri,touch_data,params).await
-                        }));
+            if  load_ctx.touch_task.as_ref().map(|v| v.is_finished()).unwrap_or(false) {
+                let task = load_ctx.touch_task.take().unwrap();
+                match smol::block_on(task) {
+                    Ok(touch_data) => {
+                        load_ctx.touch_data = load_ctx.loader.perpare(world,Some(touch_data));
+                        
+                    },
+                    Err(err) => {
+                        log::error!("async touch error:{:?}",err);
+                        load_ctx.is_fail = true;
                         continue;
-                    }
-                },
-                _=> {
-                    if  load_ctx.load_task.as_ref().map(|v| v.is_finished()).unwrap_or(false) {
-                        let task = load_ctx.load_task.take().unwrap();
-                        let asset_data = smol::block_on(task);
-                        match asset_data {
-                            Ok(dyn_asset) => {
-                                if let Some(server) = world.get_resource::<AssetServer>() {
-                                    server.add_dyn_asset(&load_ctx.uri,&load_ctx.loader.typ(),load_ctx.hid, dyn_asset);
-                                }
-                                load_ctx.is_finish = true;
-                            },
-                            Err(err) => {
-                                log::error!("load asset error:{:?}",err);
-                                load_ctx.is_fail = true;
-                            },
+                    },
+                }
+                let server = world.get_resource::<AssetServer>().unwrap();
+                let params = load_ctx.params.take();
+                let clone_loader = load_ctx.loader.clone();
+                let clone_server = server.clone();
+                let clone_uri = load_ctx.uri.clone();
+                let touch_data = load_ctx.touch_data.take();
+                load_ctx.load_task = Some(smol::spawn(async move {
+                    clone_loader.async_load(clone_server,clone_uri,touch_data,params).await
+                }));
+                continue;
+            }
+
+            if  load_ctx.load_task.as_ref().map(|v| v.is_finished()).unwrap_or(false) {
+                let task = load_ctx.load_task.take().unwrap();
+                let asset_data = smol::block_on(task);
+                match asset_data {
+                    Ok(dyn_asset) => {
+                       
+                        if let Some(server) = world.get_resource::<AssetServer>() {
+                            server.add_dyn_asset(&load_ctx.uri,&load_ctx.loader.typ(),load_ctx.hid, dyn_asset);
                         }
-                    }
-                },
+                        load_ctx.is_finish = true;
+                    },
+                    Err(err) => {
+                        log::error!("load asset error:{:?}",err);
+                        load_ctx.is_fail = true;
+                    },
+                }
             }
             
-            if load_ctx.is_finish || load_ctx.is_fail {
-                if load_ctx.is_fail {
-                   let server = world.get_resource::<AssetServer>().unwrap();
-                   if let Some(info) = server.get_asset(&load_ctx.uri) {
-                        info.set_fail();
-                   }
-                }
+            
+            if load_ctx.is_finish { 
                 self.loadings.remove(count as usize);
                 
+            } else if load_ctx.is_fail {
+                let server = world.get_resource::<AssetServer>().unwrap();
+                if let Some(info) = server.get_asset(&load_ctx.uri) {
+                    info.set_fail();
+                }
+                self.loadings.remove(count as usize);
             }
             count -= 1;
         }

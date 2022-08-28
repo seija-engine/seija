@@ -41,6 +41,7 @@ fn load_material_def(code_string:&str) -> Result<Box<dyn AssetDynamic>> {
     let mut vm = EvalRT::new();
     let define = read_material_def(&mut vm, &code_string, false)?;
     let asset = MaterialDefineAsset { define:Arc::new(define) };
+   
     Ok(Box::new(asset))
 }
 
@@ -84,6 +85,7 @@ impl IAssetLoader for MaterialLoader {
     }
 
     fn sync_load(&self,w:&mut World,path:&str,server:&AssetServer,_:Option<Box<dyn AssetLoaderParams>>) -> Result<Box<dyn AssetDynamic>> {
+       
         let full_path = server.full_path(path)?;
         let bytes = std::fs::read(full_path)?;
         let json_value:Value = serde_json::from_slice(&bytes)?;
@@ -95,6 +97,7 @@ impl IAssetLoader for MaterialLoader {
         let mut material = Material::from_def(def_asset.define.clone(), &server).context(5)?;
         let json_props = json_map.get("props").context(6)?;
         set_material_props(&mut material,json_props)?;
+       
         Ok(Box::new(material))
     }
 
