@@ -2,11 +2,11 @@ use seija_asset::AssetServer;
 use seija_core::{bevy_ecs::{system::{CommandQueue, Insert}, world::World, prelude::Entity}, anyhow::{Result,anyhow, bail}};
 use seija_pbr::PBRCameraInfo;
 use seija_render::{camera::camera::{Camera, Perspective, Projection}, resource::Mesh, material::Material};
-use seija_template::{TComponent,TComponentCreator};
+use seija_template::{TComponent,TComponentManager};
 
 
 pub fn add_render_templates(world:&mut World) -> Result<()> {
-    let mut creator = world.get_resource_mut::<TComponentCreator>()
+    let mut creator = world.get_resource_mut::<TComponentManager>()
                                                .ok_or(anyhow!("TComponentCreator"))?;
     creator.add("Camera", tcomponent_camera);
     creator.add("Mesh", t_component_mesh);

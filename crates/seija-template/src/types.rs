@@ -1,22 +1,27 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, sync::Arc};
+use seija_app::ecs::{world::World, prelude::Entity};
 use smol_str::SmolStr;
 use seija_core::{anyhow::{Result}, info::EInfo, math::Vec3};
 
-use crate::read_tmpl_entity;
+use crate::{read_tmpl_entity, instance_template_sync};
 use seija_core::{TypeUuid,uuid::Uuid};
 
 #[derive(Default,Debug,TypeUuid)]
 #[uuid = "92a98d82-b2f8-4618-8ca7-4d4bd93eb824"]
 pub struct Template {
-   pub entity:TEntity
+   pub entity:Arc<TEntity>
 }
 
 impl Template {
     pub fn from_str(xml_string:&str) -> Result<Template> {
         let entity = read_tmpl_entity(xml_string)?;
         Ok(Template {
-            entity
+            entity:Arc::new(entity)
         })
+    }
+
+    pub fn instance(&self,world:&mut World) -> Result<Entity> {
+        instance_template_sync(world, self)
     }
 }
 

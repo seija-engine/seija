@@ -1,4 +1,4 @@
-use std::{collections::HashMap};
+use std::{collections::HashMap, sync::Arc};
 use seija_app::ecs::{system::{CommandQueue, Insert}, world::World, prelude::Entity};
 use seija_transform::Transform;
 use smol_str::SmolStr;
@@ -7,22 +7,50 @@ use crate::TComponent;
 
 pub type FromTComponentFunc = fn(world:&mut World,entity:Entity,&TComponent,queue:&mut CommandQueue) -> Result<()>;
 
+pub struct TComponentManager {
+    caches:Option<HashMap<SmolStr,FromTComponentFunc>>,
+   pub creator:TComponentCreator
+}
+
+impl TComponentManager {
+    pub fn new() -> Self {
+        TComponentManager {
+            caches:Some(HashMap::default()),
+            creator:Default::default()
+        }
+    }
+
+    pub fn start(&mut self) {
+       if let Some(values) = self.caches.take() {
+         self.creator = TComponentCreator { values:Arc::new(values) }
+       }
+    }
+}
+
 #[derive(Default)]
 pub struct TComponentCreator {
-    creators:HashMap<SmolStr,FromTComponentFunc>
+    values:Arc<HashMap<SmolStr,FromTComponentFunc>>
+}
+
+impl TComponentManager {
+    pub fn add(&mut self,name:&str,value:FromTComponentFunc) {
+        if let Some(creators) = self.caches.as_mut() {
+            creators.insert(name.into(), value);
+        }
+    }
 }
 
 impl TComponentCreator {
-    pub fn add(&mut self,name:&str,value:FromTComponentFunc) {
-        self.creators.insert(name.into(), value);
-    }
-
     pub fn create<'w,'s,'a>(&self,t_component:&TComponent,world:&mut World,queue:&mut CommandQueue,entity:Entity) -> Result<()> {
-        if let Some(f) = self.creators.get(&t_component.typ) {
+        if let Some(f) = self.values.get(&t_component.typ) {
             f(world,entity,t_component,queue)
         } else {
             Err(anyhow!(format!("not found {} creator",&t_component.typ)))
         }
+    }
+
+    pub async fn create_async(&self,entity:Entity,t_component:&TComponent) {
+        
     }
 }
 

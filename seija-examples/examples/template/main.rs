@@ -1,15 +1,17 @@
 use glam::{Vec3, Quat};
-use seija_asset::{AssetServer};
+use seija_asset::{AssetServer, Assets};
 use seija_core::{CoreStage, StartupStage};
 use seija_examples::{init_core_app, update_camera_trans_system, load_material};
-use bevy_ecs::prelude::*;
+use bevy_ecs::{prelude::*, entity::Entities};
 use seija_pbr::lights::PBRLight;
+use seija_render::resource::Mesh;
 use seija_template::{Template, instance_template_sync};
 use seija_transform::Transform;
 pub fn main() {
     let mut app = init_core_app("model_render.clj");
     app.add_system2(CoreStage::Startup, StartupStage::Startup, start.exclusive_system());
     app.add_system(CoreStage::Update, update_camera_trans_system);
+    app.add_system(CoreStage::Update, async_system);
     app.run();
 }
 
@@ -34,6 +36,9 @@ fn start(world:&mut World) {
     log::info!("start instance template");
     if let Err(err) = instance_template_sync(world, &tempalte) {
         log::error!("err:{:?}",err);
-    }
-    
+    }   
+}
+
+fn async_system(entities:&Entities,c:ResMut<Assets<Mesh>>,server:Res<AssetServer>) {
+   
 }
