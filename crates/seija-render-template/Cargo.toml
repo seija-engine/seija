@@ -11,3 +11,4 @@ seija-template = {path = "../seija-template"}
 seija-asset = {path = "../seija-asset"}
 seija-pbr = {path = "../seija-pbr"}
 seija-gltf = {path = "../seija-gltf"}
+log = "*"

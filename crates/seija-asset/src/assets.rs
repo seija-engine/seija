@@ -52,6 +52,9 @@ impl<T: Asset> Assets<T> {
     pub fn add_weak(&mut self,asset:T) -> Handle<T> {
         let id = HandleId::random::<T>();
         self.assets.insert(id, asset);
+        self.events.send(AssetEvent::Created {
+            handle: Handle::weak(id),
+        }); 
         Handle::weak(id)
     }
 

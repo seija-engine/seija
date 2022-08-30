@@ -73,7 +73,8 @@ impl ITComponentOpt for TransformTemplateOpt {
         let s = component.read_v3("scale").unwrap_or(Vec3::ONE);
         let rr = Quat::from_euler(Default::default(), r.y.to_radians(), r.x.to_radians(), r.z.to_radians());
         let t = Transform::new(p, rr, s);
-        queue.push(Insert {entity,component:t } );
+        let insert = Insert {entity,component:t };
+        queue.push(insert);
         Ok(())
     }
 }

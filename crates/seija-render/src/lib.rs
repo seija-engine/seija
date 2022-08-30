@@ -1,6 +1,7 @@
 use std::path::{PathBuf, Path};
 use std::sync::Arc;
 use pipeline::{PipelineCache, update_pipeline_cache};
+use query::QuerySystem;
 use rdsl::{RenderMain};
 use render::{AppRender, Config };
 use resource::{Mesh, Texture, color_texture};
@@ -69,15 +70,15 @@ impl IModule for RenderModule {
         material::init_material(app);
         light::init_light(app);
         RenderMain::add_system(app);
-        query::init_system(app);
+       
         Self::init_buildin_assets(&mut app.world);
-
+        app.add_resource(QuerySystem::default());
         let render_system = self.get_render_system(&mut app.world,self.0.clone());
         app.schedule.add_stage_after(CoreStage::PostUpdate, RenderStage::AfterRender, SystemStage::parallel());
         app.schedule.add_stage_before(RenderStage::AfterRender, RenderStage::Render, SystemStage::single(render_system.exclusive_system()));
         app.schedule.add_stage_before(RenderStage::Render, RenderStage::PostRender, SystemStage::parallel());
-
-        
+        query::init_system(app);
+       
         app.add_system(RenderStage::AfterRender, update_pipeline_cache);
     }
 }

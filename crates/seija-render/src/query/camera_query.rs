@@ -17,6 +17,7 @@ pub(crate) fn camera_query_check_add(mut system:ResMut<QuerySystem>,
                                      remove_cameras:RemovedComponents<Camera>) {
     for add_camera in add_cameras.iter() {
         let eid = add_camera.to_bits();
+        
         system.add_query(IdOrName::Id(eid), CAMERA_TYPE);
     }
     for rm in remove_cameras.iter() {

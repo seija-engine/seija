@@ -43,7 +43,8 @@ impl ITComponentOpt for TComponentCameraOpt {
             "Orthographic" => {}
             _ => { bail!("error camera type:{}",camera_type) },
         }
-        queue.push(Insert {entity,component:camera});
+        let insert = Insert {entity,component:camera};
+        queue.push(insert);
         Ok(())
     }
 }

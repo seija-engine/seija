@@ -111,7 +111,7 @@ impl DrawPassNode {
                 let material = materials.get(&hmat.id).ok_or(PassError::MissMaterial)?;
                 
                 if !material.is_ready(&ctx.resources) { continue }
-               
+                
                 if let Some(pipelines)  = pipeline_cahce.get_pipeline(material.def.name.as_str(), mesh) {
                     if let Some(mesh_buffer_id)  = ctx.resources.get_render_resource(&hmesh.id, 0) {
                         for pipeline in pipelines.pipelines.iter() {
@@ -126,7 +126,7 @@ impl DrawPassNode {
                             let oset_index = pipeline.set_binds(self.camera_entity, entity, &mut render_pass, &ctx.ubo_ctx);
                             if oset_index.is_none()  { continue }
                             let mut set_index = oset_index.unwrap();   
-                                   
+                           
                             if material.props.def.infos.len() > 0 {
                                 if let Some(bind_group) = material.bind_group.as_ref() {
                                     render_pass.set_bind_group(set_index, bind_group, &[]);

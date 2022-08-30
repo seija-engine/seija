@@ -16,12 +16,14 @@ pub fn instance_template_sync(world:&mut World,tentity:Arc<TEntity>) -> Result<E
         let server = w.get_resource::<AssetServer>().unwrap().clone();
         let ret = instance_entity_sync(w,&server,&tentity,&mgr,&mut queue);
         queue.apply(w);
+
         ret
     })
     
 }
 
 fn instance_entity_sync(world:&mut World,server:&AssetServer,t_entity:&TEntity,mgr:&TComponentManager,queue:&mut CommandQueue) -> Result<Entity> {
+
     let mut childrens:SmallVec<[Entity;8]> = SmallVec::new();
     for child in t_entity.children.iter() {
         childrens.push(instance_entity_sync(world,server,child,mgr,queue)?);
@@ -33,7 +35,7 @@ fn instance_entity_sync(world:&mut World,server:&AssetServer,t_entity:&TEntity,m
         mgr.create(component, server,queue,eid)?;
         
     }
-
+   
     PushChildren {children:childrens,parent:eid}.write(world);   
    Ok(eid)
 }
