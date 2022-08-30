@@ -9,6 +9,13 @@ pub struct TexturePropDef {
     pub layout_builder:BindGroupLayoutBuilder,
     pub indexs:HashMap<String,TexturePropInfo>,
 }
+
+impl TexturePropDef {
+    pub fn get_info(&self,name:&str) -> Option<&TexturePropInfo> {
+        self.indexs.get(name)
+    }
+}
+
 #[derive(Default,Debug)]
 pub struct TexturePropInfo {
     pub name:String,

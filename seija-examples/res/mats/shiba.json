@@ -1,0 +1,7 @@
+{
+   "material":"materials/baseTexture.mat.clj",
+   "props":{
+       "color":[1,1,1,1],
+       "mainTexture":"gltf/shiba/textures/default_baseColor.png"
+   }
+}

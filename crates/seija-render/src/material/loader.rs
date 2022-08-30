@@ -10,7 +10,7 @@ use serde_json::Value;
 use smol_str::SmolStr;
 
 
-use crate::{MemUniformInfo,material::Material, UniformType, RawUniformInfo};
+use crate::{MemUniformInfo,material::Material, UniformType, RawUniformInfo, resource::Texture};
 
 use super::{read_material_def, material_def::MaterialDefineAsset, MaterialDef};
 
@@ -116,11 +116,24 @@ impl IAssetLoader for MaterialLoader {
         let json_map = touch.json.as_object().context(0)?;
         let json_props = json_map.get("props").context(6)?;
         set_material_props(&mut material,json_props)?;
+        set_material_textures(&mut material,json_props,&server).await?;
         let ret:Box<dyn AssetDynamic> = Box::new(material);
         Ok(ret)
     }
 }
-
+async fn set_material_textures(material:&mut Material,value:&Value,server:&AssetServer) -> Result<()> {
+    let props = value.as_object().context(1)?;
+    let define = material.def.clone();
+    for (k,v) in props.iter() {
+        if let Some(_) = define.tex_prop_def.get_info(k) {
+            let texture_path = v.as_str().context(2)?;
+            let req = server.load_async::<Texture>(texture_path, None)?;
+            let h_tex = req.wait_handle().await.context(3)?;
+            material.texture_props.set(k, h_tex.typed());
+        }
+    }
+    Ok(())
+}
 
 fn set_material_props(material:&mut Material,value:&Value) -> Result<()> {
     let props = value.as_object().context(1)?;
