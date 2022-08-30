@@ -1,23 +1,30 @@
 use glam::{Vec3, Quat};
-use seija_asset::{AssetServer, Assets};
+use seija_asset::{AssetServer, Assets, AssetRequest, Handle};
 use seija_core::{CoreStage, StartupStage};
-use seija_examples::{init_core_app, update_camera_trans_system, load_material};
-use bevy_ecs::{prelude::*, entity::Entities};
+use seija_examples::{init_core_app, update_camera_trans_system};
+use bevy_ecs::{prelude::*};
 use seija_pbr::lights::PBRLight;
-use seija_render::resource::Mesh;
 use seija_template::{Template};
 use seija_transform::Transform;
+
+
+pub struct LocalData {
+    req:AssetRequest,
+    hid:Option<Handle<Template>>
+}
+
 pub fn main() {
     let mut app = init_core_app("model_render.clj");
     app.add_system2(CoreStage::Startup, StartupStage::Startup, start.exclusive_system());
     app.add_system(CoreStage::Update, update_camera_trans_system);
-    app.add_system(CoreStage::Update, async_system);
+    app.add_system(CoreStage::Update, async_system.exclusive_system());
     app.run();
 }
 
 fn start(world:&mut World) {
-    load_material("materials/pbrColor.mat.clj", world);
-
+    //load_material("materials/pbrColor.mat.clj", world);
+    
+    
      //light
      {
         let light = PBRLight::directional(Vec3::new(1f32, 1f32, 1f32)  , 62000f32);
@@ -30,16 +37,24 @@ fn start(world:&mut World) {
     }
 
     let asset_server = world.get_resource::<AssetServer>().unwrap();
-    let tmpl_path = asset_server.full_path("template").unwrap().join("first.xml");
-    let str_template = std::fs::read_to_string(&tmpl_path).unwrap();
-    let tempalte = Template::from_str(&str_template).unwrap();
+    let req = asset_server.load_async::<Template>("template/first.xml", None).unwrap();
+   
+    let local_data = LocalData { req,hid:None };
     log::info!("start instance template");
-    //TODO
-    //if let Err(err) = instance_template_sync(world, &tempalte) {
-    //    log::error!("err:{:?}",err);
-    //}   
+    world.insert_resource(local_data);
 }
 
-fn async_system(entities:&Entities,c:ResMut<Assets<Mesh>>,server:Res<AssetServer>) {
-   
+fn async_system(world:&mut World) {
+   let mut local_data = world.get_resource_mut::<LocalData>().unwrap();
+   if local_data.req.is_finish() && local_data.hid.is_none() {
+      
+      let h = local_data.req.make_handle().typed();
+      let hid = h.id;
+      local_data.hid = Some(h);
+      log::error!("load finish");
+      
+      let templates = world.get_resource::<Assets<Template>>().unwrap();
+      let template = templates.get(&hid).unwrap();
+      Template::instance(template.entity.clone(), world).unwrap();
+   }
 }

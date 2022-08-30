@@ -52,11 +52,12 @@ impl AssetLoadingQueue {
                     clone_loader.async_touch(clone_server, clone_uri).await
                 }));
                 self.loadings.push(load_context);
+                return;
             },
-            AsyncLoadMode::Perpare => {
-                load_context.touch_data = load_context.loader.perpare(world,None);   
-            },
-            AsyncLoadMode::OnlyLoad => {
+            _ => {
+                if loader.mode() == AsyncLoadMode::Perpare {
+                    load_context.touch_data = load_context.loader.perpare(world,None); 
+                }
                 let params = load_context.params.take();
                 let touch_data = load_context.touch_data.take();
                 load_context.load_task = Some( smol::spawn(async move {

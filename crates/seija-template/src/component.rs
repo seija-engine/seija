@@ -23,6 +23,11 @@ impl TComponentManager {
         }
     }
 
+    pub fn create<'w,'s,'a>(&self,t_component:&TComponent,server:&AssetServer,queue:&mut CommandQueue,entity:Entity) -> Result<()> {
+        let opt = self.get_opt(t_component)?;
+        opt.create_component(server, t_component, queue, entity)
+    }
+
     pub fn get_opt(&self,tcomponent:&TComponent) -> Result<&Box<dyn ITComponentOpt>> {
         self
         .opts

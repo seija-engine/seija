@@ -12,6 +12,7 @@ use uuid::Uuid;
 #[derive(Debug,TypeUuid,Component)]
 #[uuid = "9fb83fbe-b850-42e0-a58c-53da87bace04"]
 pub struct Material {
+    pub define:Option<Handle<MaterialDefineAsset>>,
     pub def:Arc<MaterialDef>,
     pub order:RenderOrder,
     pub props:TypedUniformBuffer,
@@ -25,6 +26,7 @@ impl Material {
         let props = TypedUniformBuffer::from_def(def.prop_def.clone());
         let texture_props = TextureProps::from_def_new(&def,server)?;
         Some(Material {
+            define:None,
             order:def.order,
             def,
             props,

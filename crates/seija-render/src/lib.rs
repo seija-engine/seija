@@ -121,10 +121,10 @@ impl RenderModule {
     fn init_buildin_assets(world:&mut World) {
         let mut meshs = world.get_resource_mut::<Assets<Mesh>>().unwrap();
         
-        let h_cube = meshs.add(Cube::new(1f32).into());
-        let h_sphere = meshs.add(Sphere::new(0.5f32).into());
-        let h_plane = meshs.add(Plane::new(10f32,10).into());
-        let h_quad = meshs.add(Quad::new(1f32).into());
+        let h_cube = meshs.add_weak(Cube::new(1f32).into());
+        let h_sphere = meshs.add_weak(Sphere::new(0.5f32).into());
+        let h_plane = meshs.add_weak(Plane::new(10f32,10).into());
+        let h_quad = meshs.add_weak(Quad::new(1f32).into());
 
         let mut textures = world.get_resource_mut::<Assets<Texture>>().unwrap();
         let h_white = textures.add_weak(color_texture([255,255,255,255], 16));

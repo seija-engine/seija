@@ -35,16 +35,19 @@ impl IAssetLoader for TemplateLoader {
     async fn async_load(&self,server:AssetServer,path:SmolStr,
                         mut touch_data:Option<Box<dyn DowncastSync>>,
                         _:Option<Box<dyn AssetLoaderParams>>) -> Result<Box<dyn AssetDynamic>> {
-
         if let Some(touch_data) = touch_data.take() {
             let mgr = touch_data.into_any().downcast::<TComponentManager>().map_err(|_| TemplateError::TypeCastError)?;
             
             let full_path = server.full_path(path.as_str())?;
+            
             let xml_string = smol::fs::read_to_string(full_path).await?;
             let mut template = Template::from_str(&xml_string)?;
             for (asset_typ,asset_path) in mgr.search_assets(&template.entity)? {
+             
                let req = server.load_async_untyped(&asset_typ, asset_path.as_str(), None)?;
+              
                let handle = req.wait_handle().await.ok_or(TemplateError::LoadAssetError)?;
+              
                template.assets.push(handle);
             }
             return Ok(Box::new(template));

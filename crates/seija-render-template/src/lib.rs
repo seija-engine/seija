@@ -91,6 +91,7 @@ impl ITComponentOpt for TComponentMaterialOpt {
     fn search_assets(&self, component: &TComponent) -> Result<Vec<(Uuid,SmolStr)>> {
         if let Some(res_path) = component.attrs.get("res") {
             let real_path = res_path.strip_prefix("res://").ok_or(anyhow!("mesh res path err"))?;
+            
             return Ok(vec![(Material::TYPE_UUID,real_path.into())]);
         }
         Ok(vec![])
@@ -99,7 +100,7 @@ impl ITComponentOpt for TComponentMaterialOpt {
     fn create_component(&self,server:&AssetServer, component: &TComponent,queue:&mut CommandQueue,entity:Entity)-> Result<()> {
         if let Some(res_path) = component.attrs.get("res") {
             let real_path = res_path.strip_prefix("res://").ok_or(anyhow!("mesh res path err"))?;
-            let info = server.get_asset(res_path).ok_or(anyhow!("not found material res:{}",real_path))?;
+            let info = server.get_asset(real_path).ok_or(anyhow!("not found material res:{}",real_path))?;
             let h_material = info.make_handle().typed::<Material>();
             queue.push(Insert {entity,component:h_material });
         }

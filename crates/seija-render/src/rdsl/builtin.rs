@@ -295,7 +295,8 @@ pub fn load_material(scope:&mut ExecScope,args:Vec<Variable>) -> Variable {
         let world = find_userdata::<World>(scope, "*WORLD*").ok_or(0)?;
         let server = world.get_resource::<AssetServer>().ok_or(1)?.clone();
         let path = args.get(0).and_then(Variable::cast_string).ok_or(2)?;
-        let ret = server.load_sync::<MaterialDefineAsset>(world, path.borrow().as_str(),None);
-        Ok(Variable::Bool(ret.is_ok()))
+        let mut ret = server.load_sync::<MaterialDefineAsset>(world, path.borrow().as_str(),None).map_err(|_| 3)?;
+        ret.forget();
+        Ok(Variable::Bool(true))
    })
 }

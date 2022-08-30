@@ -4,7 +4,7 @@ use seija_asset::HandleUntyped;
 use smol_str::SmolStr;
 use seija_core::{anyhow::{Result}, info::EInfo, math::Vec3};
 
-use crate::{read_tmpl_entity};
+use crate::{read_tmpl_entity, inst::instance_template_sync};
 use seija_core::{TypeUuid,uuid::Uuid};
 
 #[derive(Default,Debug,TypeUuid)]
@@ -23,10 +23,8 @@ impl Template {
         })
     }
 
-    pub fn instance(&self,world:&mut World) -> Result<Entity> {
-        //TODO
-        todo!()
-        //instance_template_sync(world, self)
+    pub fn instance(tentity:Arc<TEntity>,world:&mut World) -> Result<Entity> {
+        instance_template_sync(world, tentity)
     }
 }
 

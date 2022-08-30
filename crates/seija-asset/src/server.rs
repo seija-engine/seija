@@ -23,10 +23,11 @@ pub struct AssetInfo {
 pub struct ArcAssetInfo(pub Arc<AssetInfo>);
 
 impl AssetInfo {
-    pub(crate) fn new<T:Asset>(sender:Sender<RefEvent>) -> Self {
-        let id = HandleId::random::<T>();
-        AssetInfo { handle_id:id, state: AtomicU8::new(0),sender,waker:Default::default() }
-    }
+    //#[warn(dead_code)]
+    //pub(crate) fn new<T:Asset>(sender:Sender<RefEvent>) -> Self {
+    //    let id = HandleId::random::<T>();
+    //    AssetInfo { handle_id:id, state: AtomicU8::new(0),sender,waker:Default::default() }
+    //}
 
     pub(crate) fn new_untyped(typ:&Uuid,sender:Sender<RefEvent>) -> Self {
         let id = HandleId::new(typ.clone(), rand::random());
@@ -235,6 +236,7 @@ impl AssetServer {
                 return Ok(AssetRequest::new(info.clone()))
             }  
         }
+       
         let asset_info = Arc::new(AssetInfo::new_untyped(typ,self.inner.life_cycle.sender()));
         self.inner.assets.write().insert(path.into(), asset_info.clone());
 
