@@ -1,4 +1,9 @@
+use crate::component::TComponentManager;
+use crate::errors::TemplateError;
 use crate::{TComponent, TEntity, Template,};
+use seija_app::ecs::world::World;
+use seija_asset::downcast_rs::DowncastSync;
+use seija_asset::{AssetServer, AssetLoaderParams, AssetDynamic, AsyncLoadMode};
 use seija_asset::{IAssetLoader,async_trait::async_trait};
 use seija_core::anyhow::{bail,Result,anyhow};
 use seija_core::TypeUuid;
@@ -12,21 +17,40 @@ pub(crate) struct TemplateLoader;
 #[async_trait]
 impl IAssetLoader for TemplateLoader {
     fn typ(&self) -> seija_core::uuid::Uuid { Template::TYPE_UUID }
+    
+    fn mode(&self) -> AsyncLoadMode { AsyncLoadMode::Perpare }
 
-    fn sync_load(&self,_:&mut seija_app::ecs::prelude::World,path:&str,server:&seija_asset::AssetServer,_:Option<Box<dyn seija_asset::AssetLoaderParams>>) -> Result<Box<dyn seija_asset::AssetDynamic>> {
+    fn sync_load(&self,_:&mut World,path:&str,server:&AssetServer,_:Option<Box<dyn AssetLoaderParams>>) -> Result<Box<dyn AssetDynamic>> {
         let full_path = server.full_path(path)?;
         let xml_string = std::fs::read_to_string(full_path)?;
         let template = Template::from_str(&xml_string)?;
         Ok(Box::new(template))
     }
 
-    async fn async_load(&self,server:seija_asset::AssetServer,path:SmolStr,
-                        _:Option<Box<dyn seija_asset::downcast_rs::DowncastSync>>,
-                        _:Option<Box<dyn seija_asset::AssetLoaderParams>>) -> Result<Box<dyn seija_asset::AssetDynamic>> {
-        let full_path = server.full_path(path.as_str())?;
-        let xml_string = smol::fs::read_to_string(full_path).await?;
-        let template = Template::from_str(&xml_string)?;
-        Ok(Box::new(template))
+    fn perpare(&self,world:&mut World,_:Option<Box<dyn DowncastSync>>) -> Option<Box<dyn DowncastSync>> {
+        let mgr = world.get_resource::<TComponentManager>().unwrap().clone();
+        Some(Box::new(mgr)) 
+    }
+
+    async fn async_load(&self,server:AssetServer,path:SmolStr,
+                        mut touch_data:Option<Box<dyn DowncastSync>>,
+                        _:Option<Box<dyn AssetLoaderParams>>) -> Result<Box<dyn AssetDynamic>> {
+
+        if let Some(touch_data) = touch_data.take() {
+            let mgr = touch_data.into_any().downcast::<TComponentManager>().map_err(|_| TemplateError::TypeCastError)?;
+            
+            let full_path = server.full_path(path.as_str())?;
+            let xml_string = smol::fs::read_to_string(full_path).await?;
+            let mut template = Template::from_str(&xml_string)?;
+            for (asset_typ,asset_path) in mgr.search_assets(&template.entity)? {
+               let req = server.load_async_untyped(&asset_typ, asset_path.as_str(), None)?;
+               let handle = req.wait_handle().await.ok_or(TemplateError::LoadAssetError)?;
+               template.assets.push(handle);
+            }
+            return Ok(Box::new(template));
+        }
+        
+        Err(anyhow!("TComponentManager"))
     }
 }
 

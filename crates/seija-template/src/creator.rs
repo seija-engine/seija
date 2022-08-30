@@ -48,10 +48,6 @@ impl TComponentCreator {
             Err(anyhow!(format!("not found {} creator",&t_component.typ)))
         }
     }
-
-    pub async fn create_async(&self,entity:Entity,t_component:&TComponent) {
-        
-    }
 }
 
 pub(crate) fn tcomponent_transform(_:&mut World,entity:Entity,component:&TComponent,queue:&mut CommandQueue) -> Result<()> {

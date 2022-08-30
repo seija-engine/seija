@@ -1,0 +1,5 @@
+<Entity name="Root" >
+    <Components>
+        <Mesh res="res://mesh:sphere" />
+    </Components>
+</Entity>

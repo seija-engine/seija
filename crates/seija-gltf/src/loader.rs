@@ -118,7 +118,7 @@ impl IAssetLoader for GLTFLoader {
        let skeleton = _skeleton.map(|v| server.create_asset(v,&format!("{}#skeleton",path)));
        
        for track in track_textures.drain(..) {
-          let _ = track.wait().await;
+          let _ = track.wait_id().await;
        }
       
        Ok(Box::new(GltfAsset {

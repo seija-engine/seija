@@ -5,7 +5,7 @@ use seija_examples::{init_core_app, update_camera_trans_system, load_material};
 use bevy_ecs::{prelude::*, entity::Entities};
 use seija_pbr::lights::PBRLight;
 use seija_render::resource::Mesh;
-use seija_template::{Template, instance_template_sync};
+use seija_template::{Template};
 use seija_transform::Transform;
 pub fn main() {
     let mut app = init_core_app("model_render.clj");
@@ -34,9 +34,10 @@ fn start(world:&mut World) {
     let str_template = std::fs::read_to_string(&tmpl_path).unwrap();
     let tempalte = Template::from_str(&str_template).unwrap();
     log::info!("start instance template");
-    if let Err(err) = instance_template_sync(world, &tempalte) {
-        log::error!("err:{:?}",err);
-    }   
+    //TODO
+    //if let Err(err) = instance_template_sync(world, &tempalte) {
+    //    log::error!("err:{:?}",err);
+    //}   
 }
 
 fn async_system(entities:&Entities,c:ResMut<Assets<Mesh>>,server:Res<AssetServer>) {

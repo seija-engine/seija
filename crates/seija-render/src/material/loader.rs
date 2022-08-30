@@ -66,7 +66,7 @@ impl IAssetLoader for MaterialLoader {
         let json_map = json.as_object().context(0)?;
         let material_def_path = json_map.get("material").and_then(Value::as_str).context(1)?;
         let req = server.load_async::<MaterialDefineAsset>(material_def_path,None)?;
-        let define_id = req.wait().await.ok_or(anyhow!("load material define error"))?;
+        let define_id = req.wait_id().await.ok_or(anyhow!("load material define error"))?;
         let touch = MaterialTouch { json,define_id,rc_define:None };
         let ret:Box<dyn DowncastSync> = Box::new(touch);
         Ok(ret)  

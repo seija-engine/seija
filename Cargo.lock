@@ -2694,8 +2694,10 @@ dependencies = [
 name = "seija-render-template"
 version = "0.1.0"
 dependencies = [
+ "seija-app",
  "seija-asset",
  "seija-core",
+ "seija-gltf",
  "seija-pbr",
  "seija-render",
  "seija-template",
@@ -2730,6 +2732,7 @@ dependencies = [
  "seija-transform",
  "smallvec",
  "smol_str",
+ "thiserror",
 ]
 
 [[package]]

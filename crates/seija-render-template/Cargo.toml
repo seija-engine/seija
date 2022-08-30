@@ -5,7 +5,9 @@ edition = "2021"
 
 [dependencies]
 seija-core = {path = "../seija-core"}
+seija-app = {path = "../seija-app"}
 seija-render = {path = "../seija-render"}
 seija-template = {path = "../seija-template"}
 seija-asset = {path = "../seija-asset"}
 seija-pbr = {path = "../seija-pbr"}
+seija-gltf = {path = "../seija-gltf"}

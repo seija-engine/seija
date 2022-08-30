@@ -4,9 +4,9 @@ use seija_core::anyhow::{Result};
 use seija_transform::{ PushChildren};
 use smallvec::SmallVec;
 
-use crate::creator::{TComponentManager, TComponentCreator};
 use crate::{Template, TEntity};
 
+/* 
 pub fn instance_template_sync(world:&mut World,template:&Template) -> Result<Entity> {
     world.resource_scope(|w:&mut World,mgr:Mut<TComponentManager>| {
         let mut queue = CommandQueue::default();
@@ -32,3 +32,4 @@ fn instance_entity_sync(world:&mut World,t_entity:&TEntity,creator:&TComponentCr
     PushChildren {children:childrens,parent:eid}.write(world);   
    Ok(eid)
 }
+*/

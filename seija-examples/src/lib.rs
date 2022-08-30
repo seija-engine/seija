@@ -11,6 +11,7 @@ use seija_pbr::{PBRCameraInfo, create_pbr_plugin};
 use seija_render::{camera::{camera::Perspective,camera::Camera}, 
                    material::{MaterialDefineAsset}, resource::{Texture, TextureDescInfo}
                   ,RenderConfig, GraphSetting, RenderModule};
+
 use seija_render_template::add_render_templates;
 use seija_template::TemplateModule;
 use seija_transform::{Transform, TransformModule};
@@ -29,7 +30,8 @@ pub fn init_core_app(render_file:&str) -> App {
     app.add_module(win);
     app.add_module(TransformModule);
     app.add_module(TemplateModule);
-    add_render_templates(&mut app.world).unwrap();
+   
+    add_render_templates(&mut app);
     app.add_module(GLTFModule);
     let render_config = RenderConfig {
         config_path:".render/shaders".into(),

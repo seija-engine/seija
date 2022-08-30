@@ -28,6 +28,11 @@ impl AssetInfo {
         AssetInfo { handle_id:id, state: AtomicU8::new(0),sender,waker:Default::default() }
     }
 
+    pub(crate) fn new_untyped(typ:&Uuid,sender:Sender<RefEvent>) -> Self {
+        let id = HandleId::new(typ.clone(), rand::random());
+        AssetInfo { handle_id:id, state: AtomicU8::new(0),sender,waker:Default::default() }
+    }
+
     pub(crate) fn new_id(id:HandleId,sender:Sender<RefEvent>) -> Self {
         AssetInfo { handle_id: id, state: AtomicU8::new(0),sender,waker:Default::default() }
     }
@@ -84,7 +89,16 @@ impl AssetRequest {
         self.asset.0.make_weak_handle()
     }
 
-    pub async fn wait(self) -> Option<HandleId> { self.asset.await }
+    pub async fn wait_id(self) -> Option<HandleId> { self.asset.await }
+
+    pub async fn wait_handle(self) -> Option<HandleUntyped> {
+        let sender = self.asset.0.sender.clone();
+        let id = self.wait_id().await;
+        if let Some(id) = id {
+            return Some(HandleUntyped::strong(id, sender));
+        }
+        None
+    }
 }
 
 impl Future for ArcAssetInfo {
@@ -211,15 +225,20 @@ impl AssetServer {
     }
 
     pub fn load_async<T:Asset>(&self,path:&str,params:Option<Box<dyn AssetLoaderParams>>) -> Result<AssetRequest> {
+        self.load_async_untyped(&T::TYPE_UUID, path, params)
+    }
+
+    pub fn load_async_untyped(&self,typ:&Uuid,path:&str,params:Option<Box<dyn AssetLoaderParams>>) -> Result<AssetRequest> {
         let read_info = self.inner.assets.read().get(path).cloned();
         if let Some(info) = read_info {
             if !info.is_fail() {
                 return Ok(AssetRequest::new(info.clone()))
             }  
         }
-        let asset_info = Arc::new(AssetInfo::new::<T>(self.inner.life_cycle.sender()));
+        let asset_info = Arc::new(AssetInfo::new_untyped(typ,self.inner.life_cycle.sender()));
         self.inner.assets.write().insert(path.into(), asset_info.clone());
-        let loader = self.inner.loaders.read().get(&T::TYPE_UUID).ok_or(AssetError::NotFoundLoader)?.clone();
+
+        let loader = self.inner.loaders.read().get(typ).ok_or(AssetError::NotFoundLoader)?.clone();
         self.inner.request_list.write().push_back((SmolStr::new(path),asset_info.handle_id,params,loader));
         Ok(AssetRequest::new(asset_info))
     }
