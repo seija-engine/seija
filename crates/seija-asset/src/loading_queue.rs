@@ -111,7 +111,7 @@ impl AssetLoadingQueue {
                         load_ctx.is_finish = true;
                     },
                     Err(err) => {
-                        log::error!("load asset error:{:?}",err);
+                        log::error!("load asset error path:{:?} err:{:?}",load_ctx.uri.as_str(),err);
                         load_ctx.is_fail = true;
                     },
                 }

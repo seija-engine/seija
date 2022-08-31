@@ -233,12 +233,14 @@ impl AssetServer {
         let read_info = self.inner.assets.read().get(path).cloned();
         if let Some(info) = read_info {
             if !info.is_fail() {
+                log::info!("load_async_untyped cache:{}",path);
                 return Ok(AssetRequest::new(info.clone()))
             }  
         }
        
         let asset_info = Arc::new(AssetInfo::new_untyped(typ,self.inner.life_cycle.sender()));
         self.inner.assets.write().insert(path.into(), asset_info.clone());
+        log::info!("load_async_untyped:{}",path);
 
         let loader = self.inner.loaders.read().get(typ).ok_or(AssetError::NotFoundLoader)?.clone();
         self.inner.request_list.write().push_back((SmolStr::new(path),asset_info.handle_id,params,loader));

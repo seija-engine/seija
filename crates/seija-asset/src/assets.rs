@@ -116,6 +116,7 @@ impl<T: Asset> Assets<T> {
                 match life_event.receiver.try_recv() {
                     Ok(LifecycleEvent::Create(asset,id,info)) => {
                         if let Ok(t_asset) = asset.downcast::<T>() {
+                            //log::info!("assets add:{:?}",&info);
                             assets.set_untracked(id, *t_asset);
                             info.set_finish();
                         } else {
