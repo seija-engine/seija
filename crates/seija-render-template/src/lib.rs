@@ -1,7 +1,7 @@
 use seija_asset::AssetServer;
-use seija_core::{bevy_ecs::{system::{CommandQueue, Insert}, prelude::Entity}, anyhow::{Result,anyhow, bail}, smol_str::SmolStr, uuid::Uuid, TypeUuid};
+use seija_core::{bevy_ecs::{system::{CommandQueue, Insert}, prelude::Entity}, anyhow::{Result,anyhow, bail}, smol_str::SmolStr, uuid::Uuid, TypeUuid, math::Vec3};
 use seija_gltf::asset::GltfAsset;
-use seija_pbr::PBRCameraInfo;
+use seija_pbr::{PBRCameraInfo, lights::{PBRLight, PBRLightType}};
 use seija_render::{camera::camera::{Camera, Perspective, Projection}, resource::Mesh, material::Material};
 use seija_template::{TComponent,ITComponentOpt,AddTComponent};
 use seija_app::App;
@@ -11,6 +11,7 @@ pub fn add_render_templates(app:&mut App) {
     app.add_tcomponent_opt("Mesh", TComponentMeshOpt);
     app.add_tcomponent_opt("PBRCameraInfo", TComponentPBRCameraInfoOpt);
     app.add_tcomponent_opt("Material", TComponentMaterialOpt);
+    app.add_tcomponent_opt("PBRLight", TComponentLightOpt);
 }
 
 pub(crate) struct TComponentCameraOpt;
@@ -105,6 +106,34 @@ impl ITComponentOpt for TComponentMaterialOpt {
             let h_material = info.make_handle().typed::<Material>();
             queue.push(Insert {entity,component:h_material });
         }
+        Ok(())
+    }
+}
+
+
+pub(crate) struct TComponentLightOpt;
+
+impl ITComponentOpt for TComponentLightOpt {
+    fn create_component(&self,_:&AssetServer, component: &TComponent,queue:&mut CommandQueue,entity:Entity)-> Result<()> {
+        let light_type = component.attrs.get("type").map(|v| v.as_str()).unwrap_or("Directional");
+        let typ = PBRLightType::try_from(light_type).map_err(|_| anyhow!("PBRLight Type"))?;
+        let intensity:f32 = component.attrs.get("intensity").map(|v| v.as_str()).unwrap_or("100000").parse()?;
+        let color = component.read_v3("color").unwrap_or(Vec3::ONE);
+        
+        let light = match typ {
+            PBRLightType::Directional => { PBRLight::directional(color, intensity) },
+            PBRLightType::Point => {
+                let falloff = component.read_float("falloff", 10f32);
+                PBRLight::point(color, intensity, falloff)
+            },
+            PBRLightType::Spot | PBRLightType::FocusedSpot => {
+                let falloff = component.read_float("falloff", 10f32);
+                let inner = component.read_float("inner", 45f32);
+                let outer = component.read_float("outer", 50f32);
+                PBRLight::spot(color, intensity, falloff, inner, outer, typ == PBRLightType::Spot)
+            }
+        };
+        queue.push(Insert {entity,component:light });
         Ok(())
     }
 }

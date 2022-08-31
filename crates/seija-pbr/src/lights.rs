@@ -21,6 +21,20 @@ impl PBRLightType {
     }
 }
 
+impl TryFrom<&str> for PBRLightType {
+    type Error = ();
+
+    fn try_from(value: &str) -> Result<Self, Self::Error> {
+       match value {
+           "Directional" => Ok(PBRLightType::Directional),
+           "Point" => Ok(PBRLightType::Point),
+           "Spot" => Ok(PBRLightType::Spot),
+           "FocusedSpot" => Ok(PBRLightType::FocusedSpot),
+           _ => Err(()),
+       }
+    }
+}
+
 impl Default for PBRLightType {
     fn default() -> Self { PBRLightType::Directional }
 }
