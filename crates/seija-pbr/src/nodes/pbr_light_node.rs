@@ -54,14 +54,14 @@ impl IUpdateNode for PBRLightNode {
     }
 
     fn update(&mut self,world:&mut World,ctx:&mut RenderContext) {
-        
         if let Some(array_collect) = self.array_collect.as_mut() {
             array_collect.update(world, ctx, set_pbr_light);
-
             if let Some(mut ambient) = world.get_resource_mut::<PBRGlobalAmbient>() {
                 if ambient.is_dirty() {
-                    if let Some(backend) = array_collect.backend.as_ref() {
-                       
+                    if let (Some(backend),Some(name_index)) = (array_collect.backend.as_ref(),array_collect.name_index) {
+                        ctx.ubo_ctx.set_buffer(&name_index, None, |v| {
+                            backend.set_ambile_color(&mut v.buffer, ambient.color);
+                        });
                         ambient.clear_dirty();
                     }
                    

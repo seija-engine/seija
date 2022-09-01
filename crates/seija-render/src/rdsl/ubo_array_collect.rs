@@ -10,7 +10,7 @@ use crate::{uniforms::backends::IShaderBackend, RenderContext, UniformBuffer, Un
 
 pub struct UBOArrayCollect<T:IShaderBackend,ET:'static + Send + Sync> {
     pub ubo_name:String,
-    name_index:Option<UniformIndex>,
+    pub name_index:Option<UniformIndex>,
     pub backend:Option<T>,
 
     map_idxs:FnvHashMap<u32,usize>,

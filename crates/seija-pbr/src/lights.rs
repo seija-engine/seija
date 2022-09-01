@@ -179,22 +179,22 @@ impl PBRLight {
 
 #[derive(Component)]
 pub struct PBRGlobalAmbient {
-    pub color:Vec4,
+    pub color:Vec3,
     dirty:bool
 }
 
 impl Default for PBRGlobalAmbient {
     fn default() -> Self {
-        Self { color: Vec4::new(0.1f32, 0.1f32, 0.1f32, 1f32),dirty:true }
+        Self { color: Vec3::new(0.1f32, 0.1f32, 0.1f32),dirty:true }
     }
 }
 
 impl PBRGlobalAmbient {
-    pub fn new(color:Vec4) -> Self {
+    pub fn new(color:Vec3) -> Self {
         PBRGlobalAmbient { color,dirty:true }
     }
 
-    pub fn set(&mut self,color:Vec4) {
+    pub fn set(&mut self,color:Vec3) {
         self.color = color;
         self.dirty = true;
     }

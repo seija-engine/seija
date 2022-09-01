@@ -27,6 +27,8 @@ struct MaterialInputs {
     float roughness;
     vec3  normal;
     vec3  emissiveColor;
+
+    float occlusion;
 };
 
 void initMaterial(out MaterialInputs inputs) {
@@ -35,6 +37,8 @@ void initMaterial(out MaterialInputs inputs) {
     inputs.normal = vec3(0.0, 0.0, 1.0);
     inputs.roughness = 0.0;
     inputs.emissiveColor = vec3(0.0);
+
+    inputs.occlusion = 1.0;
 }
 
 vec3 computeF0(const vec4 baseColor, float metallic, float reflectance) {
@@ -164,5 +168,11 @@ vec4 evaluateLights(const MaterialInputs inputs,vec3 vertPos,vec3 viewDir) {
 vec4 evaluateMaterial(MaterialInputs inputs,vec3 vertPos,vec3 viewDir) {
     vec4 color = evaluateLights(inputs,vertPos,viewDir);
     color.rgb += inputs.emissiveColor;
+    
+    vec3 ambileColor = getAmbileColor();
+    
+    color.rgb += inputs.baseColor.rgb * ambileColor * inputs.occlusion;
+   
+    
     return color;
 }

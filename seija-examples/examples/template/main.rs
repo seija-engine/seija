@@ -3,7 +3,7 @@ use seija_asset::{AssetServer, Assets, AssetRequest, Handle};
 use seija_core::{CoreStage, StartupStage};
 use seija_examples::{init_core_app, update_camera_trans_system, load_material};
 use bevy_ecs::{prelude::*};
-use seija_pbr::lights::PBRLight;
+use seija_pbr::lights::{PBRLight, PBRGlobalAmbient};
 use seija_template::{Template};
 use seija_transform::Transform;
 
@@ -24,7 +24,7 @@ pub fn main() {
 fn start(world:&mut World) {
     load_material("materials/pbrColor.mat.clj", world);
     
-    
+    world.insert_resource(PBRGlobalAmbient::new(Vec3::new(0.2f32, 0.2f32, 0.2f32)));
      //light
      {
         let light = PBRLight::directional(Vec3::new(1f32, 1f32, 1f32)  , 62000f32);

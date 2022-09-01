@@ -93,8 +93,8 @@ vec4 fs_main(VSOutput ino) {
     vec4 evalColor = evaluateMaterial(inputs,ino.outPos,viewDir);
     #ifdef HAS_SHADOW
       float shadow = shadowCalculation(ino.outLightPos);
-    
       evalColor = vec4(vec3( (1- shadow) * evalColor.xyz ), inputs.baseColor.a);
     #endif
+    
     return evalColor;
 }
