@@ -10,8 +10,9 @@ use seija_app::{IModule, App, ecs::world::World};
 use seija_asset::AddAsset;
 use smol_str::SmolStr;
 pub mod errors;
+mod reader;
 pub use types::{TComponent,TEntity,Template};
-pub use loader::{read_tmpl_entity};
+
 
 pub struct TemplateModule;
 

@@ -9,6 +9,7 @@ use smol_str::SmolStr;
 use std::{collections::HashMap, sync::Arc};
 
 use crate::errors::TemplateError;
+use crate::types::TEntityChildren;
 use crate::{TComponent, TEntity};
 
 #[derive(Clone)]
@@ -48,7 +49,12 @@ impl TComponentManager {
             all_assets.extend(assets.drain(..));
         }
         for centity in entity.children.iter() {
-             self._search_assets(centity,all_assets)?;
+             match centity {
+                TEntityChildren::TEntity(e) => {
+                    self._search_assets(e,all_assets)?;
+                }
+                 _ => {},
+             }
         }
         Ok(())
     }

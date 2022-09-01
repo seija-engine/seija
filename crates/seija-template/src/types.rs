@@ -4,27 +4,34 @@ use seija_asset::HandleUntyped;
 use smol_str::SmolStr;
 use seija_core::{anyhow::{Result}, info::EInfo, math::Vec3};
 
-use crate::{read_tmpl_entity, inst::instance_template_sync};
+use crate::{inst::instance_template_sync};
 use seija_core::{TypeUuid,uuid::Uuid};
 
-#[derive(Default,Debug,TypeUuid)]
+#[derive(Default,Debug,TypeUuid,Clone)]
 #[uuid = "92a98d82-b2f8-4618-8ca7-4d4bd93eb824"]
 pub struct Template {
-   pub(crate) assets:Vec<HandleUntyped>,
-   pub entity:Arc<TEntity>
+   pub(crate) inner:Arc<TemplateInner>
 }
 
+#[derive(Default,Debug)]
+pub(crate) struct TemplateInner {
+    pub(crate) assets:Vec<HandleUntyped>,
+    pub(crate) childrens:HashMap<SmolStr,HandleUntyped>,
+    pub entity:Arc<TEntity>
+}
+
+
 impl Template {
-    pub fn from_str(xml_string:&str) -> Result<Template> {
-        let entity = read_tmpl_entity(xml_string)?;
-        Ok(Template {
-            assets:vec![],
-            entity:Arc::new(entity)
-        })
+    pub fn instance(self,world:&mut World) -> Result<Entity> {
+        instance_template_sync(world, &self)
     }
 
-    pub fn instance(tentity:Arc<TEntity>,world:&mut World) -> Result<Entity> {
-        instance_template_sync(world, tentity)
+    pub fn assets(&self) -> &Vec<HandleUntyped> {
+        &self.inner.assets
+    }
+
+    pub fn childrens(&self) -> &HashMap<SmolStr,HandleUntyped> {
+        &self.inner.childrens
     }
 }
 
@@ -34,7 +41,13 @@ pub struct TEntity {
     pub layer:u32,
     pub tag:Option<SmolStr>,
     pub components:Vec<TComponent>,
-    pub children:Vec<TEntity>
+    pub children:Vec<TEntityChildren>
+}
+
+#[derive(Debug)]
+pub enum TEntityChildren {
+    TEntity(TEntity),
+    Template(SmolStr)
 }
 
 impl TEntity {

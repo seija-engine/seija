@@ -11,13 +11,8 @@
             </Components>
         </Entity>
 
-        <Entity name="Shiba">
-            <Components>
-                <Transform position="0,1,0" scale="1,1,1"  rotation="-90,0,0"/>
-                <Mesh res="res://gltf/shiba/scene.gltf#mesh.1.0"/>
-                <Material res="res://mats/shiba.json"  />
-            </Components>
-        </Entity>
+        <Template res="template/shiba.xml" />
+
         <Entity name="Cube0">
             <Components>
                 <Transform position="-1.5,0.5,-4.5" rotation="0,0,0"/>
