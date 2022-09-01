@@ -5,7 +5,7 @@ use seija_render::{IUpdateNode, RenderContext, UniformBuffer, UBOArrayCollect};
 use seija_transform::Transform;
 use anyhow::{Result};
 
-use crate::lights::{PBRLight, PBRLightType};
+use crate::lights::{PBRLight, PBRLightType, PBRGlobalAmbient};
 
 use super::pbr_light_backend::PBRLightBackend;
 
@@ -19,7 +19,6 @@ pub struct PBRLightNode {
 fn set_pbr_light(backend:&PBRLightBackend,index:usize,light:&PBRLight,buffer:&mut UniformBuffer,t:&Transform) {
     let dir = t.global().rotation * Vec3::Z;
     log::debug!("set_pbr_light dir:{:?}",dir.normalize());
-    backend.set_ambile_color(buffer, Vec3::ONE);
     backend.set_lights_position(buffer,index,t.global().position);
     backend.set_lights_type(buffer, index, light.get_type().type_id() as i32);
     backend.set_lights_direction(buffer, index, dir.normalize());
@@ -55,8 +54,19 @@ impl IUpdateNode for PBRLightNode {
     }
 
     fn update(&mut self,world:&mut World,ctx:&mut RenderContext) {
+        
         if let Some(array_collect) = self.array_collect.as_mut() {
             array_collect.update(world, ctx, set_pbr_light);
+
+            if let Some(mut ambient) = world.get_resource_mut::<PBRGlobalAmbient>() {
+                if ambient.is_dirty() {
+                    if let Some(backend) = array_collect.backend.as_ref() {
+                       
+                        ambient.clear_dirty();
+                    }
+                   
+                }
+            }
         }
     }
 }

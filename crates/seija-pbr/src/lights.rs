@@ -1,5 +1,5 @@
 use bevy_ecs::prelude::Component;
-use glam::{f32, Vec2,  Vec3};
+use glam::{f32, Vec2,  Vec3, Vec4};
 
 #[derive(PartialEq, Eq)]
 pub enum PBRLightType {
@@ -174,5 +174,36 @@ impl PBRLight {
             self._luminous_intensity =
                 self.intensity / ((1f32 - cos_outer) * std::f32::consts::TAU);
         }
+    }
+}
+
+#[derive(Component)]
+pub struct PBRGlobalAmbient {
+    pub color:Vec4,
+    dirty:bool
+}
+
+impl Default for PBRGlobalAmbient {
+    fn default() -> Self {
+        Self { color: Vec4::new(0.1f32, 0.1f32, 0.1f32, 1f32),dirty:true }
+    }
+}
+
+impl PBRGlobalAmbient {
+    pub fn new(color:Vec4) -> Self {
+        PBRGlobalAmbient { color,dirty:true }
+    }
+
+    pub fn set(&mut self,color:Vec4) {
+        self.color = color;
+        self.dirty = true;
+    }
+
+    pub fn is_dirty(&self) -> bool {
+        self.dirty
+    }
+
+    pub fn clear_dirty(&mut self) {
+        self.dirty = false;
     }
 }
