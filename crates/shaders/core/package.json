@@ -151,6 +151,17 @@
         "backend": ["Transform"],
         "vs": "postEffect.vs_main",
         "fs": "postEffect.fs_add"
+      },
+
+      {
+        "name":"skybox",
+        "vertex": {
+          "POSITION": "require",
+          "UV0":"require"
+        },
+        "backend": ["Camera3D","Transform"],
+        "vs": "skybox.vs_main",
+        "fs": "skybox.fs_main"
       }
     ]
 }

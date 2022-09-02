@@ -1,0 +1,21 @@
+<Entity name="Root">
+    <Components>
+        <Transform />
+    </Components>
+    <Children>
+        <Entity name="Camera">
+            <Components>
+                <Transform position="0,3.09,6.18" rotation="-30.78,0,0" />
+                <PBRCameraInfo />
+                <Camera type="Perspective" fov="60" aspect="1.333" near="0.01" far="1000" />
+            </Components>
+        </Entity>
+        <Entity name="Skybox">
+            <Components>
+                <Transform />
+                <Mesh res="res://mesh:cube" />
+                <Material res="res://mats/yoko_sky.json" />
+            </Components>
+        </Entity>
+    </Children>
+</Entity>

@@ -30,7 +30,6 @@ fn instance_entity_sync(world:&mut World,server:&AssetServer,tentity:&TEntity,mg
                 childrens.push(instance_entity_sync(world,server,childen,mgr,queue,child_tmpl)?);
             },
             TEntityChildren::Template(path) => {
-                log::error!("inst template:{}",path.as_str());
                let handle_id = child_tmpl.get(path.as_str()).ok_or(TemplateError::NotFoundChild(path.clone()))?.id;
                let templates = world.get_resource::<Assets<Template>>().unwrap();
                let template = templates.get(&handle_id).ok_or(TemplateError::NotFoundChild(path.clone()))?.clone();

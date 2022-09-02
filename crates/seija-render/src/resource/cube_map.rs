@@ -1,5 +1,4 @@
 use std::{ path::Path};
-
 use image::ImageError;
 
 use super::{ImageInfo, Texture, load_image_info, TextureDescInfo};

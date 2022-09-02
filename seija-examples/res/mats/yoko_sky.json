@@ -1,0 +1,6 @@
+{
+    "material":"materials/skybox.mat.clj",
+    "props":{
+        "mainTexture":"texture/cubemap/Yokohama3/yoko.cubemap.json"
+    }
+ }

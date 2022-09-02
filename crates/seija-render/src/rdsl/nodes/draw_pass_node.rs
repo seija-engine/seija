@@ -122,11 +122,9 @@ impl DrawPassNode {
                             }
                            
                             let vert_buffer = ctx.resources.get_buffer_by_resid(&mesh_buffer_id).unwrap();
-                           
                             let oset_index = pipeline.set_binds(self.camera_entity, entity, &mut render_pass, &ctx.ubo_ctx);
                             if oset_index.is_none()  { continue }
                             let mut set_index = oset_index.unwrap();   
-                           
                             if material.props.def.infos.len() > 0 {
                                 if let Some(bind_group) = material.bind_group.as_ref() {
                                     render_pass.set_bind_group(set_index, bind_group, &[]);
@@ -144,7 +142,6 @@ impl DrawPassNode {
                             }
                             
                             render_pass.set_vertex_buffer(0, vert_buffer.slice(0..));
-                            
                             if let Some(idx_id) = ctx.resources.get_render_resource(&hmesh.id, 1) {
                                 
                                 let idx_buffer = ctx.resources.get_buffer_by_resid(&idx_id).unwrap();
