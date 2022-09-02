@@ -17,5 +17,6 @@ VSOutput vs_main() {
 vec4 fs_main(VSOutput ino) {
     vec3 uv = ino.uv;
     vec4 outColor = texture(samplerCube(tex_mainTexture,tex_mainTextureSampler), uv);
+    outColor.rgb *= material.color.rgb;
     return outColor;
 }

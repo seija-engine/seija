@@ -1,5 +1,5 @@
 use bevy_ecs::prelude::Component;
-use glam::{f32, Vec2,  Vec3, Vec4};
+use glam::{f32, Vec2,  Vec3};
 
 #[derive(PartialEq, Eq)]
 pub enum PBRLightType {
