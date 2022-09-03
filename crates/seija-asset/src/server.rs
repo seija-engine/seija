@@ -9,15 +9,13 @@ use seija_core::{anyhow::{Result,anyhow}, smol_str::SmolStr, smol::channel::Send
 use uuid::Uuid;
 use std::{
     path::{PathBuf},
-    sync::{Arc, atomic::{AtomicU8,Ordering}, Mutex}, collections::{HashMap, VecDeque}, future::Future, task::{Waker, Poll}};
+    sync::{Arc, atomic::{AtomicU8,Ordering}}, collections::{HashMap, VecDeque}, future::Future, task::{Poll}};
 
 
 pub struct AssetInfo {
     handle_id:HandleId,
     state:AtomicU8,
     sender:Sender<RefEvent>,
-
-    pub(crate) waker:Mutex<Option<Waker>>
 }
 
 pub struct ArcAssetInfo(pub Arc<AssetInfo>);
@@ -31,25 +29,19 @@ impl AssetInfo {
 
     pub(crate) fn new_untyped(typ:&Uuid,sender:Sender<RefEvent>) -> Self {
         let id = HandleId::new(typ.clone(), rand::random());
-        AssetInfo { handle_id:id, state: AtomicU8::new(0),sender,waker:Default::default() }
+        AssetInfo { handle_id:id, state: AtomicU8::new(0),sender}
     }
 
     pub(crate) fn new_id(id:HandleId,sender:Sender<RefEvent>) -> Self {
-        AssetInfo { handle_id: id, state: AtomicU8::new(0),sender,waker:Default::default() }
+        AssetInfo { handle_id: id, state: AtomicU8::new(0),sender }
     }
 
     pub(crate) fn set_finish(&self) {
         self.state.store(1, Ordering::SeqCst);
-        if let Ok(mut w) = self.waker.lock() {
-            w.take().map(|v| v.wake());
-        }
     }
 
     pub(crate) fn set_fail(&self) {
         self.state.store(2, Ordering::SeqCst);
-        if let Ok(mut w) = self.waker.lock() {
-            w.take().map(|v| v.wake());
-        }
     }
 
     pub(crate) fn is_finish(&self) -> bool {
@@ -87,6 +79,7 @@ impl AssetRequest {
     }
 
     pub fn make_weak_handle(&self) -> HandleUntyped {
+        
         self.asset.0.make_weak_handle()
     }
 
@@ -105,11 +98,13 @@ impl AssetRequest {
 impl Future for ArcAssetInfo {
     type Output = Option<HandleId>;
     fn poll(self: std::pin::Pin<&mut Self>, cx: &mut std::task::Context<'_>) -> std::task::Poll<Self::Output> {
-        let waker = cx.waker().clone();
-        {
-            let mut waker_lock = self.0.waker.lock().unwrap();
-            *waker_lock = Some(waker);
-        };
+        //let waker = cx.waker().clone();
+        //{
+        //    let mut waker_lock = self.0.waker.lock().unwrap();
+        //    *waker_lock = Some(waker);
+        //};
+       
+        cx.waker().clone().wake();
         if self.0.is_finish() {
             Poll::Ready(Some(self.0.handle_id))
         } else if self.0.is_fail() {
