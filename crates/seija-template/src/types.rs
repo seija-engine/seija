@@ -44,10 +44,19 @@ pub struct TEntity {
     pub children:Vec<TEntityChildren>
 }
 
+#[derive(Default,Debug)]
+pub struct TTemplateEntity {
+    pub res:SmolStr,
+    pub name:Option<SmolStr>,
+    pub layer:u32,
+    pub tag:Option<SmolStr>,
+    pub components:Vec<TComponent>,
+}
+
 #[derive(Debug)]
 pub enum TEntityChildren {
     TEntity(TEntity),
-    Template(SmolStr)
+    Template(TTemplateEntity)
 }
 
 impl TEntity {

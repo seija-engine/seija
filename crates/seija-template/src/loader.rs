@@ -1,12 +1,10 @@
 use std::collections::HashMap;
 use std::sync::Arc;
-
-use crate::component::TComponentManager;
+use crate::component::{TComponentManager};
 use crate::errors::TemplateError;
 use crate::reader::read_tmpl_entity;
 use crate::types::{TEntityChildren, TemplateInner};
 use crate::{Template, TEntity};
-
 use seija_app::ecs::world::World;
 use seija_asset::downcast_rs::DowncastSync;
 use seija_asset::{async_trait::async_trait, IAssetLoader};
@@ -55,9 +53,10 @@ impl IAssetLoader for TemplateLoader {
             let xml_string = smol::fs::read_to_string(full_path).await?;
             let entity = read_tmpl_entity(&xml_string)?;
             
-
-            let childrens = load_deps_template(&entity,&server).await?;
+          
+           
             let mut assets = vec![];
+            let childrens = load_dep_template(&entity,&server,&mgr,&mut assets).await?;
             for (asset_typ, asset_path) in mgr.search_assets(&entity)? {
                 let req = server.load_async_untyped(&asset_typ, asset_path.as_str(), None)?;
                 let handle = req.wait_handle().await.ok_or(TemplateError::LoadAssetError)?;
@@ -73,12 +72,20 @@ impl IAssetLoader for TemplateLoader {
     }
 }
 
-async fn load_deps_template(tentiy:&TEntity,server:&AssetServer) -> Result<HashMap<SmolStr,HandleUntyped>> {
+async fn load_dep_template(tentiy:&TEntity,server:&AssetServer,mgr:&Box<TComponentManager>,all_assets:&mut Vec<HandleUntyped>) -> Result<HashMap<SmolStr,HandleUntyped>> {
     let mut req_list:Vec<(AssetRequest,SmolStr)> = vec![];
     for children in tentiy.children.iter() {
-        if let TEntityChildren::Template(path) = children {
-            let req = server.load_async::<Template>(path.as_str(), None)?;
-            req_list.push((req,path.clone()));
+        if let TEntityChildren::Template(template) = children {
+            let req = server.load_async::<Template>(template.res.as_str(), None)?;
+            req_list.push((req,template.res.clone()));
+            for comp in template.components.iter() {
+                let opt = mgr.get_opt(comp)?;
+                for (asset_typ,asset_path) in opt.search_assets(comp)? {
+                    let req = server.load_async_untyped(&asset_typ, asset_path.as_str(), None)?;
+                    let handle = req.wait_handle().await.ok_or(TemplateError::LoadAssetError)?;
+                    all_assets.push(handle);
+                }
+            }
         }
     }
     

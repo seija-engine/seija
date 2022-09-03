@@ -10,6 +10,7 @@
                 <Camera type="Perspective" fov="60" aspect="1.333" near="0.01" far="1000" />
             </Components>
         </Entity>
+        
         <Entity name="Skybox">
             <Components>
                 <Transform />
@@ -18,7 +19,10 @@
             </Components>
         </Entity>
        
-        <Template res="template/shiba.xml" />
+        <Template res="template/shiba.xml" >
+            <Transform  position="5,0,0" scale="0.1,0.1,asd" />
+        </Template>
+       
         <Entity name="Cube0">
             <Components>
                 <Transform position="-1.5,0.5,-4.5" rotation="0,0,0"/>

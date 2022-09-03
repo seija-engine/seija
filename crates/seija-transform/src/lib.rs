@@ -28,9 +28,9 @@ impl IModule for TransformModule {
                        system::parent_update_system.label(TransformLabel::ParentUpdate));
         app.add_system2(CoreStage::Startup, StartupStage::PostStartup, 
                        update_transform_system.label(TransformLabel::Propagate).after(TransformLabel::ParentUpdate));
-        app.add_system(CoreStage::PreUpdate, 
+        app.add_system(CoreStage::PostUpdate, 
                            system::parent_update_system.label(TransformLabel::ParentUpdate));
-        app.add_system(CoreStage::PreUpdate, 
+        app.add_system(CoreStage::PostUpdate, 
                            update_transform_system.label(TransformLabel::Propagate).after(TransformLabel::ParentUpdate));
     }
 }

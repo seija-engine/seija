@@ -29,12 +29,20 @@ fn instance_entity_sync(world:&mut World,server:&AssetServer,tentity:&TEntity,mg
             TEntityChildren::TEntity(childen) => {
                 childrens.push(instance_entity_sync(world,server,childen,mgr,queue,child_tmpl)?);
             },
-            TEntityChildren::Template(path) => {
-               let handle_id = child_tmpl.get(path.as_str()).ok_or(TemplateError::NotFoundChild(path.clone()))?.id;
+            TEntityChildren::Template(xml_template) => {
+               let handle_id = child_tmpl.get(xml_template.res.as_str()).ok_or(TemplateError::NotFoundChild(xml_template.res.clone()))?.id;
                let templates = world.get_resource::<Assets<Template>>().unwrap();
-               let template = templates.get(&handle_id).ok_or(TemplateError::NotFoundChild(path.clone()))?.clone();
+               let template = templates.get(&handle_id).ok_or(TemplateError::NotFoundChild(xml_template.res.clone()))?.clone();
                let entity = instance_template_sync(world,&template)?;
-               childrens.push(entity);
+
+               let template_entity = world.spawn();
+               let template_entity_id = template_entity.id();
+               for component in xml_template.components.iter() {
+                    log::error!("create:{:?}",component);
+                    mgr.create(component, server,queue,template_entity_id)?
+               }
+               childrens.push(template_entity_id);
+               PushChildren {children:SmallVec::from_slice(&[entity]) ,parent:template_entity_id}.write(world);
             }
         }
     }
@@ -42,8 +50,7 @@ fn instance_entity_sync(world:&mut World,server:&AssetServer,tentity:&TEntity,mg
     let eid = entity_mut.id();
     
     for component in tentity.components.iter() {
-        mgr.create(component, server,queue,eid)?;
-        
+        mgr.create(component, server,queue,eid)?
     }
    
     PushChildren {children:childrens,parent:eid}.write(world);   

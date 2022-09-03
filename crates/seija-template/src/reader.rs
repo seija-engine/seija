@@ -1,7 +1,7 @@
 use seija_core::anyhow::{Result,bail};
 use quick_xml::events::{BytesStart, Event};
 use smol_str::SmolStr;
-use crate::{TEntity, types::TEntityChildren, errors::TemplateError, TComponent};
+use crate::{TEntity, types::{TEntityChildren, TTemplateEntity}, errors::TemplateError, TComponent};
 
 pub fn read_tmpl_entity(xml_string: &str) -> Result<TEntity> {
     let mut xml_reader = quick_xml::Reader::from_str(xml_string);
@@ -9,7 +9,6 @@ pub fn read_tmpl_entity(xml_string: &str) -> Result<TEntity> {
     let mut entity_stack: Vec<TEntityChildren> = vec![];
     let mut in_components = false;
     let mut cur_component: Option<Vec<u8>> = None;
-
     let mut buf = Vec::new();
     loop {
         match xml_reader.read_event(&mut buf) {
@@ -23,16 +22,10 @@ pub fn read_tmpl_entity(xml_string: &str) -> Result<TEntity> {
                                     now_entity.name = Some(std::str::from_utf8(&item.value)?.into())
                                 }
                                 b"layer" => {
-                                    let value = unsafe {
-                                        u32::from_str_radix(
-                                            std::str::from_utf8_unchecked(&item.value),
-                                            10,
-                                        )?
-                                    };
-                                    now_entity.layer = value;
+                                    now_entity.layer = u32::from_str_radix(std::str::from_utf8(&item.value)?,10)?;
                                 }
                                 b"tag" => {
-                                    now_entity.name = Some(std::str::from_utf8(&item.value)?.into())
+                                    now_entity.tag = Some(std::str::from_utf8(&item.value)?.into())
                                 }
                                 _ => {}
                             }
@@ -41,10 +34,8 @@ pub fn read_tmpl_entity(xml_string: &str) -> Result<TEntity> {
                     entity_stack.push(TEntityChildren::TEntity(now_entity));
                 },
                 b"Template" => {
-                    let smol_path:SmolStr = read_template(&e)?;
-                    if let Some(TEntityChildren::TEntity(e)) = entity_stack.last_mut() {
-                        e.children.push(TEntityChildren::Template(smol_path));
-                    }
+                    let template = read_template(&e)?;
+                    entity_stack.push(TEntityChildren::Template(template));
                 },
                 b"Components" => {
                     in_components = true;
@@ -61,15 +52,20 @@ pub fn read_tmpl_entity(xml_string: &str) -> Result<TEntity> {
             },
             Ok(Event::Empty(e))  => {
                 if e.name() == b"Template" {
-                    let smol_path:SmolStr = read_template(&e)?;
+                    let template = read_template(&e)?;
                     if let Some(TEntityChildren::TEntity(e)) = entity_stack.last_mut() {
-                        e.children.push(TEntityChildren::Template(smol_path));
+                        e.children.push(TEntityChildren::Template(template));
                     }
                 } else {
                     if in_components {
                         let t = read_tmpl_component(&e)?;
                         if let Some(TEntityChildren::TEntity(e)) = entity_stack.last_mut() {
                             e.components.push(t);
+                        }
+                    } else {
+                        if let Some(TEntityChildren::Template(template)) = entity_stack.last_mut() {
+                            let t = read_tmpl_component(&e)?;
+                            template.components.push(t);
                         }
                     }
                 }
@@ -112,14 +108,26 @@ pub fn read_tmpl_entity(xml_string: &str) -> Result<TEntity> {
     }
 }
 
-fn read_template<'a>(e: &BytesStart<'a>) -> Result<SmolStr> {
-    let path_attr = e
-    .attributes()
-    .find(|item| item.as_ref().map(|a| a.key) == Ok(b"res"))
-    .ok_or(TemplateError::TemplateMissRes)??;
-    let smol_path:SmolStr = std::str::from_utf8(&path_attr.value)?.into();
+fn read_template<'a>(e: &BytesStart<'a>) -> Result<TTemplateEntity> {
+    let mut template = TTemplateEntity::default();
     
-    Ok(smol_path)
+    for attr in e.attributes() {
+        if let Ok(item) = attr {
+            match item.key {
+                b"name" => { template.name = Some(std::str::from_utf8(&item.value)?.into()) },
+                b"layer" => { 
+                    template.layer = u32::from_str_radix(std::str::from_utf8(&item.value)?,10)?;
+                },
+                b"tag" => { template.tag = Some(std::str::from_utf8(&item.value)?.into()) },
+                b"res" => { template.res = std::str::from_utf8(&item.value)?.into()},
+                _ => {}
+            }
+        }
+    }
+    if template.res.is_empty() {
+        return Err(TemplateError::TemplateMissRes.into());   
+    }
+    Ok(template)
 }
 
 fn read_tmpl_component<'a>(e: &BytesStart<'a>) -> Result<TComponent> {
@@ -135,3 +143,4 @@ fn read_tmpl_component<'a>(e: &BytesStart<'a>) -> Result<TComponent> {
     }
     Ok(component)
 }
+

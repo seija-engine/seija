@@ -59,6 +59,7 @@ pub(crate) fn update_transform_system(
     let changed_query = params.p0();
     for e_changed in changed_query.iter() {
         let  top_entity = cacl_top_changed(e_changed, &parent_query, &changed_query);
+        
         changed_set.insert(top_entity);
     }
     for top_entity in changed_set.iter() {
