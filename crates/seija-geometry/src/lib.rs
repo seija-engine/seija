@@ -5,7 +5,10 @@ use glam::{Mat4, Vec3};
 pub use sphere::{Sphere};
 pub use plane::{Plane};
 pub use frustum::{Frustum};
-
+mod volume;
+mod traits;
+pub mod bound;
+pub mod octree;
 
 pub fn proj_view_corners(proj_view:&Mat4) -> [Vec3;8] {
     let inv = proj_view.inverse();
