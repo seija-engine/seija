@@ -4,6 +4,7 @@ mod system;
 mod camera_query;
 mod shadow_query;
 mod view_list;
+mod scene_octree;
 pub use system::{QuerySystem,ViewQuery,IdOrName};
 
 use crate::RenderStage;
