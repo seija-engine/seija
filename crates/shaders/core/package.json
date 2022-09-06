@@ -162,6 +162,17 @@
         "backend": ["Camera3D","Transform"],
         "vs": "skybox.vs_main",
         "fs": "skybox.fs_main"
+      },
+
+      {
+        "name":"wireframe",
+        "vertex": {
+          "POSITION": "require",
+          "UV0":"require"
+        },
+        "backend": ["Camera3D","Transform"],
+        "vs": "debug.line_vs_main",
+        "fs": "debug.line_fs_main"
       }
     ]
 }
