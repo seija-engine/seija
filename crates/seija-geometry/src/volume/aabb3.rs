@@ -3,7 +3,7 @@ use glam::Vec3;
 use crate::{traits::Contains, bound::{PlaneBound, Relation}};
 
 use super::aabb::IAABB;
-#[derive(Debug)]
+#[derive(Debug,Clone)]
 pub struct AABB3 {
     pub min: Vec3,
     pub max: Vec3,
