@@ -13,6 +13,7 @@ seija-core = {path = "../seija-core"}
 seija-app = {path = "../seija-app"}
 seija-transform = {path = "../seija-transform"}
 seija-skeleton3d = {path = "../seija-skeleton3d"}
+seija-geometry = {path = "../seija-geometry"}
 glam = "0.20.2"
 bevy_ecs = "0.7.0"
 relative-path = "1.7.2"

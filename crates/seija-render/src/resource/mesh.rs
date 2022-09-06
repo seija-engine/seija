@@ -4,6 +4,7 @@ use fnv::FnvHasher;
 use seija_asset::{AssetEvent, Assets, Handle, HandleId};
 use seija_core::{bytes::AsBytes};
 use bevy_ecs::{ event::{Events, ManualEventReader}};
+use seija_geometry::volume::AABB3;
 use wgpu::{BufferUsage, IndexFormat, PrimitiveState, PrimitiveTopology, VertexAttribute, VertexBufferLayout, VertexFormat};
 use seija_core::TypeUuid;
 use uuid::Uuid;
@@ -212,6 +213,7 @@ impl From<Vec<[u8; 4]>> for VertexAttributeValues {
 #[derive(Debug,TypeUuid)]
 #[uuid = "ea48c171-e7b4-4e54-8895-dda5a2d0fa90"]
 pub struct Mesh {
+    pub aabb:Option<AABB3>,
     typ:PrimitiveTopology,
     values:Vec<Option<VertexAttributeValues>>,
     indices:Option<Indices>,
@@ -241,6 +243,7 @@ impl Mesh {
         values.resize(MeshAttributeType::MAX.bits, None);
         
         Mesh {
+            aabb:None,
             typ,
             values,
             indices:None,

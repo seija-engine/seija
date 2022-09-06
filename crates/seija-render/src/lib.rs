@@ -6,6 +6,7 @@ use rdsl::{RenderMain};
 use render::{AppRender, Config };
 use resource::{Mesh, Texture, color_texture};
 use resource::shape::{Cube, Sphere, Plane, Quad};
+use scene::SceneEnv;
 use seija_app::IModule;
 use seija_app::{App};
 use bevy_ecs::prelude::*;
@@ -23,6 +24,7 @@ pub mod light;
 pub mod errors;
 pub mod shadow;
 mod query;
+pub mod scene;
 
 mod uniforms;
 mod rt_shaders;
@@ -78,7 +80,7 @@ impl IModule for RenderModule {
         app.schedule.add_stage_before(RenderStage::AfterRender, RenderStage::Render, SystemStage::single(render_system.exclusive_system()));
         app.schedule.add_stage_before(RenderStage::Render, RenderStage::PostRender, SystemStage::parallel());
         query::init_system(app);
-       
+        app.init_resource::<SceneEnv>();
         app.add_system(RenderStage::AfterRender, update_pipeline_cache);
     }
 }

@@ -5,6 +5,7 @@ use glam::{Mat4, Vec3, Vec4};
 use gltf::{Document, Node, animation::{Channel, Property, Interpolation}, Gltf};
 use relative_path::RelativePath;
 use seija_core::{anyhow::{Result, anyhow, bail, Context},smol,TypeUuid};
+use seija_geometry::volume::AABB3;
 use crate::{asset::{ GltfCamera, GltfMaterial, GltfMesh, GltfNode, GltfPrimitive, GltfScene, NodeIndex}};
 use seija_asset::{Handle,async_trait::async_trait,  AssetServer, AssetLoaderParams, AssetDynamic, AssetRequest, IAssetLoader, Assets};
 use seija_render::resource::{Texture, TextureDescInfo};
@@ -321,6 +322,7 @@ fn load_meshs(path:&str,server:&AssetServer,gltf:&gltf::Gltf,buffers:&Vec<gltf::
     for (mesh_index,mesh) in gltf.meshes().enumerate() {
         let mut primitives:Vec<GltfPrimitive> = vec![];
         for (primitive_index,primitive)  in mesh.primitives().enumerate() {
+            
             //dbg!(&primitive);
             let reader = primitive.reader(|buffer| Some(&buffers[buffer.index()]));
             let primitive_topology = get_primitive_topology(primitive.mode())?;
@@ -360,6 +362,12 @@ fn load_meshs(path:&str,server:&AssetServer,gltf:&gltf::Gltf,buffers:&Vec<gltf::
             if let Some(indices) = reader.read_indices() {
                 mesh.set_indices(Some(Indices::U32(indices.into_u32().collect())));
             };
+
+            let bounding_box =  primitive.bounding_box();
+            let aabb = AABB3::new(Vec3::from(bounding_box.min), Vec3::from(bounding_box.max));
+          
+            mesh.aabb = Some(aabb);
+
             mesh.build();
             let mesh_handle = server.create_asset(mesh,&format!("{}#mesh.{}.{}",path,mesh_index,primitive_index));
             let material = primitive.material().index().and_then(|idx| materials.get(idx)).map(|v|v.clone());
