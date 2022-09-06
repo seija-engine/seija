@@ -7,8 +7,7 @@ pub use plane::{Plane};
 pub use frustum::{Frustum};
 pub mod volume;
 mod traits;
-pub mod bound; 
-pub mod octree;
+pub mod bound;
 
 pub use traits::Contains;
 

@@ -37,7 +37,7 @@ impl SceneOctreeNode {
 pub struct SceneOctree {
     max_depth:usize,
     root:NodeId,
-    nodes:Vec<SceneOctreeNode>
+    pub nodes:Vec<SceneOctreeNode>
 }
 
 impl SceneOctree {
@@ -79,7 +79,6 @@ impl SceneOctree {
     }
 
     fn node_add(&mut self,id:NodeId,entity:Entity,aabb:&AABB3) -> Option<NodeId> {
-        println!("add element: {:?} in {:?}",&self.nodes[id].aabb,&aabb);
         if !self.nodes[id].aabb.contains(aabb) {
             return None;
         }
@@ -100,7 +99,6 @@ impl SceneOctree {
                 Some(id)
             }
         }
-       
     }
 
     fn best_fit_child(&self,id:NodeId,center:Vec3) -> usize {

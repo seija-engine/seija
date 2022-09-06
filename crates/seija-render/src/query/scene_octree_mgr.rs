@@ -1,9 +1,10 @@
 use std::collections::HashMap;
 
 use bevy_ecs::{system::{Res, Commands, Query, ResMut}, prelude::Entity};
+use glam::Vec3;
 use seija_asset::{Handle, Assets};
 use seija_core::info::EInfo;
-use seija_geometry::volume::AABB3;
+use seija_geometry::{volume::AABB3, Contains};
 use seija_transform::Transform;
 
 use crate::{scene::SceneEnv, material::Material, resource::Mesh};
@@ -25,8 +26,10 @@ impl SceneOctreeMgr {
         SceneOctreeMgr { scene_tree,cache_entitys:Default::default() }
     }
 
-    pub fn add(&mut self,entity:Entity,aabb:AABB3) {
-
+    pub fn add(&mut self,entity:Entity,aabb:Option<AABB3>) {
+       let  add_aabb = aabb.unwrap_or(self.scene_tree.nodes[0].aabb.clone());
+       let id = self.scene_tree.add(entity, add_aabb);
+       self.cache_entitys.insert(entity.id(), id);
     }
 }
 
@@ -37,13 +40,23 @@ pub(crate) fn on_post_startup(mut commands:Commands,scene:Res<SceneEnv>) {
      commands.insert_resource(scene_oct_mgr);
 }
 
-pub(crate) fn on_after_update(mgr:ResMut<SceneOctreeMgr>,meshes:Res<Assets<Mesh>>,all_renders:Query<(Entity,&Transform,&Handle<Mesh>,&Handle<Material>,Option<&EInfo>)>) {
+pub(crate) fn on_after_update(mut mgr:ResMut<SceneOctreeMgr>,
+                              meshes:Res<Assets<Mesh>>,
+                              all_renders:Query<(Entity,&Transform,&Handle<Mesh>,&Handle<Material>,Option<&EInfo>)>) {
     for (entity,t,hmesh,_,info) in all_renders.iter() {
         //add
         if !mgr.cache_entitys.contains_key(&entity.id()) {
            if let Some(mesh) = meshes.get(&hmesh.id) {
-                
-           }   
+            if let Some(aabb) = mesh.aabb.as_ref() {
+                let real_aabb = aabb.transform(&t.global().matrix());
+                dbg!(real_aabb);
+                mgr.add(entity, Some(aabb.clone()));
+            } else {
+                mgr.add(entity, None);
+            }
+           } else {
+                log::error!("mesh id invalid {:?}",hmesh);
+           }
         }
 
         //update

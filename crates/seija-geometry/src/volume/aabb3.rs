@@ -1,4 +1,6 @@
-use glam::Vec3;
+use std::ops::Mul;
+
+use glam::{Vec3, Mat4, Vec4, Vec4Swizzles};
 
 use crate::{traits::Contains, bound::{PlaneBound, Relation}};
 
@@ -31,6 +33,20 @@ impl AABB3 {
         ]
     }
 
+    #[inline]
+    pub fn to_corners_v4(&self) -> [Vec4; 8] {
+        [
+            Vec4::new(self.min.x, self.min.y, self.min.z, 1f32),
+            Vec4::new(self.max.x, self.min.y, self.min.z,1f32),
+            Vec4::new(self.min.x, self.max.y, self.min.z,1f32),
+            Vec4::new(self.max.x, self.max.y, self.min.z,1f32),
+            Vec4::new(self.min.x, self.min.y, self.max.z,1f32),
+            Vec4::new(self.max.x, self.min.y, self.max.z,1f32),
+            Vec4::new(self.min.x, self.max.y, self.max.z,1f32),
+            Vec4::new(self.max.x, self.max.y, self.max.z, 1f32),
+        ]
+    }
+
     pub fn add_margin(&self, margin: Vec3) -> Self {
         AABB3::new(
             Vec3::new(
@@ -44,6 +60,24 @@ impl AABB3 {
                 self.max.z + margin.z,
             ),
         )
+    }
+
+    pub fn transform(&self,mat4:&Mat4) -> Self {
+        let corners = self.to_corners_v4();
+        let mut min = mat4.mul(corners[0]);
+        let mut max = min;
+        for p in corners.into_iter().skip(1) {
+           let np = mat4.mul(p);
+           min = min.min(np);
+           max = max.max(np);
+        }
+        AABB3::new(min.xyz(), max.xyz())
+    }
+
+    pub fn grow(&self,p:Vec3) -> Self {
+        let min = self.min.min(p);
+        let max = self.max.max(p);
+        AABB3::new(min, max)
     }
 
 }
