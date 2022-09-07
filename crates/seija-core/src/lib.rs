@@ -43,7 +43,7 @@ impl IModule for CoreModule {
         self.add_core_stages(app);
         app.init_resource::<Time>();
         app.add_system(CoreStage::First, time::time_system.exclusive_system());
-        app.add_system(CoreStage::Last, World::clear_trackers.exclusive_system());
+        app.add_system(CoreStage::Last, World::clear_trackers.exclusive_system().at_end());
     }
 }
 

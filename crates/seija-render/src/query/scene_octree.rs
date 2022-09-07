@@ -65,9 +65,9 @@ impl SceneOctree {
         false
     }
 
-    pub fn get_node(&self,id:NodeId) -> Option<&SceneOctreeNode> {
-        self.nodes.get(id)
-    }
+    //pub fn get_node(&self,id:NodeId) -> Option<&SceneOctreeNode> {
+    //    self.nodes.get(id)
+    //}
 
     pub fn get_node_mut(&mut self,id:NodeId) -> Option<&mut SceneOctreeNode> {
         self.nodes.get_mut(id)

@@ -28,7 +28,7 @@ fn start(world:&mut World) {
     let mut queue = CommandQueue::default();
     let mut commands = Commands::new(&mut queue, world);
     let window = world.get_resource::<AppWindow>().unwrap();
-    add_pbr_camera(&mut commands,&window,Vec3::new(0f32, -0.2f32, 2f32),Quat::IDENTITY,None);
+    add_pbr_camera(&mut commands,&window,Vec3::new(0f32, -0.2f32, 2f32),Quat::IDENTITY,None,None);
     queue.apply(world);
     load_material("materials/baseTexture.mat.clj", world);
     let server = world.get_resource::<AssetServer>().unwrap().clone();

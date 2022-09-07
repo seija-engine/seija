@@ -46,7 +46,7 @@ pub fn init_core_app(render_file:&str) -> App {
     app
 }
 
-pub fn add_pbr_camera(commands:&mut Commands,window:&AppWindow,pos:Vec3,r:Quat,f:Option<fn(&mut EntityCommands)>) -> Entity {
+pub fn add_pbr_camera(commands:&mut Commands,window:&AppWindow,pos:Vec3,r:Quat,f:Option<fn(&mut EntityCommands)>,far:Option<f32>) -> Entity {
     let mut camera_entity = commands.spawn();
     let mut t = Transform::default();
     t.local.position = pos;
@@ -54,7 +54,7 @@ pub fn add_pbr_camera(commands:&mut Commands,window:&AppWindow,pos:Vec3,r:Quat,f
     camera_entity.insert(t);
 
     let mut per = Perspective::default();
-    per.far = 50f32;
+    per.far = far.unwrap_or(50f32);
     per.aspect_ratio = window.width() as f32 / window.height() as f32;
     let camera = Camera::from_3d(per);
     camera_entity.insert(camera);
