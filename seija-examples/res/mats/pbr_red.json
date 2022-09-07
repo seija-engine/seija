@@ -1,5 +1,5 @@
 {
-   "material":"materials/wireframe.mat.clj",
+   "material":"materials/pbrColor.mat.clj",
    "props":{
        "color":[1,0,0,1],
        "metallic":0.5,

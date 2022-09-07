@@ -2596,6 +2596,7 @@ dependencies = [
  "seija-asset",
  "seija-core",
  "seija-deferred",
+ "seija-geometry",
  "seija-gltf",
  "seija-input",
  "seija-pbr",

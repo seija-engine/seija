@@ -1,4 +1,7 @@
 use std::f32::consts::PI;
+use glam::Vec3;
+use seija_geometry::volume::AABB3;
+
 use crate::resource::{Indices, Mesh,MeshAttributeType};
 
 use super::calc_tangent;
@@ -92,6 +95,8 @@ impl From<Sphere> for Mesh {
         mesh.set(MeshAttributeType::NORMAL, normals);
         mesh.set(MeshAttributeType::UV0, uvs);
         mesh.set(MeshAttributeType::TANGENT, tangents);
+        
+        mesh.aabb = Some(AABB3::new(Vec3::new(-sphere.radius,-sphere.radius, -sphere.radius), Vec3::new(sphere.radius, sphere.radius, sphere.radius)));
         mesh.build();
         mesh
     }

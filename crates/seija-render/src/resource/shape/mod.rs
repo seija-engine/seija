@@ -5,11 +5,14 @@ mod plane;
 mod quad;
 
 use glam::{Vec2, Vec3};
+use seija_geometry::volume::AABB3;
 pub use skybox::SkyBox;
 pub use sphere::Sphere;
 pub use cube::{Box,Cube};
 pub use plane::{Plane};
 pub use quad::{Quad};
+
+use super::{Mesh, Indices, MeshAttributeType};
 
 
 pub fn calc_tangent(verts:&Vec<[f32;3]>,uvs:&Vec<[f32;2]>,indices:&Vec<u32>) -> Vec<[f32;4]> {
@@ -51,3 +54,32 @@ pub fn calc_tangent(verts:&Vec<[f32;3]>,uvs:&Vec<[f32;2]>,indices:&Vec<u32>) -> 
     ret_list
 }
 
+pub fn create_aabb_mesh(aabb:&AABB3) -> Mesh {
+    let min = aabb.min;
+    let max = aabb.max;
+
+    let mut mesh = Mesh::new(wgpu::PrimitiveTopology::LineList);
+    let positions:Vec<[f32;3]> = vec![
+         [min.x,max.y,min.z],
+         [max.x,max.y,min.z],
+         [min.x,max.y,max.z],
+         [max.x,max.y,max.z],
+
+         [min.x,min.y,min.z],
+         [max.x,min.y,min.z],
+         [min.x,min.y,max.z],
+         [max.x,min.y,max.z],
+    ];
+
+    let idx_u32s:Vec<u32> = vec![
+        0,2, 0,1, 1,3, 2,3,
+        4,6, 4,5, 5,7, 6,7,
+        0,4, 1,5, 2,6, 3,7
+    ];
+    let indices = Indices::U32(idx_u32s);
+    mesh.set(MeshAttributeType::POSITION,positions);
+    mesh.set_indices(Some(indices));
+    mesh.aabb = Some(aabb.clone());
+    mesh.build();
+    mesh
+}

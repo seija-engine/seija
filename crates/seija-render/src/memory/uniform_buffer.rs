@@ -257,6 +257,10 @@ impl TypedUniformBuffer {
         self.buffer.dirty = false;
     }
 
+    pub fn set_dirty(&mut self) {
+        self.buffer.dirty = true;
+    }
+
 }
 
 #[test]

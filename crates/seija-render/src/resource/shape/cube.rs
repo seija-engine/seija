@@ -1,3 +1,6 @@
+use glam::Vec3;
+use seija_geometry::volume::AABB3;
+
 use crate::resource::{mesh::{Indices, Mesh,MeshAttributeType}, shape::calc_tangent};
 
 #[derive(Debug, Copy, Clone)]
@@ -114,7 +117,8 @@ impl From<Box> for Mesh {
         mesh.set(MeshAttributeType::UV0, uvs);
         mesh.set(MeshAttributeType::NORMAL, normals);
         mesh.set(MeshAttributeType::TANGENT, tangent);
-
+       
+        mesh.aabb = Some(AABB3::new(Vec3::new(sp.min_x, sp.min_y, sp.min_z), Vec3::new(sp.max_x, sp.max_y, sp.max_z)));
         mesh.set_indices(Some(indices));
         mesh.build();
         mesh

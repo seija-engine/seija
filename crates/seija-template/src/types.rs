@@ -35,13 +35,25 @@ impl Template {
     }
 }
 
-#[derive(Default,Debug)]
+#[derive(Debug)]
 pub struct TEntity {
     pub name:Option<SmolStr>,
     pub layer:u32,
     pub tag:Option<SmolStr>,
     pub components:Vec<TComponent>,
     pub children:Vec<TEntityChildren>
+}
+
+#[derive(Debug)]
+pub enum TEntityChildren {
+    TEntity(TEntity),
+    Template(TTemplateEntity)
+}
+
+impl Default for TEntity {
+    fn default() -> Self {
+        Self { layer:1,children:vec![],components:vec![],name:None,tag:None }
+    }
 }
 
 #[derive(Default,Debug)]
@@ -53,11 +65,7 @@ pub struct TTemplateEntity {
     pub components:Vec<TComponent>,
 }
 
-#[derive(Debug)]
-pub enum TEntityChildren {
-    TEntity(TEntity),
-    Template(TTemplateEntity)
-}
+
 
 impl TEntity {
     pub fn not_default_info(&self) -> Option<EInfo> {

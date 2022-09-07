@@ -149,6 +149,10 @@ impl ArrayObject {
         });
         self.buffer = Some(uniform_buffer);
         self.buffer_dirty = true;
+        
+        for cache_buffer in self.infos.values_mut().chain(self.free_items.iter_mut()) {
+            cache_buffer.buffer.set_dirty();
+        }
     }
 
     pub fn update(&mut self,res:&mut RenderResources,cmd:&mut CommandEncoder) {

@@ -10,14 +10,14 @@
                 <Camera type="Perspective" fov="60" aspect="1.333" near="0.01" far="1000" />
             </Components>
         </Entity>
-        
+      <!-- -->
         <Entity name="Skybox">
             <Components>
                 <Transform />
                 <Mesh res="res://mesh:cube" />
                 <Material res="res://mats/yoko_sky.json" />
             </Components>
-        </Entity>
+        </Entity> 
        
         <Template res="template/shiba.xml" >
             <Transform  position="5,0,0" scale="0.1,0.1,asd" />
@@ -54,7 +54,7 @@
                 <Material res="res://mats/pbr_red.json" />
             </Components>
         </Entity>
-
+ 
         <Entity name="Cube0">
             <Components>
                 <Transform position="-0.5,0.5,-4.5" rotation="0,0,0"/>
@@ -102,7 +102,7 @@
                 <Material res="res://mats/pbr_red.json" />
             </Components>
         </Entity>
-        
+       
 
         <Entity name="Plane0">
             <Components>

@@ -1,17 +1,13 @@
-struct VSOutput {
-  vec4 color;
-};
 
-VSOutput color_vs_main() {
-  VSOutput o;
-  o.color = material.color; 
-  vec4 pos = getTransform() * vec4(vert_position, 1.0);
-  gl_Position = getCameraProjView() * pos;
-  return o;
+void color_vs_main() {
+  mat4 trans = getTransform();
+  vec3 pos = vec3(trans * vec4(vert_position, 1.0));
+  mat4 pv = getCameraProjView();
+  gl_Position = pv * vec4(pos,1);
 }
 
-vec4 color_fs_main(VSOutput ino) {
-    vec4 outColor = ino.color;
+vec4 color_fs_main() {
+    vec4 outColor = material.color;
     return outColor;
 }
 

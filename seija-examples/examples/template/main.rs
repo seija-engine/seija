@@ -1,9 +1,11 @@
 use glam::{Vec3, Quat};
 use seija_asset::{AssetServer, Assets, AssetRequest, Handle};
-use seija_core::{CoreStage, StartupStage};
+use seija_core::{CoreStage, StartupStage, info::EInfo};
 use seija_examples::{init_core_app, update_camera_trans_system, load_material};
 use bevy_ecs::{prelude::*};
+use seija_geometry::volume::AABB3;
 use seija_pbr::lights::{PBRLight, PBRGlobalAmbient};
+use seija_render::{resource::{shape::create_aabb_mesh, Mesh}, material::Material};
 use seija_template::{Template};
 use seija_transform::Transform;
 
@@ -18,12 +20,13 @@ pub fn main() {
     app.add_system2(CoreStage::Startup, StartupStage::Startup, start.exclusive_system());
     app.add_system(CoreStage::Update, update_camera_trans_system);
     app.add_system(CoreStage::Update, async_system.exclusive_system());
+    //app.add_system(CoreStage::PostUpdate, on_post_update.exclusive_system().at_end());
     app.run();
 }
 
 fn start(world:&mut World) {
     load_material("materials/pbrColor.mat.clj", world);
-    
+    load_material("materials/baseColor.mat.clj", world);
     world.insert_resource(PBRGlobalAmbient::new(Vec3::new(0.2f32, 0.2f32, 0.2f32)));
      //light
      {
@@ -38,11 +41,13 @@ fn start(world:&mut World) {
 
     
 
+    
+
     let asset_server = world.get_resource::<AssetServer>().unwrap();
     let req = asset_server.load_async::<Template>("template/first.xml", None).unwrap();
    
     let local_data = LocalData { req,hid:None };
-    log::info!("start instance template");
+    //log::info!("start instance template");
     world.insert_resource(local_data);
 }
 
@@ -59,4 +64,38 @@ fn async_system(world:&mut World) {
       let template = templates.get(&hid).unwrap();
       Template::instance(template.clone(), world).unwrap();
    }
+}
+
+fn on_post_update(world:&mut World) {
+    let mut add_meshs = world.query_filtered::<(Entity,&Transform,&Handle<Mesh>,Option<&EInfo>),(Added<Handle<Mesh>>,Added<Handle<Material>>)>();
+    let mut aabbs:Vec<AABB3> = vec![];
+    let meshs =  world.get_resource::<Assets<Mesh>>().unwrap();
+    for (e,t,mesh,einfo) in add_meshs.iter(world) {
+        if let Some(info) = einfo {
+            if info.name.as_ref().map(|v| v.as_str()) == Some("Skybox") {
+                continue;
+            }
+        }
+        if let Some(aabb) = meshs.get(&mesh.id).and_then(|v| v.aabb.as_ref()) {
+            
+            let new_aabb = aabb.transform(&t.global().matrix());
+            aabbs.push(new_aabb);
+        }
+    }
+
+    for aabb in aabbs.iter() {
+        {
+            let mesh = create_aabb_mesh(aabb);
+            let mut meshs = world.get_resource_mut::<Assets<Mesh>>().unwrap();
+            let hmesh = meshs.add(mesh);
+            let t = Transform::default();
+           
+            
+            let material = Material::from_world(world, "materials/baseColor.mat.clj").unwrap();
+            let mut materials = world.get_resource_mut::<Assets<Material>>().unwrap();
+            let hmat = materials.add(material);
+            let mut e_mut =  world.spawn();
+            e_mut.insert(hmesh).insert(hmat).insert(t);
+        };
+    }
 }

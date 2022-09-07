@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use seija_app::ecs::{system::{CommandQueue, Command}};
 use seija_asset::{AssetServer, HandleUntyped, Assets};
-use seija_core::bevy_ecs::{entity::Entity,world::{World}};
+use seija_core::{bevy_ecs::{entity::Entity,world::{World}}, info::EInfo};
 use seija_core::anyhow::{Result};
 use seija_transform::{ PushChildren};
 use smallvec::SmallVec;
@@ -38,7 +38,6 @@ fn instance_entity_sync(world:&mut World,server:&AssetServer,tentity:&TEntity,mg
                let template_entity = world.spawn();
                let template_entity_id = template_entity.id();
                for component in xml_template.components.iter() {
-                    log::error!("create:{:?}",component);
                     mgr.create(component, server,queue,template_entity_id)?
                }
                childrens.push(template_entity_id);
@@ -46,13 +45,26 @@ fn instance_entity_sync(world:&mut World,server:&AssetServer,tentity:&TEntity,mg
             }
         }
     }
-    let entity_mut = world.spawn();
+    let mut entity_mut = world.spawn();
     let eid = entity_mut.id();
-    
+    let info = create_einfo(tentity);
+    entity_mut.insert(info);
     for component in tentity.components.iter() {
         mgr.create(component, server,queue,eid)?
     }
    
     PushChildren {children:childrens,parent:eid}.write(world);   
    Ok(eid)
+}
+
+fn create_einfo(entity:&TEntity) -> EInfo {
+    let mut info = EInfo::default();
+    if let Some(name) = entity.name.as_ref() {
+        info.name = Some(name.clone())
+    }
+    info.layer = entity.layer;
+    if let Some(tag) = entity.tag.as_ref() {
+        info.tag = Some(tag.clone())
+    }
+    info
 }

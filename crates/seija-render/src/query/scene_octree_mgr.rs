@@ -49,8 +49,8 @@ pub(crate) fn on_after_update(mut mgr:ResMut<SceneOctreeMgr>,
            if let Some(mesh) = meshes.get(&hmesh.id) {
             if let Some(aabb) = mesh.aabb.as_ref() {
                 let real_aabb = aabb.transform(&t.global().matrix());
-                dbg!(real_aabb);
-                mgr.add(entity, Some(aabb.clone()));
+                log::error!("add:{:?}",&t.global());
+                mgr.add(entity, Some(real_aabb));
             } else {
                 mgr.add(entity, None);
             }

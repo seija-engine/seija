@@ -1,3 +1,6 @@
+use glam::Vec3;
+use seija_geometry::volume::AABB3;
+
 use crate::resource::{Mesh, MeshAttributeType, Indices};
 
 use super::calc_tangent;
@@ -60,6 +63,9 @@ impl From<Plane> for Mesh {
         mesh.set(MeshAttributeType::NORMAL, normals);
         mesh.set(MeshAttributeType::TANGENT, tangent);
         mesh.set_indices(Some(Indices::U32(indices)));
+        
+        mesh.aabb = Some(AABB3::new(Vec3::new(-half_w, -0.02f32, -half_w), Vec3::new(half_w, 0.02f32, half_w)));
+        
         mesh.build();
         mesh
     }
