@@ -6,7 +6,7 @@ use super::view_list::ViewList;
 pub struct ViewQuery {
     pub typ:u32,
     pub key:IdOrName,
-    pub list:ViewList
+    pub list:RwLock<ViewList>
 }
 
 #[derive(PartialEq,Eq,Hash,Clone)]
@@ -35,20 +35,20 @@ impl IdOrName {
 
 impl ViewQuery {
     pub fn new(typ:u32,key:IdOrName) -> Self {
-        ViewQuery { typ, key, list:ViewList::default() }
+        ViewQuery { typ, key, list:RwLock::new(ViewList::default()) }
     }
 }
 
 #[derive(Default)]
 pub struct QuerySystem {
     key_map:HashMap<IdOrName,usize>,
-    pub querys:Vec<RwLock<ViewQuery>>
+    pub querys:Vec<ViewQuery>
 }
 
 impl QuerySystem {
    pub fn add_query(&mut self,key:IdOrName,typ:u32) {
       let view_query = ViewQuery::new(typ, key.clone());
-      self.querys.push(RwLock::new(view_query));
+      self.querys.push(view_query);
       let index = self.querys.len() - 1;
       self.key_map.insert(key, index);
    }

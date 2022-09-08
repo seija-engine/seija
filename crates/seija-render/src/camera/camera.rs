@@ -11,7 +11,8 @@ pub struct Camera {
     pub order:i32,
     pub path:SmolStr,
     pub target:Option<Handle<Texture>>,
-    pub layer:u32
+    pub layer:u32,
+    pub cull_type:i32
  }
  
  impl Default for Camera {
@@ -21,7 +22,8 @@ pub struct Camera {
           path:"Foward".into(),
           order:0,
           target:None,
-          layer:1
+          layer:1,
+          cull_type:-1
        }
     }
 }
@@ -161,4 +163,3 @@ impl Perspective {
         Mat4::perspective_rh(self.fov, self.aspect_ratio, self.near, self.far)
     }
 }
-

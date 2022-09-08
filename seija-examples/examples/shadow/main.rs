@@ -25,7 +25,7 @@ fn start(world:&mut World) {
     add_pbr_camera(&mut commands,&window,camera_pos,r,
                  Some(|e| {
                     e.insert(ShadowCamera );
-                 }),None);
+                 }),None,None);
     load_material("materials/pbrColor.mat.clj", world);
     load_material("materials/pbrColorShadow.mat.clj", world);
     queue.apply(world);

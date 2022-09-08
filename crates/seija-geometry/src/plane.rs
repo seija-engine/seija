@@ -1,5 +1,5 @@
-use glam::{Vec3};
-
+use glam::{Vec3, Vec4, Vec4Swizzles};
+#[derive(Debug)]
 pub struct Plane {
    pub normal:Vec3,
    pub distance:f32
@@ -30,6 +30,20 @@ impl Plane {
         } else {
             let denom = 1f32 / self.normal.length();
             Some(Plane::new(self.normal * denom, self.distance * denom))
+        }
+    }
+
+    pub fn from_vec4(v:Vec4) -> Self {
+        Plane {
+            normal:v.xyz(),
+            distance:v.w
+        }
+    }
+
+    pub fn from_vec4_alt(v:Vec4) -> Self {
+        Plane {
+            normal:v.xyz(),
+            distance:-v.w
         }
     }
 }

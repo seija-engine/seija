@@ -22,21 +22,32 @@ impl SceneOctreeMgr {
         SceneOctreeMgr { scene_tree,cache_entitys:Default::default() }
     }
 
-    pub fn add(&mut self,entity:Entity,aabb:Option<AABB3>) {
+    pub fn add(&mut self,entity:Entity,aabb:Option<AABB3>) -> NodeId {
        let  add_aabb = aabb.clone().unwrap_or(self.scene_tree.nodes[0].aabb.clone());
        let id = self.scene_tree.add(entity, add_aabb);
        self.cache_entitys.insert(entity.id(), id);
        log::info!("octree add:{} {:?}",id,aabb);
+       id
     }
 
-    pub fn update(&mut self,entity:Entity,new_aabb:Option<AABB3>) {
+    pub fn has(&self,eid:u32) -> bool {
+        self.cache_entitys.contains_key(&eid)
+    }
+
+    pub fn update(&mut self,entity:Entity,new_aabb:Option<AABB3>) -> Option<NodeId> {
         let update_aabb = new_aabb.unwrap_or(self.scene_tree.nodes[0].aabb.clone());
+        
         if let Some(node_id) = self.cache_entitys.get(&entity.id()) {
           if let Some(update_id) = self.scene_tree.update(*node_id, entity, update_aabb) {
              self.cache_entitys.insert(entity.id(), update_id);
+             return Some(update_id);
           }
+          Some(*node_id)
+        } else {
+            None
         }
     }
+
 
     pub fn remove(&mut self,entity:Entity) {
         if let Some(node_id) = self.cache_entitys.remove(&entity.id()) {

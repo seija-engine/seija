@@ -139,16 +139,20 @@ impl SceneOctree {
 
     
     pub fn update(&mut self,node_id:NodeId,entity:Entity,new_aabb:AABB3) -> Option<NodeId> {
-        let cur_node = &mut self.nodes[node_id];
-        if let Some(index)  = cur_node.objects.iter().position(|v| v.entity == Some(entity)) {
+        if let Some(index)  = self.nodes[node_id].objects.iter().position(|v| v.entity == Some(entity)) {
             //没超出当前块
-            if cur_node.aabb.contains(&new_aabb) {
-                cur_node.objects[index].aabb = new_aabb;
-                return Some(node_id);
+            if  self.nodes[node_id].aabb.contains(&new_aabb) {
+                if let Some(new_id) = self.node_add(node_id, entity, &new_aabb) {
+                    self.nodes[node_id].objects.remove(index);
+                    return Some(new_id);
+                } else {
+                    self.nodes[node_id].objects[index].aabb = new_aabb;
+                    return Some(node_id);
+                }
             }
-            cur_node.objects.remove(index);
+            self.nodes[node_id].objects.remove(index);
             //没超出父节点的块
-            if let Some(parent_id) = cur_node.parent {
+            if let Some(parent_id) = self.nodes[node_id].parent {
                 //用节点尝试添加，如果失败了从最顶层重新添加
                 if let Some(new_id) = self.node_add(parent_id, entity, &new_aabb) {
                    return Some(new_id);

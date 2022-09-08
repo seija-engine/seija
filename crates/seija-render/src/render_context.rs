@@ -16,7 +16,7 @@ pub struct RenderContext {
     pub shaders:RuntimeShaderInfo,
     pub ubo_ctx:UniformContext,
     pub setting:Arc<GraphSetting>,
-    pub frame_draw_pass:u8,
+    pub frame_draw_pass:u32,
 }
 
 impl RenderContext {
