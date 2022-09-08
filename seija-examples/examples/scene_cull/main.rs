@@ -51,7 +51,7 @@ fn create_many_cubes(world:&mut World) {
     let hmat = mats.add(mat);
     let hmesh:Handle<Mesh> = world.get_resource::<AssetServer>().unwrap().get_asset("mesh:cube").unwrap().make_handle().typed();
     
-    for radius in 1..100 {
+    for radius in 1..10 {
         for angle in 0..36 {
             let mut vec = Vec3::new(0f32, 0f32, -1f32);
             vec = vec * radius as f32 * 5f32;

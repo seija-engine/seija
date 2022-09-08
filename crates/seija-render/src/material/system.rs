@@ -244,17 +244,19 @@ impl MaterialDefine {
         material: &mut Material,
         dirty_hid: Option<HandleId>,
     ) {
-        if self.buffer_dirty || material.bind_group.is_none() {
-            if let Some(item) = self.items.get_mut(&id) {
-                let mut build_group_builder = BindGroupBuilder::new();
-                let start: u64 = item.index as u64 * self.buffer_item_size;
-                build_group_builder.add_buffer_addr(self.gpu_buffer, start, self.buffer_item_size);
-                material.bind_group = Some(build_group_builder.build(layout, &res.device, res));
-                item.dirty_hid = dirty_hid;
-                //TODO 这里有错误实现
-                self.buffer_dirty = false;
+        if let Some(item) = self.items.get_mut(&id) {
+            item.dirty_hid = dirty_hid;
+            if self.buffer_dirty || material.bind_group.is_none() {
+                if let Some(item) = self.items.get_mut(&id) {
+                    let mut build_group_builder = BindGroupBuilder::new();
+                    let start: u64 = item.index as u64 * self.buffer_item_size;
+                    build_group_builder.add_buffer_addr(self.gpu_buffer, start, self.buffer_item_size);
+                    material.bind_group = Some(build_group_builder.build(layout, &res.device, res));
+                    self.buffer_dirty = false;
+                }
             }
         }
+        
 
     }
 }
