@@ -1,3 +1,5 @@
+use std::{collections::VecDeque};
+
 use bevy_ecs::prelude::Entity;
 use glam::Vec3;
 use seija_geometry::{ volume::{AABB3, IAABB},Contains};
@@ -16,13 +18,13 @@ pub struct SceneOctreeNode {
     pub depth:usize,
     pub aabb:AABB3,
     pub parent:Option<NodeId>,
-    pub child_start:NodeId,
+    pub child_start:Option<NodeId>,
     pub objects:Vec<SceneElement>
 }
 
 impl SceneOctreeNode {
     pub fn new(parent:Option<NodeId>,aabb:AABB3,depth:usize) -> Self {
-        SceneOctreeNode {parent,child_start:0,objects:vec![],aabb,depth:depth }
+        SceneOctreeNode {parent,child_start:None,objects:vec![],aabb,depth:depth }
     }
 
     pub fn remove(&mut self,entity:Entity) -> bool {
@@ -44,7 +46,7 @@ impl SceneOctree {
     pub fn new(min:Vec3,max:Vec3) -> Self {
         let aabb = AABB3::new(min, max);
         let mut node = SceneOctreeNode::new(None,aabb,0);
-        node.child_start = 0;
+        node.child_start = None;
         SceneOctree { max_depth:4,root: 0, nodes: vec![node] }
     }
 
@@ -90,7 +92,7 @@ impl SceneOctree {
         } else {
             self.check_split(id);
             let offset_index = self.best_fit_child(id, aabb.center());
-            let fit_index = self.nodes[id].child_start + offset_index;
+            let fit_index = self.nodes[id].child_start.unwrap_or(0) + offset_index;
             if let Some(node_id) = self.node_add(fit_index, entity, aabb) {
                 Some(node_id)
             } else {
@@ -110,7 +112,7 @@ impl SceneOctree {
     }
 
     fn check_split(&mut self,id:NodeId) {
-        if self.nodes[id].child_start > 0 { return ; }
+        if self.nodes[id].child_start.is_some() { return ; }
         let cur_depth = self.nodes[id].depth;
         //从上到下从左到右从后到前12个点
         let min = self.nodes[id].aabb.min;
@@ -126,7 +128,7 @@ impl SceneOctree {
         let node6 = SceneOctreeNode::new(Some(id), AABB3::new(Vec3::new(half_x, min.y, min.z), Vec3::new(max.x, half_y, half_z)),cur_depth + 1);
         let node7 = SceneOctreeNode::new(Some(id), AABB3::new(Vec3::new(min.x, min.y, half_z), Vec3::new(half_x, half_y, max.z)),cur_depth + 1);
         let node8 = SceneOctreeNode::new(Some(id), AABB3::new(Vec3::new(half_x, min.y,half_z), Vec3::new(max.x, half_y, max.z)),cur_depth + 1);
-        self.nodes[id].child_start = self.nodes.len();
+        self.nodes[id].child_start = Some(self.nodes.len());
         self.nodes.push(node1);
         self.nodes.push(node2);
         self.nodes.push(node3);
@@ -164,6 +166,62 @@ impl SceneOctree {
         }
         None
     }
+
+    pub fn iter_node<'a>(&'a self,id:NodeId) -> impl Iterator<Item = &SceneElement> {
+        let mut queue = VecDeque::new();
+        queue.push_back(id);
+        SceneElementIter {
+            tree:self,
+            stack:queue,
+            cur_object_count:0,
+            cur_node:None
+        }
+    }
+}
+
+pub struct SceneElementIter<'a> {
+    tree:&'a SceneOctree,
+    cur_node:Option<NodeId>,
+    stack:VecDeque<NodeId>,
+    cur_object_count:usize
+}
+
+impl<'a> Iterator for SceneElementIter<'a> {
+    type Item = &'a SceneElement;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        loop {
+            let node_id = self.try_pop()?;
+            let objects = &self.tree.nodes[node_id].objects;
+            if self.cur_object_count < objects.len() {
+                let ret = &objects[self.cur_object_count];
+                self.cur_object_count += 1;
+                return Some(ret)
+            } else {
+                self.cur_object_count = 0;
+                self.cur_node = None;
+            }
+        }
+    }
+}
+
+
+impl<'a> SceneElementIter<'a> {
+    pub fn try_pop(&mut self) -> Option<NodeId> {
+        match self.cur_node {
+            Some(node) => Some(node),
+            None => {
+                let pop_node = self.stack.pop_front()?;
+                self.cur_node = Some(pop_node);
+                if let Some(start_index) = self.tree.nodes[pop_node].child_start {
+                    for idx in 0..8 {
+                        self.stack.push_back(start_index + idx);
+                    }
+                }
+                Some(pop_node)
+            },
+        }
+    }
 }
 
 #[test]
@@ -185,4 +243,17 @@ fn test_tree() {
     let update_id = scene_tree.update(add_id, e0, new_aabb);
     dbg!(update_id);
     //dbg!(&scene_tree);
+}
+
+#[test]
+fn test_iter() {
+    let v3_100 = Vec3::new(100f32, 100f32, 100f32);
+    let mut scene_tree = SceneOctree::new(-v3_100,v3_100);
+    scene_tree.add(Entity::from_raw(0), AABB3::new(Vec3::new(-10f32, -10f32, -10f32), Vec3::new(10f32, 10f32, 10f32)));
+    scene_tree.add(Entity::from_raw(1), AABB3::new(Vec3::new(-40f32, -10f32, -10f32), Vec3::new(-1f32, -1f32, -1f32)));
+    scene_tree.add(Entity::from_raw(2), AABB3::new(Vec3::new(10f32, 10f32, 10f32), Vec3::new(20f32, 20f32, 20f32)));
+
+    for elem in scene_tree.iter_node(0) {
+        println!("iter elem:{:?}",elem.entity);
+    }
 }

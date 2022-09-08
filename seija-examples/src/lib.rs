@@ -24,7 +24,7 @@ pub fn init_core_app(render_file:&str) -> App {
     app.add_module(CoreModule);
     app.add_module(AssetModule(std::env::current_dir().unwrap().join("res").into()));
     app.add_module(InputModule);
-    let mut win = WinitModule::default();
+    let win = WinitModule::default();
     //win.0.width = 480f32;
     //win.0.height = 320f32;
     app.add_module(win);

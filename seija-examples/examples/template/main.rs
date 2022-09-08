@@ -1,11 +1,9 @@
 use glam::{Vec3, Quat};
 use seija_asset::{AssetServer, Assets, AssetRequest, Handle};
-use seija_core::{CoreStage, StartupStage, info::EInfo};
+use seija_core::{CoreStage, StartupStage};
 use seija_examples::{init_core_app, update_camera_trans_system, load_material};
 use bevy_ecs::{prelude::*};
-use seija_geometry::volume::AABB3;
 use seija_pbr::lights::{PBRLight, PBRGlobalAmbient};
-use seija_render::{resource::{shape::create_aabb_mesh, Mesh}, material::Material};
 use seija_template::{Template};
 use seija_transform::Transform;
 
@@ -65,6 +63,7 @@ fn async_system(world:&mut World) {
       Template::instance(template.clone(), world).unwrap();
    }
 }
+/*
 
 fn on_post_update(world:&mut World) {
     let mut add_meshs = world.query_filtered::<(Entity,&Transform,&Handle<Mesh>,Option<&EInfo>),(Added<Handle<Mesh>>,Added<Handle<Material>>)>();
@@ -98,4 +97,4 @@ fn on_post_update(world:&mut World) {
             e_mut.insert(hmesh).insert(hmat).insert(t);
         };
     }
-}
+}*/

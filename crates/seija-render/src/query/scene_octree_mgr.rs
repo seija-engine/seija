@@ -13,7 +13,7 @@ use super::scene_octree::{SceneOctree, NodeId};
 
 pub struct SceneOctreeMgr {
     cache_entitys:HashMap<u32,NodeId>,
-    scene_tree:SceneOctree
+    pub scene_tree:SceneOctree
 }
 
 impl SceneOctreeMgr {
