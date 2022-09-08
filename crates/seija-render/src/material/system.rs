@@ -251,6 +251,8 @@ impl MaterialDefine {
                 build_group_builder.add_buffer_addr(self.gpu_buffer, start, self.buffer_item_size);
                 material.bind_group = Some(build_group_builder.build(layout, &res.device, res));
                 item.dirty_hid = dirty_hid;
+                //TODO 这里有错误实现
+                self.buffer_dirty = false;
             }
         }
 
