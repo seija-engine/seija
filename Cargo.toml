@@ -16,7 +16,8 @@ members = [
     "crates/seija-template",
     #"crates/tools/material-compiler",
     "crates/tools/mc-cli",
-    "seija-examples"
+    "seija-examples",
+    "crates/lib-seija"
 ]
 
 [profile.release]
