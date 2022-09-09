@@ -2,14 +2,25 @@ use std::collections::HashMap;
 
 use bevy_ecs::{system::{Res, Commands, Query, ResMut,  RemovedComponents}, prelude::Entity, query::Changed};
 
+use seija_app::{IModule, App};
 use seija_asset::{Handle, Assets};
-use seija_core::info::EInfo;
+use seija_core::{info::EInfo, CoreStage, StartupStage};
 use seija_geometry::{volume::AABB3};
 use seija_transform::Transform;
-
 use crate::{scene::SceneEnv, material::Material, resource::Mesh};
+use super::{scene_octree::{SceneOctree, NodeId}, camera_query::update_camera_octree_query};
 
-use super::scene_octree::{SceneOctree, NodeId};
+
+pub struct SceneOctreeModule;
+
+impl IModule for SceneOctreeModule {
+    fn init(&mut self,app:&mut App) {
+        app.add_system2(CoreStage::Startup, StartupStage::PostStartup,on_post_startup);
+        app.add_system(CoreStage::Last ,on_last_update);
+       
+        app.add_system(CoreStage::Update, update_camera_octree_query);
+    }
+}
 
 pub struct SceneOctreeMgr {
     cache_entitys:HashMap<u32,NodeId>,

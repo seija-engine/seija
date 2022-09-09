@@ -38,7 +38,7 @@ pub use render_context::{RenderContext};
 pub use uniforms::{UniformInfoSet,UniformInfo,UniformIndex};
 pub use uniforms::backends::{IShaderBackend};
 pub use memory::{UniformInfo as MemUniformInfo,RawUniformInfo,UniformType,UniformBufferDef,UniformBuffer,ArrayPropInfo};
-
+pub use query::SceneOctreeModule;
 
 #[derive(Debug, Hash, PartialEq, Eq, Clone,StageLabel )]
 pub enum RenderStage {
