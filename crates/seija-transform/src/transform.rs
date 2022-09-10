@@ -1,6 +1,6 @@
 
 use bevy_ecs::prelude::Component;
-use glam::{Mat4, Quat, Vec3};
+use glam::{Mat4, Quat, Vec3,EulerRot};
 use lazy_static::{lazy_static};
 
 lazy_static! {
@@ -28,17 +28,10 @@ impl Into<TransformMatrix> for Mat4 {
 }
 
 impl TransformMatrix {
-    
-    #[inline]
-    pub fn mul_vec3(&self, mut value: Vec3) -> Vec3 {
-        value = self.rotation * value;
-        value = self.scale * value;
-        value += self.position;
-        value
-    }
 
     pub fn mul_transform(&self, transform: &TransformMatrix) -> TransformMatrix {
-        let position = self.mul_vec3(transform.position);
+       
+        let position = self.position + transform.position;
         let rotation = self.rotation * transform.rotation;
         let scale = self.scale * transform.scale;
         TransformMatrix {

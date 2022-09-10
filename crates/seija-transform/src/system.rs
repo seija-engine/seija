@@ -63,7 +63,13 @@ pub(crate) fn update_transform_system(
         changed_set.insert(top_entity);
     }
     for top_entity in changed_set.iter() {
-        update_transform(*top_entity,&TRANSFORM_MAT_ID,&mut params,&child_query);
+        let p_trans = if let Ok((_,Some(p))) = parent_query.get(*top_entity) {
+            if let Ok(v) = params.p1().get(p.0) {
+                v.global().clone()
+            } else { TRANSFORM_MAT_ID.clone() }
+        } else { TRANSFORM_MAT_ID.clone() };
+       
+        update_transform(*top_entity,&p_trans,&mut params,&child_query);
     }
 }
 
@@ -72,9 +78,10 @@ fn update_transform(entity:Entity,parent:&TransformMatrix,params:&mut ParamSet<(
         t.global = t.local.mul_transform(parent);
         t.global.clone()
     } else { TransformMatrix::default() };
-
+   
     if let Ok(Some(childs)) = child_query.get(entity) {
         for child in childs.iter() {
+           
             update_transform(*child,&parent_trans,params,&child_query);
         }
     }

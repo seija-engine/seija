@@ -313,7 +313,7 @@ fn get_shader_name_prefix(mesh:&Mesh,shader:&ShaderInfoDef,shaders:&RuntimeShade
         if mesh_types.contains(s.as_str()) {
             macros.push(format!("VERTEX_{}",s).into() );
         } else if *is_require {
-            log::error!("mesh attrs:{:?}",&mesh_types);
+            log::error!("require {} but mesh attrs is:{:?}",s.as_str(),&mesh_types);
             return None;
         }
     }

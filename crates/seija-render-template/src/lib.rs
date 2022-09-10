@@ -24,6 +24,9 @@ impl ITComponentOpt for TComponentCameraOpt {
     fn create_component(&self,_:&AssetServer, component: &TComponent,queue:&mut CommandQueue,entity:Entity)-> Result<()> {
         let mut camera = Camera::default();
         let camera_type = component.attrs.get("type").map(|v| v.as_str()).unwrap_or("Perspective");
+        if let Some(cull_str) = component.attrs.get("cull").map(|v| v.as_str()) {
+            camera.cull_type = cull_str.parse()?;
+        }
         match camera_type {
             "Perspective" =>  {
                 let mut per = Perspective::default();

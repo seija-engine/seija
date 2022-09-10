@@ -58,32 +58,32 @@ impl Default for Box {
 impl From<Box> for Mesh {
     fn from(sp: Box) -> Self {
         let vertices = &[
-            // Top
+          
             ([sp.min_x, sp.min_y, sp.max_z], [0., 0., 1.0], [0., 0.]),
             ([sp.max_x, sp.min_y, sp.max_z], [0., 0., 1.0], [1.0, 0.]),
             ([sp.max_x, sp.max_y, sp.max_z], [0., 0., 1.0], [1.0, 1.0]),
             ([sp.min_x, sp.max_y, sp.max_z], [0., 0., 1.0], [0., 1.0]),
-            // Bottom
+           
             ([sp.min_x, sp.max_y, sp.min_z], [0., 0., -1.0], [1.0, 0.]),
             ([sp.max_x, sp.max_y, sp.min_z], [0., 0., -1.0], [0., 0.]),
             ([sp.max_x, sp.min_y, sp.min_z], [0., 0., -1.0], [0., 1.0]),
             ([sp.min_x, sp.min_y, sp.min_z], [0., 0., -1.0], [1.0, 1.0]),
-            // Right
+           
             ([sp.max_x, sp.min_y, sp.min_z], [1.0, 0., 0.], [0., 0.]),
             ([sp.max_x, sp.max_y, sp.min_z], [1.0, 0., 0.], [1.0, 0.]),
             ([sp.max_x, sp.max_y, sp.max_z], [1.0, 0., 0.], [1.0, 1.0]),
             ([sp.max_x, sp.min_y, sp.max_z], [1.0, 0., 0.], [0., 1.0]),
-            // Left
+          
             ([sp.min_x, sp.min_y, sp.max_z], [-1.0, 0., 0.], [1.0, 0.]),
             ([sp.min_x, sp.max_y, sp.max_z], [-1.0, 0., 0.], [0., 0.]),
             ([sp.min_x, sp.max_y, sp.min_z], [-1.0, 0., 0.], [0., 1.0]),
             ([sp.min_x, sp.min_y, sp.min_z], [-1.0, 0., 0.], [1.0, 1.0]),
-            // Front
+           
             ([sp.max_x, sp.max_y, sp.min_z], [0., 1.0, 0.], [1.0, 0.]),
             ([sp.min_x, sp.max_y, sp.min_z], [0., 1.0, 0.], [0., 0.]),
             ([sp.min_x, sp.max_y, sp.max_z], [0., 1.0, 0.], [0., 1.0]),
             ([sp.max_x, sp.max_y, sp.max_z], [0., 1.0, 0.], [1.0, 1.0]),
-            // Back
+          
             ([sp.max_x, sp.min_y, sp.max_z], [0., -1.0, 0.], [0., 0.]),
             ([sp.min_x, sp.min_y, sp.max_z], [0., -1.0, 0.], [1.0, 0.]),
             ([sp.min_x, sp.min_y, sp.min_z], [0., -1.0, 0.], [1.0, 1.0]),

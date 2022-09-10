@@ -2,7 +2,7 @@ use seija_app::ecs::prelude::Entity;
 use seija_app::ecs::system::{CommandQueue, Insert};
 use seija_asset::AssetServer;
 use seija_core::anyhow::{Result};
-use seija_core::math::{Vec3, Quat};
+use seija_core::math::{Vec3, Quat, EulerRot};
 use seija_core::uuid::Uuid;
 use seija_transform::Transform;
 use smol_str::SmolStr;
@@ -77,7 +77,7 @@ impl ITComponentOpt for TransformTemplateOpt {
         let p = component.read_v3("position").unwrap_or(Vec3::ZERO);
         let r = component.read_v3("rotation").unwrap_or(Vec3::ZERO);
         let s = component.read_v3("scale").unwrap_or(Vec3::ONE);
-        let rr = Quat::from_euler(Default::default(), r.y.to_radians(), r.x.to_radians(), r.z.to_radians());
+        let rr = Quat::from_euler(EulerRot::YXZ, r.y.to_radians(), r.x.to_radians(), r.z.to_radians());
         let t = Transform::new(p, rr, s);
         let insert = Insert {entity,component:t };
         queue.push(insert);

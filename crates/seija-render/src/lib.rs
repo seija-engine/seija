@@ -5,7 +5,7 @@ use query::QuerySystem;
 use rdsl::{RenderMain};
 use render::{AppRender, Config };
 use resource::{Mesh, Texture, color_texture};
-use resource::shape::{Cube, Sphere, Plane, Quad};
+use resource::shape::{Cube, Sphere, Plane, Quad, SkyBox};
 use scene::SceneEnv;
 use seija_app::IModule;
 use seija_app::{App};
@@ -128,6 +128,7 @@ impl RenderModule {
         let h_sphere = meshs.add_weak(Sphere::new(0.5f32).into());
         let h_plane = meshs.add_weak(Plane::new(10f32,10).into());
         let h_quad = meshs.add_weak(Quad::new(1f32).into());
+        let h_skybox = meshs.add_weak(SkyBox.into());
 
         let mut textures = world.get_resource_mut::<Assets<Texture>>().unwrap();
         let h_white = textures.add_weak(color_texture([255,255,255,255], 16));
@@ -138,6 +139,7 @@ impl RenderModule {
             assets.set_asset("mesh:sphere", h_sphere.id);
             assets.set_asset("mesh:plane", h_plane.id);
             assets.set_asset("mesh:quad", h_quad.id);
+            assets.set_asset("mesh:skybox", h_skybox.id);
 
             assets.set_asset("texture:white", h_white.id);
             assets.set_asset("texture:blue", h_blue.id);
