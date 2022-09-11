@@ -75,7 +75,7 @@ pub(crate) fn update_transform_system(
 
 fn update_transform(entity:Entity,parent:&TransformMatrix,params:&mut ParamSet<(Query<Entity,Changed<Transform>>,Query<&mut Transform>)>,child_query:&Query<Option<&Children>>) {
     let parent_trans = if let Ok(mut t) = params.p1().get_mut(entity) {
-        t.global = t.local.mul_transform(parent);
+        t.global = parent.mul_transform(&t.local);
         t.global.clone()
     } else { TransformMatrix::default() };
    
