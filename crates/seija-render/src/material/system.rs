@@ -79,26 +79,32 @@ impl MaterialSystem {
                         }
 
                         if !define.items.contains_key(&e.id()) {
-                            define.add_material(e.id(), res);
+                           define.add_material(e.id(), res,h_mat.id);
                         }
 
-                        let did = if mat.props.is_dirty() {
-                            Some(h_mat.id.clone())
-                        } else {
-                            None
-                        };
-                        define.update_buffer(e.id(), res, &self.common_buffer_layout, mat, did);
+                        
+                        define.update_bind_group(e.id(), res, &self.common_buffer_layout, mat);
                     } 
                  
                 }
             }
 
             for define in self.datas.values_mut() {
+                if define.buffer_dirty {
+                    for item in define.items.values().chain(define.free_items.iter()) {
+                        if let Some(mat) = materials.get_mut(&item.mat_id) {
+                            define.create_bind_group(mat, item.index, res, &self.common_buffer_layout);
+                        }
+                    }
+                    define.buffer_dirty = false;
+                }
+                
                 let mut cur_has_dirty = false;
-                for (_, item) in define.items.iter_mut() {
-                    
-                    if let Some(dirty_id) = item.dirty_hid.as_ref() {
-                        if let Some(mat) = materials.get_mut(dirty_id) {
+                for item in define.items.values_mut().chain(define.free_items.iter_mut()) {
+                    if item.is_dirty {
+                        if let Some(mat) = materials.get_mut(&item.mat_id) {
+                            
+
                             if cur_has_dirty == false {
                                 res.map_buffer(&define.cache_buffer, wgpu::MapMode::Write);
                                 cur_has_dirty = true;
@@ -118,11 +124,12 @@ impl MaterialSystem {
                             }
                             
                         }
-                        item.dirty_hid = None;
+                        item.is_dirty = false;
                     }
+                   
                     
                 }
-                if cur_has_dirty {
+                if cur_has_dirty  {
                     res.unmap_buffer(&define.cache_buffer);
                     res.copy_buffer_to_buffer(
                         commands,
@@ -139,16 +146,18 @@ impl MaterialSystem {
 }
 
 #[derive(Debug)]
-struct DefineItem {
+pub struct DefineItem {
     index: usize,
-    dirty_hid: Option<HandleId>,
+    mat_id:HandleId,
+    is_dirty:bool,
 }
 
 impl DefineItem {
-    pub fn new(index: usize) -> Self {
+    pub fn new(index: usize,mat_id:HandleId) -> Self {
         DefineItem {
+            mat_id,
             index,
-            dirty_hid: None,
+            is_dirty:true
         }
     }
 }
@@ -206,7 +215,7 @@ impl MaterialDefine {
         (cache_buffer, uniform_buffer)
     }
 
-    pub fn add_material(&mut self, id: u32, res: &mut RenderResources) {
+    pub fn add_material(&mut self, id: u32, res: &mut RenderResources,mat_id:HandleId) {
         if self.items.contains_key(&id) {
             return;
         }
@@ -219,15 +228,17 @@ impl MaterialDefine {
             while self.cap < self.len {
                 self.cap *= 2;
             }
-            let (cache_buffer, buffer) = Self::alloc_buffer(self.cap, self.buffer_item_size, res);
-            self.cache_buffer = cache_buffer;
-            self.gpu_buffer = buffer;
+            
+            let (new_cache_buffer, new_buffer) = Self::alloc_buffer(self.cap, self.buffer_item_size, res);
+            self.cache_buffer = new_cache_buffer;
+            self.gpu_buffer = new_buffer;
             self.buffer_dirty = true;
+            for item in self.items.values_mut().chain(self.free_items.iter_mut()) {
+                item.is_dirty = true;
+            }
         }
-
         let index = self.len - 1;
-
-        self.items.insert(id, DefineItem::new(index));
+        self.items.insert(id, DefineItem::new(index,mat_id));
     }
 
     pub fn remove_material(&mut self, id: u32) {
@@ -236,27 +247,31 @@ impl MaterialDefine {
         }
     }
 
-    pub fn update_buffer(
+    pub fn update_bind_group(
         &mut self,
         id: u32,
         res: &mut RenderResources,
         layout: &wgpu::BindGroupLayout,
-        material: &mut Material,
-        dirty_hid: Option<HandleId>,
+        material: &mut Material
     ) {
         if let Some(item) = self.items.get_mut(&id) {
-            item.dirty_hid = dirty_hid;
-            if self.buffer_dirty || material.bind_group.is_none() {
-                if let Some(item) = self.items.get_mut(&id) {
-                    let mut build_group_builder = BindGroupBuilder::new();
-                    let start: u64 = item.index as u64 * self.buffer_item_size;
-                    build_group_builder.add_buffer_addr(self.gpu_buffer, start, self.buffer_item_size);
-                    material.bind_group = Some(build_group_builder.build(layout, &res.device, res));
-                    self.buffer_dirty = false;
-                }
+            if material.props.is_dirty() { item.is_dirty = true; }
+            let item_index = item.index;
+            if material.bind_group.is_none() {
+                self.create_bind_group(material, item_index, res, layout);
             }
         }
-        
+    }
+
+    pub fn create_bind_group(&self,material:&mut Material,item_index:usize,res: &mut RenderResources,layout: &wgpu::BindGroupLayout) {
+        let mut build_group_builder = BindGroupBuilder::new();
+        let start: u64 = item_index as u64 * self.buffer_item_size;
+        build_group_builder.add_buffer_addr(self.gpu_buffer, start, self.buffer_item_size);
+        material.bind_group = Some(build_group_builder.build(layout, &res.device, res));
+
+    }
+
+    pub fn re_create_bind_groups(&self) {
 
     }
 }

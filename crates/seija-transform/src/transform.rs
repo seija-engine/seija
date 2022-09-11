@@ -1,6 +1,6 @@
 
 use bevy_ecs::prelude::Component;
-use glam::{Mat4, Quat, Vec3,EulerRot};
+use glam::{Mat4, Quat, Vec3};
 use lazy_static::{lazy_static};
 
 lazy_static! {

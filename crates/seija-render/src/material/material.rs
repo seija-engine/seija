@@ -24,7 +24,7 @@ impl Material {
 
     pub fn from_def(def:Arc<MaterialDef>,server:&AssetServer) -> Option<Material> {
         let props = TypedUniformBuffer::from_def(def.prop_def.clone());
-        let texture_props = TextureProps::from_def_new(&def,server)?;
+        let texture_props = TextureProps::from_def(&def,server)?;
         Some(Material {
             define:None,
             order:def.order,
@@ -60,7 +60,7 @@ pub struct TextureProps {
 
 impl TextureProps {
    
-    pub fn from_def_new(def:&Arc<MaterialDef>,server:&AssetServer) -> Option<TextureProps> {
+    pub fn from_def(def:&Arc<MaterialDef>,server:&AssetServer) -> Option<TextureProps> {
         let mut textures:Vec<Handle<Texture>> = Vec::with_capacity(def.tex_prop_def.indexs.len());
         for (_,info) in def.tex_prop_def.indexs.iter() {
             let handle = server.get_asset(info.def_asset.as_str())?;
