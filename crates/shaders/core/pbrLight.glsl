@@ -145,7 +145,9 @@ vec3 surfaceShading(const PixelParams pixel,const Light light,float occlusion,ve
     vec3 fd = diffuseLobe(pixel, noV, noL, loH);
 
     vec3 color = fd + fr * pixel.energyCompensation;
-
+    vec3 ambileColor = getAmbileColor();
+    
+    vec3 ambileColor = inputs.baseColor.rgb * ambileColor * inputs.occlusion;
     return (color * light.colorIntensity.rgb) * (light.colorIntensity.w * light.attenuation * noL * occlusion);
 }
 
@@ -169,9 +171,7 @@ vec4 evaluateMaterial(MaterialInputs inputs,vec3 vertPos,vec3 viewDir) {
     vec4 color = evaluateLights(inputs,vertPos,viewDir);
     color.rgb += inputs.emissiveColor;
     
-    vec3 ambileColor = getAmbileColor();
-    
-    color.rgb += inputs.baseColor.rgb * ambileColor * inputs.occlusion;
+   
    
     
     return color;
