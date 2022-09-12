@@ -5,7 +5,7 @@ use lite_clojure_eval::{Variable, EvalRT};
 
 use crate::RenderContext;
 
-use super::{main::MainContext, rt_tags::RuntimeTags};
+use super::{main::MainContext};
 
 pub trait IUpdateNode {
     fn update_params(&mut self,params:Vec<Variable>) -> Result<()>;
@@ -65,13 +65,6 @@ impl UpdateNodeBox {
        }
     }
     
-    pub fn update_enable(&mut self,rt_tags:&RuntimeTags) {
-        if let Some(tag_index) = self.tag_index {
-            if rt_tags.dirtys.contains(&tag_index) && rt_tags.tags[tag_index] != self.enable { 
-                self.enable = !self.enable;
-            }
-        }
-    }
 
     pub fn prepare(&mut self,world:&mut World,ctx:&mut RenderContext) {
         if self.enable && !self.init_fail {

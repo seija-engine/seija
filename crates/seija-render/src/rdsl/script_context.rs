@@ -20,20 +20,14 @@ impl ScriptContext {
 
     pub fn init(&mut self,code_string:&str) {
         self.rt.eval_string("render.clj".into(), code_string);
-        //let rt = &mut self.rt;
-        //let rt_ptr = rt as *mut EvalRT as *mut u8;
-        //self.rt.global_context().set_var("*VM*", Variable::UserData(rt_ptr) );
         self.rt.global_context().push_native_fn("declare-uniform", declare_uniform);
         self.rt.global_context().push_native_fn("add-uniform", add_uniform);
-        self.rt.global_context().push_native_fn("select-add-uniform", select_add_uniform);
-        self.rt.global_context().push_native_fn("add-tag", add_tag);
         self.rt.global_context().push_native_fn("add-render-path", add_render_path);
         self.rt.global_context().push_native_fn("add-node", add_node);
         self.rt.global_context().push_native_fn("atom-texture", atom_texture);
         self.rt.global_context().push_native_fn("add-query", add_query);
         self.rt.global_context().push_native_fn("get-query", get_query);
         self.rt.global_context().push_native_fn("set-global-uniform", set_global_uniform);
-        self.rt.global_context().push_native_fn("tag?", is_tag);
         self.rt.global_context().push_native_fn("load-material", load_material);
         
         self.rt.global_context().push_var("SS_VERTEX", wgpu::ShaderStage::VERTEX.bits() as i64 );

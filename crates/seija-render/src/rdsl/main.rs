@@ -2,12 +2,10 @@ use std::collections::HashMap;
 use std::path::PathBuf;
 use bevy_ecs::prelude::{World, Entity, Added, With};
 use lite_clojure_eval::{Variable, GcRefCell};
-use seija_app::App;
-use seija_core::AddCore;
 use seija_transform::Transform;
 use crate::{camera::camera::Camera};
 use crate::{UniformInfoSet, RenderContext, RenderScriptPlugin};
-use super::{ScriptContext, rt_tags::{RuntimeTags, TagEvent}, render_path::{RenderPathList}, node::*, builtin::create_builtin_node_set};
+use super::{ScriptContext, render_path::{RenderPathList}, node::*, builtin::create_builtin_node_set};
 
 //这里通过逻辑保证RenderMain只在一个线程运行，ECS库的System必须要这俩个trait
 unsafe impl Send for RenderMain {}
@@ -29,7 +27,6 @@ impl RenderMain {
         RenderMain { 
             script_ctx:ScriptContext::new(),
             main_ctx:MainContext { 
-                rt_tags: RuntimeTags::new(),
                  dyn_uniform_set: vec![],
                  path_list:RenderPathList::default(),
                  global_env:GcRefCell::new(HashMap::default()),
@@ -39,9 +36,7 @@ impl RenderMain {
         }
     }
 
-    pub fn add_system(app:&mut App) {
-        app.add_event::<TagEvent>();
-    }
+
 
     pub fn init(&mut self,code_string:&str,lib_paths:&Vec<PathBuf>,_render_path:&PathBuf,info_set:&mut UniformInfoSet) {
         for lib_path in lib_paths.iter() {
@@ -110,7 +105,6 @@ impl RenderMain {
 }
 
 pub struct MainContext {
-    pub rt_tags:RuntimeTags,
     pub dyn_uniform_set:Vec<DynUniformItem>,
     pub global_env:GcRefCell<HashMap<Variable,Variable>>,
     pub global_nodes:Vec<UpdateNodeBox>,
@@ -122,11 +116,6 @@ pub struct MainContext {
 
 impl MainContext {
     pub fn update(&mut self,ctx:&mut RenderContext,world:&mut World,_sc:&mut ScriptContext) {
-        self.rt_tags.update(world);
-        if self.rt_tags.dirtys.len() > 0 {
-            self.update_dirty_tag(ctx);
-        }
-
         for node in self.global_nodes.iter_mut() {
             node.prepare(world, ctx);
         }
@@ -145,20 +134,4 @@ impl MainContext {
         Some(node)
     }
 
-    fn update_dirty_tag(&mut self,ctx:&mut RenderContext) {
-        for info in self.dyn_uniform_set.iter_mut() {
-            if self.rt_tags.dirtys.contains(&info.tag_index) && self.rt_tags.tags[info.tag_index] != info.enable {
-                if info.enable {
-                    ctx.ubo_ctx.remove_uniform(&info.ubo_name);
-                } else {
-                    ctx.ubo_ctx.add_uniform(&info.ubo_name, &mut ctx.resources);
-                }
-                info.enable = !info.enable;
-            }
-        }
-        for node in self.global_nodes.iter_mut() {
-            node.update_enable(&self.rt_tags);
-        }
-        self.rt_tags.dirtys.clear();
-    }
 }

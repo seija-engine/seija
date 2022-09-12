@@ -1,7 +1,6 @@
 mod main;
 mod error;
 mod builtin;
-mod rt_tags;
 mod script_context;
 mod render_path;
 mod node;

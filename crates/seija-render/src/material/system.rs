@@ -270,8 +270,4 @@ impl MaterialDefine {
         material.bind_group = Some(build_group_builder.build(layout, &res.device, res));
 
     }
-
-    pub fn re_create_bind_groups(&self) {
-
-    }
 }

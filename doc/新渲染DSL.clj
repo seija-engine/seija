@@ -39,3 +39,34 @@
     )
     (draw-shadow-pass (globalEnv :shadowMap))
 )
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;
+(defn on-add-plugins []
+    (add-plugin "Shadow" {
+        :on-decl (fn []
+             (declare-uniform set "ShadowCast" {
+                :type :Global
+                :sort index
+                :apply :Frame
+                :shader-stage SS_VERTEX
+                :props [
+                    {:name "projView" :type "mat4" }
+                ]
+                :backends ["ShadowCast"]
+             })
+        )
+
+        :on-start (fn []
+            
+        )
+    })
+)
+
+(defn on-decl []
+    
+)
+
+(defn on-start []
+
+)

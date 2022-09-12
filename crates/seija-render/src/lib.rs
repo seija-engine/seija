@@ -2,7 +2,6 @@ use std::path::{PathBuf, Path};
 use std::sync::Arc;
 use pipeline::{PipelineCache, update_pipeline_cache};
 use query::QuerySystem;
-use rdsl::{RenderMain};
 use render::{AppRender, Config };
 use resource::{Mesh, Texture, color_texture};
 use resource::shape::{Cube, Sphere, Plane, Quad, SkyBox};
@@ -71,7 +70,6 @@ impl IModule for RenderModule {
         resource::init_resource(app);
         material::init_material(app);
         light::init_light(app);
-        RenderMain::add_system(app);
        
         Self::init_buildin_assets(&mut app.world);
         app.add_resource(QuerySystem::default());
