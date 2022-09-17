@@ -11,11 +11,6 @@ use super::{ScriptContext, render_path::{RenderPathList}, node::*, builtin::crea
 unsafe impl Send for RenderMain {}
 unsafe impl Sync for RenderMain {}
 
-pub struct DynUniformItem {
-    pub tag_index:usize,
-    pub enable:bool,
-    pub ubo_name:String
-}
 
 pub struct RenderMain {
     script_ctx:ScriptContext,
@@ -26,8 +21,7 @@ impl RenderMain {
     pub fn new() -> Self {
         RenderMain { 
             script_ctx:ScriptContext::new(),
-            main_ctx:MainContext { 
-                 dyn_uniform_set: vec![],
+            main_ctx:MainContext {
                  path_list:RenderPathList::default(),
                  global_env:GcRefCell::new(HashMap::default()),
                  global_nodes:vec![],
@@ -38,16 +32,15 @@ impl RenderMain {
 
 
 
-    pub fn init(&mut self,code_string:&str,lib_paths:&Vec<PathBuf>,_render_path:&PathBuf,info_set:&mut UniformInfoSet) {
+    pub fn init(&mut self,code_string:&str,lib_paths:&Vec<PathBuf>,info_set:&mut UniformInfoSet) {
         for lib_path in lib_paths.iter() {
-           
             self.script_ctx.rt.add_search_path(lib_path);
         }
+
         let global_nodes_mut = &mut self.main_ctx.global_nodes;
         let global_node_ptr = global_nodes_mut as *mut Vec<UpdateNodeBox> as *mut u8;
         self.main_ctx.global_env.borrow_mut().insert(Variable::Keyword(GcRefCell::new(":nodes".to_string())), 
                                                      Variable::UserData(global_node_ptr));
-
         self.add_render_plugin(&Self::create_core_plugin());
         self.script_ctx.init(code_string);
         self.script_ctx.exec_declare_uniform(info_set);
@@ -56,7 +49,6 @@ impl RenderMain {
     fn create_core_plugin() -> RenderScriptPlugin {
         let node_sets = create_builtin_node_set();
         let rs = RenderScriptPlugin::new(node_sets);
-        //rs.set_script_mod("core",include_str!("../../res/core.clj").to_string());
         rs
     }
 
@@ -105,7 +97,6 @@ impl RenderMain {
 }
 
 pub struct MainContext {
-    pub dyn_uniform_set:Vec<DynUniformItem>,
     pub global_env:GcRefCell<HashMap<Variable,Variable>>,
     pub global_nodes:Vec<UpdateNodeBox>,
 

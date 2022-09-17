@@ -108,7 +108,7 @@ impl RenderModule {
       
         match std::fs::read_to_string(&self.0.script_path) {
             Ok(code_string) => {
-                app_render.main.init(&code_string,&config.render_lib_paths,&config.config_path,&mut ctx.ubo_ctx.info);
+                app_render.main.init(&code_string,&config.render_lib_paths,&mut ctx.ubo_ctx.info);
             },
             Err(err) => {
                 log::error!("load main render script:{:?} error:{:?}",&self.0.script_path,err);
