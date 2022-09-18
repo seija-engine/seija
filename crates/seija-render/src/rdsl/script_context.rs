@@ -29,6 +29,7 @@ impl ScriptContext {
         self.rt.global_context().push_native_fn("get-query", get_query);
         self.rt.global_context().push_native_fn("set-global-uniform", set_global_uniform);
         self.rt.global_context().push_native_fn("load-material", load_material);
+        self.rt.global_context().push_native_fn("plugins", add_plugins);
         
         self.rt.global_context().push_var("SS_VERTEX", wgpu::ShaderStage::VERTEX.bits() as i64 );
         self.rt.global_context().push_var("SS_FRAGMENT", wgpu::ShaderStage::FRAGMENT.bits() as i64 );
@@ -43,6 +44,8 @@ impl ScriptContext {
         if let Err(err) = self.rt.invoke_func("declare-uniforms", vec![Variable::UserData(info_ptr)]) {
             log::error!("{:?}",err);
         }
+
+        
     }
 
     pub fn set_global_const(&mut self,world:&World) {

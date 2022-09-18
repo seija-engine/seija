@@ -5,6 +5,7 @@ mod script_context;
 mod render_path;
 mod node;
 mod atom;
+mod script_plugin;
 pub mod nodes;
 mod win_event;
 mod ubo_array_collect;

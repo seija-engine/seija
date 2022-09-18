@@ -16,6 +16,7 @@ use super::main::MainContext;
 use super::node::{NodeCreatorSet, UpdateNodeBox};
 use super::nodes::{TransfromNode, WindowReSizeNode, DrawPassNode, DrawQuadNode};
 use super::render_path::RenderPathDef;
+use super::script_plugin::ScriptPlugin;
 
 
 pub fn create_builtin_node_set() -> NodeCreatorSet {
@@ -230,3 +231,17 @@ pub fn load_material(scope:&mut ExecScope,args:Vec<Variable>) -> Variable {
         Ok(Variable::Bool(true))
    })
 }
+
+pub fn add_plugins(scope:&mut ExecScope,args:Vec<Variable>) -> Variable {
+    handle_error("plugins", scope, args, |scope,mut args| {
+        let plugins = args.remove(0).cast_vec().ok_or(0)?;
+        let main_ctx = find_userdata::<MainContext>(scope, "*MAIN_CTX*").ok_or(1)?;
+        let mut mut_plugins = plugins.borrow_mut();
+        for plugin_var in mut_plugins.drain(..) {
+            let plugin = ScriptPlugin::new(plugin_var).map_err(|_|2)?;
+            main_ctx.plugins.push(plugin);
+        }
+        Ok(Variable::Nil)
+    })
+}
+

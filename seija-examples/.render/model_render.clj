@@ -1,22 +1,38 @@
 (require "all_uniform")
 
+(defrecord Base3D []
+    (init []
+      (println "Base3D Init")
+      (all_uniform/decl set)
+    )
 
-(defn declare-uniforms [set]
-    (all_uniform/decl set)
+    (start []
+        (println "Base3D Start")
+        (add-uniform  "ObjectBuffer")
+        (add-uniform  "CameraBuffer")
+        (add-uniform  "LightBuffer")
+
+        ;(do-tag "Base3D" (fn [env]
+
+        ;))
+    )
 )
 
-(println "Enter New Render Clojure")
+
+(defn declare-uniforms [set]
+    (plugins [
+       (Base3D. ) 
+    ])
+)
+
 
 
 (defn on-render-start [globalEnv]
     (println "on-render-start")
     (load-material "materials/fxaa.mat.clj")
-
-    (add-uniform  "ObjectBuffer")
-    (add-uniform  "CameraBuffer")
-    (add-uniform  "LightBuffer")
-    
-
+    ;(apply-nodes [
+        "Base3D"
+    ;])
     (add-node globalEnv  CAMERA_NODE    "CameraBuffer")
     (add-node globalEnv  TRANSFROM_NODE "ObjectBuffer")
     (add-node globalEnv  PBR_CAMERA_EX  "CameraBuffer")

@@ -1,10 +1,12 @@
 use std::collections::HashMap;
 use std::path::PathBuf;
 use bevy_ecs::prelude::{World, Entity, Added, With};
+use fixedbitset::IndexRange;
 use lite_clojure_eval::{Variable, GcRefCell};
 use seija_transform::Transform;
 use crate::{camera::camera::Camera};
 use crate::{UniformInfoSet, RenderContext, RenderScriptPlugin};
+use super::script_plugin::ScriptPlugin;
 use super::{ScriptContext, render_path::{RenderPathList}, node::*, builtin::create_builtin_node_set};
 
 //这里通过逻辑保证RenderMain只在一个线程运行，ECS库的System必须要这俩个trait
@@ -22,6 +24,7 @@ impl RenderMain {
         RenderMain { 
             script_ctx:ScriptContext::new(),
             main_ctx:MainContext {
+                 plugins:vec![],
                  path_list:RenderPathList::default(),
                  global_env:GcRefCell::new(HashMap::default()),
                  global_nodes:vec![],
@@ -43,7 +46,11 @@ impl RenderMain {
                                                      Variable::UserData(global_node_ptr));
         self.add_render_plugin(&Self::create_core_plugin());
         self.script_ctx.init(code_string);
+        self.script_ctx.set_userdata("*MAIN_CTX*", &mut self.main_ctx);
         self.script_ctx.exec_declare_uniform(info_set);
+        for plugin in self.main_ctx.plugins.iter() {
+            plugin.init(&mut self.script_ctx.rt);   
+        }
     }
 
     fn create_core_plugin() -> RenderScriptPlugin {
@@ -69,6 +76,9 @@ impl RenderMain {
     pub fn start(&mut self,world:&mut World,ctx:&mut RenderContext) {
         self.script_ctx.set_global_const(world);
         self.script_ctx.exec_render_start(ctx,world,&mut self.main_ctx);
+        for plugin in self.main_ctx.plugins.iter() {
+            plugin.start(&mut self.script_ctx.rt); 
+        }
         for node_box in self.main_ctx.global_nodes.iter_mut() {
             node_box.set_params(&mut self.script_ctx.rt,true);
             node_box.init(world, ctx);
@@ -97,6 +107,7 @@ impl RenderMain {
 }
 
 pub struct MainContext {
+    pub plugins:Vec<ScriptPlugin>,
     pub global_env:GcRefCell<HashMap<Variable,Variable>>,
     pub global_nodes:Vec<UpdateNodeBox>,
 
