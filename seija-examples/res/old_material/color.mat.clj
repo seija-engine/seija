@@ -17,7 +17,7 @@
             :shader { :name "core.shadowDepth" }
             :targets [
                         {
-                            :format "Bgra8UnormSrgb" 
+                            :format "Bgra8Unorm" 
                             :blend { :color ["src" "-" "src"] :alpha nil } 
                         }
                      ]

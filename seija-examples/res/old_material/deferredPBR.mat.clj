@@ -12,8 +12,8 @@
     :pass {
         :targets [{:format "Rgba16Float" :blend nil} 
                   {:format "Rgba16Float" :blend nil} 
-                  {:format "Rgba8Unorm" :blend nil} 
-                  {:format "Rgba8Unorm" :blend nil} ]
+                  {:format "Bgra8Unorm" :blend nil} 
+                  {:format "Bgra8Unorm" :blend nil} ]
         :shader {
             :name "core.pbrGBuffer"
             :macros []

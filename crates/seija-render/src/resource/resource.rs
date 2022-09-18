@@ -163,7 +163,7 @@ impl RenderResources {
     pub fn create_swap_chain(&mut self,w:u32,h:u32,vsync:bool) {
         let desc = &wgpu::SwapChainDescriptor {
             usage:wgpu::TextureUsage::RENDER_ATTACHMENT,
-            format:wgpu::TextureFormat::Bgra8UnormSrgb,
+            format:wgpu::TextureFormat::Bgra8Unorm,
             width:w,
             height:h,
             present_mode: if vsync {wgpu::PresentMode::Fifo} else {wgpu::PresentMode::Immediate}

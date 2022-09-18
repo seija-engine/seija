@@ -29,9 +29,9 @@
     (add-render-path "Foward" {
         :on-start (fn [env] 
             (assoc! env :depth (atom-texture {:format "Depth32Float" :width WINDOW_WIDTH :height WINDOW_HEIGHT}))
-            (assoc! env :rawTexture  (atom-texture {:format "Bgra8UnormSrgb" :width WINDOW_WIDTH :height WINDOW_HEIGHT}))
-            (assoc! env :postEffect  (atom-texture {:format "Bgra8UnormSrgb" :width WINDOW_WIDTH :height WINDOW_HEIGHT}))
-            (assoc! env :postEffect2 (atom-texture {:format "Bgra8UnormSrgb" :width WINDOW_WIDTH :height WINDOW_HEIGHT}))
+            (assoc! env :rawTexture  (atom-texture {:format "Bgra8Unorm" :width WINDOW_WIDTH :height WINDOW_HEIGHT}))
+            (assoc! env :postEffect  (atom-texture {:format "Bgra8Unorm" :width WINDOW_WIDTH :height WINDOW_HEIGHT}))
+            (assoc! env :postEffect2 (atom-texture {:format "Bgra8Unorm" :width WINDOW_WIDTH :height WINDOW_HEIGHT}))
             (add-node env  WINSIZE_TEXTURE [(env :depth) (env :targetView)])
             (add-node env  DRAW_PASS (env :camera-query) (env :camera-id) [(env :rawTexture)] (env :depth) "Foward")
             ;从rawTexture提取亮度到postEffect

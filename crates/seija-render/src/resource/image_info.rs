@@ -120,5 +120,5 @@ pub fn color_image_info(color:[u8;4],size:usize) -> ImageInfo {
         data.extend_from_slice(&color);
     }
     
-    ImageInfo { width: size as u32, height: size as u32, format: wgpu::TextureFormat::Rgba8Unorm, data }
+    ImageInfo { width: size as u32, height: size as u32, format: wgpu::TextureFormat::Bgra8Unorm, data }
 }

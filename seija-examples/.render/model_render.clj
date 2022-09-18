@@ -3,7 +3,7 @@
 (defrecord Base3D []
     (init []
       (println "Base3D Init")
-      (all_uniform/decl set)
+      
     )
 
     (start []
@@ -20,6 +20,7 @@
 
 
 (defn declare-uniforms [set]
+    (all_uniform/decl set)
     (plugins [
        (Base3D. ) 
     ])
@@ -45,7 +46,7 @@
     (add-render-path "Foward" {
         :on-start (fn [env] 
             (assoc! env :depth (atom-texture {:format "Depth32Float" :width WINDOW_WIDTH :height WINDOW_HEIGHT}))
-            ;(assoc! env :postEffect (atom-texture {:format "Bgra8UnormSrgb" :width WINDOW_WIDTH :height WINDOW_HEIGHT}))
+            ;(assoc! env :postEffect (atom-texture {:format "Bgra8Unorm" :width WINDOW_WIDTH :height WINDOW_HEIGHT}))
             
             ;(add-node env nil WINSIZE_TEXTURE [(env :depth) (env :targetView)])
             (add-node env  DRAW_PASS (env :camera-query) (env :camera-id) [(env :targetView)] (env :depth) "Foward")

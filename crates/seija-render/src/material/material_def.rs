@@ -271,7 +271,7 @@ impl TryFrom<&Value> for TargetInfo {
 impl Default for TargetInfo {
     fn default() -> Self {
         Self { 
-             format: wgpu::TextureFormat::Bgra8UnormSrgb,
+             format: wgpu::TextureFormat::Bgra8Unorm,
              blend: Some(wgpu::BlendState {
                 color: wgpu::BlendComponent {
                     src_factor: wgpu::BlendFactor::SrcAlpha,

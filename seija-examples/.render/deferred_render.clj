@@ -18,8 +18,8 @@
              depth-texture (node SCREEN_TEXTURE [{:format "Depth32Float"}])
              gbuffer-texs  (node SCREEN_TEXTURE [{:format "Rgba16Float"} 
                                                  {:format "Rgba16Float"}
-                                                 {:format "Rgba8Unorm"}
-                                                 {:format "Rgba8Unorm"} 
+                                                 {:format "Bgra8Unorm"}
+                                                 {:format "Bgra8Unorm"} 
                                                  ])
              light-pass (node DEFERRED_LIGHT_PASS {:tex-count 4})
              foward-pass  (node PASS {:is-depth true :clear-depth false})
