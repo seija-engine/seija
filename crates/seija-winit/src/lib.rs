@@ -1,5 +1,6 @@
 mod window;
 pub mod event;
+pub mod ffi;
 use event::{WindowCreated, WindowResized, conv_mouse_input};
 use seija_app::{IModule,App};
 use seija_core::{ window::{AppWindow, WindowConfig},AddCore};

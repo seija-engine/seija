@@ -9,3 +9,4 @@ crate-type = ["cdylib"]
 [dependencies]
 seija-app = {path = "../seija-app"}
 seija-core = {path = "../seija-core"}
+seija-winit = {path = "../seija-winit"}

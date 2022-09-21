@@ -1,7 +1,6 @@
 use std::collections::HashMap;
 use std::path::PathBuf;
 use bevy_ecs::prelude::{World, Entity, Added, With};
-use fixedbitset::IndexRange;
 use lite_clojure_eval::{Variable, GcRefCell};
 use seija_transform::Transform;
 use crate::{camera::camera::Camera};

@@ -10,6 +10,7 @@ pub mod bytes;
 pub mod time;
 pub mod window;
 pub mod type_uuid;
+pub mod ffi;
 pub use type_uuid::{TypeUuid,TypeUuidDynamic};
 pub use uuid;
 pub use bevy_ecs;

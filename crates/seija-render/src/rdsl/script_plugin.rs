@@ -34,4 +34,12 @@ impl ScriptPlugin {
          log::error!("plugin run start error {:?}",err);
         }
      }
+
+     pub fn exit(&self,eval:&mut EvalRT) {
+        if let Some(exit_fn) = self.exit_fn.as_ref() {
+            if let Err(err) = eval.invoke_func2(exit_fn, vec![]) {
+                log::error!("plugin run start error {:?}",err);
+            }
+        }
+     }
 }
