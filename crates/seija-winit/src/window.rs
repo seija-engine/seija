@@ -38,7 +38,7 @@ impl WinitWindow {
             WindowMode::BorderlessFullscreen => { 
                 builder.with_fullscreen(Some(Fullscreen::Borderless(event_loop.primary_monitor())))
             },
-            WindowMode::Fullscreen {..} => {
+            WindowMode::Fullscreen => {
                let max_mode = get_max_video_mode(&event_loop.primary_monitor().unwrap());
                builder.with_fullscreen(Some(Fullscreen::Exclusive(max_mode)))
             },

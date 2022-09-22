@@ -2,11 +2,12 @@ use std::{ops::{Deref, DerefMut}};
 
 use raw_window_handle::{HasRawWindowHandle, RawWindowHandle};
 
+#[repr(u32)]
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum WindowMode {
     Windowed,
     BorderlessFullscreen,
-    Fullscreen { use_size: bool },
+    Fullscreen,
 }
 
 pub trait IWindow : HasRawWindowHandle {
@@ -50,12 +51,14 @@ impl AppWindow {
     }
 }
 
+#[repr(C)]
+#[derive(Debug)]
 pub struct WindowConfig {
     pub width: f32,
     pub height: f32,
-    pub title: String,
     pub mode: WindowMode,
     pub vsync:bool,
+    pub title: String,
 }
 
 impl Default for WindowConfig {
@@ -69,3 +72,5 @@ impl Default for WindowConfig {
         }
     }
 }
+
+
