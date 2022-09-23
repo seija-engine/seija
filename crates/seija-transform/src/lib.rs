@@ -6,6 +6,7 @@ pub mod hierarchy;
 mod children_command;
 mod system;
 mod transform;
+pub mod ffi;
 
 use seija_core::{CoreStage, StartupStage};
 use system::update_transform_system;

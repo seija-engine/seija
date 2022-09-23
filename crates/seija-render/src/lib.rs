@@ -24,7 +24,7 @@ pub mod errors;
 pub mod shadow;
 mod query;
 pub mod scene;
-
+pub mod ffi;
 mod uniforms;
 mod rt_shaders;
 mod mesh_render;

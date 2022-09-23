@@ -7,6 +7,7 @@ lazy_static! {
     pub static ref TRANSFORM_MAT_ID:TransformMatrix = TransformMatrix::default(); 
 }
 
+#[repr(C)]
 #[derive(Debug,PartialEq,Clone)]
 pub struct TransformMatrix {
     pub scale:Vec3,
@@ -59,7 +60,7 @@ impl Default for TransformMatrix {
     }
 }
 
-
+#[repr(C)]
 #[derive(Default,PartialEq,Clone,Debug,Component)]
 pub struct Transform {
     pub local:TransformMatrix,

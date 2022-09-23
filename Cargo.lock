@@ -1664,7 +1664,10 @@ name = "lib-seija"
 version = "0.1.0"
 dependencies = [
  "seija-app",
+ "seija-asset",
  "seija-core",
+ "seija-input",
+ "seija-transform",
  "seija-winit",
 ]
 

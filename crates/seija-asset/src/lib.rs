@@ -21,6 +21,7 @@ pub use lifecycle::{RefEvent,LifecycleEvent};
 use seija_core::bevy_ecs::change_detection::Mut;
 pub use downcast_rs;
 pub use async_trait;
+pub mod ffi;
 
 #[derive(Debug, Hash, PartialEq, Eq, Clone,StageLabel)]
 pub enum AssetStage {

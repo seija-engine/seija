@@ -30,6 +30,7 @@ pub struct MouseWheelInput {
 
 
 #[derive(Debug, Hash, PartialEq, Eq, Clone, Copy)]
+#[repr(u32)]
 pub enum MouseButton {
     Left,
     Right,

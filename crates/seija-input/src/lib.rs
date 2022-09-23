@@ -6,6 +6,7 @@ pub mod keycode;
 pub mod event;
 mod input;
 pub use input::{Input};
+pub mod ffi;
 pub struct InputModule;
 
 impl IModule for InputModule {
