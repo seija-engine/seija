@@ -8,6 +8,7 @@ mod atom;
 mod script_plugin;
 pub mod nodes;
 mod win_event;
+mod node_list;
 mod ubo_array_collect;
 pub use script_context::{ScriptContext};
 pub use main::{RenderMain};

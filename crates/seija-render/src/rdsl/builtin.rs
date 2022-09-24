@@ -10,10 +10,10 @@ use crate::rdsl::nodes::CameraNode;
 use crate::resource::{Texture, TextureDescInfo, RenderResourceId};
 use crate::shadow::ShadowNode;
 use crate::{UniformInfoSet, UniformInfo, RenderContext};
-
 use super::atom::Atom;
 use super::main::MainContext;
 use super::node::{NodeCreatorSet, UpdateNodeBox};
+use super::node_list::ScriptNodeList;
 use super::nodes::{TransfromNode, WindowReSizeNode, DrawPassNode, DrawQuadNode};
 use super::render_path::RenderPathDef;
 use super::script_plugin::ScriptPlugin;
@@ -65,21 +65,17 @@ fn _declare_uniform(_scope:&mut ExecScope,mut args:Vec<Variable>) -> Option<()> 
     Some(())
 }
 
-pub fn add_uniform(scope:&mut ExecScope,args:Vec<Variable>) -> Variable {
-    if _add_uniform(scope, args).is_none() {
-        log::error!("add uniform error");
-    }
-    Variable::Nil
-}
-
-fn _add_uniform(scope:&mut ExecScope,args:Vec<Variable>) -> Option<()> { 
-    if args.len() != 1 { return None; }
-    let ctx = find_userdata::<RenderContext>(scope,"*RENDER_CTX*")?;
-    let name = args[0].cast_string()?;
-    if !ctx.ubo_ctx.add_uniform(name.borrow().as_str(), &mut ctx.resources) {
-        log::error!("not found uniform:{}",name.borrow().as_str());
-    }
-    Some(())
+pub fn add_uniform(s:&mut ExecScope,a:Vec<Variable>) -> Variable {
+    handle_error("add_uniform", s, a, |scope,args| {
+        if args.len() != 1 { return Err(0); }
+        let ctx = find_userdata::<RenderContext>(scope,"*RENDER_CTX*").ok_or(1)?;
+        let name = args[0].cast_string().ok_or(2)?;
+        if !ctx.ubo_ctx.add_uniform(name.borrow().as_str(), &mut ctx.resources) {
+            log::error!("not found uniform:{}",name.borrow().as_str());
+        }
+        Ok(Variable::Nil)
+    })
+    
 }
 
 
@@ -245,3 +241,43 @@ pub fn add_plugins(scope:&mut ExecScope,args:Vec<Variable>) -> Variable {
     })
 }
 
+pub fn add_node_list(s:&mut ExecScope,a:Vec<Variable>) -> Variable {
+    handle_error("add-node-list", s, a, |scope: &mut ExecScope,mut args| {
+        let main_ctx = find_userdata::<MainContext>(scope, "*MAIN_CTX*").ok_or(1)?;
+        let lst_name = args.remove(0).cast_string().ok_or(0)?;
+        let lst_name_str = lst_name.borrow().as_str().to_string();
+        let fn_var = args.remove(0);
+        let script_node = ScriptNodeList::new(fn_var);
+        println!("add:{}",lst_name_str);
+        main_ctx.node_list.insert(lst_name_str, script_node);
+        Ok(Variable::Nil)
+    })
+}
+
+pub fn node_list(s:&mut ExecScope,a:Vec<Variable>) -> Variable {
+    handle_error("node-list", s, a, |scope:&mut ExecScope,mut args| {
+        let main_ctx = find_userdata::<MainContext>(scope, "*MAIN_CTX*").ok_or(1)?;
+        let env = args.remove(0);
+        let node_names = args.remove(0);
+        match &node_names {
+            Variable::String(s) => {
+                println!("eval name:{}",s.borrow().as_str());
+                let node_list = main_ctx.node_list.get(s.borrow().as_str()).ok_or(2)?;
+                if let Err(err) = scope.context.invoke_func2(&node_list.fn_var, vec![env], scope.modules) {
+                    log::error!("eval {} error:{:?}",s.borrow().as_str(),err);
+                }
+            },
+            Variable::Array(arr) => {
+                let arr_ref = arr.borrow();
+                for node_name in arr_ref.iter() {
+                    let node_name_str = node_name.cast_string().ok_or(4)?;
+                    let node_list = main_ctx.node_list.get(node_name_str.borrow().as_str()).ok_or(5)?;
+                    scope.context.invoke_func2(&node_list.fn_var, vec![env.clone()], scope.modules).map_err(|_|6)?;
+                }
+            },
+            _ => return Err(7),
+        }
+
+        Ok(Variable::Nil)
+    })
+}

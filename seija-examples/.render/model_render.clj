@@ -1,9 +1,16 @@
 (require "all_uniform")
 
 (defrecord Base3D []
+    
     (init []
-      (println "Base3D Init")
-      
+      (println "Base3D Init") 
+      (add-node-list "Base3D" (fn [env]
+         (println "run Base3D node list")
+         (add-node env  CAMERA_NODE    "CameraBuffer")
+         (add-node env  TRANSFROM_NODE "ObjectBuffer")
+         (add-node env  PBR_CAMERA_EX  "CameraBuffer")
+         (add-node env  PBR_LIGHT      "LightBuffer")
+      ))
     )
 
     (start []
@@ -11,10 +18,6 @@
         (add-uniform  "ObjectBuffer")
         (add-uniform  "CameraBuffer")
         (add-uniform  "LightBuffer")
-
-        ;(do-tag "Base3D" (fn [env]
-
-        ;))
     )
 )
 
@@ -31,14 +34,7 @@
 (defn on-render-start [globalEnv]
     (println "on-render-start")
     (load-material "materials/fxaa.mat.clj")
-    ;(apply-nodes [
-        "Base3D"
-    ;])
-    (add-node globalEnv  CAMERA_NODE    "CameraBuffer")
-    (add-node globalEnv  TRANSFROM_NODE "ObjectBuffer")
-    (add-node globalEnv  PBR_CAMERA_EX  "CameraBuffer")
-    (add-node globalEnv  PBR_LIGHT      "LightBuffer")
-
+    (node-list globalEnv ["Base3D"])
     (add-foward-path globalEnv)
 )
 

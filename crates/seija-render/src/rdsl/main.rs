@@ -5,6 +5,7 @@ use lite_clojure_eval::{Variable, GcRefCell};
 use seija_transform::Transform;
 use crate::{camera::camera::Camera};
 use crate::{UniformInfoSet, RenderContext, RenderScriptPlugin};
+use super::node_list::ScriptNodeList;
 use super::script_plugin::ScriptPlugin;
 use super::{ScriptContext, render_path::{RenderPathList}, node::*, builtin::create_builtin_node_set};
 
@@ -24,6 +25,7 @@ impl RenderMain {
             script_ctx:ScriptContext::new(),
             main_ctx:MainContext {
                  plugins:vec![],
+                 node_list:Default::default(),
                  path_list:RenderPathList::default(),
                  global_env:GcRefCell::new(HashMap::default()),
                  global_nodes:vec![],
@@ -74,10 +76,11 @@ impl RenderMain {
 
     pub fn start(&mut self,world:&mut World,ctx:&mut RenderContext) {
         self.script_ctx.set_global_const(world);
-        self.script_ctx.exec_render_start(ctx,world,&mut self.main_ctx);
+        self.script_ctx.set_script_global(ctx,&mut self.main_ctx, world);
         for plugin in self.main_ctx.plugins.iter() {
             plugin.start(&mut self.script_ctx.rt); 
         }
+        self.script_ctx.exec_render_start(ctx,world,&mut self.main_ctx);
         for node_box in self.main_ctx.global_nodes.iter_mut() {
             node_box.set_params(&mut self.script_ctx.rt,true);
             node_box.init(world, ctx);
@@ -107,6 +110,7 @@ impl RenderMain {
 
 pub struct MainContext {
     pub plugins:Vec<ScriptPlugin>,
+    pub node_list:HashMap<String,ScriptNodeList>,
     pub global_env:GcRefCell<HashMap<Variable,Variable>>,
     pub global_nodes:Vec<UpdateNodeBox>,
 

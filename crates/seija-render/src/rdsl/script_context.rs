@@ -30,6 +30,8 @@ impl ScriptContext {
         self.rt.global_context().push_native_fn("set-global-uniform", set_global_uniform);
         self.rt.global_context().push_native_fn("load-material", load_material);
         self.rt.global_context().push_native_fn("plugins", add_plugins);
+        self.rt.global_context().push_native_fn("add-node-list",add_node_list);
+        self.rt.global_context().push_native_fn("node-list",node_list);
         
         self.rt.global_context().push_var("SS_VERTEX", wgpu::ShaderStage::VERTEX.bits() as i64 );
         self.rt.global_context().push_var("SS_FRAGMENT", wgpu::ShaderStage::FRAGMENT.bits() as i64 );
@@ -73,7 +75,7 @@ impl ScriptContext {
         ctx:&mut RenderContext,
         world:&mut World,
         main_ctx:&mut MainContext)  {
-        self.set_script_global(ctx,main_ctx, world);
+        
         if let Err(err) = self.rt.invoke_func("on-render-start", vec![Variable::Map(main_ctx.global_env.clone())]) {
             log::error!("{:?}",err);
         }
