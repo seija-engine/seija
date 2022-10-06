@@ -103,4 +103,19 @@ impl<'a> LexString<'a> {
             }
         }
     }
+
+    pub fn take_while(&mut self,is_break:fn(char) -> bool) -> Option<&str> {
+        let cur_byte_index = self.byte_index;
+        while let Some(chr) = self.lookahead(1)  {
+            if is_break(chr) {
+                break;
+            } else {
+                self.next();
+            }
+        }
+        if cur_byte_index != self.byte_index {
+            return Some(&self.source[cur_byte_index..self.byte_index])   
+        }
+        None
+    }
 }

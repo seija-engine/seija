@@ -1022,7 +1022,7 @@ dependencies = [
 name = "ffi-parser"
 version = "0.1.0"
 dependencies = [
- "nom",
+ "anyhow",
 ]
 
 [[package]]
