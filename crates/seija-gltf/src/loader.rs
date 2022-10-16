@@ -7,7 +7,7 @@ use relative_path::RelativePath;
 use seija_core::{anyhow::{Result, anyhow, bail, Context},smol,TypeUuid};
 use seija_geometry::volume::AABB3;
 use crate::{asset::{ GltfCamera, GltfMaterial, GltfMesh, GltfNode, GltfPrimitive, GltfScene, NodeIndex}};
-use seija_asset::{Handle,async_trait::async_trait,  AssetServer, AssetLoaderParams, AssetDynamic, AssetRequest, IAssetLoader, Assets};
+use seija_asset::{Handle,async_trait::async_trait,  AssetServer, AssetLoaderParams, AssetDynamic, AssetRequest, IAssetLoader, Assets, HandleUntyped, add_to_asset_type};
 use seija_render::resource::{Texture, TextureDescInfo};
 use seija_render::{camera::camera::{Orthographic, Perspective, Projection}, 
                    resource::{Indices, Mesh, MeshAttributeType, VertexAttributeValues}, 
@@ -27,7 +27,9 @@ pub(crate) struct GLTFLoader;
 #[async_trait]
 impl IAssetLoader for GLTFLoader {
     fn typ(&self) -> seija_core::uuid::Uuid { GltfAsset::TYPE_UUID }
-
+    fn add_to_asset(&self, world:&mut World, res:Box<dyn AssetDynamic>) -> Result<HandleUntyped> {
+        add_to_asset_type::<GltfAsset>(world, res)
+    }
     fn sync_load(&self,w:&mut World,path:&str,server:&AssetServer,_:Option<Box<dyn AssetLoaderParams>>) -> Result<Box<dyn AssetDynamic>> {
         let full_path = server.full_path(path)?;
         let bytes = std::fs::read(&full_path)?;

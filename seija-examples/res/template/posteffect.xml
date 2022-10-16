@@ -1,0 +1,37 @@
+<Entity name="Root" >
+    <Components>
+        <Transform />
+    </Components>
+    <Children>
+        <Entity name="Camera">
+            <Components>
+                <Transform position="0,3.09,6.18" rotation="-30.78,0,0" />
+                <PBRCameraInfo />
+                <Camera type="Perspective" fov="60" aspect="1.333" near="0.01" far="1000" />
+            </Components>
+        </Entity>
+        <Entity name="Light">
+            <Components>
+                <Transform rotation="120,0,0" />
+                <PBRLight type="Directional" intensity="92000" color="1,1,1" />
+            </Components>
+        </Entity>
+
+        <Entity name="Cube0">
+            <Components>
+                <Transform position="0,0,-4" rotation="0,0,0"/>
+                <Mesh res="res://mesh:cube"/>
+                <Material res="res://mats/pbr_red.json" />
+            </Components>
+        </Entity>
+
+        <Entity name="Shiba">
+            <Components>
+                <Transform position="0,1,1" scale="1,1,1"  rotation="-90,0,0"/>
+                <Mesh res="res://gltf/shiba/scene.gltf#mesh.1.0"/>
+                <Material res="res://mats/shiba.json"  />
+            </Components>
+        </Entity>
+
+    </Children>
+</Entity>

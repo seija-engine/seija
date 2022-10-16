@@ -3,7 +3,7 @@ use std::{sync::Arc};
 use anyhow::Context;
 use bevy_ecs::prelude::World;
 use lite_clojure_eval::EvalRT;
-use seija_asset::{AssetServer,async_trait::async_trait ,AssetLoaderParams, AssetDynamic, Assets, downcast_rs::*,IAssetLoader, AsyncLoadMode, HandleUntyped};
+use seija_asset::{AssetServer,async_trait::async_trait ,AssetLoaderParams, AssetDynamic, Assets, downcast_rs::*,IAssetLoader, AsyncLoadMode, HandleUntyped, add_to_asset_type};
 use seija_core::{anyhow::{Result,anyhow},smol, bytes::AsBytes};
 use seija_core::TypeUuid;
 use serde_json::Value;
@@ -21,6 +21,10 @@ pub(crate) struct MaterialDefineLoader;
 #[async_trait]
 impl IAssetLoader for MaterialDefineLoader {
     fn typ(&self) -> uuid::Uuid { MaterialDefineAsset::TYPE_UUID }
+
+    fn add_to_asset(&self, world:&mut World, res:Box<dyn AssetDynamic>) -> Result<HandleUntyped> {
+        add_to_asset_type::<MaterialDefineAsset>(world, res)
+    }
 
     fn sync_load(&self,_:&mut World,path:&str,server:&AssetServer,_:Option<Box<dyn AssetLoaderParams>>) -> Result<Box<dyn AssetDynamic>> {
         let full_path = server.full_path(path)?;
@@ -60,6 +64,9 @@ impl IAssetLoader for MaterialLoader {
     fn typ(&self) -> uuid::Uuid { Material::TYPE_UUID }
     fn mode(&self) -> AsyncLoadMode { AsyncLoadMode::Touch }
     
+    fn add_to_asset(&self, world:&mut World, res:Box<dyn AssetDynamic>) -> Result<HandleUntyped> {
+        add_to_asset_type::<Material>(world, res)
+    }
 
     fn sync_load(&self,w:&mut World,path:&str,server:&AssetServer,_:Option<Box<dyn AssetLoaderParams>>) -> Result<Box<dyn AssetDynamic>> {
        
@@ -74,7 +81,7 @@ impl IAssetLoader for MaterialLoader {
         let mut material = Material::from_def(def_asset.define.clone(), &server).context(5)?;
         let json_props = json_map.get("props").context(6)?;
         set_material_props(&mut material,json_props)?;
-       
+        set_material_textures_sync(w,&mut material,json_props,&server)?;
         Ok(Box::new(material))
     }
 
@@ -130,6 +137,19 @@ async fn set_material_textures(material:&mut Material,value:&Value,server:&Asset
             let req = server.load_async::<Texture>(texture_path, None)?;
             let h_tex = req.wait_handle().await.context(3)?;
             material.texture_props.set(k, h_tex.typed());
+        }
+    }
+    Ok(())
+}
+
+fn set_material_textures_sync(world:&mut World,material:&mut Material,value:&Value,server:&AssetServer) -> Result<()> {
+    let props = value.as_object().context(1)?;
+    let define = material.def.clone();
+    for (k,v) in props.iter() {
+        if let Some(_) = define.tex_prop_def.get_info(k) {
+            let texture_path = v.as_str().context(2)?;
+            let handle = server.load_sync::<Texture>(world,texture_path, None)?;
+            material.texture_props.set(k, handle);
         }
     }
     Ok(())

@@ -1,5 +1,5 @@
 use bevy_ecs::prelude::World;
-use seija_asset::IAssetLoader;
+use seija_asset::{IAssetLoader, HandleUntyped, add_to_asset_type};
 use seija_asset::async_trait::async_trait;
 use serde_json::Value;
 use smol_str::SmolStr;
@@ -15,7 +15,9 @@ pub(crate) struct  TextureLoader;
 #[async_trait]
 impl IAssetLoader for TextureLoader {
     fn typ(&self) -> uuid::Uuid { Texture::TYPE_UUID }
-
+    fn add_to_asset(&self, world:&mut World, res:Box<dyn AssetDynamic>) -> Result<HandleUntyped> {
+        add_to_asset_type::<Texture>(world, res)
+    }
     fn sync_load(&self,_:&mut World,path:&str,server:&AssetServer,params:Option<Box<dyn AssetLoaderParams>>) -> Result<Box<dyn AssetDynamic>> {
         if path.ends_with(".json") {
             let json_path = server.full_path(path)?;

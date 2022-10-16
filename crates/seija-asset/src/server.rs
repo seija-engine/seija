@@ -4,6 +4,7 @@ use crate::{
 };
 use bevy_ecs::{prelude::{Res, World}};
 use parking_lot::RwLock;
+use parking_lot_core::SpinWait;
 use relative_path::RelativePath;
 use seija_core::{anyhow::{Result,anyhow}, smol_str::SmolStr, smol::channel::Sender};
 use uuid::Uuid;
@@ -189,19 +190,20 @@ impl AssetServer {
     }
 
     pub fn load_sync<T:Asset>(&self,world:&mut World,path:&str,params:Option<Box<dyn AssetLoaderParams>>) -> Result<Handle<T>> {
-      
+        self.load_sync_untyped(world, &T::TYPE_UUID, path, params).map(|v| v.typed())
+    }
+
+    pub fn load_sync_untyped(&self,world:&mut World,typ:&Uuid,path:&str,params:Option<Box<dyn AssetLoaderParams>>) -> Result<HandleUntyped> {
         let info = self.inner.assets.read().get(path).cloned();
         if let Some(info) = info {
-           
             if info.is_finish() {
-                return Ok(info.make_handle().typed::<T>());
+                return Ok(info.make_handle());
             }
-            
             if !info.is_fail() {
-                let mut wait = parking_lot_core::SpinWait::default();
+                let mut wait:SpinWait = Default::default();
                 loop {
                     if info.is_finish() {
-                        return Ok(info.make_handle().typed::<T>());
+                        return Ok(info.make_handle());
                     } else if info.is_fail() {
                         return Err(anyhow!("load fail"));
                     }
@@ -209,11 +211,10 @@ impl AssetServer {
                 }
             }
         }
-        let loader = self.inner.loaders.read().get(&T::TYPE_UUID).ok_or(AssetError::NotFoundLoader)?.clone();
+
+        let loader = self.inner.loaders.read().get(&typ).ok_or(AssetError::NotFoundLoader)?.clone();
         let load_asset = loader.sync_load(world,path,self,params)?;
-        let boxed_asset = load_asset.downcast::<T>().map_err(|_| AssetError::TypeCastError)?;
-        let mut assets = world.get_resource_mut::<Assets<T>>().ok_or(AssetError::TypeCastError)?;
-        let handle = assets.add(*boxed_asset);
+        let handle = loader.add_to_asset(world, load_asset)?;
         let info = Arc::new( AssetInfo::new_id(handle.id, self.inner.life_cycle.sender()));
         info.set_finish();
         self.inner.assets.write().insert(SmolStr::new(path), info);

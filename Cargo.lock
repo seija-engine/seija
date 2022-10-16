@@ -1713,8 +1713,9 @@ checksum = "806de604a37f6d73a83c850af7b3ba33a44f330d12fd5e4ac216645b54da912b"
 [[package]]
 name = "lite-clojure-eval"
 version = "0.1.0"
-source = "git+https://github.com/seija-engine/lite-clojure.git#6d20ba4afa8353d9fbaf8a484d98435df20a7793"
+source = "git+https://github.com/seija-engine/lite-clojure.git#7e4f6a0bfff4596bb76f8d20a82670ed62c3a960"
 dependencies = [
+ "anyhow",
  "env_logger 0.9.1",
  "gc",
  "lite-clojure-parser",
@@ -1723,9 +1724,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "lite-clojure-frp"
+version = "0.1.0"
+source = "git+https://github.com/seija-engine/lite-clojure.git#7e4f6a0bfff4596bb76f8d20a82670ed62c3a960"
+dependencies = [
+ "anyhow",
+ "env_logger 0.9.1",
+ "lite-clojure-eval",
+ "thiserror",
+]
+
+[[package]]
 name = "lite-clojure-parser"
 version = "0.1.0"
-source = "git+https://github.com/seija-engine/lite-clojure.git#6d20ba4afa8353d9fbaf8a484d98435df20a7793"
+source = "git+https://github.com/seija-engine/lite-clojure.git#7e4f6a0bfff4596bb76f8d20a82670ed62c3a960"
 
 [[package]]
 name = "lock_api"
@@ -2611,7 +2623,7 @@ name = "seija-examples"
 version = "0.1.0"
 dependencies = [
  "bevy_ecs",
- "env_logger 0.9.1",
+ "env_logger 0.8.4",
  "glam",
  "lite-clojure-eval",
  "log",
@@ -2696,6 +2708,7 @@ dependencies = [
  "glsl-pack-rtbase",
  "image",
  "lite-clojure-eval",
+ "lite-clojure-frp",
  "log",
  "num_enum",
  "once_cell",

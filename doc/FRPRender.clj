@@ -43,7 +43,7 @@
             targetTexture (dyn-texture dynHdrDesc)
          ]
         (add-node env  DRAW_PASS (env :camera-query) (env :camera-id) [targetTexture] (env :depth) "Foward")
-        (posteffect-stack targetTexture (env :target-view))
+        (post-effect-stack (env :target-view) (env :target-view))
     )
 )
 

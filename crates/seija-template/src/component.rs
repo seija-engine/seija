@@ -51,7 +51,7 @@ impl TComponentManager {
         for centity in entity.children.iter() {
              match centity {
                 TEntityChildren::TEntity(e) => {
-                    self._search_assets(e,all_assets)?;
+                    self._search_assets(&e,all_assets)?;
                 }
                  _ => {},
              }

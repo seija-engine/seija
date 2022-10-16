@@ -115,11 +115,19 @@ impl<'a> FFIFileParser<'a> {
         };
         self.skip_white();
         let fn_name = self.lex_string.take_while(|chr| chr == '(')
-                               .ok_or(ParseError::ErrFnName)?;
+                               .ok_or(ParseError::ErrFnName)?.to_string();
+        self.lex_string.next();
+
+        loop {
+            let mut type_tok = self.next_token(false)?;
+            if type_tok == Token::Struct {
+                type_tok = self.next_token(false)?;
+            }
+        }
         println!("{:?} {}",ret_type,fn_name);
         todo!()
     }
-
+    
     fn next_keyword(&mut self) -> Result<String,ParseError> {
         self.skip_white();
         self.lex_string.take_while(|chr| chr.is_whitespace() || chr == ';')

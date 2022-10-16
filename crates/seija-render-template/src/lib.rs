@@ -96,7 +96,6 @@ impl ITComponentOpt for TComponentMaterialOpt {
     fn search_assets(&self, component: &TComponent) -> Result<Vec<(Uuid,SmolStr)>> {
         if let Some(res_path) = component.attrs.get("res") {
             let real_path = res_path.strip_prefix("res://").ok_or(anyhow!("mesh res path err"))?;
-           
             return Ok(vec![(Material::TYPE_UUID,real_path.into())]);
         }
         Ok(vec![])

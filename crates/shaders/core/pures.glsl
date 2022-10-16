@@ -26,8 +26,8 @@ VSInput texture_vs_main() {
 
 vec4 texture_fs_main(VSInput o) {
   vec4 texColor = texture(sampler2D(tex_mainTexture,tex_mainTextureSampler),o.uv);
-  texColor = texColor * material.color;
-  slot_fs_material(texColor);
+  //texColor = texColor * material.color;
+  //slot_fs_material(texColor);
   return texColor;
 }
 

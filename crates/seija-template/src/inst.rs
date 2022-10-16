@@ -27,7 +27,7 @@ fn instance_entity_sync(world:&mut World,server:&AssetServer,tentity:&TEntity,mg
     for child in tentity.children.iter() {
         match child {
             TEntityChildren::TEntity(childen) => {
-                childrens.push(instance_entity_sync(world,server,childen,mgr,queue,child_tmpl)?);
+                childrens.push(instance_entity_sync(world,server,&childen,mgr,queue,child_tmpl)?);
             },
             TEntityChildren::Template(xml_template) => {
                let handle_id = child_tmpl.get(xml_template.res.as_str()).ok_or(TemplateError::NotFoundChild(xml_template.res.clone()))?.id;
