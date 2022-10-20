@@ -173,6 +173,17 @@
         "backend": ["Camera3D","Transform"],
         "vs": "debug.line_vs_main",
         "fs": "debug.line_fs_main"
+      },
+
+      {
+        "name":"tonemaping",
+        "vertex": {
+          "POSITION": "require",
+          "UV0":"require"
+        },
+        "backend": ["Camera3D","Transform"],
+        "vs": "tonemap.vs_main",
+        "fs": "tonemap.fs_main"
       }
     ]
 }

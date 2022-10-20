@@ -5,6 +5,7 @@ mod script_context;
 mod render_path;
 mod node;
 mod atom;
+mod posteffect_stack;
 mod script_plugin;
 pub mod nodes;
 mod win_event;
@@ -15,6 +16,7 @@ pub use main::{RenderMain};
 use smol_str::SmolStr;
 pub use ubo_array_collect::{UBOArrayCollect};
 pub use node::{NodeCreatorSet,NodeCreatorFn,IUpdateNode,UpdateNodeBox};
+pub use  posteffect_stack::{PostEffectStack};
 
 pub struct RenderScriptPlugin {
     pub node_creators:NodeCreatorSet,

@@ -31,7 +31,7 @@ mod mesh_render;
 mod render_context;
 mod render;
 mod memory;
-pub use rdsl::{RenderScriptPlugin,NodeCreatorFn,NodeCreatorSet,ScriptContext,IUpdateNode,UpdateNodeBox,UBOArrayCollect};
+pub use rdsl::{RenderScriptPlugin,PostEffectStack,NodeCreatorFn,NodeCreatorSet,ScriptContext,IUpdateNode,UpdateNodeBox,UBOArrayCollect};
 pub use graph_setting::{GraphSetting};
 pub use render_context::{RenderContext};
 pub use uniforms::{UniformInfoSet,UniformInfo,UniformIndex};

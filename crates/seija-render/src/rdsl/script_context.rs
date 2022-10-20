@@ -71,11 +71,7 @@ impl ScriptContext {
         }
     }
 
-    pub fn exec_render_start(&mut self,
-        ctx:&mut RenderContext,
-        world:&mut World,
-        main_ctx:&mut MainContext)  {
-        
+    pub fn exec_render_start(&mut self, _ctx:&mut RenderContext, _world:&mut World, main_ctx:&mut MainContext)  {
         if let Err(err) = self.rt.invoke_func("on-render-start", vec![Variable::Map(main_ctx.global_env.clone())]) {
             log::error!("{:?}",err);
         }
