@@ -6,7 +6,10 @@ use seija_transform::Transform;
 use smol_str::SmolStr;
 use wgpu::{Operations, Color, CommandEncoder};
 
-use crate::{IUpdateNode, rdsl::atom::Atom, resource::{RenderResourceId, shape::Quad, Mesh}, material::{Material, MaterialDefineAsset}, RenderContext, pipeline::PipelineCache};
+use crate::{IUpdateNode, rdsl::atom::Atom, 
+    resource::{RenderResourceId, shape::Quad, Mesh}, 
+    material::{Material, MaterialDefineAsset}, RenderContext, pipeline::PipelineCache
+};
 
 use super::{CommonError, create_render_pass};
 #[derive(Default)]

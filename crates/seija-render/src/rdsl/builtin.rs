@@ -14,7 +14,7 @@ use super::atom::Atom;
 use super::main::MainContext;
 use super::node::{NodeCreatorSet, UpdateNodeBox};
 use super::node_list::ScriptNodeList;
-use super::nodes::{TransfromNode, WindowReSizeNode, DrawPassNode, DrawQuadNode};
+use super::nodes::{TransfromNode, WindowReSizeNode, DrawPassNode, DrawQuadNode, UsePostStack};
 use super::render_path::RenderPathDef;
 use super::script_plugin::ScriptPlugin;
 
@@ -27,6 +27,7 @@ pub fn create_builtin_node_set() -> NodeCreatorSet {
     node_set.add::<DrawPassNode>("DRAW_PASS");
     node_set.add::<ShadowNode>("SHADOW_NODE");
     node_set.add::<DrawQuadNode>("DRAW_QUAD");
+    node_set.add::<UsePostStack>("USE_POST_STACK");
     node_set
 }
 

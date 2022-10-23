@@ -23,17 +23,22 @@
     (add-node globalEnv    PBR_CAMERA_EX  "CameraBuffer")
     (add-node globalEnv    PBR_LIGHT      "LightBuffer")
     
-    (add-foward-path globalEnv)
-)
-
-(defn add-foward-path [globalEnv]
     (add-render-path "Foward" {
         :on-start (fn [env] 
             (assoc! env :depth (atom-texture {:format "Depth32Float" :width WINDOW_WIDTH :height WINDOW_HEIGHT}))
-            (add-node env  WINSIZE_TEXTURE [(env :depth) (env :targetView)])
-            (add-node env  DRAW_PASS (env :camera-query) (env :camera-id) [(env :targetView)] (env :depth) "Foward")
-            (println "add foward success")
+            (assoc! env :hdr-texture (atom-texture {:format "Rgba32Float" :width WINDOW_WIDTH :height WINDOW_HEIGHT}))
+            (let [
+                   depth-texture (env :depth)
+                   camera-id (env :camera-id) 
+                   camera-query (env :camera-query)
+                   camera-target (env :targetView)
+                   hdr-texture (env hdr-texture)
+                 ]
+                (add-node env  WINSIZE_TEXTURE [depth-texture camera-target])
+                (add-node env  DRAW_PASS camera-query camera-id [hdr-texture] depth-texture "Foward")
+                (add-node env  USE_POST_STACK camera-id hdr-texture camera-target)
+                (println "add foward success")
+            )
         )
     })
 )
-
