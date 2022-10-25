@@ -6,3 +6,6 @@ edition = "2021"
 
 [dependencies]
 anyhow = "1.0.58"
+toml = "0.5.9"
+serde = "*"
+serde_derive = "*"

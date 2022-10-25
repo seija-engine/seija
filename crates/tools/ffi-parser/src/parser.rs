@@ -1,11 +1,14 @@
+use std::collections::VecDeque;
+
 use crate::{lex_string::LexString, ffi_file::FFIFile};
-use crate::ffi_file::{Stmt,DataType,StructType, StructItem, FunctionDefine};
+use crate::ffi_file::{Stmt,DataType,StructType, StructItem, FunctionDefine, EnumDefine, FuncParam};
 #[derive(Debug)]
 pub enum ParseError {
     EOF,
     ErrType(Token),
     ErrToken(Token),
-    ErrFnName
+    ErrFnName,
+    ErrEnumFormat
 }
 
 #[derive(Debug,PartialEq, Eq)]
@@ -16,29 +19,53 @@ enum Token {
     Typedef,
     Struct,
     Enum,
-    LeftBrace,
-    RightBrace
+    LeftBrace, // {}
+    RightBrace,
+    LeftParent,//(
+    RightParent,
+    Comma,
+    Eq,
+    Const
+}
+
+impl Token {
+    pub fn cast_sym(self) -> Result<String,ParseError> {
+        match self {
+            Token::Symbol(sym) => Ok(sym),
+            _ => Err(ParseError::ErrToken(self))
+        }
+    }
 }
 
 
 
 
 pub struct FFIFileParser<'a> {
-    cache_tokens:Vec<Token>,
+    cache_tokens:VecDeque<Token>,
     lex_string:LexString<'a>
 }
 
 impl<'a> FFIFileParser<'a> {
     pub fn new(file_source:&'a str) -> Self {
         let lexer = LexString::new(file_source, 5);
-        FFIFileParser { cache_tokens:vec![],lex_string:lexer }
+        FFIFileParser { cache_tokens:Default::default(),lex_string:lexer }
     }
 
     pub fn parse(&mut self) -> Result<FFIFile,ParseError> {
         let mut stmt_list:Vec<Stmt> = vec![];
-        while let Ok(v) = self.parse_item() {
-           
-            stmt_list.push(v);
+        
+        loop {
+            match self.parse_item() {
+                Ok(stmt) => {
+                    stmt_list.push(stmt);
+                },
+                Err(ParseError::EOF) => {
+                    break; 
+                }
+                Err(err) => {
+                    eprintln!("parse err:{:?}",err);
+                }
+            }
         }
 
         Ok(FFIFile { stmts:stmt_list} )
@@ -46,30 +73,33 @@ impl<'a> FFIFileParser<'a> {
 
     fn parse_item(&mut self) -> Result<Stmt,ParseError> {
        let tok = self.next_token(false)?;
+       
        match tok {
         Token::Typedef => {
             let next = self.next_token(false)?;
             if next == Token::Struct {
-                let new_name = self.next_keyword()?;
-                let next_tok = self.next_keyword()?;
-                if next_tok == "{" {
+                let new_name = self.next_token(true)?.cast_sym()?;
+                let next_tok = self.next_token(false)?;
+                if next_tok == Token::LeftBrace {
                     let struct_type = self.parse_struct()?;
                     return Ok(Stmt::TypedefStruct(new_name,struct_type));
                 } else {
-                   return Ok(Stmt::TypedefStructName(new_name,next_tok));
+                   return Ok(Stmt::TypedefStructName(new_name,next_tok.cast_sym()?));
                 }
             } else if let Token::Type(typ) = next {
-                let new_name = self.next_keyword()?;
+                let new_name = self.next_token(true)?.cast_sym()?;
                 return Ok(Stmt::Typedef(typ,new_name))
             } else {
                 return Err(ParseError::ErrToken(next));
             }
         },
         Token::Enum => {
-            self.parse_enum();
-            todo!()
+            let enum_define = self.parse_enum()?;
+            
+            return Ok(Stmt::EnumDefine(enum_define));
         }
          tok => {
+           
             let func_define = self.parse_func_define(tok)?;
             return Ok(Stmt::FuncDefine(func_define))
          }
@@ -91,7 +121,7 @@ impl<'a> FFIFileParser<'a> {
                 Token::Symbol(sym) => {DataType::Custom(sym) },
                 tok => { return Err(ParseError::ErrType(tok)); }
             };
-            let item_mame = self.next_keyword()?;
+            let item_mame = self.next_token(true)?.cast_sym()?;
             let item = StructItem { typ:real_type,name:item_mame };
             items.push(item);
         }
@@ -102,37 +132,90 @@ impl<'a> FFIFileParser<'a> {
         Ok(struct_type)
     }
 
-    fn parse_enum(&mut self) {
-
+    fn parse_enum(&mut self) -> Result<EnumDefine,ParseError> {
+        let enum_name = self.next_token(true)?.cast_sym()?;
+        if  self.next_token(false)? != Token::LeftBrace {
+            return Err(ParseError::ErrEnumFormat);
+        }
+        let mut list = vec![];
+        loop {
+           let field_name = self.next_token(true)?.cast_sym()?;
+           //println!("fst {:?}",field_name);
+           if field_name == "}" { break; }
+           
+           let snd_tok = self.next_token(false)?;
+           //println!("snd {:?}",snd_tok);
+           match snd_tok {
+                Token::Eq => {
+                    let value_sym = self.next_token(true)?.cast_sym()?;
+                    list.push((field_name,Some(value_sym)));
+                    let trd_tok = self.next_token(false)?;
+                    //println!("trd_tok:{:?}",&trd_tok);
+                    match trd_tok {
+                        Token::Comma => {},
+                        _ => { break; }
+                    }
+                },
+                Token::Comma => {
+                    list.push((field_name,None));
+                },
+                Token::RightBrace => { break; },
+                other => {
+                    println!("other:{:?}",other);
+                    return Err(ParseError::ErrEnumFormat ); 
+                }
+           }
+        }
+       
+      
+        Ok(EnumDefine { name: enum_name, list })
     }
 
     fn parse_func_define(&mut self,mut tok_typ:Token) -> Result<FunctionDefine,ParseError> {
-        if tok_typ == Token::Struct {tok_typ = self.next_token(false)?; };
+        if tok_typ == Token::Struct {
+            tok_typ = self.next_token(false)?; 
+        };
+
         let ret_type = match tok_typ {
             Token::Type(typ) => { typ },
             Token::Symbol(sym) => { DataType::Custom(sym) },
             tok => {return Err(ParseError::ErrToken(tok)); }
         };
+        println!("ret:{:?}",ret_type);
         self.skip_white();
-        let fn_name = self.lex_string.take_while(|chr| chr == '(')
-                               .ok_or(ParseError::ErrFnName)?.to_string();
+        let fn_name = self.next_token(true)?.cast_sym()?;
         self.lex_string.next();
-
+        let mut params:Vec<FuncParam> = vec![];
         loop {
-            let mut type_tok = self.next_token(false)?;
-            if type_tok == Token::Struct {
-                type_tok = self.next_token(false)?;
+            let mut type_name = self.next_token(false)?;
+            if type_name == Token::Struct || type_name == Token::Const || type_name == Token::Comma {
+                type_name = self.next_token(false)?;
+            }
+            println!("type_name:{:?}",type_name);
+            let param_name = self.next_token(false)?.cast_sym()?;
+            println!("param_name:{:?}",&param_name);
+           
+            
+            params.push(FuncParam {
+                name:param_name,
+                typ:match type_name {
+                    Token::Type(t) => t,
+                    Token::Symbol(s) => DataType::Custom(s),
+                    tok => return Err(ParseError::ErrToken(tok))
+                }
+            });
+            if self.next_token(false)? == Token::RightParent {
+                break;
             }
         }
-        println!("{:?} {}",ret_type,fn_name);
-        todo!()
+      
+        Ok( FunctionDefine {
+            ret_type,
+            name:fn_name,
+            params
+        })
     }
-    
-    fn next_keyword(&mut self) -> Result<String,ParseError> {
-        self.skip_white();
-        self.lex_string.take_while(|chr| chr.is_whitespace() || chr == ';')
-                       .map(|v|v.to_string()).ok_or(ParseError::EOF)
-    }
+
 
     fn skip_white(&mut self) {
         while let Some(chr) = self.lex_string.lookahead(1) {
@@ -144,9 +227,29 @@ impl<'a> FFIFileParser<'a> {
         }
     }
 
+
     fn next_token(&mut self,only_sym:bool) -> Result<Token,ParseError> {
+        if let Some(cache_tok) = self.cache_tokens.pop_front() {
+            return Ok(cache_tok);
+        }
         self.skip_white();
-        let key_string = self.lex_string.take_while(|chr| chr.is_whitespace());
+        if let Some(chr) = self.lex_string.lookahead(1) {
+           let ret = match chr {
+                '{' =>  Some(Token::LeftBrace),
+                '}' => Some(Token::RightBrace),
+                ',' => Some(Token::Comma),
+                '=' => Some(Token::Eq),
+                '(' => Some(Token::LeftParent),
+                ')' =>Some(Token::RightParent),
+                 _ => { None }
+            };
+            if let Some(tok) = ret {
+                self.lex_string.next();
+                return Ok(tok);
+            }
+        }
+        let key_string = self.lex_string.take_while(|chr| chr.is_whitespace() || chr == '(' || chr == ',' || chr == '(' || chr == ')');
+       
         if let Some(keyword) = key_string {
            if only_sym {
               return Ok(Token::Symbol(keyword.to_string()));
@@ -154,21 +257,23 @@ impl<'a> FFIFileParser<'a> {
            let tok = match keyword {
               "typedef" => Token::Typedef,
               "struct" => Token::Struct,
+              "const" => Token::Const,
               "uint32_t" => Token::Type(DataType::U32),
               "uint8_t" => Token::Type(DataType::U8),
               "float" => Token::Type(DataType::Float),
               "bool" => Token::Type(DataType::Bool),
               "String" => Token::Type(DataType::String),
               "void" => Token::Type(DataType::Void),
-              "{" => Token::LeftBrace,
-              "}" => Token::RightBrace,
               "enum" => Token::Enum,
+              
               sym_str => Token::Symbol(sym_str.to_string()),
            };
            return Ok(tok);
         }
         Err(ParseError::EOF)
     }
+
+   
 
 
 }
@@ -183,7 +288,16 @@ fn test_parse() {
         bool vsync;
         struct String title;
     } WindowConfig;
-    void core_add_module(uint8_t *app_ptr);
+   
+    enum WindowMode {
+        Windowed,
+        BorderlessFullscreen = 2,
+        Fullscreen,
+    };
+
+    void core_add_module(uint8_t *app_ptr,String app_string);
+
+    void app_set_fps(struct App *app_ptr, uint32_t fps);
     "#;
     let mut parser = FFIFileParser::new(code_string);
     let stmt = parser.parse();

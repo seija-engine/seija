@@ -1023,6 +1023,9 @@ name = "ffi-parser"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "serde",
+ "serde_derive",
+ "toml",
 ]
 
 [[package]]
@@ -2623,7 +2626,7 @@ name = "seija-examples"
 version = "0.1.0"
 dependencies = [
  "bevy_ecs",
- "env_logger 0.8.4",
+ "env_logger 0.9.1",
  "glam",
  "lite-clojure-eval",
  "log",

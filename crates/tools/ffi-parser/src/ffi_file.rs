@@ -16,14 +16,20 @@ pub enum Stmt {
    Typedef(DataType,String),
    TypedefStructName(String,String),
    TypedefStruct(String,StructType),
-   FuncDefine(FunctionDefine)
+   FuncDefine(FunctionDefine),
+   EnumDefine(EnumDefine)
 }
 #[derive(Debug)]
 pub struct FunctionDefine {
    pub ret_type:DataType,
-   pub name:String
+   pub name:String,
+   pub params:Vec<FuncParam>
 }
-
+#[derive(Debug)]
+pub struct FuncParam {
+    pub name:String,
+    pub typ:DataType
+}
 
 #[derive(Debug)]
 pub struct StructItem {
@@ -34,6 +40,13 @@ pub struct StructItem {
 pub struct StructType {
     pub items:Vec<StructItem>,
 }
+
+#[derive(Debug)]
+pub struct EnumDefine {
+   pub name:String,
+   pub list:Vec<(String,Option<String>)>
+}
+
 #[derive(Debug)]
 pub struct FFIFile {
     pub stmts:Vec<Stmt>   
