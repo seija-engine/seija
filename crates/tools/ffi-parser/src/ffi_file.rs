@@ -3,11 +3,18 @@
 pub enum DataType {
     U8,
     U32,
+    U64,
     Bool,
     String,
     Float,
     Custom(String),
     Void
+}
+
+#[derive(Debug)]
+pub struct DataTypeFull {
+    pub typ:DataType,
+    pub is_ptr:bool
 }
 
 
@@ -21,19 +28,19 @@ pub enum Stmt {
 }
 #[derive(Debug)]
 pub struct FunctionDefine {
-   pub ret_type:DataType,
+   pub ret_type:DataTypeFull,
    pub name:String,
    pub params:Vec<FuncParam>
 }
 #[derive(Debug)]
 pub struct FuncParam {
     pub name:String,
-    pub typ:DataType
+    pub typ:DataTypeFull
 }
 
 #[derive(Debug)]
 pub struct StructItem {
-    pub typ:DataType,
+    pub typ:DataTypeFull,
     pub name:String
 }
 #[derive(Debug)]
@@ -49,5 +56,6 @@ pub struct EnumDefine {
 
 #[derive(Debug)]
 pub struct FFIFile {
+    pub name:String,
     pub stmts:Vec<Stmt>   
 }

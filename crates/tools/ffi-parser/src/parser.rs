@@ -1,7 +1,7 @@
 use std::collections::VecDeque;
 
 use crate::{lex_string::LexString, ffi_file::FFIFile};
-use crate::ffi_file::{Stmt,DataType,StructType, StructItem, FunctionDefine, EnumDefine, FuncParam};
+use crate::ffi_file::{Stmt,DataType,StructType, StructItem, FunctionDefine, EnumDefine, FuncParam, DataTypeFull};
 #[derive(Debug)]
 pub enum ParseError {
     EOF,
@@ -12,7 +12,7 @@ pub enum ParseError {
 }
 
 #[derive(Debug,PartialEq, Eq)]
-enum Token {
+pub enum Token {
     Type(DataType),
     Symbol(String),
     Keyword(String),
@@ -41,14 +41,15 @@ impl Token {
 
 
 pub struct FFIFileParser<'a> {
+    name:String,
     cache_tokens:VecDeque<Token>,
     lex_string:LexString<'a>
 }
 
 impl<'a> FFIFileParser<'a> {
-    pub fn new(file_source:&'a str) -> Self {
+    pub fn new(file_source:&'a str,name:String) -> Self {
         let lexer = LexString::new(file_source, 5);
-        FFIFileParser { cache_tokens:Default::default(),lex_string:lexer }
+        FFIFileParser { name, cache_tokens:Default::default(),lex_string:lexer }
     }
 
     pub fn parse(&mut self) -> Result<FFIFile,ParseError> {
@@ -68,7 +69,7 @@ impl<'a> FFIFileParser<'a> {
             }
         }
 
-        Ok(FFIFile { stmts:stmt_list} )
+        Ok(FFIFile {name:self.name.clone(), stmts:stmt_list} )
     }
 
     fn parse_item(&mut self) -> Result<Stmt,ParseError> {
@@ -121,8 +122,11 @@ impl<'a> FFIFileParser<'a> {
                 Token::Symbol(sym) => {DataType::Custom(sym) },
                 tok => { return Err(ParseError::ErrType(tok)); }
             };
+            let full_type = self.fill_data_type(real_type);
+            
+
             let item_mame = self.next_token(true)?.cast_sym()?;
-            let item = StructItem { typ:real_type,name:item_mame };
+            let item = StructItem { typ:full_type,name:item_mame };
             items.push(item);
         }
         if let Some(_) = self.lex_string.take_while(|chr| chr== ';') {
@@ -132,6 +136,17 @@ impl<'a> FFIFileParser<'a> {
         Ok(struct_type)
     }
 
+    fn fill_data_type(&mut self,typ:DataType) -> DataTypeFull {
+        self.skip_white();
+        let mut is_ptr = false;
+        if self.lex_string.lookahead(1) == Some('*') {
+            self.lex_string.next();
+            is_ptr = true;
+        };
+
+        DataTypeFull { typ, is_ptr }
+    }
+
     fn parse_enum(&mut self) -> Result<EnumDefine,ParseError> {
         let enum_name = self.next_token(true)?.cast_sym()?;
         if  self.next_token(false)? != Token::LeftBrace {
@@ -139,10 +154,10 @@ impl<'a> FFIFileParser<'a> {
         }
         let mut list = vec![];
         loop {
-           let field_name = self.next_token(true)?.cast_sym()?;
+           let fst_tok = self.next_token(true)?;
            //println!("fst {:?}",field_name);
-           if field_name == "}" { break; }
-           
+           if fst_tok == Token::RightBrace { break; }
+           let field_name = fst_tok.cast_sym()?;
            let snd_tok = self.next_token(false)?;
            //println!("snd {:?}",snd_tok);
            match snd_tok {
@@ -161,7 +176,7 @@ impl<'a> FFIFileParser<'a> {
                 },
                 Token::RightBrace => { break; },
                 other => {
-                    println!("other:{:?}",other);
+                    //println!("other:{:?}",other);
                     return Err(ParseError::ErrEnumFormat ); 
                 }
            }
@@ -172,7 +187,8 @@ impl<'a> FFIFileParser<'a> {
     }
 
     fn parse_func_define(&mut self,mut tok_typ:Token) -> Result<FunctionDefine,ParseError> {
-        if tok_typ == Token::Struct {
+        self.skip_white();
+        if tok_typ == Token::Struct || tok_typ == Token::Const {
             tok_typ = self.next_token(false)?; 
         };
 
@@ -181,36 +197,49 @@ impl<'a> FFIFileParser<'a> {
             Token::Symbol(sym) => { DataType::Custom(sym) },
             tok => {return Err(ParseError::ErrToken(tok)); }
         };
-        println!("ret:{:?}",ret_type);
+        let full_type = self.fill_data_type(ret_type);
+        //println!("ret:{:?}",ret_type);
         self.skip_white();
         let fn_name = self.next_token(true)?.cast_sym()?;
         self.lex_string.next();
         let mut params:Vec<FuncParam> = vec![];
         loop {
             let mut type_name = self.next_token(false)?;
+            if type_name == Token::RightParent {
+                break;
+            }
+            if type_name == Token::Type(DataType::Void) {
+                continue;
+            }
             if type_name == Token::Struct || type_name == Token::Const || type_name == Token::Comma {
                 type_name = self.next_token(false)?;
+                if type_name == Token::Struct || type_name == Token::Const {
+                    type_name = self.next_token(false)?;
+                }
             }
-            println!("type_name:{:?}",type_name);
-            let param_name = self.next_token(false)?.cast_sym()?;
-            println!("param_name:{:?}",&param_name);
-           
+            let param_type = match type_name {
+                Token::Type(t) => t,
+                Token::Symbol(s) => DataType::Custom(s),
+                tok => return Err(ParseError::ErrToken(tok))
+            };
+            let full_type = self.fill_data_type(param_type);
             
+            let param_name = self.next_token(false)?.cast_sym()?;
+            //println!("param_name:{:?}",&param_name);
+           
+            //println!("type_name:{:?}",type_name);
+           
             params.push(FuncParam {
                 name:param_name,
-                typ:match type_name {
-                    Token::Type(t) => t,
-                    Token::Symbol(s) => DataType::Custom(s),
-                    tok => return Err(ParseError::ErrToken(tok))
-                }
+                typ:full_type
             });
             if self.next_token(false)? == Token::RightParent {
                 break;
             }
         }
-      
+        
         Ok( FunctionDefine {
-            ret_type,
+            ret_type:full_type,
             name:fn_name,
             params
         })
@@ -248,7 +277,8 @@ impl<'a> FFIFileParser<'a> {
                 return Ok(tok);
             }
         }
-        let key_string = self.lex_string.take_while(|chr| chr.is_whitespace() || chr == '(' || chr == ',' || chr == '(' || chr == ')');
+        let key_string = self.lex_string.take_while(|chr| 
+            chr.is_whitespace() || chr == '(' || chr == ',' || chr == '(' || chr == ')' || chr == ';');
        
         if let Some(keyword) = key_string {
            if only_sym {
@@ -259,6 +289,7 @@ impl<'a> FFIFileParser<'a> {
               "struct" => Token::Struct,
               "const" => Token::Const,
               "uint32_t" => Token::Type(DataType::U32),
+              "uint64_t" => Token::Type(DataType::U64),
               "uint8_t" => Token::Type(DataType::U8),
               "float" => Token::Type(DataType::Float),
               "bool" => Token::Type(DataType::Bool),
@@ -291,7 +322,7 @@ fn test_parse() {
    
     enum WindowMode {
         Windowed,
-        BorderlessFullscreen = 2,
+        BorderlessFullscreen,
         Fullscreen,
     };
 
@@ -299,7 +330,7 @@ fn test_parse() {
 
     void app_set_fps(struct App *app_ptr, uint32_t fps);
     "#;
-    let mut parser = FFIFileParser::new(code_string);
+    let mut parser = FFIFileParser::new(code_string,"test".into());
     let stmt = parser.parse();
     dbg!(&stmt);
    
