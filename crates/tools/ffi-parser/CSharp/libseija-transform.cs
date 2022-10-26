@@ -9,16 +9,16 @@ public struct Transform {
     public TransformMatrix  global;
 };
 
-class libseija_transform {
+public class libseija_transform {
 
     [DllImport("lib_seija.dll")]
-    public static extern void tranrform_add_module();
+    public static extern void tranrform_add_module(IntPtr app_ptr);
 
     [DllImport("lib_seija.dll")]
-    public static extern void transform_world_entity_add();
+    public static extern void transform_world_entity_add(IntPtr world,uint eid,IntPtr t);
 
     [DllImport("lib_seija.dll")]
-    public static extern IntPtr transform_world_entity_get();
+    public static extern IntPtr transform_world_entity_get(IntPtr world,uint eid);
 
 
 }

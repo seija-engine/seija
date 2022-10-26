@@ -7,7 +7,7 @@ pub enum ParseError {
     EOF,
     ErrType(Token),
     ErrToken(Token),
-    ErrFnName,
+    //ErrFnName,
     ErrEnumFormat
 }
 
@@ -15,7 +15,7 @@ pub enum ParseError {
 pub enum Token {
     Type(DataType),
     Symbol(String),
-    Keyword(String),
+    //Keyword(String),
     Typedef,
     Struct,
     Enum,
@@ -32,7 +32,9 @@ impl Token {
     pub fn cast_sym(self) -> Result<String,ParseError> {
         match self {
             Token::Symbol(sym) => Ok(sym),
-            _ => Err(ParseError::ErrToken(self))
+            _ => {
+                Err(ParseError::ErrToken(self))
+            }
         }
     }
 }
@@ -80,7 +82,7 @@ impl<'a> FFIFileParser<'a> {
             let next = self.next_token(false)?;
             if next == Token::Struct {
                 let new_name = self.next_token(true)?.cast_sym()?;
-                let next_tok = self.next_token(false)?;
+                let next_tok = self.next_token(true)?;
                 if next_tok == Token::LeftBrace {
                     let struct_type = self.parse_struct()?;
                     return Ok(Stmt::TypedefStruct(new_name,struct_type));
@@ -175,7 +177,7 @@ impl<'a> FFIFileParser<'a> {
                     list.push((field_name,None));
                 },
                 Token::RightBrace => { break; },
-                other => {
+                _ => {
                     //println!("other:{:?}",other);
                     return Err(ParseError::ErrEnumFormat ); 
                 }

@@ -70,7 +70,7 @@ impl IGenerator for CSharpGen {
         let mut output = String::default();
         CSharpGen::on_process_enums(&mut output, ffi_file)?;
         CSharpGen::on_process_structs(&mut output, ffi_file)?;
-        output.write_str("class ")?;
+        output.write_str("public class ")?;
         output.write_str(real_class_name.as_str())?;
         output.write_str(" {\r\n\r\n")?;
         for stmt in ffi_file.stmts.iter() {
@@ -82,7 +82,15 @@ impl IGenerator for CSharpGen {
                     output.write_str(" ")?;
                     output.write_str(func_def.name.as_str())?;
                     output.write_char('(')?;
-
+                    for idx in 0..func_def.params.len() {
+                        let param = &func_def.params[idx];
+                        Self::write_type(&mut output, &param.typ)?;
+                        output.write_str(" ")?;
+                        output.write_str(&param.name)?;
+                        if idx < func_def.params.len() - 1 {
+                            output.write_char(',')?;
+                        }
+                    }
                     output.write_str(");\r\n")?;
                     //let func_s = format!("{:?}",func_def);
                     //output.write_str(&func_s)?;
