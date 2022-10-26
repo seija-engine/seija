@@ -1,10 +1,11 @@
-use std::{sync::Arc, path::Path};
-
+use std::{sync::Arc};
+use crate::pipeline::{PipelineKey,PipelineCache};
+use fnv::FnvHasher;
 use seija_asset::AssetServer;
-use wgpu::{CommandEncoder, Device};
-
-use crate::{ material::{MaterialSystem, PassDef}, 
-resource::RenderResources,  rt_shaders::RuntimeShaderInfo, uniforms::{UniformContext}, graph_setting::GraphSetting};
+use wgpu::{CommandEncoder, Device, TextureFormat};
+use std::hash::{Hash,Hasher};
+use crate::{ material::{MaterialSystem, PassDef, MaterialDef}, 
+resource::{RenderResources, Mesh},  rt_shaders::RuntimeShaderInfo, uniforms::{UniformContext}, graph_setting::GraphSetting, RenderConfig};
 
 unsafe impl Send for RenderContext {}
 unsafe impl Sync for RenderContext {}
@@ -16,6 +17,7 @@ pub struct RenderContext {
     pub shaders:RuntimeShaderInfo,
     pub ubo_ctx:UniformContext,
     pub setting:Arc<GraphSetting>,
+    pub pipeline_cache:PipelineCache,
     pub frame_draw_pass:u32,
 }
 
@@ -31,9 +33,9 @@ impl RenderContext {
         Some(ret)
     }
 
-    pub fn new<P:AsRef<Path>>(device:Arc<Device>,config_path:P,setting:Arc<GraphSetting>,assets:&AssetServer) -> Self {
+    pub fn new(device:Arc<Device>,config:Arc<RenderConfig>,assets:&AssetServer) -> Self {
         let mut shaders = RuntimeShaderInfo::default();
-        shaders.load(config_path);
+        shaders.load(&config.config_path);
         let ctx = RenderContext {
             device:device.clone(),
             command_encoder:None,
@@ -41,11 +43,24 @@ impl RenderContext {
             mat_system:MaterialSystem::new(&device),
             shaders,
             ubo_ctx:UniformContext::default(),
-            setting,
-            frame_draw_pass:0
+            setting:config.setting.clone(),
+            frame_draw_pass:0,
+            pipeline_cache:PipelineCache::new(config)
         };
        
          
         ctx
+    }
+
+    pub fn build_pipeine(&mut self,mat_def:&MaterialDef,mesh:&Mesh,formats:&Vec<TextureFormat>) {
+        let mut hasher = FnvHasher::default();
+        PipelineKey(mat_def.name.as_str(),mesh.layout_hash_u64(),formats).hash(&mut hasher);
+        let key = hasher.finish();
+        if !self.pipeline_cache.cache_pipelines.contains_key(&key) {
+            if let Some(pipes)  = self.pipeline_cache.compile_pipelines(mesh, mat_def,formats,self) {
+                log::info!("create pipeline success {}",mat_def.name.as_str());
+                self.pipeline_cache.cache_pipelines.insert(key, pipes);
+            }
+        }
     }
 }

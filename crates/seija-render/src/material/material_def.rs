@@ -43,7 +43,7 @@ pub struct PassDef {
 
 #[derive(Debug)]
 pub struct TargetInfo {
-    format:wgpu::TextureFormat,
+    format:Option<wgpu::TextureFormat>,
     blend:Option<wgpu::BlendState>,
     write_mask:wgpu::ColorWrite
 }
@@ -237,7 +237,7 @@ impl PassDef {
         let mut color_targets:Vec<wgpu::ColorTargetState> = vec![];
         for target in self.targets.iter() {
             let target = wgpu::ColorTargetState {
-                format: target.format.clone(),
+                format:target.format.unwrap_or(wgpu::TextureFormat::Bgra8Unorm),
                 blend: target.blend.clone(),
                 write_mask: target.write_mask.clone(),
             };
@@ -253,10 +253,10 @@ impl TryFrom<&Value> for TargetInfo {
         let mut default_target = TargetInfo::default();
 
         let value_map = value.as_object().ok_or(())?;
-        let str_format = value_map.get(":format").and_then(Value::as_str).ok_or(())?;
-        let sformat = STextureFormat::try_from(str_format)?;
-        
-        default_target.format = sformat.0;
+        if let Some(str_format) = value_map.get(":format").and_then(Value::as_str) {
+            let sformat =  STextureFormat::try_from(str_format)?;
+            default_target.format = Some(sformat.0);
+        }
         if let Some(blend) = value_map.get(":blend") {
             if blend.is_null() {
                 default_target.blend = None;
@@ -271,7 +271,7 @@ impl TryFrom<&Value> for TargetInfo {
 impl Default for TargetInfo {
     fn default() -> Self {
         Self { 
-             format: wgpu::TextureFormat::Bgra8Unorm,
+             format: None,
              blend: Some(wgpu::BlendState {
                 color: wgpu::BlendComponent {
                     src_factor: wgpu::BlendFactor::SrcAlpha,

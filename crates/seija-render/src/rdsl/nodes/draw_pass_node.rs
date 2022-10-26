@@ -2,10 +2,10 @@ use bevy_ecs::prelude::{World, Entity};
 use lite_clojure_eval::Variable;
 use anyhow::{Result};
 use seija_asset::{Handle, Assets};
-use wgpu::{Operations, Color, CommandEncoder};
+use wgpu::{Operations, Color, CommandEncoder, TextureFormat};
 use crate::{IUpdateNode, RenderContext, query::QuerySystem, 
             resource::{Mesh, RenderResourceId, RenderResources}, 
-            material::{Material}, pipeline::PipelineCache, rdsl::atom::Atom};
+            material::{Material}, rdsl::atom::Atom};
 
 #[derive(Debug,PartialEq, Eq)] 
 pub enum PassError {
@@ -23,12 +23,14 @@ pub enum PassError {
 pub struct DrawPassNode {
     query_index:usize,
     camera_entity:Option<Entity>,
-    textures:Vec<*mut Atom<RenderResourceId>>,
+    
     depth:Option<*mut Atom<RenderResourceId>>,
     pass_name:String,
 
     operations:Operations<Color>,
-
+    textures:Vec<*mut Atom<RenderResourceId>>,
+    target_formats:Vec<TextureFormat>,
+    param_dirty:bool
 }
 
 impl Default for DrawPassNode {
@@ -43,6 +45,8 @@ impl Default for DrawPassNode {
                 load:wgpu::LoadOp::Clear(Color {r:0f64,g:0f64,b:0f64,a:1f64 }),
                 store:true  
             },
+            target_formats:vec![],
+            param_dirty:true
         }
     }
 }
@@ -70,8 +74,20 @@ impl IUpdateNode for DrawPassNode {
         if let Some(pass_name) = params[4].cast_string() {
             self.pass_name = pass_name.borrow().clone();
         }
-
+        self.param_dirty = true;
         Ok(())
+    }
+
+    fn prepare(&mut self,world:&mut World,ctx:&mut RenderContext) {
+      if !self.param_dirty { return; }
+      self.target_formats.clear();
+      self.param_dirty = false;
+      for tex_resid in self.textures.iter() {
+        let resid = unsafe { &**tex_resid }.inner();
+        if let Some(format) = ctx.resources.get_texture_format(resid,world) {
+            self.target_formats.push(format);
+        }
+      }
     }
 
     fn update(&mut self,world:&mut World,ctx:&mut RenderContext) {
@@ -98,11 +114,17 @@ impl DrawPassNode {
         let materials = world.get_resource::<Assets<Material>>().unwrap();
        
         let query_system = world.get_resource::<QuerySystem>().unwrap();
-        let pipeline_cahce = world.get_resource::<PipelineCache>().unwrap();
         let view_query = &query_system.querys[self.query_index];
         
+        for entity in view_query.list.read().iter() {
+            if let Ok((hmesh,hmat)) = render_query.get(world, *entity) { 
+                let mesh = meshs.get(&hmesh.id).ok_or(PassError::MissMesh)?;
+                let material = materials.get(&hmat.id).ok_or(PassError::MissMaterial)?;
+                ctx.build_pipeine(&material.def, mesh,&self.target_formats);
+            }
+        }
+
         let mut draw_count:u32 = 0;
-       
         let mut render_pass = self.create_render_pass(&ctx.resources,  command)?;
        
         for entity in view_query.list.read().iter() {
@@ -111,16 +133,16 @@ impl DrawPassNode {
                 let material = materials.get(&hmat.id).ok_or(PassError::MissMaterial)?;
                 
                 if !material.is_ready(&ctx.resources) { continue }
-                
-                if let Some(pipelines)  = pipeline_cahce.get_pipeline(material.def.name.as_str(), mesh) {
+                let pipelines = ctx.pipeline_cache.get_pipeline(material.def.name.as_str(), mesh,&self.target_formats);
+                if let Some(pipelines) = pipelines {
                     if let Some(mesh_buffer_id)  = ctx.resources.get_render_resource(&hmesh.id, 0) {
-                        for pipeline in pipelines.pipelines.iter() {
-
+                       
+                        for pipeline in pipelines.pipelines.iter() { 
                             if pipeline.tag != self.pass_name   {
                                  //log::warn!("skip tag :{}",&pipeline.tag);
                                  continue; 
                             }
-                           
+                            
                             let vert_buffer = ctx.resources.get_buffer_by_resid(&mesh_buffer_id).unwrap();
                             let oset_index = pipeline.set_binds(self.camera_entity, entity, &mut render_pass, &ctx.ubo_ctx);
                             if oset_index.is_none()  { continue }

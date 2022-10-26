@@ -8,8 +8,7 @@ use seija_asset::add_to_asset_type;
 use seija_asset::downcast_rs::DowncastSync;
 use seija_asset::{async_trait::async_trait, IAssetLoader};
 use seija_asset::{
-    AssetDynamic, AssetLoaderParams, AssetRequest, AssetServer, AsyncLoadMode, HandleUntyped, Assets,
-    errors::AssetError
+    AssetDynamic, AssetLoaderParams, AssetRequest, AssetServer, AsyncLoadMode, HandleUntyped
 };
 use seija_core::anyhow::{anyhow, Result};
 use seija_core::smol;

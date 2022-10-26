@@ -4,11 +4,11 @@ use anyhow::{Result,anyhow, Context};
 use seija_asset::{Assets, Handle, AssetServer};
 use seija_transform::Transform;
 use smol_str::SmolStr;
-use wgpu::{Operations, Color, CommandEncoder};
+use wgpu::{Operations, Color, CommandEncoder, TextureFormat};
 
 use crate::{IUpdateNode, rdsl::atom::Atom, 
     resource::{RenderResourceId, shape::Quad, Mesh}, 
-    material::{Material, MaterialDefineAsset}, RenderContext, pipeline::PipelineCache
+    material::{Material, MaterialDefineAsset}, RenderContext
 };
 
 use super::{CommonError, create_render_pass};
@@ -18,6 +18,8 @@ pub struct DrawQuadNode {
     textures:Vec<*mut Atom<RenderResourceId>>,
     depth:Option<*mut Atom<RenderResourceId>>,
     mat_textures:Vec<*mut Atom<RenderResourceId>>,
+    target_formats:Vec<TextureFormat>,
+    param_dirty:bool,
     operations:Operations<Color>,
     pass_index:i32,
     quad_id:Option<Entity>
@@ -52,6 +54,7 @@ impl IUpdateNode for DrawQuadNode {
         } else {
             self.pass_index = -1;
         }
+        self.param_dirty = true;
         Ok(())
     }
 
@@ -89,6 +92,18 @@ impl IUpdateNode for DrawQuadNode {
         Ok(())
     }
 
+    fn prepare(&mut self,world:&mut World,ctx:&mut RenderContext) {
+      if !self.param_dirty { return; }
+      self.target_formats.clear();
+      self.param_dirty = false;
+      for tex_resid in self.textures.iter() {
+        let resid = unsafe { &**tex_resid }.inner();
+        if let Some(format) = ctx.resources.get_texture_format(resid,world) {
+            self.target_formats.push(format);
+        }
+      }
+    }
+
     fn update(&mut self,world:&mut World,ctx:&mut crate::RenderContext) {
         let mut command = ctx.command_encoder.take().unwrap();
         match self.draw(world, ctx, &mut command) {
@@ -108,7 +123,6 @@ impl DrawQuadNode {
         let mut draw_count:u32 = 0;
         let meshs = world.get_resource::<Assets<Mesh>>().unwrap();
         let materials = world.get_resource::<Assets<Material>>().unwrap();
-        let pipeline_cahce = world.get_resource::<PipelineCache>().unwrap();
         if let Some(quad_entity) = self.quad_id {
             let quad_ref = world.entity(quad_entity);
             let hmesh = quad_ref.get::<Handle<Mesh>>().ok_or(CommonError::MissMesh)?;
@@ -119,8 +133,7 @@ impl DrawQuadNode {
             if !material.is_ready(&ctx.resources) { return Ok(0); }
             
             let mut render_pass = create_render_pass(&self.textures, self.operations, self.depth, &ctx.resources, command)?;
-            if let Some(pipelines)  = pipeline_cahce.get_pipeline(&material.def.name, mesh) {
-              
+            if let Some(pipelines)  = ctx.pipeline_cache.get_pipeline(&material.def.name, mesh,&self.target_formats) {
                 if let Some(mesh_buffer_id)  = ctx.resources.get_render_resource(&hmesh.id, 0) {
                     let mut cur_pass_index = 0;
                     
@@ -154,7 +167,9 @@ impl DrawQuadNode {
                         }
                         draw_count += 1;
                     }
+                   
                 }
+                
             }
         }
         Ok(draw_count)

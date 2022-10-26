@@ -1,5 +1,4 @@
 use core::slice;
-
 use std::collections::HashSet;
 use std::io;
 use std::hash::{Hash, Hasher};
@@ -16,7 +15,7 @@ use wgpu::{DepthStencilState, Device,
           FragmentState, MultisampleState, PipelineLayout, 
           PipelineLayoutDescriptor, 
           RenderPipelineDescriptor, ShaderModule, 
-          ShaderModuleDescriptor, StencilState, VertexState};
+          ShaderModuleDescriptor, StencilState, VertexState, TextureFormat};
 use crate::rt_shaders::RuntimeShaderInfo;
 use crate::uniforms::{UBOApplyType, UniformContext};
 use crate::{RenderContext, RenderConfig, GraphSetting, UniformIndex};
@@ -27,7 +26,7 @@ use seija_core::anyhow::{Result,anyhow};
 
 
 #[derive(Hash,PartialEq, Eq,Debug)]
-pub struct PipelineKey<'a>(&'a str,u64);
+pub struct PipelineKey<'a>(pub &'a str,pub u64,pub &'a Vec<wgpu::TextureFormat>);
 
 pub struct RenderPipelines {
    pub pipelines:Vec<RenderPipeline>
@@ -75,11 +74,12 @@ impl RenderPipeline {
 #[derive(Default)]
 pub struct PipelineCache {
     cfg:Arc<RenderConfig>,
-    cache_pipelines:FnvHashMap<u64,RenderPipelines>
+    pub(crate) cache_pipelines:FnvHashMap<u64,RenderPipelines>
 }
 
 impl PipelineCache {
     pub fn new(cfg:Arc<RenderConfig>) -> Self {
+        
         PipelineCache { cache_pipelines: Default::default(),cfg }
     }
 }
@@ -87,34 +87,20 @@ impl PipelineCache {
 
 impl PipelineCache {
 
+   
 
-    pub fn get_pipeline(&self,def_name:&str,mesh:&Mesh) -> Option<&RenderPipelines> {
+    pub fn get_pipeline(&self,def_name:&str,mesh:&Mesh,formats:&Vec<TextureFormat>) -> Option<&RenderPipelines> {
         let mut hasher = FnvHasher::default();
-        PipelineKey(def_name,mesh.layout_hash_u64()).hash(&mut hasher);
+        PipelineKey(def_name,mesh.layout_hash_u64(),formats).hash(&mut hasher);
         let key = hasher.finish();
         self.cache_pipelines.get(&key)
     }
 
-    pub fn update(&mut self,mesh:&Mesh,mat_def:&MaterialDef,ctx:&RenderContext) {
-        let mut hasher = FnvHasher::default();
-        PipelineKey(mat_def.name.as_str(),mesh.layout_hash_u64()).hash(&mut hasher);
-        let key = hasher.finish();
-        if !self.cache_pipelines.contains_key(&key) {
-            if let Some(pipes)  = self.compile_pipelines(mesh, mat_def,ctx) {
-                log::info!("create pipeline success {}",&mat_def.name);
-                self.cache_pipelines.insert(key, pipes);
-            }
-            
-        }
-    }
-
-    
-
-    fn compile_pipelines<'m>(&mut self,mesh:&Mesh,mat_def:&'m MaterialDef,ctx:&RenderContext) -> Option<RenderPipelines> {
+    pub fn compile_pipelines<'m>(&self,mesh:&Mesh,mat_def:&'m MaterialDef,formats:&Vec<TextureFormat>,ctx:&RenderContext) -> Option<RenderPipelines> {
         let mut pipes:Vec<RenderPipeline> = Vec::new();
       
         for pass in  mat_def.pass_list.iter() {
-            match self.compile_pipeline(mesh,pass,ctx,mat_def) {
+            match self.compile_pipeline(mesh,pass,ctx,mat_def,formats) {
                 Ok(None) => {
                     log::info!("wait create {}",mat_def.name.as_str());
                     return None;
@@ -131,10 +117,11 @@ impl PipelineCache {
         Some(RenderPipelines::new(pipes))
     }
 
-    fn compile_pipeline(&mut self,
+    fn compile_pipeline(&self,
                         mesh:&Mesh,pass:&PassDef,
                         ctx:&RenderContext,
-                        mat_def:&MaterialDef) -> Result<Option<RenderPipeline>> {
+                        mat_def:&MaterialDef,
+                        formats:&Vec<TextureFormat>) -> Result<Option<RenderPipeline>> {
         let mut cur_primstate = mesh.primitive_state().clone();
         cur_primstate.cull_mode = (&pass.cull).into();
         cur_primstate.front_face = pass.front_face.0;
@@ -172,8 +159,19 @@ impl PipelineCache {
       let pipeline_layout = self.create_pipeline_layout(ctx,pass,mat_def)?;
       if pipeline_layout.is_none() { return Ok(None); }
       
-      let targets = pass.get_color_targets();
-
+       let mut targets = pass.get_color_targets();
+       for idx in 0..formats.len() {
+         if idx <= targets.len() {
+            targets[idx].format = formats[idx];
+         } else {
+            let target = wgpu::ColorTargetState {
+                format:formats[idx],
+                blend: Default::default(),
+                write_mask: Default::default(),
+            };
+            targets.push(target);
+         }
+       }
        let render_pipeline_desc = RenderPipelineDescriptor {
            label:None,
            layout:pipeline_layout.as_ref(),
@@ -226,7 +224,7 @@ impl PipelineCache {
         }
     }
 
-    fn create_pipeline_layout(&mut self,ctx:&RenderContext,pass_def:&PassDef,mat_def:&MaterialDef) -> Result<Option<PipelineLayout>> {
+    fn create_pipeline_layout(&self,ctx:&RenderContext,pass_def:&PassDef,mat_def:&MaterialDef) -> Result<Option<PipelineLayout>> {
        
         let mut layouts = ctx.create_bind_group_layouts(pass_def).context("create_bind_group_layouts")?;
         if mat_def.prop_def.infos.len() > 0 {

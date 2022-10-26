@@ -1,7 +1,8 @@
 use std::{collections::HashMap, num::NonZeroU32, ops::Range, sync::Arc};
-use seija_asset::{HandleId, Handle, AssetServer};
+use bevy_ecs::world::World;
+use seija_asset::{HandleId, Handle, AssetServer, Assets};
 use seija_core::IDGenU64;
-use wgpu::{BufferUsage, SwapChainError, TextureView, util::DeviceExt};
+use wgpu::{BufferUsage, SwapChainError, TextureView, util::DeviceExt, TextureFormat};
 
 use super::{Texture, TextureType};
 
@@ -218,7 +219,23 @@ impl RenderResources {
             }
             _ => None
         }  
-    } 
+    }
+
+    pub fn get_texture_format(&mut self,resid:&RenderResourceId,world:&World) -> Option<TextureFormat> {
+        match resid {
+            RenderResourceId::MainSwap => {
+               Some(wgpu::TextureFormat::Bgra8Unorm)
+            },
+            RenderResourceId::Texture(h_texture) => {
+               let textures = world.get_resource::<Assets<Texture>>().unwrap();
+               if let Some(texture) = textures.get(&h_texture.id) {
+                 return Some(texture.desc().desc.format)
+               }
+               None
+            }, 
+            _ => None
+        }
+    }
 
     pub fn get_buffer(&self,buffer_id:&BufferId) -> Option<&wgpu::Buffer> {
         self.buffers.get(buffer_id)

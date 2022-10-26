@@ -1,6 +1,5 @@
 use std::path::{PathBuf, Path};
 use std::sync::Arc;
-use pipeline::{PipelineCache, update_pipeline_cache};
 use query::QuerySystem;
 use render::{AppRender, Config };
 use resource::{Mesh, Texture, color_texture};
@@ -79,7 +78,7 @@ impl IModule for RenderModule {
         app.schedule.add_stage_before(RenderStage::Render, RenderStage::PostRender, SystemStage::parallel());
         query::init_system(app);
         app.init_resource::<SceneEnv>();
-        app.add_system(RenderStage::AfterRender, update_pipeline_cache);
+        //app.add_system(RenderStage::AfterRender, update_pipeline_cache);
     }
 }
 
@@ -88,7 +87,7 @@ impl RenderModule {
     fn get_render_system(&self,w:&mut World,config:Arc<RenderConfig>) -> impl FnMut(&mut World) {
         let mut app_render = AppRender::new_sync(Config::default());
         let assets = w.get_resource::<AssetServer>().unwrap();
-        let render_ctx = RenderContext::new(app_render.device.clone(),&self.0.config_path,self.0.setting.clone(),assets);
+        let render_ctx = RenderContext::new(app_render.device.clone(),self.0.clone(),assets);
        
         self.init_render(w,render_ctx,&mut app_render,config); 
         move |_w| {
@@ -102,7 +101,6 @@ impl RenderModule {
         for plugin in self.0.plugins.iter() {
             app_render.main.add_render_plugin(plugin);
         }
-        w.insert_resource(PipelineCache::new(config.clone()));
         ctx.ubo_ctx.init(&mut ctx.resources);
         
       
