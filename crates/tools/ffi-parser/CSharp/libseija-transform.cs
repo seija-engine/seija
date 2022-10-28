@@ -1,3 +1,4 @@
+using System.Runtime.InteropServices;
 public struct TransformMatrix {
     public Vec3  scale;
     public Quat  rotation;
@@ -9,7 +10,7 @@ public struct Transform {
     public TransformMatrix  global;
 };
 
-public class libseija_transform {
+public static class libseija_transform {
 
     [DllImport("lib_seija.dll")]
     public static extern void tranrform_add_module(IntPtr app_ptr);

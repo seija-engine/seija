@@ -6,6 +6,16 @@
 
 (println "Enter New Render Clojure")
 
+(defn render []
+    (uniform bObject "ObjectBuffer")
+    (uniform bCamera "CameraBuffer")
+    (uniform bLight  "LightBuffer")
+    (uniform bSkin   "SkinBuffer")
+
+    (node CAMERA "CameraBuffer")
+    (node TRANSFROM "ObjectBuffer")
+    
+)
 
 (defn on-render-start [globalEnv]
     (println "on-render-start")
@@ -14,8 +24,8 @@
     (add-uniform  "ObjectBuffer")
     (add-uniform  "CameraBuffer")
 
-    (add-uniform    "LightBuffer")
-    (add-uniform   "SkinBuffer")
+    (add-uniform  "LightBuffer")
+    (add-uniform  "SkinBuffer")
     
 
     (add-node globalEnv    CAMERA_NODE    "CameraBuffer")
@@ -42,3 +52,4 @@
         )
     })
 )
+

@@ -1,6 +1,7 @@
 use raw_window_handle::{HasRawWindowHandle, RawWindowHandle};
 use seija_core::window::{IWindow, WindowConfig,WindowMode};
-use winit::{dpi::LogicalSize, event_loop::EventLoop, monitor::{MonitorHandle, VideoMode}, window::{Window,Fullscreen}};
+use winit::{dpi::LogicalSize, event_loop::EventLoop, monitor::{MonitorHandle, VideoMode}, window::{Window,Fullscreen}, platform::windows::WindowBuilderExtWindows};
+use winit::platform::windows;
 pub struct WinitWindow {
     title:String,
     vsync:bool,
@@ -45,6 +46,10 @@ impl WinitWindow {
             WindowMode::Windowed => { 
                 builder.with_inner_size(LogicalSize::new(config.width,config.height))
              }
+        };
+        #[cfg(target_os = "windows")] 
+        {
+            builder = builder.with_drag_and_drop(false);
         };
         let window = builder.with_title(&config.title).build(&event_loop).unwrap();
         (WinitWindow {  title: config.title.clone(), window,vsync:config.vsync },event_loop)

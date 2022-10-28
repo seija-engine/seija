@@ -1,4 +1,5 @@
-public class libseija_app {
+using System.Runtime.InteropServices;
+public static class libseija_app {
 
     [DllImport("lib_seija.dll")]
     public static extern IntPtr app_new();

@@ -7,6 +7,13 @@ pub struct CSharpGen;
 impl CSharpGen {
     fn write_type(output:&mut String,typ:&DataTypeFull) -> Result<()> {
         if typ.is_ptr {
+            if let DataType::Custom(ref s) = typ.typ {
+               
+                if s.as_str() == "char" {
+                    output.write_str("[MarshalAs(UnmanagedType.LPUTF8Str)] string")?;
+                    return Ok(());
+                }
+            }
             output.write_str("IntPtr")?;
             return Ok(());
         }
@@ -68,9 +75,10 @@ impl IGenerator for CSharpGen {
     fn on_process(&self,ffi_file:&FFIFile,config:&ParseGenConfig) -> Result<String> {
         let real_class_name = ffi_file.name.replace("-", "_");
         let mut output = String::default();
+        output.write_str("using System.Runtime.InteropServices;\r\n")?;
         CSharpGen::on_process_enums(&mut output, ffi_file)?;
         CSharpGen::on_process_structs(&mut output, ffi_file)?;
-        output.write_str("public class ")?;
+        output.write_str("public static class ")?;
         output.write_str(real_class_name.as_str())?;
         output.write_str(" {\r\n\r\n")?;
         for stmt in ffi_file.stmts.iter() {
