@@ -1,3 +1,5 @@
+use bevy_ecs::prelude::World;
+
 use crate::App;
 
 #[no_mangle]
@@ -23,3 +25,4 @@ pub unsafe extern "C" fn app_start(app_ptr:*mut App)  {
     let mut_app = &mut *app_ptr;
     mut_app.start()
 }
+

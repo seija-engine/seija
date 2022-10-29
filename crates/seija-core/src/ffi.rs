@@ -1,7 +1,7 @@
 use bevy_ecs::prelude::World;
 use seija_app::App;
-
-use crate::{CoreModule, time::Time};
+use seija_app::ecs::prelude::*;
+use crate::{CoreModule, time::Time, CoreStage, StartupStage};
 
 #[no_mangle]
 pub unsafe extern "C" fn core_add_module(app_ptr:*mut u8) {
@@ -32,3 +32,36 @@ pub unsafe extern "C" fn core_time_get_delta_seconds(time_ptr:* const u8) -> f32
 }
 
 
+
+type WorldFN = extern fn(world:*mut World);
+
+struct OnStartFN(WorldFN);
+
+#[no_mangle]
+pub unsafe extern "C" fn app_set_on_start(app_ptr:*mut App,start_fn:WorldFN) {
+    let mut_app = &mut *app_ptr;
+    mut_app.world.insert_resource(OnStartFN(start_fn));
+    mut_app.add_system2(CoreStage::Startup,StartupStage::Startup,on_start_system.exclusive_system());
+}
+
+fn on_start_system(world:&mut World) {
+    if let Some(f) =  world.get_resource::<OnStartFN>() {
+         f.0(world);
+    }
+ }
+
+
+struct OnUpdateFN(WorldFN);
+
+#[no_mangle]
+pub unsafe extern "C" fn app_set_on_update(app_ptr:*mut App,update_fn:WorldFN) {
+    let mut_app = &mut *app_ptr;
+    mut_app.world.insert_resource(OnUpdateFN(update_fn));
+    mut_app.add_system(CoreStage::Update,on_update_system.exclusive_system());
+}
+
+fn on_update_system(world:&mut World) {
+    if let Some(f) =  world.get_resource::<OnUpdateFN>() {
+         f.0(world);
+    }
+ }

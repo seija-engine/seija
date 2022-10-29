@@ -27,11 +27,12 @@ pub unsafe extern "C" fn input_get_keyup(input:*const Input,keycode:KeyCode) -> 
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn input_get_mouse_down(input:*const Input,keycode:MouseButton) -> bool {
-    (&*input).get_mouse_down(keycode)
+pub unsafe extern "C" fn input_get_mouse_down(input:*const Input,mouse_btn:u32) -> bool {
+    
+    (&*input).get_mouse_down(mouse_btn.into())
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn input_get_mouse_up(input:*const Input,keycode:MouseButton) -> bool {
-    (&*input).get_mouse_up(keycode)
+pub unsafe extern "C" fn input_get_mouse_up(input:*const Input,mouse_btn:u32) -> bool {
+    (&*input).get_mouse_up(mouse_btn.into())
 }

@@ -80,6 +80,7 @@ impl<'a> FFIFileParser<'a> {
        match tok {
         Token::Typedef => {
             let next = self.next_token(false)?;
+           
             if next == Token::Struct {
                 let new_name = self.next_token(true)?.cast_sym()?;
                 let next_tok = self.next_token(true)?;
@@ -90,9 +91,16 @@ impl<'a> FFIFileParser<'a> {
                    return Ok(Stmt::TypedefStructName(new_name,next_tok.cast_sym()?));
                 }
             } else if let Token::Type(typ) = next {
-                let new_name = self.next_token(true)?.cast_sym()?;
-                return Ok(Stmt::Typedef(typ,new_name))
+                
+                let next_tok = self.next_token(true)?;
+                if next_tok == Token::LeftParent {
+                   let func_def = self.parse_fn_ptr(typ)?;
+                   return Ok(Stmt::TypeDefFuncPtr(func_def) );
+                } else {
+                    return Ok(Stmt::Typedef(typ,next_tok.cast_sym()?))
+                }
             } else {
+                
                 return Err(ParseError::ErrToken(next));
             }
         },
@@ -151,23 +159,23 @@ impl<'a> FFIFileParser<'a> {
 
     fn parse_enum(&mut self) -> Result<EnumDefine,ParseError> {
         let enum_name = self.next_token(true)?.cast_sym()?;
-        if  self.next_token(false)? != Token::LeftBrace {
+        
+        if self.next_token(false)? != Token::LeftBrace {
             return Err(ParseError::ErrEnumFormat);
         }
         let mut list = vec![];
         loop {
+          
            let fst_tok = self.next_token(true)?;
-           //println!("fst {:?}",field_name);
            if fst_tok == Token::RightBrace { break; }
            let field_name = fst_tok.cast_sym()?;
            let snd_tok = self.next_token(false)?;
-           //println!("snd {:?}",snd_tok);
            match snd_tok {
                 Token::Eq => {
                     let value_sym = self.next_token(true)?.cast_sym()?;
                     list.push((field_name,Some(value_sym)));
                     let trd_tok = self.next_token(false)?;
-                    //println!("trd_tok:{:?}",&trd_tok);
+                    println!("trd_tok:{:?}",&trd_tok);
                     match trd_tok {
                         Token::Comma => {},
                         _ => { break; }
@@ -177,8 +185,8 @@ impl<'a> FFIFileParser<'a> {
                     list.push((field_name,None));
                 },
                 Token::RightBrace => { break; },
-                _ => {
-                    //println!("other:{:?}",other);
+                other => {
+                    println!("other:{:?}",other);
                     return Err(ParseError::ErrEnumFormat ); 
                 }
            }
@@ -188,22 +196,21 @@ impl<'a> FFIFileParser<'a> {
         Ok(EnumDefine { name: enum_name, list })
     }
 
-    fn parse_func_define(&mut self,mut tok_typ:Token) -> Result<FunctionDefine,ParseError> {
-        self.skip_white();
-        if tok_typ == Token::Struct || tok_typ == Token::Const {
-            tok_typ = self.next_token(false)?; 
-        };
+    fn parse_fn_ptr(&mut self,tok_typ:DataType) -> Result<FunctionDefine,ParseError> {
+        self.lex_string.next(); // skip *
+        let name = self.next_token(true)?.cast_sym()?;
+        self.next_token(false)?; // skip )
+       
+        self.next_token(false)?; // skip (
+        let params = self.parse_params()?;
+        Ok( FunctionDefine {
+             ret_type:DataTypeFull {typ:tok_typ,is_ptr:false},
+             name,
+             params
+        })
+    }
 
-        let ret_type = match tok_typ {
-            Token::Type(typ) => { typ },
-            Token::Symbol(sym) => { DataType::Custom(sym) },
-            tok => {return Err(ParseError::ErrToken(tok)); }
-        };
-        let full_type = self.fill_data_type(ret_type);
-        //println!("ret:{:?}",ret_type);
-        self.skip_white();
-        let fn_name = self.next_token(true)?.cast_sym()?;
-        self.lex_string.next();
+    fn parse_params(&mut self) -> Result<Vec<FuncParam>,ParseError> {
         let mut params:Vec<FuncParam> = vec![];
         loop {
             let mut type_name = self.next_token(false)?;
@@ -227,9 +234,6 @@ impl<'a> FFIFileParser<'a> {
             let full_type = self.fill_data_type(param_type);
             
             let param_name = self.next_token(false)?.cast_sym()?;
-            //println!("param_name:{:?}",&param_name);
-           
-            //println!("type_name:{:?}",type_name);
            
             params.push(FuncParam {
                 name:param_name,
@@ -239,6 +243,29 @@ impl<'a> FFIFileParser<'a> {
                 break;
             }
         }
+        Ok(params)
+    }
+
+    fn parse_func_define(&mut self,mut tok_typ:Token) -> Result<FunctionDefine,ParseError> {
+        self.skip_white();
+        if tok_typ == Token::Struct || tok_typ == Token::Const {
+            tok_typ = self.next_token(false)?;
+            if tok_typ == Token::Struct || tok_typ == Token::Const {
+                tok_typ = self.next_token(false)?; 
+            };
+        };
+
+        let ret_type = match tok_typ {
+            Token::Type(typ) => { typ },
+            Token::Symbol(sym) => { DataType::Custom(sym) },
+            tok => {return Err(ParseError::ErrToken(tok)); }
+        };
+        let full_type = self.fill_data_type(ret_type);
+        //println!("ret:{:?}",ret_type);
+        self.skip_white();
+        let fn_name = self.next_token(true)?.cast_sym()?;
+        self.lex_string.next();
+        let params:Vec<FuncParam> = self.parse_params()?;
         
         Ok( FunctionDefine {
             ret_type:full_type,
@@ -249,6 +276,12 @@ impl<'a> FFIFileParser<'a> {
 
 
     fn skip_white(&mut self) {
+        self.skip_char_white();
+        self.skip_comment();
+        self.skip_char_white();
+    }
+
+    fn skip_char_white(&mut self) {
         while let Some(chr) = self.lex_string.lookahead(1) {
             if chr.is_whitespace() || chr == ';' {
                 self.lex_string.next();
@@ -258,12 +291,41 @@ impl<'a> FFIFileParser<'a> {
         }
     }
 
+    
+
+    fn skip_comment(&mut self) {
+        let fst = self.lex_string.lookahead(1);
+        let snd = self.lex_string.lookahead(2);
+        if fst != Some('/') { return; }
+        if snd == Some('*') {
+            //println!("{:?}==",&snd);
+            self.lex_string.next();
+            self.lex_string.next();
+            while let Some(chr) = self.lex_string.lookahead(1)  {
+                if chr == '*' && self.lex_string.lookahead(2) == Some('/') {
+                    self.lex_string.next();
+                    self.lex_string.next();
+                   
+                    break;
+                } else {
+                    self.lex_string.next();
+                }
+            }
+        } else if snd == Some('/') {
+            self.lex_string.next();
+            self.lex_string.next();
+            
+            self.lex_string.skip_white(|chr| !chr.is_whitespace());
+        }
+    }
+
 
     fn next_token(&mut self,only_sym:bool) -> Result<Token,ParseError> {
         if let Some(cache_tok) = self.cache_tokens.pop_front() {
             return Ok(cache_tok);
         }
         self.skip_white();
+        
         if let Some(chr) = self.lex_string.lookahead(1) {
            let ret = match chr {
                 '{' =>  Some(Token::LeftBrace),
@@ -281,7 +343,7 @@ impl<'a> FFIFileParser<'a> {
         }
         let key_string = self.lex_string.take_while(|chr| 
             chr.is_whitespace() || chr == '(' || chr == ',' || chr == '(' || chr == ')' || chr == ';');
-       
+        
         if let Some(keyword) = key_string {
            if only_sym {
               return Ok(Token::Symbol(keyword.to_string()));

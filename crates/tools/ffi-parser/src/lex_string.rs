@@ -118,4 +118,14 @@ impl<'a> LexString<'a> {
         }
         None
     }
+
+    pub fn skip_white(&mut self,is_break:fn(char) -> bool) {
+        while let Some(chr) = self.lookahead(1)  {
+            if is_break(chr) {
+                break;
+            } else {
+                self.next();
+            }
+        }
+    }
 }

@@ -43,7 +43,7 @@ pub(crate) fn conv_mouse_input(state:ElementState,button:MouseButton) -> MouseIn
             MouseButton::Left => IMouseButton::Left,
             MouseButton::Right => IMouseButton::Right,
             MouseButton::Middle => IMouseButton::Middle,
-            MouseButton::Other(v) => IMouseButton::Other(v),
+            MouseButton::Other(v) => IMouseButton::Other(v as u32),
         }
     }
 }

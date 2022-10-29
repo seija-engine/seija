@@ -1,7 +1,8 @@
 use raw_window_handle::{HasRawWindowHandle, RawWindowHandle};
 use seija_core::window::{IWindow, WindowConfig,WindowMode};
-use winit::{dpi::LogicalSize, event_loop::EventLoop, monitor::{MonitorHandle, VideoMode}, window::{Window,Fullscreen}, platform::windows::WindowBuilderExtWindows};
-use winit::platform::windows;
+use winit::{dpi::LogicalSize, event_loop::EventLoop, monitor::{MonitorHandle, VideoMode}, window::{Window,Fullscreen}};
+#[cfg(target_os = "windows")] 
+use winit::platform::windows::WindowBuilderExtWindows;
 pub struct WinitWindow {
     title:String,
     vsync:bool,

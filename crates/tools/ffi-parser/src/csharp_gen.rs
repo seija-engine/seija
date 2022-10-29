@@ -1,6 +1,6 @@
 use std::fmt::Write;
 
-use crate::{IGenerator, ffi_file::{FFIFile, Stmt, DataTypeFull, DataType}, parse_gen::ParseGenConfig};
+use crate::{IGenerator, ffi_file::{FFIFile, Stmt, DataTypeFull, DataType, FuncParam}, parse_gen::ParseGenConfig};
 use anyhow::{Result};
 pub struct CSharpGen;
 
@@ -30,7 +30,25 @@ impl CSharpGen {
         Ok(())
     }
 
+    fn on_process_func_ptr(output:&mut String,ffi_file:&FFIFile) -> Result<()> {
+        for stmt in ffi_file.stmts.iter() {
+            if let Stmt::TypeDefFuncPtr(func_ptr) = stmt {
+                output.write_str("    public delegate ")?;
+                Self::write_type(output, &func_ptr.ret_type)?;
+                output.write_str(" ")?;
+                output.write_str(&func_ptr.name)?;
+                output.write_char('(')?;
+                Self::write_params(output, &func_ptr.params)?;
+                output.write_str(");\r\n")?;
+            }
+        }
+
+        Ok(())
+    }
+
     fn on_process_enums(output:&mut String,ffi_file:&FFIFile) -> Result<()> {
+        //println!("{:?}",&ffi_file.name);
+        //dbg!(&ffi_file);
         for stmt in ffi_file.stmts.iter() {
             if let Stmt::EnumDefine(enum_define) = stmt {
                 output.write_str("public enum ")?;
@@ -69,6 +87,20 @@ impl CSharpGen {
         }
         Ok(())
     }
+
+    fn write_params(output:&mut String,params:&Vec<FuncParam>) -> Result<()> {
+        for idx in 0..params.len() {
+            let param = &params[idx];
+            Self::write_type(output, &param.typ)?;
+            output.write_str(" ")?;
+            output.write_str(&param.name)?;
+            if idx < params.len() - 1 {
+                output.write_char(',')?;
+            }
+        }
+        
+        Ok(())
+    }
 }
 
 impl IGenerator for CSharpGen {
@@ -81,6 +113,7 @@ impl IGenerator for CSharpGen {
         output.write_str("public static class ")?;
         output.write_str(real_class_name.as_str())?;
         output.write_str(" {\r\n\r\n")?;
+        Self::on_process_func_ptr(&mut output, ffi_file)?;
         for stmt in ffi_file.stmts.iter() {
             match stmt {
                 Stmt::FuncDefine(func_def) => {
@@ -90,15 +123,7 @@ impl IGenerator for CSharpGen {
                     output.write_str(" ")?;
                     output.write_str(func_def.name.as_str())?;
                     output.write_char('(')?;
-                    for idx in 0..func_def.params.len() {
-                        let param = &func_def.params[idx];
-                        Self::write_type(&mut output, &param.typ)?;
-                        output.write_str(" ")?;
-                        output.write_str(&param.name)?;
-                        if idx < func_def.params.len() - 1 {
-                            output.write_char(',')?;
-                        }
-                    }
+                    Self::write_params(&mut output, &func_def.params)?;
                     output.write_str(");\r\n")?;
                     //let func_s = format!("{:?}",func_def);
                     //output.write_str(&func_s)?;

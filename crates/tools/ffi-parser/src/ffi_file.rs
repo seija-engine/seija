@@ -23,6 +23,7 @@ pub enum Stmt {
    Typedef(DataType,String),
    TypedefStructName(String,String),
    TypedefStruct(String,StructType),
+   TypeDefFuncPtr(FunctionDefine),
    FuncDefine(FunctionDefine),
    EnumDefine(EnumDefine)
 }
@@ -32,6 +33,7 @@ pub struct FunctionDefine {
    pub name:String,
    pub params:Vec<FuncParam>
 }
+
 #[derive(Debug)]
 pub struct FuncParam {
     pub name:String,

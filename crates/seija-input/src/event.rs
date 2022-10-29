@@ -35,5 +35,16 @@ pub enum MouseButton {
     Left,
     Right,
     Middle,
-    Other(u16),
+    Other(u32),
+}
+
+impl From<u32> for MouseButton {
+    fn from(num: u32) -> Self {
+        match num {
+           0 => MouseButton::Left,
+           1 => MouseButton::Right,
+           2 => MouseButton::Middle,
+           n => MouseButton::Other(n)
+        }
+    }
 }
