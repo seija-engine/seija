@@ -1,56 +1,39 @@
-(require "core")
+;uniform,node都是特殊的需要特殊都处理
 
-(defrecord Base3D [name]
-    (init [this set]
-        (core/declare-core-uniform set)
-    )
+(defn node-camera [uname] (node CAMERA_NODE uname))
 
-    (start [{dynEnable :dynEnable}]
-        (uniform dynEnable "ObjectBuffer")
-        (uniform dynEnable "CameraBuffer")
-        (uniform dynEnable "LightBuffer")
-    )
-
-    (base3d-start-nodes [{dynEnable :dynEnable} env]
-      
-        (node dynEnable env  CAMERA_NODE    "CameraBuffer")
-        (node dynEnable env  TRANSFROM_NODE "ObjectBuffer")
-        (node dynEnable env  PBR_CAMERA_EX  "CameraBuffer")
-        (node dynEnable env  PBR_LIGHT      "LightBuffer")            
-    )
+(frp-comp base-3d-common []
+  (uniform  "ObjectBuffer")
+  (uniform  "CameraBuffer")
+  (uniform  "LightBuffer" )
+  (node-camera "CameraBuffer")
+  (node TRANSFROM_NODE "ObjectBuffer")
+  (node PBR_CAMERA_EX "CameraBuffer")
+  (node PBR_LIGHT "LightBuffer")
 )
 
 
-(defn init [set]
-    (add-plugins [(Base3D. "Base3D") ])
-    ;auto run plugin init
-    
+
+(frp-comp start []
+  (cond-comp dynEnableBase3D '(base-3d-common ))
+  (add-render-path foward-path-start)
 )
 
-(defn create-depth32 [] (texture {:format "Depth32Float" :width WINDOW_WIDTH :height WINDOW_HEIGHT}))
-
-(defn create-dyn-target [eSetHDR]
-    (let [normal-desc {:format "Depth32Float"}  hdr-desc {:format "Rgba32Float"}]
-        (foldDyn normal eSetHDR #(if % normal hdr-desc))    
-    )
-    
+(frp-comp foward-path-start [{:targetView window-texture :camera-id  camera-id :camera-query camera-query}]
+   (let [depth-texture (texture {:format "Depth32Float"})]
+      (node WINDOW_SIZE depth-texture)
+      (cond-comp dynIsHdr '(hdr-draw depth-texture window-texture camera-id camera-query)
+                          '(normal-draw depth-texture window-texture camera-id camera-query))
+   )
 )
 
-(defn foward-path [env]
-    (assoc! env :depth (create-depth32))
-    (let [ 
-            dynHdrDesc    (create-dyn-target eSetHDR) 
-            targetTexture (dyn-texture dynHdrDesc)
-         ]
-        (add-node env  DRAW_PASS (env :camera-query) (env :camera-id) [targetTexture] (env :depth) "Foward")
-        (post-effect-stack (env :target-view) (env :target-view))
-    )
+(frp-comp hdr-draw [depth-texture window-texture camera-id camera-query]
+   (let [hdr-texture (texture {:format "Rgba16Float"})] 
+      (node DRAW_PASS camera_query camera_id [hdr-texture] depth-texture "Foward")
+      (node POST_STACK camera_id hdr-texture window-texture)
+   )
 )
 
-(defn start [env]
-    (base3d-start-nodes [env])
+(frp-comp normal-draw [depth-texture window-texture camera-id camera-query]
 
-    (.base3d-start-nodes (plugins "Base3D") env)
-
-    (add-render-path "Foward" foward-path)
 )
