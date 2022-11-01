@@ -26,7 +26,7 @@ FRP组件激活和取消激活都会有对应的响应函数。响应函数同�
 1. <b>if-comp</b>开关组件  
      第一个参数接收一个`Dynamic Bool`表示组件的开关.  
      第二个参数接收组件构建函数。  
-     根据外部`Dynamic Bool`的变化为true这个组件会被激活,为false会被关闭
+     根据外部`Dynamic Bool`的变化为true这个组件会被激活,为false会被关闭  
      第三个参数可选`Dynamic Bool`为false的时候激活，为true的时候关闭
 ```Clojure
 (def-frp-comp start []
