@@ -3,7 +3,7 @@ use lite_clojure_frp::{FRPSystem,fns::add_frp_fns};
 
 use crate::UniformInfoSet;
 
-use super::fns;
+use super::{fns, builder::FRPCompBuilder};
 pub struct FRPDSLSystem {
     vm:EvalRT,
     frp_system:FRPSystem,
@@ -29,6 +29,16 @@ impl FRPDSLSystem {
             log::error!("FRPDSLSystem init error:{:?}",err);
         }
     }
+
+    pub fn start(&mut self) {
+        let mut builder = FRPCompBuilder::new();
+        let builder_ptr = &mut builder as *mut FRPCompBuilder as *mut u8;
+        self.vm.global_context().set_var("*BUILDER*", Variable::UserData(builder_ptr));
+        if let Err(err) = self.vm.invoke_func("start", vec![]) {
+            log::error!("FRPDSLSystem start error:{:?}",err);
+        }
+        builder.build();
+    }
 }
 
 
@@ -38,13 +48,15 @@ fn test_system() {
     let mut system = FRPDSLSystem::new();
     system.init(r#"
     (defn init [set]
-       (println 123)
+       (println "init exec")
     )
-
-    (def start (frp-comp 
-        (fn []
-            (uniform "ObjectBuffer")
-        )
-    ))
+    
+    (defn start []
+      (__frp_enter__ "start")
+      (uniform "ObjectBuffer")
+    )
+    
+    
     "#, &mut UniformInfoSet::default());
+    system.start();
 }
