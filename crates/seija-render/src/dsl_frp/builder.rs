@@ -1,9 +1,12 @@
+use crate::dsl_frp::{elems::UniformElem, frp_comp::CompElement};
+
 use super::frp_comp::FRPComponent;
 use anyhow::{Result,anyhow};
 
 #[derive(Debug)]
 pub enum BuilderCommand {
     StartComp(String),
+    EndComp,
     Uniform(String)
 }
 
@@ -21,19 +24,27 @@ impl FRPCompBuilder {
         self.command_list.push(command);
     }
 
-    pub fn build(mut self) -> Result<()> {
+    pub fn build(mut self) -> Result<FRPComponent> {
         for command in self.command_list.drain(..) {
-            dbg!(&command);
+           log::info!("Exec FRPCompBuilder:{:?}",&command);
             match command {
                 BuilderCommand::StartComp(name) => {
                     self.comp_stack.push(FRPComponent::new(name));
                 },
-                BuilderCommand::Uniform(name) => {
-                    let cur_comp = self.comp_stack.last().ok_or(anyhow!("stack comp is nil"))?;
+                BuilderCommand::EndComp => {
+                   let pop_comp = self.comp_stack.pop().ok_or(anyhow!("comp stack is nil"))?;
+                   if let Some(parent_comp) = self.comp_stack.last_mut() {
+                        parent_comp.add_element(CompElement::Component(pop_comp));
+                   } else {
+                      return Ok(pop_comp);
+                   }
                 },
-                _ => {}
+                BuilderCommand::Uniform(name) => {
+                    let cur_comp = self.comp_stack.last_mut().ok_or(anyhow!("stack comp is nil"))?;
+                    cur_comp.add_element(CompElement::Unifrom(UniformElem::new(name)));
+                },
             }
         }
-        Ok(())
+        Err(anyhow!("error eof"))
     }
 }

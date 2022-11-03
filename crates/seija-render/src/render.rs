@@ -8,13 +8,14 @@ use wgpu::{CommandEncoderDescriptor, Device, Instance, Queue};
 use crate::rdsl::RenderMain;
 use crate::render_context::RenderContext;
 use crate::resource::{self, Mesh, RenderResources, Texture};
+use crate::dsl_frp::FRPDSLSystem;
 pub struct AppRender {
     pub instance: wgpu::Instance,
     pub device: Arc<wgpu::Device>,
     pub queue: wgpu::Queue,
 
-    pub main:RenderMain,
-
+    pub frp_render:FRPDSLSystem,
+   
     pub window_resized_event_reader: ManualEventReader<WindowResized>,
     pub window_created_event_reader: ManualEventReader<WindowCreated>,
     mesh_event_reader:ManualEventReader<AssetEvent<Mesh>>,
@@ -58,7 +59,7 @@ impl AppRender {
             window_resized_event_reader:Default::default(),
             mesh_event_reader:Default::default(),
             texture_event_reader:Default::default(),
-            main:RenderMain::new()
+            frp_render:FRPDSLSystem::new(),
         }
     }
 
@@ -100,7 +101,7 @@ impl AppRender {
         resource::update_mesh_system(world,&mut self.mesh_event_reader,ctx);
        
         resource::update_texture_system(world, &mut self.texture_event_reader, ctx);
-        self.main.update(ctx,world);
+        self.frp_render.update(ctx,world);
         
         let command_buffer = ctx.command_encoder.take().unwrap().finish();
         self.queue.submit(Some(command_buffer));

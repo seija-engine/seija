@@ -21,7 +21,14 @@ enum Errors {
 pub fn init_fns(vm:&mut EvalRT) {
     vm.global_context().push_native_fn("declare-uniform", declare_uniform);
     vm.global_context().push_native_fn("__frp_enter__", __frp_enter__);
+    vm.global_context().push_native_fn("__frp_exit__", __frp_exit__);
     vm.global_context().push_native_fn("uniform", uniform);
+
+    vm.global_context().push_var("SS_VERTEX", wgpu::ShaderStage::VERTEX.bits() as i64 );
+    vm.global_context().push_var("SS_FRAGMENT", wgpu::ShaderStage::FRAGMENT.bits() as i64 );
+    vm.global_context().push_var("SS_VERTEX_FRAGMENT", wgpu::ShaderStage::VERTEX_FRAGMENT.bits() as i64 );
+    vm.global_context().push_var("SS_COMPUTE", wgpu::ShaderStage::COMPUTE.bits() as i64 );
+    vm.global_context().push_var("SS_ALL", wgpu::ShaderStage::all().bits() as i64 );
 }
 
 pub fn declare_uniform(s:&mut ExecScope,a:Vec<Variable>) -> Variable { 
@@ -53,6 +60,15 @@ pub fn __frp_enter__(s:&mut ExecScope,a:Vec<Variable>) -> Variable {
     run_native_fn("__frp_enter__", s, a, |scope,args| {
         let name:String = args[0].cast_string().ok_or(Errors::TypeCastError("string"))?.borrow().clone();
         let command = BuilderCommand::StartComp(name);
+        let builder = find_frp_builder(scope)?;
+        builder.push_command(command);
+        Ok(Variable::Nil)
+    })
+}
+
+pub fn __frp_exit__(s:&mut ExecScope,a:Vec<Variable>) -> Variable {
+    run_native_fn("__frp_exit__", s, a, |scope,_| {
+        let command = BuilderCommand::EndComp;
         let builder = find_frp_builder(scope)?;
         builder.push_command(command);
         Ok(Variable::Nil)

@@ -14,7 +14,7 @@ extern crate serde_derive;
 pub use wgpu;
 mod graph_setting;
 pub mod rdsl;
-mod dsl_frp;
+pub mod dsl_frp;
 pub mod material;
 pub mod camera;
 pub mod resource;
@@ -79,7 +79,6 @@ impl IModule for RenderModule {
         app.schedule.add_stage_before(RenderStage::Render, RenderStage::PostRender, SystemStage::parallel());
         query::init_system(app);
         app.init_resource::<SceneEnv>();
-        //app.add_system(RenderStage::AfterRender, update_pipeline_cache);
     }
 }
 
@@ -100,21 +99,24 @@ impl RenderModule {
 
     fn init_render(&self,w:&mut World,mut ctx:RenderContext,app_render:&mut AppRender,config:Arc<RenderConfig>) {
         for plugin in self.0.plugins.iter() {
-            app_render.main.add_render_plugin(plugin);
+            //app_render.main.add_render_plugin(plugin);
         }
         ctx.ubo_ctx.init(&mut ctx.resources);
         
       
         match std::fs::read_to_string(&self.0.script_path) {
             Ok(code_string) => {
-                app_render.main.init(&code_string,&config.render_lib_paths,&mut ctx.ubo_ctx.info);
+                app_render.frp_render.init(&code_string,&mut ctx.ubo_ctx.info,&config.render_lib_paths);
             },
             Err(err) => {
                 log::error!("load main render script:{:?} error:{:?}",&self.0.script_path,err);
             }
         }
 
-        app_render.main.start(w, &mut ctx);
+
+        if let Err(err) = app_render.frp_render.start(&mut ctx,w) {
+            log::error!("{:?} start error:{:?}",&self.0.script_path,err);
+        }
         w.insert_resource(ctx);       
     }
 
