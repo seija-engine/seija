@@ -1,7 +1,8 @@
+use bevy_ecs::world::World;
+
 use crate::RenderContext;
-
+pub mod camera_node;
 use super::frp_comp::IElement;
-
 pub struct UniformElem {
     name:String
 }
@@ -21,4 +22,11 @@ impl IElement for UniformElem {
     fn deactive(&mut self,ctx:&mut RenderContext) {
         ctx.ubo_ctx.remove_uniform(&self.name);
     }
+}
+
+pub trait IUpdateNode {
+    fn init(&mut self,world:&mut World,ctx:&mut RenderContext);
+}
+pub struct ElementNode {
+    node:Box<dyn IUpdateNode>
 }

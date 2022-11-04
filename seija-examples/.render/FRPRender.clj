@@ -4,6 +4,8 @@
     (all_uniform/decl set)
 )
 
+(def CameraNodeID 123)
+
 (defn start []
     (__frp_enter__ "start")
     (uniform "ObjectBuffer")

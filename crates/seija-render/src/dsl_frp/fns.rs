@@ -1,28 +1,19 @@
 use lite_clojure_eval::{EvalRT, ExecScope, Variable, run_native_fn};
 use serde_json::Value;
-use thiserror::Error;
 use anyhow::{anyhow,Result};
 use std::{convert::TryFrom, sync::Arc};
 use crate::{UniformInfo, UniformInfoSet};
-
+use super::errors::Errors;
 use super::builder::{FRPCompBuilder, BuilderCommand};
 
-#[derive(Debug,Error)]
-
-enum Errors {
-    #[error("not found info set")]
-    NotFoundInfoSet,
-    #[error("type cast error {0}")]
-    TypeCastError(&'static str),
-    #[error("not found userdata {0}")]
-    NotFoundUserData(&'static str)
-}
 
 pub fn init_fns(vm:&mut EvalRT) {
+    
     vm.global_context().push_native_fn("declare-uniform", declare_uniform);
     vm.global_context().push_native_fn("__frp_enter__", __frp_enter__);
     vm.global_context().push_native_fn("__frp_exit__", __frp_exit__);
     vm.global_context().push_native_fn("uniform", uniform);
+    vm.global_context().push_native_fn("node", node);
 
     vm.global_context().push_var("SS_VERTEX", wgpu::ShaderStage::VERTEX.bits() as i64 );
     vm.global_context().push_var("SS_FRAGMENT", wgpu::ShaderStage::FRAGMENT.bits() as i64 );
@@ -81,6 +72,15 @@ pub fn uniform(s:&mut ExecScope,a:Vec<Variable>) -> Variable {
         let command = BuilderCommand::Uniform(name);
         let builder = find_frp_builder(scope)?;
         builder.push_command(command);
+        Ok(Variable::Nil)
+    })
+}
+
+
+pub fn node(s:&mut ExecScope,a:Vec<Variable>) -> Variable { 
+    run_native_fn("node", s, a, |scope,mut args| {
+        let node_id = args.remove(0).cast_int().ok_or(Errors::TypeCastError("int") )?;
+
         Ok(Variable::Nil)
     })
 }

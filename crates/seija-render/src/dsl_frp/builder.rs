@@ -1,13 +1,15 @@
 use crate::dsl_frp::{elems::UniformElem, frp_comp::CompElement};
 
-use super::frp_comp::FRPComponent;
+use super::{frp_comp::FRPComponent, system::ElementCreator};
 use anyhow::{Result,anyhow};
+use lite_clojure_eval::Variable;
 
 #[derive(Debug)]
 pub enum BuilderCommand {
     StartComp(String),
     EndComp,
-    Uniform(String)
+    Uniform(String),
+    Node(i64,Vec<Variable>)
 }
 
 pub struct FRPCompBuilder {
@@ -24,7 +26,7 @@ impl FRPCompBuilder {
         self.command_list.push(command);
     }
 
-    pub fn build(mut self) -> Result<FRPComponent> {
+    pub fn build(mut self,creator:&ElementCreator) -> Result<FRPComponent> {
         for command in self.command_list.drain(..) {
            log::info!("Exec FRPCompBuilder:{:?}",&command);
             match command {
@@ -43,6 +45,9 @@ impl FRPCompBuilder {
                     let cur_comp = self.comp_stack.last_mut().ok_or(anyhow!("stack comp is nil"))?;
                     cur_comp.add_element(CompElement::Unifrom(UniformElem::new(name)));
                 },
+                BuilderCommand::Node(id, args) => {
+                    
+                }
             }
         }
         Err(anyhow!("error eof"))
