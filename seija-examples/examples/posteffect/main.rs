@@ -4,7 +4,7 @@ use seija_core::{CoreStage, StartupStage, window::AppWindow};
 use seija_examples::{init_core_app, load_material};
 use seija_app::ecs::prelude::*;
 use seija_pbr::PBRCameraInfo;
-use seija_render::{camera::camera::{Perspective, Camera}, PostEffectStack, material::Material};
+use seija_render::{camera::camera::{Perspective, Camera}, material::Material};
 use seija_skeleton3d::Skeleton3dModule;
 use seija_template::Template;
 use seija_transform::Transform;
@@ -42,9 +42,9 @@ fn on_start(world:&mut World) {
        let pbr_camera = PBRCameraInfo::default();
        camera_entity.insert(pbr_camera);
 
-       let mut post_stack = PostEffectStack::default();
-       post_stack.add(h_tonemaping);
-       camera_entity.insert(post_stack);
+       //let mut post_stack = PostEffectStack::default();
+       //post_stack.add(h_tonemaping);
+       //camera_entity.insert(post_stack);
     };
 
     let req = asset_server.load_sync::<Template>(world,"template/posteffect.xml", None).unwrap();

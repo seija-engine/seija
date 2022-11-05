@@ -4,7 +4,7 @@
     (all_uniform/decl set)
 )
 
-(def CameraNodeID 123)
+(println CameraNodeID)
 
 (defn start []
     (__frp_enter__ "start")
@@ -12,5 +12,6 @@
     (uniform "CameraBuffer")
     (uniform "LightBuffer")
     (node CameraNodeID "CameraBuffer")
+    (node TransformNodeID "ObjectBuffer")
     (__frp_exit__)
 )

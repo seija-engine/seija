@@ -80,7 +80,9 @@ pub fn uniform(s:&mut ExecScope,a:Vec<Variable>) -> Variable {
 pub fn node(s:&mut ExecScope,a:Vec<Variable>) -> Variable { 
     run_native_fn("node", s, a, |scope,mut args| {
         let node_id = args.remove(0).cast_int().ok_or(Errors::TypeCastError("int") )?;
-
+        let builder = find_frp_builder(scope)?;
+        let command = BuilderCommand::Node(node_id,args);
+        builder.push_command(command);
         Ok(Variable::Nil)
     })
 }

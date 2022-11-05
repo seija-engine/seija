@@ -6,3 +6,4 @@ mod elems;
 mod plugin;
 mod errors;
 pub use system::FRPDSLSystem;
+pub use plugin::RenderScriptPlugin;

@@ -45,8 +45,11 @@ impl FRPCompBuilder {
                     let cur_comp = self.comp_stack.last_mut().ok_or(anyhow!("stack comp is nil"))?;
                     cur_comp.add_element(CompElement::Unifrom(UniformElem::new(name)));
                 },
-                BuilderCommand::Node(id, args) => {
-                    
+                BuilderCommand::Node(index, args) => {
+                    let update_node = creator.create_node(index as usize, args)?;
+                    let node = CompElement::Node(update_node);
+                    let cur_comp = self.comp_stack.last_mut().ok_or(anyhow!("stack comp is nil"))?;
+                    cur_comp.add_element(node);
                 }
             }
         }

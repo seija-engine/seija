@@ -1,24 +1,23 @@
 use std::{sync::Arc, collections::HashMap};
-use seija_render::{UniformInfo, ScriptContext, UniformInfoSet};
+use seija_render::{UniformInfo, UniformInfoSet, dsl_frp::FRPDSLSystem};
 use smol_str::SmolStr;
 
 pub struct RenderInfo {
     ubos:Vec<Arc<UniformInfo>>,
     pub backend2ubo:HashMap<SmolStr,Arc<UniformInfo>>,
-    pub rsc:ScriptContext
+    pub system:FRPDSLSystem
 }
 
 impl RenderInfo {
     pub fn new() -> Self {
-        RenderInfo { ubos:vec![],backend2ubo:HashMap::default(),rsc:ScriptContext::new() }
+        RenderInfo { ubos:vec![],backend2ubo:HashMap::default(),system:FRPDSLSystem::new() }
     }
 
     pub fn run(&mut self,path:&str) {
        match std::fs::read_to_string(path) {
           Ok(code) => {
               let mut info_set:UniformInfoSet = UniformInfoSet::default();
-              self.rsc.init(code.as_str());
-              self.rsc.exec_declare_uniform(&mut info_set);
+              self.system.init(&code, &mut info_set, &vec![]);
               for (_,ubo_info) in info_set.components.drain() {
                   self.add_ubo_info(ubo_info);
               }

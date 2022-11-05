@@ -77,7 +77,7 @@ impl MaterialCompiler {
         }
         self.compiled.clear();
         for script_path in config.script_libs.iter() {
-            self.backend.render_info.rsc.rt.add_search_path(script_path);
+            self.backend.render_info.system.vm.add_search_path(script_path);
         }
         for shader_path in config.shader_libs.iter() {
             self.pkg_mgr.add_dir(shader_path);

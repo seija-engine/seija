@@ -1,7 +1,7 @@
 use bevy_ecs::{entity::Entity, prelude::World};
 use lite_clojure_eval::Variable;
 use anyhow::{anyhow,Result};
-use crate::{IUpdateNode, RenderContext, rdsl::{atom::Atom, nodes::CommonError}, resource::RenderResourceId, PostEffectStack};
+use crate::{IUpdateNode, RenderContext, rdsl::{atom::Atom}, resource::RenderResourceId, PostEffectStack};
 
 #[derive(Default)]
 pub struct UsePostStack {

@@ -5,7 +5,6 @@ use seija_core::window::AppWindow;
 use seija_winit::event::{WindowCreated, WindowResized};
 use std::{borrow::Cow, sync::Arc};
 use wgpu::{CommandEncoderDescriptor, Device, Instance, Queue};
-use crate::rdsl::RenderMain;
 use crate::render_context::RenderContext;
 use crate::resource::{self, Mesh, RenderResources, Texture};
 use crate::dsl_frp::FRPDSLSystem;

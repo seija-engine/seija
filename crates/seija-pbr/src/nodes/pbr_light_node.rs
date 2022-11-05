@@ -1,6 +1,7 @@
 use bevy_ecs::prelude::World;
 use glam::Vec3;
 use lite_clojure_eval::Variable;
+/* 
 use seija_render::{IUpdateNode, RenderContext, UniformBuffer, UBOArrayCollect};
 use seija_transform::Transform;
 use anyhow::{Result};
@@ -70,3 +71,4 @@ impl IUpdateNode for PBRLightNode {
         }
     }
 }
+*/

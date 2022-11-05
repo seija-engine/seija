@@ -1,6 +1,7 @@
 use bevy_ecs::prelude::{World, Entity, Changed, Or, Added};
 use lite_clojure_eval::Variable;
 use anyhow::{Result,anyhow};
+/* 
 use seija_render::{IUpdateNode, RenderContext, UniformIndex};
 
 
@@ -36,4 +37,4 @@ impl IUpdateNode for PBRCameraNode {
             })
         }
     }
-}
+}*/
