@@ -1,4 +1,4 @@
-use crate::{dsl_frp::{elems::UniformElem, frp_comp::CompElement}, resource::TextureDescInfo};
+use crate::{dsl_frp::{elems::{UniformElement, TextureElement}, frp_comp::CompElement}, resource::TextureDescInfo};
 
 use super::{frp_comp::FRPComponent, system::ElementCreator};
 use anyhow::{Result,anyhow};
@@ -44,7 +44,7 @@ impl FRPCompBuilder {
                 },
                 BuilderCommand::Uniform(name) => {
                     let cur_comp = self.comp_stack.last_mut().ok_or(anyhow!("stack comp is nil"))?;
-                    cur_comp.add_element(CompElement::Unifrom(UniformElem::new(name)));
+                    cur_comp.add_element(CompElement::Unifrom(UniformElement::new(name)));
                 },
                 BuilderCommand::Node(index, args) => {
                     let update_node = creator.create_node(index as usize, args)?;
@@ -53,7 +53,9 @@ impl FRPCompBuilder {
                     cur_comp.add_element(node);
                 },
                 BuilderCommand::Texture(desc_info) => {
-                    
+                    let element = CompElement::Texture(TextureElement::new(desc_info));
+                    let cur_comp = self.comp_stack.last_mut().ok_or(anyhow!("stack comp is nil"))?;
+                    cur_comp.add_element(element);
                 }
             }
         }

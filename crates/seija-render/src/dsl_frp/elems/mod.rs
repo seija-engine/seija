@@ -1,20 +1,20 @@
 use bevy_ecs::world::World;
 use anyhow::Result;
-use crate::RenderContext;
+use crate::{RenderContext, resource::TextureDescInfo};
 pub mod camera_node;
 pub mod transform_node;
 use super::frp_comp::IElement;
-pub struct UniformElem {
+pub struct UniformElement {
     name:String
 }
 
-impl UniformElem {
+impl UniformElement {
     pub fn new(name:String) -> Self {
-        UniformElem { name }
+        UniformElement { name }
     }
 }
 
-impl IElement for UniformElem {
+impl IElement for UniformElement {
    
     fn active(&mut self,_:&mut World,ctx:&mut RenderContext) -> Result<()> {
        log::info!("UniformElem active:{}",self.name.as_str());
@@ -64,4 +64,24 @@ impl IElement for ElementNode {
         self.node.update(world, ctx)
     }
     
+}
+
+pub struct TextureElement {
+    desc_info:TextureDescInfo
+}
+
+impl TextureElement {
+    pub fn new(desc_info:TextureDescInfo) -> Self {
+        TextureElement { desc_info }
+    }
+}
+
+impl IElement for TextureElement {
+    fn active(&mut self,world:&mut World,ctx:&mut RenderContext) -> Result<()> {
+        Ok(())
+    }
+
+    fn deactive(&mut self,world:&mut World,ctx:&mut RenderContext) -> Result<()> {
+        Ok(())
+    }
 }

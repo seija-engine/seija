@@ -1,7 +1,7 @@
 use bevy_ecs::world::World;
 use anyhow::Result;
 use crate::RenderContext;
-use super::elems::{UniformElem, ElementNode};
+use super::elems::{UniformElement, ElementNode, TextureElement};
 
 pub trait IElement {
     fn init(&mut self,_world:&mut World,_ctx:&mut RenderContext) -> Result<()> { Ok(()) }
@@ -80,9 +80,10 @@ impl IElement for FRPComponent {
 
 
 pub enum CompElement {
-    Unifrom(UniformElem),
+    Unifrom(UniformElement),
     Component(FRPComponent),
-    Node(ElementNode)
+    Node(ElementNode),
+    Texture(TextureElement)
 }
 
 impl CompElement {
@@ -97,7 +98,8 @@ impl CompElement {
             },
             CompElement::Node(node) => {
                 f(node,world,ctx);
-            }
+            },
+            CompElement::Texture(texture) => { f(texture,world,ctx) }
         }
     }
 
