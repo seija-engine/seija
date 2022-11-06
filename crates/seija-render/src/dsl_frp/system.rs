@@ -1,13 +1,14 @@
 use std::path::PathBuf;
 
-use bevy_ecs::world::World;
+use bevy_ecs::{world::World};
 use lite_clojure_eval::{EvalRT, Variable};
 use lite_clojure_frp::{FRPSystem,fns::add_frp_fns};
 use anyhow::Result;
 use crate::{UniformInfoSet, RenderContext};
 
-use super::{fns, builder::FRPCompBuilder, frp_comp::{FRPComponent, IElement}, 
-            plugin::{RenderScriptPlugin, create_buildin_plugin, NodeCreateFn}, elems::{ElementNode}, errors::Errors};
+use super::{fns, builder::FRPCompBuilder, frp_comp::{IElement, FRPComponent}, 
+            plugin::{RenderScriptPlugin, create_buildin_plugin, NodeCreateFn}, 
+            elems::{ElementNode}, errors::Errors, render_path::{RenderPathContext}};
 
 unsafe impl Send for FRPDSLSystem {}
 unsafe impl Sync for FRPDSLSystem {}
@@ -15,6 +16,7 @@ pub struct FRPDSLSystem {
     pub vm:EvalRT,
     frp_system:FRPSystem,
     elem_creator:ElementCreator,
+    path_context:RenderPathContext,
     main_comp:Option<FRPComponent>
 }
 
@@ -26,6 +28,7 @@ impl FRPDSLSystem {
         FRPDSLSystem {
             vm, 
             frp_system: FRPSystem::default(),
+            path_context:RenderPathContext::default(),
             main_comp:None,
             elem_creator:ElementCreator::default()
         }
@@ -39,6 +42,8 @@ impl FRPDSLSystem {
             self.vm.add_search_path(lib_path);
         }
         fns::init_fns(&mut self.vm);
+        let path_ctx_ptr = &mut self.path_context as *mut RenderPathContext as *mut u8;
+        self.vm.global_context().set_var("*PATH_DEFINE_SET*", Variable::UserData(path_ctx_ptr));
         self.vm.eval_string(String::default() ,code_string);
         //call init
         let info_ptr = info_set as *mut UniformInfoSet as *mut u8;
@@ -48,8 +53,6 @@ impl FRPDSLSystem {
     }
 
     pub fn start(&mut self,ctx:&mut RenderContext,world:&mut World) -> Result<()> {
-        
-
         let mut builder = FRPCompBuilder::new();
         let builder_ptr = &mut builder as *mut FRPCompBuilder as *mut u8;
         self.vm.global_context().set_var("*BUILDER*", Variable::UserData(builder_ptr));
@@ -72,6 +75,8 @@ impl FRPDSLSystem {
         if let Some(main_comp) = self.main_comp.as_mut() {
             main_comp.update(world, ctx);
         }
+        self.path_context.update(world, ctx,&self.elem_creator,&mut self.vm);
+        
     }
 }
 

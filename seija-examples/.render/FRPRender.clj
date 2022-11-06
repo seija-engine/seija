@@ -19,9 +19,11 @@
 )
 
 
-(defn foward-path []
+(defn foward-path [env]
   (__frp_enter__ "foward-path")
-  
+  (let [depth-texture (texture {:format "Depth32Float"})]
+
+  )
   (__frp_exit__)
 )
 

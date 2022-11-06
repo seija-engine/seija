@@ -13,4 +13,6 @@ pub(crate) enum Errors {
     NotFoundNodeCreator,
     #[error("not found ubo {0}")]
     NotFoundUBO(SmolStr),
+    #[error("func param count error")]
+    FuncParamCountError
 }

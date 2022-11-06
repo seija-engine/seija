@@ -2,9 +2,12 @@ use lite_clojure_eval::{EvalRT, ExecScope, Variable, run_native_fn};
 use serde_json::Value;
 use anyhow::{anyhow,Result};
 use std::{convert::TryFrom, sync::Arc};
+use crate::material::STextureDescriptor;
+use crate::resource::TextureDescInfo;
 use crate::{UniformInfo, UniformInfoSet};
 use super::errors::Errors;
 use super::builder::{FRPCompBuilder, BuilderCommand};
+use super::render_path::{RenderPathDefine, RenderPathContext};
 
 
 pub fn init_fns(vm:&mut EvalRT) {
@@ -14,7 +17,8 @@ pub fn init_fns(vm:&mut EvalRT) {
     vm.global_context().push_native_fn("__frp_exit__", __frp_exit__);
     vm.global_context().push_native_fn("uniform", uniform);
     vm.global_context().push_native_fn("node", node);
-    vm.global_context().push_native_fn("add-render-path", node);
+    vm.global_context().push_native_fn("texture", texture);
+    vm.global_context().push_native_fn("add-render-path", add_render_path);
 
     vm.global_context().push_var("SS_VERTEX", wgpu::ShaderStage::VERTEX.bits() as i64 );
     vm.global_context().push_var("SS_FRAGMENT", wgpu::ShaderStage::FRAGMENT.bits() as i64 );
@@ -88,10 +92,25 @@ pub fn node(s:&mut ExecScope,a:Vec<Variable>) -> Variable {
     })
 }
 
+pub fn texture(s:&mut ExecScope,a:Vec<Variable>) -> Variable { 
+    run_native_fn("texture", s, a, |scope,mut args| {
+        let builder = find_frp_builder(scope)?;
+        let value:Value = args.get(0).ok_or(Errors::FuncParamCountError)?.clone().into();
+        let steture_desc = STextureDescriptor::try_from(&value).map_err(|err| anyhow!("{:?}",err))?;
+        let mut desc_info = TextureDescInfo::default();
+        desc_info.desc = steture_desc.0;
+        Ok(Variable::Nil)
+    })
+}
+
 pub fn add_render_path(s:&mut ExecScope,a:Vec<Variable>) -> Variable { 
     run_native_fn("add-render-path", s, a, |scope,mut args| {
         let path_name = args.remove(0).cast_string().ok_or(Errors::TypeCastError("string"))?;
-        
+        if let Ok(path_ctx) = find_userdata::<RenderPathContext>(scope, "*PATH_DEFINE_SET*") {
+            let frp_fn = args.remove(0);
+            let path_define = RenderPathDefine {name:path_name.borrow().as_str().into(),start_func:frp_fn};
+            path_ctx.add_define(path_define);
+        }
         Ok(Variable::Nil)
     })
 }

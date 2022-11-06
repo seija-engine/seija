@@ -1,4 +1,4 @@
-use crate::dsl_frp::{elems::UniformElem, frp_comp::CompElement};
+use crate::{dsl_frp::{elems::UniformElem, frp_comp::CompElement}, resource::TextureDescInfo};
 
 use super::{frp_comp::FRPComponent, system::ElementCreator};
 use anyhow::{Result,anyhow};
@@ -9,7 +9,8 @@ pub enum BuilderCommand {
     StartComp(String),
     EndComp,
     Uniform(String),
-    Node(i64,Vec<Variable>)
+    Node(i64,Vec<Variable>),
+    Texture(TextureDescInfo)
 }
 
 pub struct FRPCompBuilder {
@@ -50,6 +51,9 @@ impl FRPCompBuilder {
                     let node = CompElement::Node(update_node);
                     let cur_comp = self.comp_stack.last_mut().ok_or(anyhow!("stack comp is nil"))?;
                     cur_comp.add_element(node);
+                },
+                BuilderCommand::Texture(desc_info) => {
+                    
                 }
             }
         }
