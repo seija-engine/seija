@@ -98,7 +98,7 @@ impl RenderModule {
 
     fn init_render(&self,w:&mut World,mut ctx:RenderContext,app_render:&mut AppRender,config:Arc<RenderConfig>) {
         for plugin in self.0.plugins.iter() {
-            //app_render.main.add_render_plugin(plugin);
+            app_render.frp_render.apply_plugin(plugin);
         }
         ctx.ubo_ctx.init(&mut ctx.resources);
         

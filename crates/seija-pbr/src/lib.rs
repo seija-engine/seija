@@ -1,7 +1,7 @@
 mod camera_info;
 mod exposure;
 pub mod lights;
-mod nodes;
+mod elems;
 mod plugin;
 pub use camera_info::{PBRCameraInfo};
 pub use exposure::{Exposure};

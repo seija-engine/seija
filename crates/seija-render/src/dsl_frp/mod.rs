@@ -5,5 +5,8 @@ mod builder;
 mod elems;
 mod plugin;
 mod errors;
+mod ubo_array_collect;
 pub use system::FRPDSLSystem;
 pub use plugin::RenderScriptPlugin;
+pub use elems::IUpdateNode;
+pub use ubo_array_collect::UBOArrayCollect;

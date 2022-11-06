@@ -31,7 +31,7 @@ impl IElement for UniformElem {
 }
 
 pub trait IUpdateNode {
-    fn init(&mut self,world:&mut World,ctx:&mut RenderContext) -> Result<()>;
+    fn init(&mut self,_world:&mut World,_ctx:&mut RenderContext) -> Result<()> { Ok(()) }
     fn active(&mut self,_world:&mut World,_ctx:&mut RenderContext) -> Result<()> { Ok(()) }
     fn deactive(&mut self,_world:&mut World,_ctx:&mut RenderContext) -> Result<()> { Ok(()) }
     fn update(&mut self,_world:&mut World,_ctx:&mut RenderContext) -> Result<()> { Ok(()) }

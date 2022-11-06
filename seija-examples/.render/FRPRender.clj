@@ -13,5 +13,17 @@
     (uniform "LightBuffer")
     (node CameraNodeID "CameraBuffer")
     (node TransformNodeID "ObjectBuffer")
+    (node PBRCameraExNodeID "CameraBuffer")
+    (node PBRLightNodeID "LightBuffer")
     (__frp_exit__)
 )
+
+
+(defn foward-path []
+  (__frp_enter__ "foward-path")
+  
+  (__frp_exit__)
+)
+
+
+(add-render-path "Foward" foward-path)

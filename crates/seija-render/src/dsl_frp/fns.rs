@@ -14,6 +14,7 @@ pub fn init_fns(vm:&mut EvalRT) {
     vm.global_context().push_native_fn("__frp_exit__", __frp_exit__);
     vm.global_context().push_native_fn("uniform", uniform);
     vm.global_context().push_native_fn("node", node);
+    vm.global_context().push_native_fn("add-render-path", node);
 
     vm.global_context().push_var("SS_VERTEX", wgpu::ShaderStage::VERTEX.bits() as i64 );
     vm.global_context().push_var("SS_FRAGMENT", wgpu::ShaderStage::FRAGMENT.bits() as i64 );
@@ -83,6 +84,14 @@ pub fn node(s:&mut ExecScope,a:Vec<Variable>) -> Variable {
         let builder = find_frp_builder(scope)?;
         let command = BuilderCommand::Node(node_id,args);
         builder.push_command(command);
+        Ok(Variable::Nil)
+    })
+}
+
+pub fn add_render_path(s:&mut ExecScope,a:Vec<Variable>) -> Variable { 
+    run_native_fn("add-render-path", s, a, |scope,mut args| {
+        let path_name = args.remove(0).cast_string().ok_or(Errors::TypeCastError("string"))?;
+        
         Ok(Variable::Nil)
     })
 }

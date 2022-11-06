@@ -12,7 +12,6 @@ use super::{fns, builder::FRPCompBuilder, frp_comp::{FRPComponent, IElement},
 unsafe impl Send for FRPDSLSystem {}
 unsafe impl Sync for FRPDSLSystem {}
 pub struct FRPDSLSystem {
-    plugins:Vec<RenderScriptPlugin>,
     pub vm:EvalRT,
     frp_system:FRPSystem,
     elem_creator:ElementCreator,
@@ -25,7 +24,6 @@ impl FRPDSLSystem {
         vm.init();
         add_frp_fns(&mut vm);
         FRPDSLSystem {
-            plugins:vec![],
             vm, 
             frp_system: FRPSystem::default(),
             main_comp:None,
@@ -35,8 +33,7 @@ impl FRPDSLSystem {
 
     pub fn init(&mut self,code_string:&str,info_set:&mut UniformInfoSet,lib_paths:&Vec<PathBuf>) {
         let plugin = create_buildin_plugin();
-        self.plugins.push(plugin);
-        self.apply_plugins();
+        self.apply_plugin(&plugin);
 
         for lib_path in lib_paths.iter() {
             self.vm.add_search_path(lib_path);
@@ -67,10 +64,8 @@ impl FRPDSLSystem {
         Ok(())
     }
 
-    fn apply_plugins(&mut self) {
-        for plugin in self.plugins.iter() {
-            self.elem_creator.apply_plugin(&mut self.vm,plugin);
-        }
+    pub fn apply_plugin(&mut self,plugin:&RenderScriptPlugin) {
+        self.elem_creator.apply_plugin(&mut self.vm,plugin);
     }
 
     pub fn update(&mut self,ctx:&mut RenderContext,world:&mut World) {
