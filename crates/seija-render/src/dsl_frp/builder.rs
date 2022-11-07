@@ -3,6 +3,7 @@ use crate::{dsl_frp::{elems::{UniformElement, TextureElement}, frp_comp::CompEle
 use super::{frp_comp::FRPComponent, system::ElementCreator};
 use anyhow::{Result,anyhow};
 use lite_clojure_eval::Variable;
+use lite_clojure_frp::DynamicID;
 
 #[derive(Debug)]
 pub enum BuilderCommand {
@@ -10,7 +11,7 @@ pub enum BuilderCommand {
     EndComp,
     Uniform(String),
     Node(i64,Vec<Variable>),
-    Texture(TextureDescInfo)
+    Texture(TextureDescInfo,DynamicID)
 }
 
 pub struct FRPCompBuilder {
@@ -52,8 +53,8 @@ impl FRPCompBuilder {
                     let cur_comp = self.comp_stack.last_mut().ok_or(anyhow!("stack comp is nil"))?;
                     cur_comp.add_element(node);
                 },
-                BuilderCommand::Texture(desc_info) => {
-                    let element = CompElement::Texture(TextureElement::new(desc_info));
+                BuilderCommand::Texture(desc_info,dyn_id) => {
+                    let element = CompElement::Texture(TextureElement::new(desc_info,dyn_id));
                     let cur_comp = self.comp_stack.last_mut().ok_or(anyhow!("stack comp is nil"))?;
                     cur_comp.add_element(element);
                 }

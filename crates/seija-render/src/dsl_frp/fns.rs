@@ -1,4 +1,6 @@
+use bevy_ecs::world::World;
 use lite_clojure_eval::{EvalRT, ExecScope, Variable, run_native_fn};
+use lite_clojure_frp::FRPSystem;
 use serde_json::Value;
 use anyhow::{anyhow,Result};
 use std::{convert::TryFrom, sync::Arc};
@@ -52,6 +54,14 @@ fn find_frp_builder(scope:&mut ExecScope) -> Result<&'static mut FRPCompBuilder>
     find_userdata::<FRPCompBuilder>(scope, "*BUILDER*")
 }
 
+fn find_world(scope:&mut ExecScope) -> Result<&'static mut World> {
+    find_userdata::<World>(scope, "*WORLD*")
+}
+
+fn find_frp_system(scope:&mut ExecScope) -> Result<&'static mut FRPSystem> {
+    find_userdata::<FRPSystem>(scope, "*FRPSystem*")
+}
+
 pub fn __frp_enter__(s:&mut ExecScope,a:Vec<Variable>) -> Variable {
     run_native_fn("__frp_enter__", s, a, |scope,args| {
         let name:String = args[0].cast_string().ok_or(Errors::TypeCastError("string"))?.borrow().clone();
@@ -93,13 +103,21 @@ pub fn node(s:&mut ExecScope,a:Vec<Variable>) -> Variable {
 }
 
 pub fn texture(s:&mut ExecScope,a:Vec<Variable>) -> Variable { 
-    run_native_fn("texture", s, a, |scope,mut args| {
-        let builder = find_frp_builder(scope)?;
+    run_native_fn("texture", s, a, |scope,args| {
         let value:Value = args.get(0).ok_or(Errors::FuncParamCountError)?.clone().into();
         let steture_desc = STextureDescriptor::try_from(&value).map_err(|err| anyhow!("{:?}",err))?;
         let mut desc_info = TextureDescInfo::default();
         desc_info.desc = steture_desc.0;
-        Ok(Variable::Nil)
+
+        let dyn_texture = {
+           let frp_sys = find_frp_system(scope)?;
+           frp_sys.new_dynamic(Variable::Nil, frp_sys.never(), None).unwrap()
+        };
+
+        let builder = find_frp_builder(scope)?;
+        builder.push_command(BuilderCommand::Texture(desc_info,dyn_texture));
+
+        Ok(Variable::Int(dyn_texture as i64))
     })
 }
 

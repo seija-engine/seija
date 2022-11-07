@@ -21,10 +21,14 @@
 
 (defn foward-path [env]
   (__frp_enter__ "foward-path")
-  (let [depth-texture (texture {:format "Depth32Float"})]
-
+  (let [depth-texture (texture {:format "Depth32Float"}) hdr-draw-comp [hdr-draw 1 2]]
+     ;(if-comp dynIsHDR hdr-draw-comp)
   )
   (__frp_exit__)
+)
+
+(defn hdr-draw [a b]
+  
 )
 
 

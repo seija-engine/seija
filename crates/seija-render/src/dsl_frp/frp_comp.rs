@@ -1,12 +1,13 @@
 use bevy_ecs::world::World;
 use anyhow::Result;
+use lite_clojure_frp::FRPSystem;
 use crate::RenderContext;
 use super::elems::{UniformElement, ElementNode, TextureElement};
 
 pub trait IElement {
-    fn init(&mut self,_world:&mut World,_ctx:&mut RenderContext) -> Result<()> { Ok(()) }
-    fn active(&mut self,world:&mut World,ctx:&mut RenderContext) -> Result<()>;
-    fn deactive(&mut self,world:&mut World,ctx:&mut RenderContext) -> Result<()>;
+    fn init(&mut self,_world:&mut World,_ctx:&mut RenderContext,_frp_sys:&mut FRPSystem) -> Result<()> { Ok(()) }
+    fn active(&mut self,world:&mut World,ctx:&mut RenderContext,_frp_sys:&mut FRPSystem) -> Result<()>;
+    fn deactive(&mut self,world:&mut World,ctx:&mut RenderContext,_frp_sys:&mut FRPSystem) -> Result<()>;
     fn update(&mut self,_world:&mut World,_ctx:&mut RenderContext) -> Result<()> { Ok(()) }
 }
 
@@ -42,10 +43,10 @@ impl FRPComponent {
 }
 
 impl IElement for FRPComponent {
-    fn init(&mut self,world:&mut World,ctx:&mut RenderContext) -> Result<()> {
+    fn init(&mut self,world:&mut World,ctx:&mut RenderContext,frp_sys:&mut FRPSystem) -> Result<()> {
         for elem in self.elems.iter_mut() {
-            elem.opt_element_mut(world,ctx,|v,w,ctx| {
-                if let Err(err) = v.init(w,ctx) {
+            elem.opt_element_mut(|v| {
+                if let Err(err) = v.init(world,ctx,frp_sys) {
                     log::error!("element init error:{:?}",&err);
                 };
             });
@@ -53,10 +54,10 @@ impl IElement for FRPComponent {
         Ok(())
     }
 
-    fn active(&mut self,world:&mut World,ctx:&mut RenderContext) -> Result<()> {
+    fn active(&mut self,world:&mut World,ctx:&mut RenderContext,frp_sys:&mut FRPSystem) -> Result<()> {
         for elem in self.elems.iter_mut() {
-            elem.opt_element_mut(world,ctx,|v,w,ctx| {
-                if let Err(err) = v.active(w,ctx) {
+            elem.opt_element_mut(|v| {
+                if let Err(err) = v.active(world,ctx,frp_sys) {
                     log::error!("element active error:{:?}",&err);
                 };
             });
@@ -64,10 +65,10 @@ impl IElement for FRPComponent {
         Ok(())
     }
 
-    fn deactive(&mut self,world:&mut World,ctx:&mut RenderContext) -> Result<()> {
+    fn deactive(&mut self,world:&mut World,ctx:&mut RenderContext,frp_sys:&mut FRPSystem) -> Result<()> {
         for elem in self.elems.iter_mut() {
-            elem.opt_element_mut(world,ctx,|v,w,ctx| {
-                if let Err(err) = v.deactive(w,ctx) {
+            elem.opt_element_mut(|v| {
+                if let Err(err) = v.deactive(world,ctx,frp_sys) {
                     log::error!("element deactive error:{:?}",&err);
                 };
             });
@@ -87,22 +88,14 @@ pub enum CompElement {
 }
 
 impl CompElement {
-    pub fn opt_element_mut(&mut self,world:&mut World,ctx:&mut RenderContext,
-                            f:fn(&mut dyn IElement,world:&mut World,&mut RenderContext)) {
+    pub fn opt_element_mut<F>(&mut self,mut f:F) where F:FnMut(&mut dyn IElement) {
         match self {
-            CompElement::Unifrom(uniform) => {
-                f(uniform,world,ctx)
-            },
-            CompElement::Component(frp) => {
-                f(frp,world,ctx)
-            },
-            CompElement::Node(node) => {
-                f(node,world,ctx);
-            },
-            CompElement::Texture(texture) => { f(texture,world,ctx) }
+            CompElement::Unifrom(uniform) => { f(uniform) },
+            CompElement::Component(frp) => { f(frp) },
+            CompElement::Node(node) => { f(node); },
+            CompElement::Texture(texture) => { f(texture) }
         }
     }
-
 
 }
 

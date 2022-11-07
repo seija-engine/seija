@@ -23,7 +23,8 @@
    (let [depth-texture (texture {:format "Depth32Float"})]
       (node WINDOW_SIZE depth-texture)
       (if-comp dynIsHdr '(hdr-draw depth-texture window-texture camera-id camera-query)
-                          '(normal-draw depth-texture window-texture camera-id camera-query))
+                        '(normal-draw depth-texture window-texture camera-id camera-query)
+      )
    )
 )
 

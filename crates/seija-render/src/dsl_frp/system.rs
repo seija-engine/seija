@@ -27,7 +27,7 @@ impl FRPDSLSystem {
         add_frp_fns(&mut vm);
         FRPDSLSystem {
             vm, 
-            frp_system: FRPSystem::default(),
+            frp_system: FRPSystem::new(),
             path_context:RenderPathContext::default(),
             main_comp:None,
             elem_creator:ElementCreator::default()
@@ -56,12 +56,16 @@ impl FRPDSLSystem {
         let mut builder = FRPCompBuilder::new();
         let builder_ptr = &mut builder as *mut FRPCompBuilder as *mut u8;
         self.vm.global_context().set_var("*BUILDER*", Variable::UserData(builder_ptr));
+        let world_ptr = world as *mut World as *mut u8;
+        self.vm.global_context().set_var("*WORLD*", Variable::UserData(world_ptr));
+        let frp_ptr = &mut self.frp_system as *mut FRPSystem as *mut u8;
+        self.vm.global_context().set_var("*FRPSystem*", Variable::UserData(frp_ptr));
         if let Err(err) = self.vm.invoke_func("start", vec![]) {
             log::error!("FRPDSLSystem start error:{:?}",err);
         }
         let mut main_comp = builder.build(&self.elem_creator)?;
-        main_comp.init(world,ctx)?;
-        main_comp.active(world,ctx)?;
+        main_comp.init(world,ctx,&mut self.frp_system)?;
+        main_comp.active(world,ctx,&mut self.frp_system)?;
         self.main_comp = Some(main_comp);
         
         Ok(())
@@ -75,7 +79,7 @@ impl FRPDSLSystem {
         if let Some(main_comp) = self.main_comp.as_mut() {
             main_comp.update(world, ctx);
         }
-        self.path_context.update(world, ctx,&self.elem_creator,&mut self.vm);
+        self.path_context.update(world, ctx,&self.elem_creator,&mut self.vm,&mut self.frp_system);
         
     }
 }
