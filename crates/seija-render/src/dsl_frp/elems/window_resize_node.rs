@@ -1,9 +1,9 @@
 use bevy_ecs::world::World;
 use lite_clojure_eval::Variable;
 use lite_clojure_frp::{DynamicID, FRPSystem};
-use anyhow::Result;
+use anyhow::{Result,anyhow};
 use seija_asset::Assets;
-use crate::{dsl_frp::win_event::WindowEvent, RenderContext, resource::{RenderResourceId, Texture}};
+use crate::{dsl_frp::{win_event::WindowEvent, errors::Errors}, RenderContext, resource::{RenderResourceId, Texture}};
 use super::IUpdateNode;
 
 pub struct WindowReSizeNode {
@@ -12,14 +12,18 @@ pub struct WindowReSizeNode {
 }
 
 impl WindowReSizeNode {
-    pub fn from_args(args:Vec<Variable>) -> Result<Box<dyn IUpdateNode>> {
+    pub fn from_args(mut args:Vec<Variable>) -> Result<Box<dyn IUpdateNode>> {
+        if args.len() == 0 { return Err(anyhow!(Errors::FuncParamCountError)); }
+
         let mut dyn_textures = vec![];
-        for arg in args.iter() {
+        let params = args.remove(0).cast_vec().ok_or(Errors::TypeCastError("vec"))?;
+        for arg in params.borrow().iter() {
             if let Variable::Int(id) = arg {
                 let dyn_id = *id as DynamicID;
                 dyn_textures.push(dyn_id);
             }
         }
+        dbg!(&dyn_textures);
         Ok(Box::new(WindowReSizeNode {
             dyn_textures,
             win_event:WindowEvent::default()
@@ -31,6 +35,7 @@ impl IUpdateNode for WindowReSizeNode {
     fn update(&mut self,world:&mut World,_ctx:&mut RenderContext,frp_sys:&mut FRPSystem) ->Result<()> {
         
         if let Some((w,h)) = self.win_event.get_new_window_size(world) {
+           
             let mut textures = world.get_resource_mut::<Assets<Texture>>().unwrap();
             for dyn_id in self.dyn_textures.iter() {
                if let Some(dynamic) = frp_sys.dynamics.get_mut(&dyn_id) {
