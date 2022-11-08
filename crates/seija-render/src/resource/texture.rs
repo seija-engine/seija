@@ -117,4 +117,5 @@ pub fn update_texture_system(world:&mut World,texture_reader:&mut ManualEventRea
             }
         }
     }
+    //TODO 这里需要移除释放的Texture的render resource
 }

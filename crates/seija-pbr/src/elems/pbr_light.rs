@@ -1,7 +1,7 @@
 use bevy_ecs::world::World;
 use glam::Vec3;
 use lite_clojure_eval::Variable;
-use seija_render::{dsl_frp::{UBOArrayCollect, IUpdateNode}, RenderContext, UniformBuffer};
+use seija_render::{dsl_frp::{UBOArrayCollect, IUpdateNode, FRPSystem}, RenderContext, UniformBuffer};
 use anyhow::{Result,anyhow};
 use seija_transform::Transform;
 use crate::lights::{PBRLight, PBRLightType, PBRGlobalAmbient};
@@ -28,14 +28,14 @@ impl PBRLightNode {
 }
 
 impl IUpdateNode for PBRLightNode {
-    fn active(&mut self,_world:&mut World,ctx:&mut RenderContext) -> Result<()> {
+    fn active(&mut self,_world:&mut World,ctx:&mut RenderContext,_:&mut FRPSystem) -> Result<()> {
         let mut array_collect = UBOArrayCollect::new(self.ubo_name.clone(), 10);
         array_collect.init(ctx);
         self.array_collect = Some(array_collect);
         Ok(())
     }
 
-    fn update(&mut self,world:&mut World,ctx:&mut RenderContext) -> Result<()> {
+    fn update(&mut self,world:&mut World,ctx:&mut RenderContext,_:&mut FRPSystem) -> Result<()> {
         if let Some(array_collect) = self.array_collect.as_mut() {
             array_collect.update(world, ctx, set_pbr_light);
             if let Some(mut ambient) = world.get_resource_mut::<PBRGlobalAmbient>() {

@@ -1,6 +1,7 @@
 use bevy_ecs::{world::World, prelude::Entity, query::{Added, With}};
 use glam::Vec4;
 use lite_clojure_eval::Variable;
+use lite_clojure_frp::FRPSystem;
 use seija_transform::Transform;
 use smol_str::SmolStr;
 use crate::{RenderContext, uniforms::backends::Camera3DBackend, UniformIndex, camera::camera::Camera, memory::TypedUniformBuffer};
@@ -23,7 +24,7 @@ impl CameraNode {
 }
 
 impl IUpdateNode for CameraNode {
-    fn init(&mut self,_:&mut World,ctx:&mut RenderContext) -> Result<()> {
+    fn init(&mut self,_:&mut World,ctx:&mut RenderContext,_:&mut FRPSystem) -> Result<()> {
         let info = ctx.ubo_ctx.info.get_info(&self.ubo_name).ok_or(Errors::NotFoundUBO(self.ubo_name.clone()))?;
         let backend = Camera3DBackend::from_def(&info.props).map_err(|v| anyhow!("camera3d backend err:{}",v.as_str()))?;
         self.backend = Some(backend);
@@ -31,13 +32,13 @@ impl IUpdateNode for CameraNode {
         Ok(())
     }
 
-    fn active(&mut self,_:&mut World,ctx:&mut RenderContext) -> Result<()> {
+    fn active(&mut self,_:&mut World,ctx:&mut RenderContext,_:&mut FRPSystem) -> Result<()> {
         let name_index = ctx.ubo_ctx.get_index(self.ubo_name.as_str()).ok_or(anyhow!("err ubo name"))?;
         self.name_index = Some(name_index);
         Ok(())
     }
 
-    fn update(&mut self,world:&mut World,ctx:&mut RenderContext) -> Result<()> {
+    fn update(&mut self,world:&mut World,ctx:&mut RenderContext,_:&mut FRPSystem) -> Result<()> {
         self.prepare(world, ctx)?;
         let mut cameras = world.query::<(Entity,&Transform,&Camera)>();
         for (e,t,camera) in cameras.iter(world) {
@@ -50,9 +51,7 @@ impl IUpdateNode for CameraNode {
         Ok(())
     }
 
-    fn deactive(&mut self,_:&mut World,_:&mut RenderContext) -> Result<()> {
-        Ok(())
-    }
+   
 }
 
 impl CameraNode {

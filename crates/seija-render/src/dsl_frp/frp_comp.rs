@@ -8,7 +8,7 @@ pub trait IElement {
     fn init(&mut self,_world:&mut World,_ctx:&mut RenderContext,_frp_sys:&mut FRPSystem) -> Result<()> { Ok(()) }
     fn active(&mut self,world:&mut World,ctx:&mut RenderContext,_frp_sys:&mut FRPSystem) -> Result<()>;
     fn deactive(&mut self,world:&mut World,ctx:&mut RenderContext,_frp_sys:&mut FRPSystem) -> Result<()>;
-    fn update(&mut self,_world:&mut World,_ctx:&mut RenderContext) -> Result<()> { Ok(()) }
+    fn update(&mut self,_world:&mut World,_ctx:&mut RenderContext,_frp_sys:&mut FRPSystem) -> Result<()> { Ok(()) }
 }
 
 pub struct FRPComponent {
@@ -28,11 +28,11 @@ impl FRPComponent {
         self.elems.push(element);
     }
 
-    pub fn update(&mut self,world:&mut World,ctx:&mut RenderContext) {
+    pub fn update(&mut self,world:&mut World,ctx:&mut RenderContext,frp_sys:&mut FRPSystem) {
         for elem in self.elems.iter_mut() {
             match elem {
                 CompElement::Node(node) => {
-                   if let Err(err) = node.update(world, ctx) {
+                   if let Err(err) = node.update(world, ctx,frp_sys) {
                       log::error!("node {} update error:{}",self.name.as_str(),&err);
                    }
                 }

@@ -77,7 +77,7 @@ impl FRPDSLSystem {
 
     pub fn update(&mut self,ctx:&mut RenderContext,world:&mut World) {
         if let Some(main_comp) = self.main_comp.as_mut() {
-            main_comp.update(world, ctx);
+            main_comp.update(world, ctx,&mut self.frp_system);
         }
         self.path_context.update(world, ctx,&self.elem_creator,&mut self.vm,&mut self.frp_system);
         

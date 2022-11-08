@@ -54,7 +54,7 @@ impl RenderPath {
         let res_id_ptr = Box::into_raw(res_id) as *mut u8;
         let dyn_target_texture = frp_sys.new_dynamic(Variable::UserData(res_id_ptr), camera_target_event, None).unwrap();
         env_map.insert(path_target_key, Variable::Int(dyn_target_texture as i64));
-
+        
         
         Ok(RenderPath {
             camera_target_event,
@@ -132,7 +132,7 @@ impl RenderPathContext {
                 path.wait_init = false;
             }
             if let Some(main_comp) = path.main_comp.as_mut() {
-                main_comp.update(world, ctx);
+                main_comp.update(world, ctx,frp_sys);
             }
         }
     }

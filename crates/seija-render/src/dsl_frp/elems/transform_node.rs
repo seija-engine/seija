@@ -1,5 +1,6 @@
 use bevy_ecs::{world::World, prelude::Entity, query::{Added, With, Changed}};
 use lite_clojure_eval::Variable;
+use lite_clojure_frp::FRPSystem;
 use seija_asset::Handle;
 use seija_transform::Transform;
 use smol_str::SmolStr;
@@ -40,21 +41,20 @@ impl TransfromNode {
 }
 
 impl IUpdateNode for TransfromNode {
-    fn init(&mut self,_:&mut World,ctx:&mut RenderContext) -> anyhow::Result<()> {
+    fn init(&mut self,_:&mut World,ctx:&mut RenderContext,frp_sys:&mut FRPSystem) -> anyhow::Result<()> {
         let info = ctx.ubo_ctx.info.get_info(&self.ubo_name).ok_or(Errors::NotFoundUBO(self.ubo_name.clone()))?;
-        let backend = TransformBackend::from_def(&info.props)
-                                                        .map_err(|v| anyhow!("transform backend err:{}",v.as_str()))?;
+        let backend = TransformBackend::from_def(&info.props).map_err(|v| anyhow!("transform backend err:{}",v.as_str()))?;
         self.backend = Some(backend);
         Ok(())
     }
 
-    fn active(&mut self,_world:&mut World,ctx:&mut RenderContext) -> Result<()> {
+    fn active(&mut self,_world:&mut World,ctx:&mut RenderContext,frp_sys:&mut FRPSystem) -> Result<()> {
         let name_index = ctx.ubo_ctx.get_index(self.ubo_name.as_str()).ok_or(anyhow!("err ubo name"))?;
         self.name_index = Some(name_index);
         Ok(())
     }
 
-    fn update(&mut self,world:&mut World,ctx:&mut RenderContext) -> Result<()> {
+    fn update(&mut self,world:&mut World,ctx:&mut RenderContext,frp_sys:&mut FRPSystem) -> Result<()> {
         self.prepare(world, ctx)?;
         let mut trans = world.query_filtered::<(Entity,&Transform),(Changed<Transform>,With<Handle<Mesh>>,With<Handle<Material>>)>();
         for (e,t) in trans.iter(world) { 
