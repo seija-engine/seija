@@ -17,7 +17,7 @@ impl RenderInfo {
        match std::fs::read_to_string(path) {
           Ok(code) => {
               let mut info_set:UniformInfoSet = UniformInfoSet::default();
-              self.system.init(&code, &mut info_set, &vec![]);
+              self.system.init(&code, &mut info_set, &vec![],None);
               for (_,ubo_info) in info_set.components.drain() {
                   self.add_ubo_info(ubo_info);
               }

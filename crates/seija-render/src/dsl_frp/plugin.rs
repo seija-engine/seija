@@ -7,7 +7,9 @@ use super::elems::{camera_node::CameraNode, IUpdateNode, transform_node::Transfr
 pub type NodeCreateFn = fn(args:Vec<Variable>) -> Result<Box<dyn IUpdateNode>>;
 #[derive(Default)]
 pub struct RenderScriptPlugin {
-    pub node_creators:HashMap<SmolStr,NodeCreateFn>
+    pub node_creators:HashMap<SmolStr,NodeCreateFn>,
+    pub events:Vec<SmolStr>,
+    pub dynamics:Vec<(SmolStr,Variable)>,
 }
 
 impl RenderScriptPlugin {
@@ -21,5 +23,6 @@ pub fn create_buildin_plugin() -> RenderScriptPlugin {
     plugin.add_node_creator("Camera", CameraNode::from_args);
     plugin.add_node_creator("Transform", TransfromNode::from_args);
     plugin.add_node_creator("WinResize", WindowReSizeNode::from_args);
+    plugin.dynamics.push(("dynBase3D".into(),Variable::Bool(true)));
     plugin
 }

@@ -1,8 +1,10 @@
 use std::path::{PathBuf, Path};
 use std::sync::Arc;
+use camera::camera_event_system;
 use dsl_frp::RenderScriptPlugin;
 use query::QuerySystem;
 use render::{AppRender, Config };
+use frp_context::FRPContext;
 use resource::{Mesh, Texture, color_texture};
 use resource::shape::{Cube, Sphere, Plane, Quad, SkyBox};
 use scene::SceneEnv;
@@ -13,6 +15,7 @@ use seija_asset::{AssetServer, Assets};
 use seija_core::{CoreStage};
 extern crate serde_derive;
 pub use wgpu;
+mod frp_context;
 mod graph_setting;
 pub mod dsl_frp;
 pub mod material;
@@ -37,6 +40,7 @@ pub use uniforms::{UniformInfoSet,UniformInfo,UniformIndex};
 pub use uniforms::backends::{IShaderBackend};
 pub use memory::{UniformInfo as MemUniformInfo,RawUniformInfo,UniformType,UniformBufferDef,UniformBuffer,ArrayPropInfo};
 pub use query::SceneOctreeModule;
+
 
 #[derive(Debug, Hash, PartialEq, Eq, Clone,StageLabel )]
 pub enum RenderStage {
@@ -65,11 +69,11 @@ pub struct RenderModule(pub Arc<RenderConfig>);
 
 impl IModule for RenderModule {
     fn init(&mut self,app:&mut App) {
-        
         resource::init_resource(app);
         material::init_material(app);
         light::init_light(app);
-       
+        
+        app.add_resource(FRPContext::new());
         Self::init_buildin_assets(&mut app.world);
         app.add_resource(QuerySystem::default());
         let render_system = self.get_render_system(&mut app.world,self.0.clone());
@@ -77,6 +81,8 @@ impl IModule for RenderModule {
         app.schedule.add_stage_before(RenderStage::AfterRender, RenderStage::Render, SystemStage::single(render_system.exclusive_system()));
         app.schedule.add_stage_before(RenderStage::Render, RenderStage::PostRender, SystemStage::parallel());
         query::init_system(app);
+
+        app.add_system(CoreStage::PostUpdate, camera_event_system);
         app.init_resource::<SceneEnv>();
     }
 }
@@ -97,15 +103,15 @@ impl RenderModule {
     }
 
     fn init_render(&self,w:&mut World,mut ctx:RenderContext,app_render:&mut AppRender,config:Arc<RenderConfig>) {
+        let frp_ctx = w.get_resource::<FRPContext>().unwrap();
         for plugin in self.0.plugins.iter() {
-            app_render.frp_render.apply_plugin(plugin);
+            app_render.frp_render.apply_plugin(plugin,Some(frp_ctx));
         }
         ctx.ubo_ctx.init(&mut ctx.resources);
         
-      
         match std::fs::read_to_string(&self.0.script_path) {
-            Ok(code_string) => {
-                app_render.frp_render.init(&code_string,&mut ctx.ubo_ctx.info,&config.render_lib_paths);
+            Ok(code_string) => {        
+                app_render.frp_render.init(&code_string,&mut ctx.ubo_ctx.info,&config.render_lib_paths,Some(frp_ctx));
             },
             Err(err) => {
                 log::error!("load main render script:{:?} error:{:?}",&self.0.script_path,err);

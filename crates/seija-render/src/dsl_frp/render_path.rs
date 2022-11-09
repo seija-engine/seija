@@ -5,7 +5,7 @@ use bevy_ecs::{
     world::World,
 };
 use lite_clojure_eval::{Variable, EvalRT, GcRefCell};
-use lite_clojure_frp::{FRPSystem, EventID};
+use lite_clojure_frp::FRPSystem;
 use seija_transform::Transform;
 use smol_str::SmolStr;
 use std::{collections::HashMap, sync::Arc};
@@ -20,10 +20,8 @@ pub struct RenderPathDefine {
 }
 
 pub struct RenderPath {
-    camera_target_event:EventID,
     define:Arc<RenderPathDefine>,
     wait_init:bool,
-    camera_entity:Entity,
     env:GcRefCell<HashMap<Variable,Variable>>,
     main_comp: Option<FRPComponent>,
 }
@@ -57,10 +55,8 @@ impl RenderPath {
         
         
         Ok(RenderPath {
-            camera_target_event,
             define,
             wait_init:true,
-            camera_entity:entity,
             env:GcRefCell::new(env_map),
             main_comp:None
         })
@@ -112,6 +108,7 @@ impl RenderPathContext {
         let mut added_cameras = world.query_filtered::<(Entity, &Camera), (Added<Camera>, With<Transform>)>();
         for (entity, camera) in added_cameras.iter(world) {
             if let Some(define) = self.defines.get(camera.path.as_str()) {
+                
                 match RenderPath::create(entity,&world, camera,define.clone(),frp_sys) {
                     Ok(path) => { self.path_list.push(path); },
                     Err(err) => { log::error!("{:?}",err); }

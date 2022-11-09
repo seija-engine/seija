@@ -1,5 +1,5 @@
-use bevy_ecs::prelude::{Component};
-use glam::{Mat4};
+use bevy_ecs::prelude::Component;
+use glam::Mat4;
 use seija_asset::Handle;
 use smol_str::SmolStr;
 use crate::resource::Texture;
@@ -12,7 +12,8 @@ pub struct Camera {
     pub path:SmolStr,
     pub target:Option<Handle<Texture>>,
     pub layer:u32,
-    pub cull_type:i32
+    pub cull_type:i32,
+    pub is_hdr:bool
  }
  
  impl Default for Camera {
@@ -23,7 +24,8 @@ pub struct Camera {
           order:0,
           target:None,
           layer:1,
-          cull_type:0
+          cull_type:0,
+          is_hdr:false
        }
     }
 }

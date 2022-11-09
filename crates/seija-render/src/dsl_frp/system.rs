@@ -1,10 +1,9 @@
 use std::path::PathBuf;
-
-use bevy_ecs::{world::World};
+use seija_app::ecs::{world::World,change_detection::Mut};
 use lite_clojure_eval::{EvalRT, Variable};
 use lite_clojure_frp::{FRPSystem,fns::add_frp_fns};
 use anyhow::Result;
-use crate::{UniformInfoSet, RenderContext};
+use crate::{UniformInfoSet, RenderContext, frp_context::FRPContext};
 
 use super::{fns, builder::FRPCompBuilder, frp_comp::{IElement, FRPComponent}, 
             plugin::{RenderScriptPlugin, create_buildin_plugin, NodeCreateFn}, 
@@ -14,7 +13,6 @@ unsafe impl Send for FRPDSLSystem {}
 unsafe impl Sync for FRPDSLSystem {}
 pub struct FRPDSLSystem {
     pub vm:EvalRT,
-    frp_system:FRPSystem,
     elem_creator:ElementCreator,
     path_context:RenderPathContext,
     main_comp:Option<FRPComponent>
@@ -26,17 +24,16 @@ impl FRPDSLSystem {
         vm.init();
         add_frp_fns(&mut vm);
         FRPDSLSystem {
-            vm, 
-            frp_system: FRPSystem::new(),
+            vm,
             path_context:RenderPathContext::default(),
             main_comp:None,
             elem_creator:ElementCreator::default()
         }
     }
 
-    pub fn init(&mut self,code_string:&str,info_set:&mut UniformInfoSet,lib_paths:&Vec<PathBuf>) {
+    pub fn init(&mut self,code_string:&str,info_set:&mut UniformInfoSet,lib_paths:&Vec<PathBuf>,frp_ctx:Option<&FRPContext>) {
         let plugin = create_buildin_plugin();
-        self.apply_plugin(&plugin);
+        self.apply_plugin(&plugin,frp_ctx);
 
         for lib_path in lib_paths.iter() {
             self.vm.add_search_path(lib_path);
@@ -53,34 +50,52 @@ impl FRPDSLSystem {
     }
 
     pub fn start(&mut self,ctx:&mut RenderContext,world:&mut World) -> Result<()> {
-        let mut builder = FRPCompBuilder::new();
-        let builder_ptr = &mut builder as *mut FRPCompBuilder as *mut u8;
-        self.vm.global_context().set_var("*BUILDER*", Variable::UserData(builder_ptr));
-        let world_ptr = world as *mut World as *mut u8;
-        self.vm.global_context().set_var("*WORLD*", Variable::UserData(world_ptr));
-        let frp_ptr = &mut self.frp_system as *mut FRPSystem as *mut u8;
-        self.vm.global_context().set_var("*FRPSystem*", Variable::UserData(frp_ptr));
-        if let Err(err) = self.vm.invoke_func("start", vec![]) {
-            log::error!("FRPDSLSystem start error:{:?}",err);
-        }
-        let mut main_comp = builder.build(&self.elem_creator)?;
-        main_comp.init(world,ctx,&mut self.frp_system)?;
-        main_comp.active(world,ctx,&mut self.frp_system)?;
-        self.main_comp = Some(main_comp);
+        world.resource_scope(|world:&mut World,frp_ctx:Mut<FRPContext>| {
+            let mut builder = FRPCompBuilder::new();
+            let builder_ptr = &mut builder as *mut FRPCompBuilder as *mut u8;
+            self.vm.global_context().set_var("*BUILDER*", Variable::UserData(builder_ptr));
+            let world_ptr = world as *mut World as *mut u8;
+            self.vm.global_context().set_var("*WORLD*", Variable::UserData(world_ptr));
+            let mut write_frp = frp_ctx.inner.write();
+            let mut_system:&mut FRPSystem = &mut write_frp.system;
+            let frp_ptr = mut_system as *mut FRPSystem as *mut u8;
+            self.vm.global_context().set_var("*FRPSystem*", Variable::UserData(frp_ptr));
+            if let Err(err) = self.vm.invoke_func("start", vec![]) {
+                log::error!("FRPDSLSystem start error:{:?}",err);
+            }
+            let mut main_comp = builder.build(&self.elem_creator)?;
+            main_comp.init(world,ctx,mut_system)?;
+            main_comp.active(world,ctx,mut_system)?;
+            self.main_comp = Some(main_comp);
         
-        Ok(())
+            Ok(())
+        })
     }
 
-    pub fn apply_plugin(&mut self,plugin:&RenderScriptPlugin) {
+    pub fn apply_plugin(&mut self,plugin:&RenderScriptPlugin,frp_ctx:Option<&FRPContext>) {
         self.elem_creator.apply_plugin(&mut self.vm,plugin);
+        if let Some(frp_ctx) = frp_ctx {
+            let mut ctx_inner = frp_ctx.inner.write();
+            for event in plugin.events.iter() {
+               let evid = ctx_inner.new_event(Some(event.clone()));
+               self.vm.global_context().set_var(event.as_str(), Variable::Int(evid as i64));
+            }
+            for (name,default_value) in plugin.dynamics.iter() {
+                let dynid = ctx_inner.new_dynamic(Some(name.clone()),default_value.clone());
+                self.vm.global_context().set_var(name.as_str(), Variable::Int(dynid as i64));
+             }
+        }
     }
 
     pub fn update(&mut self,ctx:&mut RenderContext,world:&mut World) {
-        if let Some(main_comp) = self.main_comp.as_mut() {
-            main_comp.update(world, ctx,&mut self.frp_system);
-        }
-        self.path_context.update(world, ctx,&self.elem_creator,&mut self.vm,&mut self.frp_system);
-        
+        world.resource_scope(|world:&mut World,frp_ctx:Mut<FRPContext>| {
+            let mut write_frp = frp_ctx.inner.write();
+            let mut_system:&mut FRPSystem = &mut write_frp.system;
+            if let Some(main_comp) = self.main_comp.as_mut() {
+                main_comp.update(world, ctx,mut_system);
+            }
+            self.path_context.update(world, ctx,&self.elem_creator,&mut self.vm,mut_system);
+        });
     }
 }
 
