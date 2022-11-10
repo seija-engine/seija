@@ -1,6 +1,6 @@
 use bevy_ecs::world::World;
 use lite_clojure_eval::{EvalRT, ExecScope, Variable, run_native_fn};
-use lite_clojure_frp::FRPSystem;
+use lite_clojure_frp::{FRPSystem, DynamicID};
 use serde_json::Value;
 use anyhow::{anyhow,Result};
 use std::{convert::TryFrom, sync::Arc};
@@ -20,6 +20,7 @@ pub fn init_fns(vm:&mut EvalRT) {
     vm.global_context().push_native_fn("uniform", uniform);
     vm.global_context().push_native_fn("node", node);
     vm.global_context().push_native_fn("texture", texture);
+    vm.global_context().push_native_fn("if-comp", if_comp);
     vm.global_context().push_native_fn("add-render-path", add_render_path);
 
     vm.global_context().push_var("SS_VERTEX", wgpu::ShaderStage::VERTEX.bits() as i64 );
@@ -118,6 +119,18 @@ pub fn texture(s:&mut ExecScope,a:Vec<Variable>) -> Variable {
         builder.push_command(BuilderCommand::Texture(desc_info,dyn_texture));
 
         Ok(Variable::Int(dyn_texture as i64))
+    })
+}
+
+pub fn if_comp(s:&mut ExecScope,a:Vec<Variable>) -> Variable { 
+    run_native_fn("if-comp", s, a, |scope,mut args| {
+        if args.len() < 2 || args.len() > 3 { return Err(anyhow!(Errors::FuncParamCountError)); }
+        let dyn_id = args.remove(0).cast_int().ok_or(Errors::TypeCastError("int"))? as DynamicID;
+        let true_comp = args.remove(0);
+        let else_comp = if args.len() > 0 { Some(args.remove(0)) } else { None };
+        let builder = find_frp_builder(scope)?;
+        builder.push_command(BuilderCommand::IfComp(dyn_id,true_comp,else_comp));
+        Ok(Variable::Nil)
     })
 }
 

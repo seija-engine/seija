@@ -2,7 +2,7 @@ use bevy_ecs::world::World;
 use anyhow::Result;
 use lite_clojure_frp::FRPSystem;
 use crate::RenderContext;
-use super::elems::{UniformElement, ElementNode, TextureElement};
+use super::elems::{UniformElement, ElementNode, TextureElement, if_comp::IfCompElement};
 
 pub trait IElement {
     fn init(&mut self,_world:&mut World,_ctx:&mut RenderContext,_frp_sys:&mut FRPSystem) -> Result<()> { Ok(()) }
@@ -84,7 +84,8 @@ pub enum CompElement {
     Unifrom(UniformElement),
     Component(FRPComponent),
     Node(ElementNode),
-    Texture(TextureElement)
+    Texture(TextureElement),
+    IfComp(IfCompElement)
 }
 
 impl CompElement {
@@ -93,7 +94,8 @@ impl CompElement {
             CompElement::Unifrom(uniform) => { f(uniform) },
             CompElement::Component(frp) => { f(frp) },
             CompElement::Node(node) => { f(node); },
-            CompElement::Texture(texture) => { f(texture) }
+            CompElement::Texture(texture) => { f(texture) },
+            CompElement::IfComp(if_comp) => { f(if_comp) }
         }
     }
 

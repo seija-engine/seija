@@ -3,7 +3,7 @@ use seija_app::ecs::{world::World,change_detection::Mut};
 use lite_clojure_eval::{EvalRT, Variable};
 use lite_clojure_frp::{FRPSystem,fns::add_frp_fns};
 use anyhow::Result;
-use crate::{UniformInfoSet, RenderContext, frp_context::FRPContext};
+use crate::{UniformInfoSet, RenderContext, frp_context::{FRPContext, FRPContextInner}};
 
 use super::{fns, builder::FRPCompBuilder, frp_comp::{IElement, FRPComponent}, 
             plugin::{RenderScriptPlugin, create_buildin_plugin, NodeCreateFn}, 
@@ -63,7 +63,7 @@ impl FRPDSLSystem {
             if let Err(err) = self.vm.invoke_func("start", vec![]) {
                 log::error!("FRPDSLSystem start error:{:?}",err);
             }
-            let mut main_comp = builder.build(&self.elem_creator)?;
+            let mut main_comp = builder.build(&self.elem_creator,&mut self.vm)?;
             main_comp.init(world,ctx,mut_system)?;
             main_comp.active(world,ctx,mut_system)?;
             self.main_comp = Some(main_comp);
@@ -74,13 +74,14 @@ impl FRPDSLSystem {
 
     pub fn apply_plugin(&mut self,plugin:&RenderScriptPlugin,frp_ctx:Option<&FRPContext>) {
         self.elem_creator.apply_plugin(&mut self.vm,plugin);
+        self.path_context.apply_plugin(plugin, frp_ctx);
         if let Some(frp_ctx) = frp_ctx {
             let mut ctx_inner = frp_ctx.inner.write();
-            for event in plugin.events.iter() {
+            for event in plugin.global_events.iter() {
                let evid = ctx_inner.new_event(Some(event.clone()));
                self.vm.global_context().set_var(event.as_str(), Variable::Int(evid as i64));
             }
-            for (name,default_value) in plugin.dynamics.iter() {
+            for (name,default_value) in plugin.global_dynamics.iter() {
                 let dynid = ctx_inner.new_dynamic(Some(name.clone()),default_value.clone());
                 self.vm.global_context().set_var(name.as_str(), Variable::Int(dynid as i64));
              }
@@ -90,11 +91,11 @@ impl FRPDSLSystem {
     pub fn update(&mut self,ctx:&mut RenderContext,world:&mut World) {
         world.resource_scope(|world:&mut World,frp_ctx:Mut<FRPContext>| {
             let mut write_frp = frp_ctx.inner.write();
-            let mut_system:&mut FRPSystem = &mut write_frp.system;
+            let mut_ctx_inner:&mut FRPContextInner = &mut write_frp;
             if let Some(main_comp) = self.main_comp.as_mut() {
-                main_comp.update(world, ctx,mut_system);
+                main_comp.update(world, ctx,&mut mut_ctx_inner.system);
             }
-            self.path_context.update(world, ctx,&self.elem_creator,&mut self.vm,mut_system);
+            self.path_context.update(world, ctx,&self.elem_creator,&mut self.vm,mut_ctx_inner);
         });
     }
 }

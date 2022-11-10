@@ -7,6 +7,7 @@ use crate::{RenderContext, resource::{TextureDescInfo, Texture, RenderResourceId
 pub mod camera_node;
 pub mod transform_node;
 pub mod window_resize_node;
+pub mod if_comp;
 use super::frp_comp::IElement;
 pub struct UniformElement {
     name:String

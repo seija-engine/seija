@@ -19,15 +19,18 @@
 
 (defn foward-path [env]
   (__frp_enter__ "foward-path")
-  (let [depth-texture (texture {:format "Depth32Float"}) hdr-draw-comp [hdr-draw 1 2]]
+  (let [depth-texture (texture {:format "Depth32Float"}) 
+        hdr-draw-comp [hdr-draw 1 2] 
+        dynIsHDR (env :dynIsHDR)]
     (node WinResizeNodeID [depth-texture])
-     ;(if-comp dynIsHDR hdr-draw-comp)
+    (if-comp dynIsHDR hdr-draw-comp)
   )
   (__frp_exit__)
 )
 
 (defn hdr-draw [a b]
-
+  (__frp_enter__ "hdr-draw")
+  (__frp_exit__)
 )
 
 

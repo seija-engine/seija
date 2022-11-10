@@ -1,8 +1,8 @@
-use crate::{dsl_frp::{elems::{UniformElement, TextureElement}, frp_comp::CompElement}, resource::TextureDescInfo};
+use crate::{dsl_frp::{elems::{UniformElement, TextureElement, if_comp::IfCompElement}, frp_comp::CompElement}, resource::TextureDescInfo};
 
 use super::{frp_comp::FRPComponent, system::ElementCreator};
 use anyhow::{Result,anyhow};
-use lite_clojure_eval::Variable;
+use lite_clojure_eval::{Variable, EvalRT};
 use lite_clojure_frp::DynamicID;
 
 #[derive(Debug)]
@@ -11,7 +11,8 @@ pub enum BuilderCommand {
     EndComp,
     Uniform(String),
     Node(i64,Vec<Variable>),
-    Texture(TextureDescInfo,DynamicID)
+    Texture(TextureDescInfo,DynamicID),
+    IfComp(DynamicID,Variable,Option<Variable>)
 }
 
 pub struct FRPCompBuilder {
@@ -28,7 +29,7 @@ impl FRPCompBuilder {
         self.command_list.push(command);
     }
 
-    pub fn build(mut self,creator:&ElementCreator) -> Result<FRPComponent> {
+    pub fn build(mut self,creator:&ElementCreator,vm:&mut EvalRT) -> Result<FRPComponent> {
         for command in self.command_list.drain(..) {
            log::info!("Exec FRPCompBuilder:{:?}",&command);
             match command {
@@ -57,7 +58,12 @@ impl FRPCompBuilder {
                     let element = CompElement::Texture(TextureElement::new(desc_info,dyn_id));
                     let cur_comp = self.comp_stack.last_mut().ok_or(anyhow!("stack comp is nil"))?;
                     cur_comp.add_element(element);
-                }
+                },
+                BuilderCommand::IfComp(dynamic_id, true_comp_var,else_comp_var) => {
+                    let element = CompElement::IfComp(IfCompElement {dynamic_id,true_comp_var,else_comp_var });
+                    let cur_comp = self.comp_stack.last_mut().ok_or(anyhow!("stack comp is nil"))?;
+                    cur_comp.add_element(element);
+                },
             }
         }
         Err(anyhow!("error eof"))

@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 
+use seija_app::ecs::prelude::Entity;
 use lite_clojure_eval::Variable;
 use lite_clojure_frp::{FRPSystem, DynamicID, EventID};
 use parking_lot::RwLock;
@@ -16,8 +17,10 @@ pub struct FRPContext {
 
 pub struct FRPContextInner {
     pub system:FRPSystem,
-    named_events:HashMap<SmolStr,EventID>,
-    named_dyns:HashMap<SmolStr,DynamicID>
+    global_events:HashMap<SmolStr,EventID>,
+    global_dyns:HashMap<SmolStr,DynamicID>,
+    camera_events:HashMap<(Entity,SmolStr),EventID>,
+    dynamic_events:HashMap<(Entity,SmolStr),EventID>,
 }
 
 impl FRPContext {
@@ -25,8 +28,10 @@ impl FRPContext {
         FRPContext {
             inner:FRPContextInner {
                 system:FRPSystem::new(),
-                named_events:HashMap::default(),
-                named_dyns:HashMap::default()
+                global_events:HashMap::default(),
+                global_dyns:HashMap::default(),
+                camera_events:HashMap::default(),
+                dynamic_events:HashMap::default()
             }.into()
         }
     }
@@ -36,7 +41,7 @@ impl FRPContextInner {
     pub fn new_event(&mut self,name:Option<SmolStr>) -> EventID {
         let event_id = self.system.new_event(None);
         if let Some(name) = name {
-            self.named_events.insert(name, event_id);
+            self.global_events.insert(name, event_id);
         }
         event_id
     }
@@ -44,8 +49,20 @@ impl FRPContextInner {
     pub fn new_dynamic(&mut self,name:Option<SmolStr>,value:Variable) -> DynamicID {
         let dyn_id = self.system.new_dynamic(value, self.system.never(), None).unwrap();
         if let Some(name) = name {
-            self.named_dyns.insert(name, dyn_id);
+            self.global_dyns.insert(name, dyn_id);
         }
+        dyn_id
+    }
+
+    pub fn new_camera_event(&mut self,entity:Entity,name:SmolStr) -> EventID {
+        let event_id = self.system.new_event(None);
+        self.camera_events.insert((entity,name), event_id);
+        event_id
+    }
+
+    pub fn new_camera_dynamic(&mut self,entity:Entity,name:SmolStr,value:Variable) -> DynamicID {
+        let dyn_id = self.system.new_dynamic(value,self.system.never(),None).unwrap();
+        self.dynamic_events.insert((entity,name), dyn_id);
         dyn_id
     }
 }
