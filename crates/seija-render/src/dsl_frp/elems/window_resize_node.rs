@@ -23,7 +23,6 @@ impl WindowReSizeNode {
                 dyn_textures.push(dyn_id);
             }
         }
-        dbg!(&dyn_textures);
         Ok(Box::new(WindowReSizeNode {
             dyn_textures,
             win_event:WindowEvent::default()

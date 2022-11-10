@@ -1,6 +1,6 @@
 use bevy_ecs::world::World;
 use anyhow::Result;
-use lite_clojure_eval::Variable;
+use lite_clojure_eval::{Variable, EvalRT};
 use lite_clojure_frp::{DynamicID, FRPSystem};
 use seija_asset::Assets;
 use crate::{RenderContext, resource::{TextureDescInfo, Texture, RenderResourceId}};
@@ -8,7 +8,7 @@ pub mod camera_node;
 pub mod transform_node;
 pub mod window_resize_node;
 pub mod if_comp;
-use super::frp_comp::IElement;
+use super::{frp_comp::IElement, system::ElementCreator};
 pub struct UniformElement {
     name:String
 }
@@ -53,7 +53,8 @@ impl ElementNode {
 }
 
 impl IElement for ElementNode {
-    fn init(&mut self,world:&mut World,ctx:&mut RenderContext,frp_sys:&mut FRPSystem) -> Result<()> {
+    fn init(&mut self,world:&mut World,ctx:&mut RenderContext,frp_sys:&mut FRPSystem,
+            _vm:&mut EvalRT,_elem_creator:&ElementCreator) -> Result<()> {
         self.node.init(world, ctx,frp_sys)
     }
     

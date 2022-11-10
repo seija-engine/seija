@@ -1,11 +1,13 @@
 use bevy_ecs::world::World;
 use anyhow::Result;
+use lite_clojure_eval::EvalRT;
 use lite_clojure_frp::FRPSystem;
 use crate::RenderContext;
-use super::elems::{UniformElement, ElementNode, TextureElement, if_comp::IfCompElement};
+use super::{elems::{UniformElement, ElementNode, TextureElement, if_comp::IfCompElement}, system::ElementCreator};
 
 pub trait IElement {
-    fn init(&mut self,_world:&mut World,_ctx:&mut RenderContext,_frp_sys:&mut FRPSystem) -> Result<()> { Ok(()) }
+    fn init(&mut self,_world:&mut World,_ctx:&mut RenderContext,
+            _frp_sys:&mut FRPSystem,_vm:&mut EvalRT,_elem_creator:&ElementCreator) -> Result<()> { Ok(()) }
     fn active(&mut self,world:&mut World,ctx:&mut RenderContext,_frp_sys:&mut FRPSystem) -> Result<()>;
     fn deactive(&mut self,world:&mut World,ctx:&mut RenderContext,_frp_sys:&mut FRPSystem) -> Result<()>;
     fn update(&mut self,_world:&mut World,_ctx:&mut RenderContext,_frp_sys:&mut FRPSystem) -> Result<()> { Ok(()) }
@@ -43,10 +45,10 @@ impl FRPComponent {
 }
 
 impl IElement for FRPComponent {
-    fn init(&mut self,world:&mut World,ctx:&mut RenderContext,frp_sys:&mut FRPSystem) -> Result<()> {
+    fn init(&mut self,world:&mut World,ctx:&mut RenderContext,frp_sys:&mut FRPSystem,vm:&mut EvalRT,elem_creator:&ElementCreator) -> Result<()> {
         for elem in self.elems.iter_mut() {
             elem.opt_element_mut(|v| {
-                if let Err(err) = v.init(world,ctx,frp_sys) {
+                if let Err(err) = v.init(world,ctx,frp_sys,vm,elem_creator) {
                     log::error!("element init error:{:?}",&err);
                 };
             });

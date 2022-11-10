@@ -60,8 +60,10 @@ impl FRPCompBuilder {
                     cur_comp.add_element(element);
                 },
                 BuilderCommand::IfComp(dynamic_id, true_comp_var,else_comp_var) => {
-                    let element = CompElement::IfComp(IfCompElement {dynamic_id,true_comp_var,else_comp_var });
+                    let if_comp = IfCompElement::new(dynamic_id, true_comp_var, else_comp_var)?;
+                    let element = CompElement::IfComp(if_comp);
                     let cur_comp = self.comp_stack.last_mut().ok_or(anyhow!("stack comp is nil"))?;
+                 
                     cur_comp.add_element(element);
                 },
             }

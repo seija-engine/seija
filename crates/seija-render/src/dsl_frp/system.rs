@@ -52,19 +52,14 @@ impl FRPDSLSystem {
     pub fn start(&mut self,ctx:&mut RenderContext,world:&mut World) -> Result<()> {
         world.resource_scope(|world:&mut World,frp_ctx:Mut<FRPContext>| {
             let mut builder = FRPCompBuilder::new();
-            let builder_ptr = &mut builder as *mut FRPCompBuilder as *mut u8;
-            self.vm.global_context().set_var("*BUILDER*", Variable::UserData(builder_ptr));
-            let world_ptr = world as *mut World as *mut u8;
-            self.vm.global_context().set_var("*WORLD*", Variable::UserData(world_ptr));
             let mut write_frp = frp_ctx.inner.write();
             let mut_system:&mut FRPSystem = &mut write_frp.system;
-            let frp_ptr = mut_system as *mut FRPSystem as *mut u8;
-            self.vm.global_context().set_var("*FRPSystem*", Variable::UserData(frp_ptr));
+            Self::set_global_vars(&mut self.vm, &mut builder, world, mut_system);
             if let Err(err) = self.vm.invoke_func("start", vec![]) {
                 log::error!("FRPDSLSystem start error:{:?}",err);
             }
             let mut main_comp = builder.build(&self.elem_creator,&mut self.vm)?;
-            main_comp.init(world,ctx,mut_system)?;
+            main_comp.init(world,ctx,mut_system,&mut self.vm,&self.elem_creator)?;
             main_comp.active(world,ctx,mut_system)?;
             self.main_comp = Some(main_comp);
         
@@ -98,6 +93,16 @@ impl FRPDSLSystem {
             self.path_context.update(world, ctx,&self.elem_creator,&mut self.vm,mut_ctx_inner);
         });
     }
+
+    pub fn set_global_vars(vm:&mut EvalRT,builder:&mut FRPCompBuilder,world:&mut World,system:&mut FRPSystem) {
+        let builder_ptr = builder as *mut FRPCompBuilder as *mut u8;
+        vm.global_context().set_var("*BUILDER*", Variable::UserData(builder_ptr));
+        let world_ptr = world as *mut World as *mut u8;
+        vm.global_context().set_var("*WORLD*", Variable::UserData(world_ptr));
+        let frp_ptr = system as *mut FRPSystem as *mut u8;
+        vm.global_context().set_var("*FRPSystem*", Variable::UserData(frp_ptr));
+    }
+
 }
 
 #[derive(Default)]

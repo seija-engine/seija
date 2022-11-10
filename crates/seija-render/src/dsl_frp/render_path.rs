@@ -64,7 +64,7 @@ impl RenderPath {
         })
     }
 
-    pub fn init(&mut self,world:&mut World,_ctx:&mut RenderContext,vm:&mut EvalRT,
+    pub fn init(&mut self,world:&mut World,ctx:&mut RenderContext,vm:&mut EvalRT,
                 creator:&ElementCreator,frp_sys:&mut FRPSystem) -> Result<()> {
         let mut builder = FRPCompBuilder::new();
         let builder_ptr = &mut builder as *mut FRPCompBuilder as *mut u8;
@@ -76,8 +76,12 @@ impl RenderPath {
         vm.global_context().set_var("*FRPSystem*", Variable::UserData(frp_ptr));
         vm.invoke_func2(&self.define.start_func, vec![Variable::Map(env_map_cell)]).map_err(|err| anyhow!("{:?}",err))?;
         match builder.build(creator,vm) {
-            Ok(comp) => {
+            Ok(mut comp) => {
+                if let Err(err) = comp.init(world, ctx, frp_sys, vm,creator) {
+                    log::error!("comp init error:{:?}",err);
+                }
                 self.main_comp = Some(comp);
+                
             },
             Err(err) => { return Err(anyhow!("build camera path {} comp error:{:?}",self.define.name.as_str(),err)); }
         }
