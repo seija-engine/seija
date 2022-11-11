@@ -31,6 +31,7 @@ impl FRPComponent {
     }
 
     pub fn update(&mut self,world:&mut World,ctx:&mut RenderContext,frp_sys:&mut FRPSystem) {
+       
         for elem in self.elems.iter_mut() {
             match elem {
                 CompElement::Node(node) => {
@@ -38,7 +39,13 @@ impl FRPComponent {
                       log::error!("node {} update error:{}",self.name.as_str(),&err);
                    }
                 }
-                _ => {}
+                elem => {
+                    elem.opt_element_mut(|e| {
+                       if let Err(err) = e.update(world, ctx, frp_sys) {
+                            log::error!("element update error:{:?}",&err);
+                       }
+                    });
+                }
             }
         }
     }
@@ -53,6 +60,12 @@ impl IElement for FRPComponent {
                 };
             });
         }
+        Ok(())
+    }
+
+    fn update(&mut self,world:&mut World,ctx:&mut RenderContext,frp_sys:&mut FRPSystem) -> Result<()> {
+        self.update(world, ctx, frp_sys);
+
         Ok(())
     }
 

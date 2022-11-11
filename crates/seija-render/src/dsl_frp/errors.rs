@@ -14,5 +14,7 @@ pub(crate) enum Errors {
     #[error("not found ubo {0}")]
     NotFoundUBO(SmolStr),
     #[error("func param count error")]
-    FuncParamCountError
+    FuncParamCountError,
+    #[error("not found dynamic")]
+    NotFoundDynamic,
 }

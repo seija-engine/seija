@@ -221,7 +221,7 @@ impl RenderResources {
         }  
     }
 
-    pub fn get_texture_format(&mut self,resid:&RenderResourceId,world:&World) -> Option<TextureFormat> {
+    pub fn get_texture_format(&self,resid:&RenderResourceId,world:&World) -> Option<TextureFormat> {
         match resid {
             RenderResourceId::MainSwap => {
                Some(wgpu::TextureFormat::Bgra8Unorm)

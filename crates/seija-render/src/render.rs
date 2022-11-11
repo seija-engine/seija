@@ -104,10 +104,10 @@ impl AppRender {
         
         let command_buffer = ctx.command_encoder.take().unwrap().finish();
         self.queue.submit(Some(command_buffer));
-        if ctx.frame_draw_pass > 0 {
+        //if ctx.frame_draw_pass > 0 {
           ctx.resources.clear_swap_chain_texture();
           ctx.frame_draw_pass = 0;
-        }
+        //}
        
     }
 

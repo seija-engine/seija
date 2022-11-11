@@ -44,6 +44,7 @@ impl IUpdateNode for WindowReSizeNode {
                            let mut texture_desc = texture.desc().clone();
                            texture_desc.desc.size.width = w;
                            texture_desc.desc.size.height = h;
+                          
                            let new_h_texture = Box::new(RenderResourceId::Texture(textures.add(Texture::create_by_desc(texture_desc))));
                            let ptr = Box::into_raw(new_h_texture) as *mut u8;
                            dynamic.set_value(Variable::UserData(ptr));

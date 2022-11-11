@@ -23,17 +23,19 @@
         dynIsHDR  (env :dynIsHDR)
         camera-id (env :camera-id)
         camera-query (env :camera-query)
-        hdr-draw-comp [hdr-draw camera-id camera-query depth-texture] ]
+        camera-target (env :path-target)
+        hdr-draw-comp [hdr-draw camera-id camera-query depth-texture camera-target] ]
     (node WinResizeNodeID [depth-texture])
     (if-comp dynIsHDR hdr-draw-comp)
   )
   (__frp_exit__)
 )
 
-(defn hdr-draw [camera-id camera-query depth-texture]
+(defn hdr-draw [camera-id camera-query depth-texture camera-target]
   (__frp_enter__ "hdr-draw")
   (let [hdr-texture (texture {:format "Rgba16Float"})]
-    (node DrawPassNodeID camera-id camera-query [hdr-texture] depth-texture "Foward")
+    (node WinResizeNodeID [hdr-texture])
+    (node DrawPassNodeID camera-id camera-query [camera-target] depth-texture "Foward")
   )
   (__frp_exit__)
 )
