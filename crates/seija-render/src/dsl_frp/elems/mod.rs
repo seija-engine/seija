@@ -8,6 +8,7 @@ pub mod camera_node;
 pub mod transform_node;
 pub mod window_resize_node;
 pub mod if_comp;
+pub mod draw_pass_node;
 use super::{frp_comp::IElement, system::ElementCreator};
 pub struct UniformElement {
     name:String

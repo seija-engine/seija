@@ -48,6 +48,7 @@ impl IElement for IfCompElement {
         vm.invoke_func2(&self.true_comp_fn.0 ,self.true_comp_fn.1.clone()).map_err(|err| anyhow!("eval err:{:?}",&err))?;
         let mut true_comp = builder.build(creator, vm)?;
         true_comp.init(world, ctx, frp_sys, vm, creator)?;
+
         let else_comp = if let Some((fn_name,params)) = self.else_comp_fn.take() {
             let mut builder = FRPCompBuilder::new();
             let builder_mut = &mut builder;
@@ -66,9 +67,7 @@ impl IElement for IfCompElement {
     }
 
     fn active(&mut self,world:&mut World,ctx:&mut RenderContext,frp_sys:&mut FRPSystem) -> Result<()> {
-        let bool_value = frp_sys.dynamics.get(&self.dynamic_id)
-                                               .ok_or(anyhow!("if-comp bool err"))?
-                                               .get_value().cast_bool().unwrap_or(true);
+        let bool_value = frp_sys.dynamics.get(&self.dynamic_id).ok_or(anyhow!("if-comp bool err"))?.get_value().cast_bool().unwrap_or(true);
         self.cur_bool_value = bool_value;
         if bool_value {
             if let Some(true_comp) = self.true_comp.as_mut() {
