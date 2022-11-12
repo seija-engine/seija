@@ -1,4 +1,4 @@
-use crate::{dsl_frp::{elems::{UniformElement, TextureElement, if_comp::IfCompElement}, frp_comp::CompElement}, resource::TextureDescInfo};
+use crate::{dsl_frp::{elems::{UniformElement, TextureElement, if_comp::IfCompElement}}, resource::TextureDescInfo};
 
 use super::{frp_comp::FRPComponent, system::ElementCreator};
 use anyhow::{Result,anyhow};
@@ -29,7 +29,7 @@ impl FRPCompBuilder {
         self.command_list.push(command);
     }
 
-    pub fn build(mut self,creator:&ElementCreator,vm:&mut EvalRT) -> Result<FRPComponent> {
+    pub fn build(mut self,creator:&ElementCreator,_:&mut EvalRT) -> Result<FRPComponent> {
         for command in self.command_list.drain(..) {
            log::info!("Exec FRPCompBuilder:{:?}",&command);
             match command {
@@ -39,29 +39,29 @@ impl FRPCompBuilder {
                 BuilderCommand::EndComp => {
                    let pop_comp = self.comp_stack.pop().ok_or(anyhow!("comp stack is nil"))?;
                    if let Some(parent_comp) = self.comp_stack.last_mut() {
-                        parent_comp.add_element(CompElement::Component(pop_comp));
+                        parent_comp.add_element(Box::new(pop_comp));
                    } else {
                       return Ok(pop_comp);
                    }
                 },
                 BuilderCommand::Uniform(name) => {
                     let cur_comp = self.comp_stack.last_mut().ok_or(anyhow!("stack comp is nil"))?;
-                    cur_comp.add_element(CompElement::Unifrom(UniformElement::new(name)));
+                    cur_comp.add_element(Box::new(UniformElement::new(name)));
                 },
                 BuilderCommand::Node(index, args) => {
                     let update_node = creator.create_node(index as usize, args)?;
-                    let node = CompElement::Node(update_node);
+                    let node = Box::new(update_node);
                     let cur_comp = self.comp_stack.last_mut().ok_or(anyhow!("stack comp is nil"))?;
                     cur_comp.add_element(node);
                 },
                 BuilderCommand::Texture(desc_info,dyn_id) => {
-                    let element = CompElement::Texture(TextureElement::new(desc_info,dyn_id));
+                    let element = Box::new(TextureElement::new(desc_info,dyn_id));
                     let cur_comp = self.comp_stack.last_mut().ok_or(anyhow!("stack comp is nil"))?;
                     cur_comp.add_element(element);
                 },
                 BuilderCommand::IfComp(dynamic_id, true_comp_var,else_comp_var) => {
                     let if_comp = IfCompElement::new(dynamic_id, true_comp_var, else_comp_var)?;
-                    let element = CompElement::IfComp(if_comp);
+                    let element = Box::new(if_comp);
                     let cur_comp = self.comp_stack.last_mut().ok_or(anyhow!("stack comp is nil"))?;
                  
                     cur_comp.add_element(element);
