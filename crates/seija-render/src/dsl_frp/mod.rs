@@ -8,6 +8,7 @@ mod errors;
 mod win_event;
 mod ubo_array_collect;
 pub mod render_path;
+mod post_stack;
 pub use system::FRPDSLSystem;
 pub use plugin::RenderScriptPlugin;
 pub use elems::IUpdateNode;
