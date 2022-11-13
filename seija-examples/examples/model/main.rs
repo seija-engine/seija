@@ -1,4 +1,4 @@
-use bevy_ecs::system::{Commands, ResMut, CommandQueue};
+use bevy_ecs::system::{Commands, ResMut, CommandQueue, EntityCommands};
 use glam::{Vec3, Quat};
 use seija_asset::{Assets, AssetServer,  Handle, AssetRequest};
 use seija_core::{CoreStage, StartupStage, window::AppWindow};
@@ -6,7 +6,7 @@ use seija_examples::{init_core_app, add_pbr_camera, load_material, update_camera
 use seija_gltf::{create_gltf, asset::GltfAsset};
 use seija_pbr::lights::PBRLight;
 use bevy_ecs::prelude::*;
-use seija_render::material::{MaterialDefineAsset, Material};
+use seija_render::{material::{MaterialDefineAsset, Material}, dsl_frp::PostEffectStack};
 use seija_transform::Transform;
 
 #[derive(Default)]
@@ -25,13 +25,19 @@ pub fn main() {
 }
 
 fn start(world:&mut World) {
+    let server = world.get_resource::<AssetServer>().unwrap().clone();
+    load_material("materials/baseTexture.mat.clj", world);
+    let htonemap = server.load_sync::<Material>(world, "mats/tonemap.json", None).unwrap();
     let mut queue = CommandQueue::default();
     let mut commands = Commands::new(&mut queue, world);
     let window = world.get_resource::<AppWindow>().unwrap();
-    add_pbr_camera(&mut commands,&window,Vec3::new(0f32, -0.2f32, 2f32),Quat::IDENTITY,None,None,None);
+    add_pbr_camera(&mut commands,&window,Vec3::new(0f32, -0.2f32, 2f32),Quat::IDENTITY,|cmds:&mut EntityCommands| {
+        let mut effect_stack = PostEffectStack::default();
+        effect_stack.add_item(htonemap, 1000);
+        cmds.insert(effect_stack);
+    },None,None);
     queue.apply(world);
-    load_material("materials/baseTexture.mat.clj", world);
-    let server = world.get_resource::<AssetServer>().unwrap().clone();
+    
     let track = server.load_async::<GltfAsset>("gltf/shiba/scene.gltf", None).unwrap();
     let mut data = world.get_resource_mut::<GameData>().unwrap();
     data.track = Some(track);

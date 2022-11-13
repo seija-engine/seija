@@ -2,7 +2,7 @@ use std::{collections::HashMap, sync::Arc};
 use lite_clojure_eval::Variable;
 use smol_str::SmolStr;
 use anyhow::Result;
-use super::elems::{camera_node::CameraNode, IUpdateNode, transform_node::TransfromNode, window_resize_node::WindowReSizeNode, draw_pass_node::DrawPassNode};
+use super::elems::{camera_node::CameraNode, IUpdateNode, transform_node::TransfromNode, window_resize_node::WindowReSizeNode, draw_pass_node::DrawPassNode, post_stack::PostStackNode};
 
 pub type NodeCreateFn = fn(args:Vec<Variable>) -> Result<Box<dyn IUpdateNode>>;
 
@@ -33,6 +33,8 @@ pub fn create_buildin_plugin() -> RenderScriptPlugin {
     plugin.add_node_creator("Transform", TransfromNode::from_args);
     plugin.add_node_creator("WinResize", WindowReSizeNode::from_args);
     plugin.add_node_creator("DrawPass", DrawPassNode::from_args);
+    plugin.add_node_creator("PostStack", PostStackNode::from_args);
+
     plugin.global_dynamics.push(("dynBase3D".into(),Variable::Bool(true)));
 
     let mut camera_dyns = vec![];

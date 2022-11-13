@@ -1,9 +1,9 @@
-use anyhow::Result;
+use anyhow::{Result,anyhow};
 use bevy_ecs::{prelude::Entity, world::World};
 use lite_clojure_eval::Variable;
 use lite_clojure_frp::{DynamicID, FRPSystem};
 
-use crate::{dsl_frp::errors::Errors, RenderContext, resource::RenderResourceId};
+use crate::{dsl_frp::{errors::Errors, PostEffectStack}, RenderContext, resource::RenderResourceId};
 
 use super::IUpdateNode;
 
@@ -79,9 +79,12 @@ impl IUpdateNode for PostStackNode {
         Ok(())
     }
 
-    fn active(&mut self,_world:&mut World,_ctx:&mut RenderContext,frp_sys:&mut FRPSystem) -> Result<()> {
+    fn active(&mut self,world:&mut World,_ctx:&mut RenderContext,frp_sys:&mut FRPSystem) -> Result<()> {
         self.check_update_textures(frp_sys)?;
-
+        let camera_entity = world.get_entity(self.camera_entity).ok_or(anyhow!("camera entity error"))?;
+        if let Some(post_stack) = camera_entity.get::<PostEffectStack>() {
+            
+        }
         Ok(())
     }
 

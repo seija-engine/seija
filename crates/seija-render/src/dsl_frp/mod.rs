@@ -14,3 +14,4 @@ pub use plugin::RenderScriptPlugin;
 pub use elems::IUpdateNode;
 pub use ubo_array_collect::UBOArrayCollect;
 pub use lite_clojure_frp::FRPSystem;
+pub use post_stack::PostEffectStack;

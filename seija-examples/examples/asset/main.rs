@@ -75,7 +75,7 @@ fn on_start(world:&mut World) {
 }
 
 fn pre_start(mut commands:Commands,mut _local_data:ResMut<LocalData>,_:Res<AssetServer>,window:Res<AppWindow>) {
-    add_pbr_camera(&mut commands,&window,Vec3::new(0f32, 0f32, 2f32),Quat::IDENTITY,None,None,None);
+    add_pbr_camera(&mut commands,&window,Vec3::new(0f32, 0f32, 2f32),Quat::IDENTITY,|_| {},None,None);
    
     //light
     {

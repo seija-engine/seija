@@ -1,6 +1,6 @@
 {
     "material_paths":["../res/materials"],
-    "script_path":"../.render/render.clj",
+    "script_path":"../.render/FRPRender.clj",
     "out_path":"../.render/shaders",
     "script_libs":["../../crates/seija-pbr/res","../../crates/seija-render/res","./"],
     "shader_libs":["../../crates/shaders"]
