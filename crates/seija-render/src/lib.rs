@@ -133,6 +133,7 @@ impl RenderModule {
         let h_plane = meshs.add_weak(Plane::new(10f32,10).into());
         let h_quad = meshs.add_weak(Quad::new(1f32).into());
         let h_skybox = meshs.add_weak(SkyBox.into());
+        let h_quad2 = meshs.add_weak(Quad::new(2f32).into());
 
         let mut textures = world.get_resource_mut::<Assets<Texture>>().unwrap();
         let h_white = textures.add_weak(color_texture([255,255,255,255], 16));
@@ -144,6 +145,7 @@ impl RenderModule {
             assets.set_asset("mesh:plane", h_plane.id);
             assets.set_asset("mesh:quad", h_quad.id);
             assets.set_asset("mesh:skybox", h_skybox.id);
+            assets.set_asset("mesh:quad2", h_quad2.id);
 
             assets.set_asset("texture:white", h_white.id);
             assets.set_asset("texture:blue", h_blue.id);

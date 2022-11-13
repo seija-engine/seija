@@ -4,7 +4,7 @@ use seija_asset::{HandleId, Handle, AssetServer, Assets};
 use seija_core::IDGenU64;
 use wgpu::{BufferUsage, SwapChainError, TextureView, util::DeviceExt, TextureFormat};
 
-use super::{Texture, TextureType};
+use super::{Texture, TextureType, TextureDescInfo};
 
 
 pub const COPY_BYTES_PER_ROW_ALIGNMENT: usize = wgpu::COPY_BYTES_PER_ROW_ALIGNMENT as usize;
@@ -235,6 +235,16 @@ impl RenderResources {
             }, 
             _ => None
         }
+    }
+
+    pub fn get_texture_desc(&self,res_id:&RenderResourceId,world:&World) -> Option<TextureDescInfo> {
+        if let RenderResourceId::Texture(h_texture) = res_id {
+            let textures = world.get_resource::<Assets<Texture>>().unwrap();
+            if let Some(texture) = textures.get(&h_texture.id) {
+                return Some(texture.desc().clone())
+            }
+        }
+        None
     }
 
     pub fn get_buffer(&self,buffer_id:&BufferId) -> Option<&wgpu::Buffer> {

@@ -33,6 +33,7 @@ fn start(world:&mut World) {
     let window = world.get_resource::<AppWindow>().unwrap();
     add_pbr_camera(&mut commands,&window,Vec3::new(0f32, -0.2f32, 2f32),Quat::IDENTITY,|cmds:&mut EntityCommands| {
         let mut effect_stack = PostEffectStack::default();
+        effect_stack.add_item(htonemap.clone_weak(), 1000);
         effect_stack.add_item(htonemap, 1000);
         cmds.insert(effect_stack);
     },None,None);
