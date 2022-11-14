@@ -5,7 +5,7 @@ use crate::material::Material;
 
 
 pub struct EffectItem {
-    material:Handle<Material>,
+    pub material:Handle<Material>,
     order:u32  
 }
 

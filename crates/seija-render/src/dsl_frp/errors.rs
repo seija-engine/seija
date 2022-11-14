@@ -17,4 +17,6 @@ pub(crate) enum Errors {
     FuncParamCountError,
     #[error("not found dynamic")]
     NotFoundDynamic,
+    #[error("miss material")]
+    MissMaterial,
 }

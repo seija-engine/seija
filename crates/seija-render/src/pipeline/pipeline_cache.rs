@@ -327,3 +327,4 @@ fn get_shader_name_prefix(mesh:&Mesh,shader:&ShaderInfoDef,shaders:&RuntimeShade
     log::info!("get shader {} prefix:{:?}",&shader.name,&macro_group);
     Some(format!("{}_{}",&sname,&macro_string))
 }
+

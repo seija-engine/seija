@@ -3,7 +3,7 @@ use bevy_ecs::{prelude::Entity, world::World};
 use lite_clojure_eval::Variable;
 use lite_clojure_frp::{DynamicID, FRPSystem};
 use seija_asset::{Handle, AssetServer, Assets};
-use crate::{dsl_frp::{errors::Errors, PostEffectStack}, RenderContext, resource::{RenderResourceId, Mesh, Texture}};
+use crate::{dsl_frp::{errors::Errors, PostEffectStack}, RenderContext, resource::{RenderResourceId, Mesh, Texture}, material::Material};
 use super::IUpdateNode;
 
 pub struct PostStackNode {
@@ -87,7 +87,6 @@ impl PostStackNode {
         let mut textures = world.get_resource_mut::<Assets<Texture>>().unwrap();
         let h_texture = textures.add(new_texture);
         self.cache_texture = Some(RenderResourceId::Texture(h_texture));
-        log::error!("in ????");
         Ok(())
     }
 
@@ -126,9 +125,12 @@ impl IUpdateNode for PostStackNode {
         self.check_update_textures(frp_sys,world,ctx)?;
         let camera_entity = world.get_entity(self.camera_entity).ok_or(anyhow!("camera entity error"))?;
         if let Some(post_stack) = camera_entity.get::<PostEffectStack>() {
+            let materials = world.get_resource::<Assets<Material>>().unwrap();
             let mut command = ctx.command_encoder.take().unwrap();
             for effect_item in post_stack.items.iter() {
-                
+                let material = materials.get(&effect_item.material.id).ok_or(Errors::MissMaterial)?;
+                if !material.is_ready(&ctx.resources) { continue }
+                //let pipelines = ctx.pipeline_cache.get_pipeline(material.def.name.as_str(), mesh,&self.cache_formats);
             }
         }
         Ok(())
