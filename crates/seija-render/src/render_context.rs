@@ -52,14 +52,14 @@ impl RenderContext {
         ctx
     }
 
-    pub fn build_pipeine(&mut self,mat_def:&MaterialDef,mesh:&Mesh,formats:&Vec<TextureFormat>,pass_index:usize) {
+    pub fn build_pipeine(&mut self,mat_def:&MaterialDef,mesh:&Mesh,formats:&Vec<TextureFormat>,depth_format:Option<wgpu::TextureFormat>,pass_index:usize) {
         let mut hasher = FnvHasher::default();
-        PipelineKey(mat_def.name.as_str(),mesh.layout_hash_u64(),formats,pass_index).hash(&mut hasher);
+        PipelineKey(mat_def.name.as_str(),mesh.layout_hash_u64(),formats,depth_format,pass_index).hash(&mut hasher);
         let key = hasher.finish();
         
         if !self.pipeline_cache.cache_pipelines.contains_key(&key) {
             //log::error!("in key:{}",&key);
-            match self.pipeline_cache.compile_pipeline(mesh,&mat_def.pass_list[pass_index],self,mat_def,formats) {
+            match self.pipeline_cache.compile_pipeline(mesh,&mat_def.pass_list[pass_index],self,mat_def,formats,depth_format) {
                 Ok(None) => {
                     log::info!("wait create {}",mat_def.name.as_str());
                 },

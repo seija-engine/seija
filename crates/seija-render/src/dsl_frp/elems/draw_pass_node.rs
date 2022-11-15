@@ -157,7 +157,7 @@ impl DrawPassNode {
                 let mesh = meshs.get(&hmesh.id).ok_or(PassError::MissMesh)?;
                 let material = materials.get(&hmat.id).ok_or(PassError::MissMaterial)?;
                 for pass_index in 0..material.def.pass_list.len() {
-                    ctx.build_pipeine(&material.def, mesh,&self.cache_formats,pass_index);
+                    ctx.build_pipeine(&material.def, mesh,&self.cache_formats,None,pass_index);
                 }
             }
         }
@@ -169,7 +169,10 @@ impl DrawPassNode {
                 let material = materials.get(&hmat.id).ok_or(PassError::MissMaterial)?;
                 if !material.is_ready(&ctx.resources) { continue }
                 for pass_index in 0..material.def.pass_list.len() {
-                    let pipeline = ctx.pipeline_cache.get_pipeline(material.def.name.as_str(), mesh,&self.cache_formats,pass_index);
+                    
+                    let pipeline = ctx.pipeline_cache.get_pipeline(material.def.name.as_str(), 
+                                                                   mesh,&self.cache_formats,
+                                                                   Some(wgpu::TextureFormat::Depth32Float),pass_index);
                     if let Some(pipeline) = pipeline {
                         if pipeline.tag != self.pass_name { continue; }
                         if let Some(mesh_buffer_id)  = ctx.resources.get_render_resource(&hmesh.id, 0) {

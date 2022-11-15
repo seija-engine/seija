@@ -26,7 +26,7 @@ use seija_core::anyhow::{Result,anyhow};
 
 
 #[derive(Hash,PartialEq, Eq,Debug)]
-pub struct PipelineKey<'a>(pub &'a str,pub u64,pub &'a Vec<wgpu::TextureFormat>,pub usize);
+pub struct PipelineKey<'a>(pub &'a str,pub u64,pub &'a Vec<wgpu::TextureFormat>,pub Option<wgpu::TextureFormat>,pub usize);
 
 pub struct RenderPipelines {
    pub pipelines:Vec<RenderPipeline>
@@ -93,39 +93,19 @@ impl PipelineCache {
 
    
 
-    pub fn get_pipeline(&self,def_name:&str,mesh:&Mesh,formats:&Vec<TextureFormat>,pass_index:usize) -> Option<&RenderPipeline> {
+    pub fn get_pipeline(&self,def_name:&str,mesh:&Mesh,formats:&Vec<TextureFormat>,depth_format:Option<wgpu::TextureFormat>,pass_index:usize) -> Option<&RenderPipeline> {
         let mut hasher = FnvHasher::default();
-        PipelineKey(def_name,mesh.layout_hash_u64(),formats,pass_index).hash(&mut hasher);
+        PipelineKey(def_name,mesh.layout_hash_u64(),formats,depth_format,pass_index).hash(&mut hasher);
         let key = hasher.finish();
         self.cache_pipelines.get(&key)
     }
-    /*
-    pub fn compile_pipelines<'m>(&self,mesh:&Mesh,mat_def:&'m MaterialDef,formats:&Vec<TextureFormat>,ctx:&RenderContext) -> Option<RenderPipelines> {
-        let mut pipes:Vec<RenderPipeline> = Vec::new();
-      
-        for pass in  mat_def.pass_list.iter() {
-            match self.compile_pipeline(mesh,pass,ctx,mat_def,formats) {
-                Ok(None) => {
-                    log::info!("wait create {}",mat_def.name.as_str());
-                    return None;
-                },
-                Ok(Some(pipe)) => {
-                    pipes.push(pipe);
-                }
-                Err(err) => {
-                    log::error!("create pipeline fail {} {:?}",mat_def.name,err);
-                    return None;
-                },
-            }
-        }
-        Some(RenderPipelines::new(pipes))
-    }*/
-
+    
     pub fn compile_pipeline(&self,
                         mesh:&Mesh,pass:&PassDef,
                         ctx:&RenderContext,
                         mat_def:&MaterialDef,
-                        formats:&Vec<TextureFormat>) -> Result<Option<RenderPipeline>> {
+                        formats:&Vec<TextureFormat>,
+                        depth_format:Option<TextureFormat>) -> Result<Option<RenderPipeline>> {
         let mut cur_primstate = mesh.primitive_state().clone();
         cur_primstate.cull_mode = (&pass.cull).into();
         cur_primstate.front_face = pass.front_face.0;
@@ -133,22 +113,24 @@ impl PipelineCache {
         cur_primstate.polygon_mode = pass.polygon_mode.0;
         cur_primstate.conservative = pass.conservative;
         
-       let depth_stencil = Some(DepthStencilState {
-        format: wgpu::TextureFormat::Depth32Float,
-        depth_write_enabled: pass.z_write,
-        depth_compare: (&pass.z_test).into(),
-        stencil: StencilState {
-            front: wgpu::StencilFaceState::IGNORE,
-            back: wgpu::StencilFaceState::IGNORE,
-            read_mask: 0,
-            write_mask: 0,
-        },
-        bias: wgpu::DepthBiasState {
-            constant: 0,
-            slope_scale: 0.0,
-            clamp: 0.0,
-        }
-       });
+       let depth_stencil = if let Some(depth_format) = depth_format {
+        Some(DepthStencilState {
+            format: depth_format,
+            depth_write_enabled: pass.z_write,
+            depth_compare: (&pass.z_test).into(),
+            stencil: StencilState {
+                front: wgpu::StencilFaceState::IGNORE,
+                back: wgpu::StencilFaceState::IGNORE,
+                read_mask: 0,
+                write_mask: 0,
+            },
+            bias: wgpu::DepthBiasState {
+                constant: 0,
+                slope_scale: 0.0,
+                clamp: 0.0,
+            }
+           })
+       } else { None };
 
        let shader_name_prefix = get_shader_name_prefix(mesh, &pass.shader_info,&ctx.shaders)
                                         .context(format!("gen shader name prefix err:{}",&pass.shader_info.name))?;

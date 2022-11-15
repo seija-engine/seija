@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use anyhow::{Result,anyhow};
 use bevy_ecs::{prelude::Entity, world::World};
 use lite_clojure_eval::Variable;
@@ -24,6 +26,8 @@ pub struct PostStackNode {
     last_state:LastTextureState,
 
     operations:Operations<Color>,
+
+    cache_quads:HashMap<Handle<Material>,Entity>
 }
 
 #[derive(PartialEq, Eq)]
@@ -35,18 +39,9 @@ enum LastTextureState {
 
 impl PostStackNode {
     pub fn from_args(args: Vec<Variable>) -> Result<Box<dyn IUpdateNode>> {
-        let camera_id = args
-            .get(0)
-            .and_then(Variable::cast_int)
-            .ok_or(Errors::TypeCastError("int"))?;
-        let src_texture_id = args
-            .get(1)
-            .and_then(Variable::cast_int)
-            .ok_or(Errors::TypeCastError("int"))? as DynamicID;
-        let dst_texture_id = args
-            .get(2)
-            .and_then(Variable::cast_int)
-            .ok_or(Errors::TypeCastError("int"))? as DynamicID;
+        let camera_id = args.get(0).and_then(Variable::cast_int).ok_or(Errors::TypeCastError("int"))?;
+        let src_texture_id = args.get(1).and_then(Variable::cast_int).ok_or(Errors::TypeCastError("int"))? as DynamicID;
+        let dst_texture_id = args.get(2).and_then(Variable::cast_int).ok_or(Errors::TypeCastError("int"))? as DynamicID;
 
         Ok(Box::new(PostStackNode {
             camera_entity: Entity::from_bits(camera_id as u64),
@@ -65,7 +60,8 @@ impl PostStackNode {
             operations:wgpu::Operations {
                 load:wgpu::LoadOp::Clear(Color {r:0f64,g:0f64,b:0f64,a:1f64 }),
                 store:true  
-            }
+            },
+            cache_quads:Default::default()
         }))
     }
 }
@@ -127,6 +123,24 @@ impl PostStackNode {
         Ok(())
     }
 
+    fn check_update_quad_entity(&mut self,world:&mut World) -> Result<()> {
+        let camera_entity = world.get_entity(self.camera_entity).ok_or(anyhow!("camera entity error"))?;
+        let mut new_lst:Vec<Handle<Material>> = Vec::new();
+        if let Some(post_stack) = camera_entity.get::<PostEffectStack>() {
+           for effect in post_stack.items.iter() {
+              if self.cache_quads.contains_key(&effect.material) { continue; }
+              new_lst.push(effect.material.clone());
+           }
+        }
+        for new_material in new_lst.drain(..) {
+            let mut new_entity = world.spawn();
+            new_entity.insert(new_material.clone_weak());
+            let eid = new_entity.id();
+            self.cache_quads.insert(new_material, eid);
+        }
+        Ok(())
+    }
+
     fn get_target_format(&self,is_last:bool) -> wgpu::TextureFormat {
         if is_last {  return self.dst_format.unwrap(); }
         self.src_format.unwrap()
@@ -167,6 +181,8 @@ impl PostStackNode {
         }
     }
 
+   
+
     fn draw(&mut self,world:&mut World,ctx:&mut RenderContext,frp_sys:&mut FRPSystem,command:&mut CommandEncoder) -> Result<()> {
         self.last_state = LastTextureState::None;
         let camera_entity = world.get_entity(self.camera_entity).ok_or(anyhow!("camera entity error"))?;
@@ -184,7 +200,7 @@ impl PostStackNode {
                    let is_last = pass_index == material.def.pass_list.len() - 1 && index == post_stack.items.len() - 1;
                    let target_format = self.get_target_format(is_last);
                    self.cache_pass_format[0] = target_format;
-                   ctx.build_pipeine(&material.def, quad_mesh, &self.cache_pass_format, pass_index);
+                   ctx.build_pipeine(&material.def, quad_mesh, &self.cache_pass_format, None,pass_index);
                    
                    let mut from_res_id = RenderResourceId::MainSwap;
                    let mut dst_res_id = RenderResourceId::MainSwap;
@@ -202,7 +218,7 @@ impl PostStackNode {
                       depth_stencil_attachment:None
                      };
                      let mut render_pass = command.begin_render_pass(&pass_desc);
-                     if let Some(pipeline) = ctx.pipeline_cache.get_pipeline(&material.def.name, &quad_mesh, &self.cache_pass_format, pass_index) {
+                     if let Some(pipeline) = ctx.pipeline_cache.get_pipeline(&material.def.name, &quad_mesh, &self.cache_pass_format,None, pass_index) {
                         if let Some(mesh_buffer_id)  = ctx.resources.get_render_resource(&quad_mesh_id, 0) {
                             let vert_buffer = ctx.resources.get_buffer_by_resid(&mesh_buffer_id).unwrap();
                             let offset_index = pipeline.set_binds(Some(self.camera_entity), None, &mut render_pass, &ctx.ubo_ctx);
@@ -247,6 +263,7 @@ impl PostStackNode {
         Ok(())
     }
    
+    
 }
 
 impl IUpdateNode for PostStackNode {
@@ -259,12 +276,14 @@ impl IUpdateNode for PostStackNode {
 
     fn active(&mut self,world:&mut World,ctx:&mut RenderContext,frp_sys:&mut FRPSystem) -> Result<()> {
         self.check_update_textures(frp_sys,world,ctx)?;
-        
+        self.check_update_quad_entity(world)?;
         Ok(())
     }
 
     fn update(&mut self,world:&mut World,ctx:&mut RenderContext,frp_sys:&mut FRPSystem) -> Result<()> {
         self.check_update_textures(frp_sys,world,ctx)?;
+        self.check_update_quad_entity(world)?;
+
         let mut command = ctx.command_encoder.take().unwrap();
         if let Err(err) = self.draw(world, ctx, frp_sys, &mut command) {
             log::error!("post_stack node error:{:?}",err);
