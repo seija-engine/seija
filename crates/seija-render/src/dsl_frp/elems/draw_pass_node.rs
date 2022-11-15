@@ -156,7 +156,9 @@ impl DrawPassNode {
             if let Ok((hmesh,hmat)) = render_query.get(world, *entity) { 
                 let mesh = meshs.get(&hmesh.id).ok_or(PassError::MissMesh)?;
                 let material = materials.get(&hmat.id).ok_or(PassError::MissMaterial)?;
-                ctx.build_pipeine(&material.def, mesh,&self.cache_formats);
+                for pass_index in 0..material.def.pass_list.len() {
+                    ctx.build_pipeine(&material.def, mesh,&self.cache_formats,pass_index);
+                }
             }
         }
         let mut draw_count:u32 = 0;
@@ -166,16 +168,17 @@ impl DrawPassNode {
                 let mesh = meshs.get(&hmesh.id).ok_or(PassError::MissMesh)?;
                 let material = materials.get(&hmat.id).ok_or(PassError::MissMaterial)?;
                 if !material.is_ready(&ctx.resources) { continue }
-                let pipelines = ctx.pipeline_cache.get_pipeline(material.def.name.as_str(), mesh,&self.cache_formats);
-                if let Some(pipelines) = pipelines {
-                    if let Some(mesh_buffer_id)  = ctx.resources.get_render_resource(&hmesh.id, 0) {
-                        for pipeline in pipelines.pipelines.iter() { 
-                            if pipeline.tag != self.pass_name { continue; }
+                for pass_index in 0..material.def.pass_list.len() {
+                    let pipeline = ctx.pipeline_cache.get_pipeline(material.def.name.as_str(), mesh,&self.cache_formats,pass_index);
+                    if let Some(pipeline) = pipeline {
+                        if pipeline.tag != self.pass_name { continue; }
+                        if let Some(mesh_buffer_id)  = ctx.resources.get_render_resource(&hmesh.id, 0) {
 
                             let vert_buffer = ctx.resources.get_buffer_by_resid(&mesh_buffer_id).unwrap();
                             let oset_index = pipeline.set_binds(self.camera_entity, entity, &mut render_pass, &ctx.ubo_ctx);
                             if oset_index.is_none()  { continue }
                             let mut set_index = oset_index.unwrap();
+
                             if material.props.def.infos.len() > 0 {
                                 if let Some(bind_group) = material.bind_group.as_ref() {
                                     render_pass.set_bind_group(set_index, bind_group, &[]);
@@ -205,7 +208,6 @@ impl DrawPassNode {
                                 render_pass.draw(0..mesh.count_vertices() as u32, 0..1);
                             }
                             draw_count += 1;
-
                         }
                     }
                 }

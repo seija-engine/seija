@@ -52,14 +52,21 @@ impl RenderContext {
         ctx
     }
 
-    pub fn build_pipeine(&mut self,mat_def:&MaterialDef,mesh:&Mesh,formats:&Vec<TextureFormat>) {
+    pub fn build_pipeine(&mut self,mat_def:&MaterialDef,mesh:&Mesh,formats:&Vec<TextureFormat>,pass_index:usize) {
         let mut hasher = FnvHasher::default();
-        PipelineKey(mat_def.name.as_str(),mesh.layout_hash_u64(),formats).hash(&mut hasher);
+        PipelineKey(mat_def.name.as_str(),mesh.layout_hash_u64(),formats,pass_index).hash(&mut hasher);
         let key = hasher.finish();
         if !self.pipeline_cache.cache_pipelines.contains_key(&key) {
-            if let Some(pipes)  = self.pipeline_cache.compile_pipelines(mesh, mat_def,formats,self) {
-                log::info!("create pipeline success {}",mat_def.name.as_str());
-                self.pipeline_cache.cache_pipelines.insert(key, pipes);
+            match self.pipeline_cache.compile_pipeline(mesh,&mat_def.pass_list[pass_index],self,mat_def,formats) {
+                Ok(None) => {
+                    log::info!("wait create {}",mat_def.name.as_str());
+                },
+                Ok(Some(pipe)) => {
+                    self.pipeline_cache.cache_pipelines.insert(key, pipe);
+                }
+                Err(err) => {
+                    log::error!("create pipeline fail {} {:?}",mat_def.name,err);
+                },
             }
         }
     }

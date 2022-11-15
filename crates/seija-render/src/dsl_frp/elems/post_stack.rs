@@ -132,6 +132,7 @@ impl IUpdateNode for PostStackNode {
                 if !material.is_ready(&ctx.resources) { continue }
                 //let pipelines = ctx.pipeline_cache.get_pipeline(material.def.name.as_str(), mesh,&self.cache_formats);
             }
+            ctx.command_encoder = Some(command);
         }
         Ok(())
     }

@@ -26,7 +26,7 @@ use seija_core::anyhow::{Result,anyhow};
 
 
 #[derive(Hash,PartialEq, Eq,Debug)]
-pub struct PipelineKey<'a>(pub &'a str,pub u64,pub &'a Vec<wgpu::TextureFormat>);
+pub struct PipelineKey<'a>(pub &'a str,pub u64,pub &'a Vec<wgpu::TextureFormat>,pub usize);
 
 pub struct RenderPipelines {
    pub pipelines:Vec<RenderPipeline>
@@ -74,7 +74,7 @@ impl RenderPipeline {
 #[derive(Default)]
 pub struct PipelineCache {
     cfg:Arc<RenderConfig>,
-    pub(crate) cache_pipelines:FnvHashMap<u64,RenderPipelines>
+    pub(crate) cache_pipelines:FnvHashMap<u64,RenderPipeline>
 }
 
 impl PipelineCache {
@@ -89,13 +89,13 @@ impl PipelineCache {
 
    
 
-    pub fn get_pipeline(&self,def_name:&str,mesh:&Mesh,formats:&Vec<TextureFormat>) -> Option<&RenderPipelines> {
+    pub fn get_pipeline(&self,def_name:&str,mesh:&Mesh,formats:&Vec<TextureFormat>,pass_index:usize) -> Option<&RenderPipeline> {
         let mut hasher = FnvHasher::default();
-        PipelineKey(def_name,mesh.layout_hash_u64(),formats).hash(&mut hasher);
+        PipelineKey(def_name,mesh.layout_hash_u64(),formats,pass_index).hash(&mut hasher);
         let key = hasher.finish();
         self.cache_pipelines.get(&key)
     }
-
+    /*
     pub fn compile_pipelines<'m>(&self,mesh:&Mesh,mat_def:&'m MaterialDef,formats:&Vec<TextureFormat>,ctx:&RenderContext) -> Option<RenderPipelines> {
         let mut pipes:Vec<RenderPipeline> = Vec::new();
       
@@ -115,9 +115,9 @@ impl PipelineCache {
             }
         }
         Some(RenderPipelines::new(pipes))
-    }
+    }*/
 
-    fn compile_pipeline(&self,
+    pub fn compile_pipeline(&self,
                         mesh:&Mesh,pass:&PassDef,
                         ctx:&RenderContext,
                         mat_def:&MaterialDef,
