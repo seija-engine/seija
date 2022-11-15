@@ -1,8 +1,7 @@
 use std::{
-    collections::{HashMap},
+    collections::{HashMap, HashSet},
     sync::Arc,
 };
-
 use super::{Material, MaterialDef};
 use crate::{
     memory::align_num_to,
@@ -12,7 +11,7 @@ use crate::{
 use bevy_ecs::{
     change_detection::Mut,
     entity::Entity,
-    prelude::{World},
+    prelude::World,
 };
 use seija_asset::{Assets, Handle, HandleId};
 use smol_str::SmolStr;
@@ -53,6 +52,17 @@ impl MaterialSystem {
         res: &mut RenderResources,
         commands: &mut CommandEncoder,
     ) {
+        {
+            let mut global_materials = world.get_resource_mut::<GlobalImportMaterials>().unwrap();
+            if global_materials.is_dirty {
+                for material_def in global_materials.material_defs.iter() {
+                    if !self.datas.contains_key(material_def.name.as_str()) {
+                        self.add_material_define(material_def.clone(), res);
+                    }
+                }
+                global_materials.is_dirty = false;
+            }
+        };
         {
             let rm_list: Vec<Entity> = world.removed::<Handle<Material>>().collect();
             for define in self.datas.values_mut() {
@@ -270,4 +280,24 @@ impl MaterialDefine {
         material.bind_group = Some(build_group_builder.build(layout, &res.device, res));
 
     }
+}
+
+
+#[derive(Default)]
+pub struct GlobalImportMaterials {
+    material_defs:Vec<Arc<MaterialDef>>,
+    name_set:HashSet<SmolStr>,
+    is_dirty:bool
+}
+
+impl GlobalImportMaterials {
+    pub fn add(&mut self,define:&Arc<MaterialDef>) {
+        if !self.name_set.contains(define.name.as_str()) {
+            self.is_dirty = true;
+            self.material_defs.push(define.clone());
+            self.name_set.insert(define.name.clone());
+        }
+    }
+
+   
 }

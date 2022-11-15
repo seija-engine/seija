@@ -45,7 +45,7 @@ pub struct RenderPipeline {
 }
 
 impl RenderPipeline {
-    pub fn set_binds<'b:'a,'a>(&self,camera_e:Option<Entity>,ve:&Entity,pass:&'a mut wgpu::RenderPass<'b>,buf_ctx:&'b UniformContext) -> Option<u32> {
+    pub fn set_binds<'b:'a,'a>(&self,camera_e:Option<Entity>,ve:Option<Entity>,pass:&'a mut wgpu::RenderPass<'b>,buf_ctx:&'b UniformContext) -> Option<u32> {
         for (index,ubo_name_index) in self.ubos.iter().enumerate() {
             match ubo_name_index.apply_type {
              UBOApplyType::Camera => {
@@ -57,8 +57,12 @@ impl RenderPipeline {
                 }
              },
              UBOApplyType::RenderObject => {
-                let bind_group = buf_ctx.get_bind_group(ubo_name_index, Some(ve.id()))?;
-                pass.set_bind_group(index as u32, &bind_group, &[]);
+                if let Some(ve) = ve {
+                    let bind_group = buf_ctx.get_bind_group(ubo_name_index, Some(ve.id()))?;
+                    pass.set_bind_group(index as u32, &bind_group, &[]);
+                } else {
+                    return None;
+                }
              },
              UBOApplyType::Frame => {
                 let bind_group = buf_ctx.get_bind_group(ubo_name_index, None)?;
@@ -148,6 +152,10 @@ impl PipelineCache {
 
        let shader_name_prefix = get_shader_name_prefix(mesh, &pass.shader_info,&ctx.shaders)
                                         .context(format!("gen shader name prefix err:{}",&pass.shader_info.name))?;
+       let pipeline_layout = self.create_pipeline_layout(ctx,pass,mat_def)?;
+       if pipeline_layout.is_none() {
+         return Ok(None); 
+       }
        let vs_path = self.cfg.config_path.join(&format!("{}.vert.spv",shader_name_prefix));
       
        let fs_path = self.cfg.config_path.join(&format!("{}.frag.spv",shader_name_prefix));
@@ -156,8 +164,7 @@ impl PipelineCache {
        let vert_shader = Self::read_shader_module(&vs_path,&ctx.device).context("read shader error")?;
        let frag_shader = Self::read_shader_module(fs_path,&ctx.device).context("read shader error")?;
        
-      let pipeline_layout = self.create_pipeline_layout(ctx,pass,mat_def)?;
-      if pipeline_layout.is_none() { return Ok(None); }
+      
       
        let mut targets = pass.get_color_targets();
        for idx in 0..formats.len() {
@@ -228,12 +235,12 @@ impl PipelineCache {
        
         let mut layouts = ctx.create_bind_group_layouts(pass_def).context("create_bind_group_layouts")?;
         if mat_def.prop_def.infos.len() > 0 {
-            layouts.push(&ctx.mat_system.get_buffer_layout());
+            layouts.push(&ctx.material_system.get_buffer_layout());
         } else {
             return Ok(None);
         }
         if mat_def.tex_prop_def.indexs.len() > 0 {
-            if let Some(texture_layout) = ctx.mat_system.get_texture_layout(mat_def.name.as_str()) {
+            if let Some(texture_layout) = ctx.material_system.get_texture_layout(mat_def.name.as_str()) {
                 layouts.push(texture_layout);
             } else {
                 return Ok(None);

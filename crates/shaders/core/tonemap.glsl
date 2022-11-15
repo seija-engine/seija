@@ -5,7 +5,7 @@ struct VSInput {
 VSInput vs_main() {
   VSInput o;
   o.uv = vert_uv0; 
-  vec4 pos = getTransform() * vec4(vert_position, 1.0);
+  vec4 pos = vec4(vert_position, 1.0);
   gl_Position = getCameraProjView() * pos;
   return o;
 }

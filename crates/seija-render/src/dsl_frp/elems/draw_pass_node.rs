@@ -175,7 +175,7 @@ impl DrawPassNode {
                         if let Some(mesh_buffer_id)  = ctx.resources.get_render_resource(&hmesh.id, 0) {
 
                             let vert_buffer = ctx.resources.get_buffer_by_resid(&mesh_buffer_id).unwrap();
-                            let oset_index = pipeline.set_binds(self.camera_entity, entity, &mut render_pass, &ctx.ubo_ctx);
+                            let oset_index = pipeline.set_binds(self.camera_entity,Some(entity.clone()), &mut render_pass, &ctx.ubo_ctx);
                             if oset_index.is_none()  { continue }
                             let mut set_index = oset_index.unwrap();
 

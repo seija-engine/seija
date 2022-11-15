@@ -13,7 +13,7 @@ pub struct RenderContext {
     pub device:Arc<Device>,
     pub resources:RenderResources,
     pub command_encoder:Option<CommandEncoder>,
-    pub mat_system:MaterialSystem,
+    pub material_system:MaterialSystem,
     pub shaders:RuntimeShaderInfo,
     pub ubo_ctx:UniformContext,
     pub setting:Arc<GraphSetting>,
@@ -40,7 +40,7 @@ impl RenderContext {
             device:device.clone(),
             command_encoder:None,
             resources:RenderResources::new(device.clone(),assets),
-            mat_system:MaterialSystem::new(&device),
+            material_system:MaterialSystem::new(&device),
             shaders,
             ubo_ctx:UniformContext::default(),
             setting:config.setting.clone(),
@@ -56,7 +56,9 @@ impl RenderContext {
         let mut hasher = FnvHasher::default();
         PipelineKey(mat_def.name.as_str(),mesh.layout_hash_u64(),formats,pass_index).hash(&mut hasher);
         let key = hasher.finish();
+        
         if !self.pipeline_cache.cache_pipelines.contains_key(&key) {
+            //log::error!("in key:{}",&key);
             match self.pipeline_cache.compile_pipeline(mesh,&mat_def.pass_list[pass_index],self,mat_def,formats) {
                 Ok(None) => {
                     log::info!("wait create {}",mat_def.name.as_str());

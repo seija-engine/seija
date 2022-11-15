@@ -71,6 +71,7 @@ impl IModule for RenderModule {
     fn init(&mut self,app:&mut App) {
         resource::init_resource(app);
         material::init_material(app);
+        dsl_frp::init_dsl_frp(app);
         light::init_light(app);
         
         app.add_resource(FRPContext::new());

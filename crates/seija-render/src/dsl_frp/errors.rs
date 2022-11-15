@@ -19,4 +19,6 @@ pub(crate) enum Errors {
     NotFoundDynamic,
     #[error("miss material")]
     MissMaterial,
+    #[error("res texture format error")]
+    GetResTextureFormatError
 }
