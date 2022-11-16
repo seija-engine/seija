@@ -2,7 +2,8 @@ use std::{collections::HashMap, sync::Arc};
 use lite_clojure_eval::Variable;
 use smol_str::SmolStr;
 use anyhow::Result;
-use super::elems::{camera_node::CameraNode, IUpdateNode, transform_node::TransfromNode, window_resize_node::WindowReSizeNode, draw_pass_node::DrawPassNode, post_stack::PostStackNode};
+use super::elems::{camera_node::CameraNode, IUpdateNode, transform_node::TransfromNode, 
+    window_resize_node::WindowReSizeNode, draw_pass_node::DrawPassNode, post_stack_node::PostStackNode};
 
 pub type NodeCreateFn = fn(args:Vec<Variable>) -> Result<Box<dyn IUpdateNode>>;
 

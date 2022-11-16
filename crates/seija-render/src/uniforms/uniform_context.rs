@@ -140,14 +140,18 @@ impl UniformContext {
 
     pub fn get_layout(&self,name:&str) -> Option<&wgpu::BindGroupLayout> {
         let index = self.get_index(name)?;
+        Some(self.get_layout_(&index))
+    }
+
+    pub fn get_layout_(&self,index:&UniformIndex) -> &wgpu::BindGroupLayout {
         match index.typ {
             UniformType::Global => {
                 let object = &self.globals[index.index];
-                Some(&object.layout)
+                &object.layout
             },
             UniformType::Component => {
                 let object = &self.components[index.index];
-                Some(&object.layout)
+                &object.layout
             },
         }
     }

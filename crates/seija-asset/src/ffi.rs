@@ -1,7 +1,7 @@
 use std::{ffi::CStr, path::PathBuf};
 
 use seija_app::App;
-use seija_core::LogResult;
+use seija_core::ResultExt;
 
 use crate::AssetModule;
 #[no_mangle]

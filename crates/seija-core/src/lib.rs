@@ -97,12 +97,13 @@ macro_rules! idgen {
 idgen!(IDGenU32,AtomicU32,u32);
 idgen!(IDGenU64,AtomicU64,u64);
 
-pub trait LogOption<T> {
+pub trait OptionExt<T> {
     fn log_err (self,msg:&str) -> Option<T>;
     fn log_warn(self,msg:&str) -> Option<T>;
+    fn get(self) -> anyhow::Result<T>;
 }
 
-impl<T> LogOption<T> for Option<T> {
+impl<T> OptionExt<T> for Option<T> {
     fn log_err (self,msg:&str) -> Option<T> {
         match self {
             Some(t) => Some(t),
@@ -122,14 +123,26 @@ impl<T> LogOption<T> for Option<T> {
             }
         }
     }
+
+    #[track_caller]
+    fn get(self) -> anyhow::Result<T> {
+        match self {
+            Some(v) => Ok(v),
+            None => {
+               let caller = std::panic::Location::caller();
+               return Err(anyhow::anyhow!("{} ",caller));
+            }
+        }
+    }
+
 }
 
-pub trait LogResult<T,E:Debug> {
+pub trait ResultExt<T,E:Debug> {
     fn log_err (self) -> Result<T,E>;
     fn log_warn(self) -> Result<T,E>;
 }
 
-impl<T,E:Debug> LogResult<T,E> for Result<T,E> {
+impl<T,E:Debug> ResultExt<T,E> for Result<T,E> {
     fn log_err(self) -> Result<T,E> {
        match self {
            Ok(v) => Ok(v),

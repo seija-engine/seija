@@ -56,6 +56,11 @@ impl Texture {
         let texture = TextureType::Image(info);
         Ok(Texture {texture,desc })
     }
+
+    pub fn immediate() {
+
+    }
+
 }
 #[derive(Debug,Clone)]
 pub struct TextureDescInfo {

@@ -9,7 +9,8 @@ pub mod transform_node;
 pub mod window_resize_node;
 pub mod if_comp;
 pub mod draw_pass_node;
-pub mod post_stack;
+//pub mod post_stack;
+pub mod post_stack_node;
 use super::{frp_comp::IElement, system::ElementCreator};
 pub struct UniformElement {
     name:String

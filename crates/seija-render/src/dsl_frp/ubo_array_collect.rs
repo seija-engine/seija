@@ -3,7 +3,7 @@ use std::marker::PhantomData;
 use bevy_ecs::prelude::{World, Entity, With, Changed, Or, Component};
 use fixedbitset::FixedBitSet;
 use fnv::FnvHashMap;
-use seija_core::LogOption;
+use seija_core::OptionExt;
 use seija_transform::Transform;
 
 use crate::{uniforms::backends::IShaderBackend, RenderContext, UniformBuffer, UniformIndex};

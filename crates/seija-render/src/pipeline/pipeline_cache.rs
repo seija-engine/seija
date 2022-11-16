@@ -6,7 +6,7 @@ use std::fs;
 use std::path::Path;
 use anyhow::Context;
 use bevy_ecs::prelude::Entity;
-use seija_core::{LogOption};
+use seija_core::{OptionExt};
 use smol_str::SmolStr;
 use std::sync::{Arc};
 use fnv::{FnvHashMap, FnvHasher};
