@@ -3,10 +3,11 @@ use bevy_ecs::prelude::World;
 use image::ImageError;
 use seija_asset::{Assets, AssetEvent, Handle};
 use uuid::Uuid;
-use seija_core::{TypeUuid, IDGenU32};
+use seija_core::{TypeUuid, IDGenU32, OptionExt};
 use bevy_ecs::event::{ManualEventReader, Events};
 
 use once_cell::sync::Lazy;
+use wgpu::CommandEncoder;
 use crate::{resource::{read_image_info, image_info::color_image_info}, RenderContext};
 use seija_core::{anyhow::{Result}};
 use super::{ImageInfo, RenderResourceId};
@@ -57,8 +58,24 @@ impl Texture {
         Ok(Texture {texture,desc })
     }
 
-    pub fn immediate() {
+    pub fn to_gpu(handle:&Handle<Texture>,world:&mut World,ctx:&mut RenderContext) -> Result<()> {
+        if ctx.resources.get_render_resource(&handle.id, 0).is_some() {
+            return Ok(());
+        }
+        let textures = world.get_resource::<Assets<Texture>>().get()?;
+        if let Some(texture) = textures.get(&handle.id) {
+            let desc = texture.desc();
+            let texture_id = ctx.resources.create_texture(&desc.desc,&desc.view_desc);
+            ctx.resources.set_render_resource(&handle.id, RenderResourceId::TextureView(texture_id), 0);
 
+            let sampler_id = ctx.resources.create_sampler(&desc.sampler_desc);
+            ctx.resources.set_render_resource(&handle.id, RenderResourceId::Sampler(sampler_id), 1);
+            if let TextureType::Image(_) = texture.texture {
+                let command = ctx.command_encoder.as_mut().get()?;
+                ctx.resources.fill_texture(texture, &texture_id,command);
+            }
+        }
+        Ok(())
     }
 
 }
@@ -107,19 +124,9 @@ pub fn update_texture_system(world:&mut World,texture_reader:&mut ManualEventRea
             }
         }
     }
-
-    let textures = world.get_resource::<Assets<Texture>>().unwrap();
     for texture_handle in changed_textures.iter() {
-        if let Some(texture) = textures.get(&texture_handle.id) {
-            let desc = texture.desc();
-            let texture_id = ctx.resources.create_texture(&desc.desc,&desc.view_desc);
-            ctx.resources.set_render_resource(&texture_handle.id, RenderResourceId::TextureView(texture_id), 0);
-
-            let sampler_id = ctx.resources.create_sampler(&desc.sampler_desc);
-            ctx.resources.set_render_resource(&texture_handle.id, RenderResourceId::Sampler(sampler_id), 1);
-            if let TextureType::Image(_) = texture.texture {
-                ctx.resources.fill_texture(texture, &texture_id,command);
-            }
+        if let Err(err) = Texture::to_gpu(&texture_handle, world, ctx) {
+            log::error!("upload texture error:{}",err);
         }
     }
     //TODO 这里需要移除释放的Texture的render resource
