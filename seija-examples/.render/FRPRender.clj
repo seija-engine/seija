@@ -9,6 +9,7 @@
     (uniform "ObjectBuffer")
     (uniform "CameraBuffer")
     (uniform "LightBuffer")
+    (uniform "PostEffect")
     (node CameraNodeID "CameraBuffer")
     (node TransformNodeID "ObjectBuffer")
     (node PBRCameraExNodeID "CameraBuffer")

@@ -181,7 +181,7 @@
           "POSITION": "require",
           "UV0":"require"
         },
-        "backend": ["Camera3D"],
+        "backend": ["Camera3D","PostEffect"],
         "vs": "tonemap.vs_main",
         "fs": "tonemap.fs_main"
       }

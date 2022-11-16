@@ -91,6 +91,10 @@ impl UniformContext {
         }
     }
 
+    pub fn set_texture_bind_group(&mut self,eid:Option<u32>) {
+
+    }
+
     pub fn set_texture(&mut self,eid:Option<u32>,ubo_name:&str,texture_name:&str,texture:Handle<Texture>) -> Result<(),i32> {
         let index = self.get_index(ubo_name).ok_or(0)?;
         match index.typ {
@@ -107,6 +111,8 @@ impl UniformContext {
         }
         Ok(())
     }
+
+    
 
     pub fn add_component(&mut self,index:&UniformIndex,eid:u32,res:&mut RenderResources) {
         let array_object = &mut self.components[index.index];

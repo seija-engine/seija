@@ -222,7 +222,9 @@ fn write_ubo_uniform<W:Write>(info:&UniformInfo, writer:&mut W,index:usize) {
         }
     }
     writer.write_str("\r\n").unwrap();
-    writer.write_str(&format!("layout(set = {}, binding = 0) uniform {} {{\r\n",index,&info.name)).unwrap();
+    if info.props.infos.len() > 0 {
+        writer.write_str(&format!("layout(set = {}, binding = 0) uniform {} {{\r\n",index,&info.name)).unwrap();
+    }
     for prop in info.props.infos.iter() {
         match prop {
             MemUniformInfo::Raw(raw) => {
@@ -233,7 +235,9 @@ fn write_ubo_uniform<W:Write>(info:&UniformInfo, writer:&mut W,index:usize) {
             }
         }
     }
-    writer.write_str(&format!("}} _{};\r\n",&info.name)).unwrap();
+    if info.props.infos.len() > 0 {
+        writer.write_str(&format!("}} _{};\r\n",&info.name)).unwrap();
+    }
 
     let mut binding_index = 1;
     for texture_prop in info.textures.iter() {

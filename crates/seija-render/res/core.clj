@@ -39,6 +39,24 @@
     })
 )
 
+(defn declare-posteffect-uniform [set index]
+    (declare-uniform set "PostEffect" {
+        :type :Component
+        :sort index
+        :apply :RenderObject
+        :shader-stage SS_VERTEX_FRAGMENT
+        :props []
+        :textures [
+            {
+                :name "postTexture"
+                :type "texture2D"
+                :filterable true
+            }
+        ]
+        :backends ["PostEffect"]
+    })
+)
+
 (defn declare-shadow-uniform [set index]
     (declare-uniform set "ShadowCast" {
         :type :Global
