@@ -20,3 +20,9 @@ vec3 median3(vec3 a, vec3 b, vec3 c)
 float brightness(vec3 v) {
     return mmax3(v);
 }
+
+
+vec3 grayColor(vec3 color) {
+    float grayValue = color.r * 0.299 + color.g * 0.587 + color.b * 0.114;
+    return vec3(grayValue,grayValue,grayValue);
+}

@@ -91,9 +91,7 @@ impl UniformContext {
         }
     }
 
-    pub fn set_texture_bind_group(&mut self,eid:Option<u32>) {
-
-    }
+    
 
     pub fn set_texture(&mut self,eid:Option<u32>,ubo_name:&str,texture_name:&str,texture:Handle<Texture>) -> Result<(),i32> {
         let index = self.get_index(ubo_name).ok_or(0)?;
@@ -134,6 +132,23 @@ impl UniformContext {
                 let object = &self.components[index.index];
                 eid.and_then(|id| object.get_item(id))
                    .and_then(|v| v.bind_group.as_ref())
+            },
+        }
+    }
+
+    pub fn set_bind_group(&mut self,index:&UniformIndex,eid:Option<u32>,bind_group:wgpu::BindGroup) {
+        match index.typ {
+            UniformType::Global => {
+                let object = &mut self.globals[index.index];
+                object.bind_group = Some(bind_group);
+            },
+            UniformType::Component => {
+                let array_object = &mut self.components[index.index];
+                if let Some(eid) = eid {
+                    if let Some(item) = array_object.get_item_mut(eid) {
+                        item.bind_group =Some(bind_group);
+                    }
+                }
             },
         }
     }

@@ -9,7 +9,7 @@ use seija_core::OptionExt;
 use wgpu::{CommandEncoder,Operations,Color};
 use crate::{dsl_frp::{errors::Errors, PostEffectStack}, 
 RenderContext, UniformIndex, resource::{RenderResourceId, Texture, Mesh}, 
-pipeline::render_bindings::BindGroupBuilder, material::Material};
+pipeline::render_bindings::BindGroupBuilder, material::Material, uniforms::UBOApplyType};
 
 use super::IUpdateNode;
 
@@ -40,9 +40,8 @@ pub struct PostStackNode {
     last_state:LastTextureState
 }
 
-#[derive(PartialEq, Eq)]
+#[derive(PartialEq, Eq,Clone, Copy)]
 enum LastTextureState {
-    None,
     SrcToCache,
     CacheToSrc
 }
@@ -74,7 +73,7 @@ impl PostStackNode {
                 load:wgpu::LoadOp::Clear(Color {r:0f64,g:0f64,b:0f64,a:1f64 }),
                 store:true  
             },
-            last_state:LastTextureState::None
+            last_state:LastTextureState::SrcToCache
         }))
     }
 
@@ -152,14 +151,15 @@ impl PostStackNode {
         Ok(())
     }
 
-    fn draw(&mut self,world:&mut World,ctx:&mut RenderContext,frp_sys:&mut FRPSystem,command:&mut CommandEncoder) -> Result<bool> {
-        self.last_state = LastTextureState::None;
+    fn draw(&mut self,world:&mut World,ctx:&mut RenderContext,command:&mut CommandEncoder) -> Result<bool> {
+        self.last_state = LastTextureState::SrcToCache;
         let camera_entity = world.get_entity(self.camera_entity).get()?;
         let post_stack = camera_entity.get::<PostEffectStack>().get()?;
         let materials = world.get_resource::<Assets<Material>>().get()?;
         let meshs = world.get_resource::<Assets<Mesh>>().get()?;
         let quad_mesh_id = self.quad_mesh.as_ref().get()?.id.clone();
         let quad_mesh = meshs.get(&quad_mesh_id).get()?;
+        let uniform_index = self.post_effect_index.as_ref().get()?.index;
         for (index,effect_item) in post_stack.items.iter().enumerate() {
             let material = materials.get(&effect_item.material.id).get()?;
             if !material.is_ready(&ctx.resources) { continue }
@@ -169,20 +169,108 @@ impl PostStackNode {
                 let target_format = if is_last { self.dst_format.get()? } else { self.src_format.get()? };
                 self.cache_pass_format[0] = target_format;
                 ctx.build_pipeine(&material.def, quad_mesh, &self.cache_pass_format, None,pass_index);
+                let dst_res_id = self.cur_target_texture(is_last)?;
+                let dst_texture_view = ctx.resources.get_texture_view_by_resid(dst_res_id).get()?;
+                color_attachments.push(wgpu::RenderPassColorAttachment { 
+                    view: dst_texture_view, 
+                    resolve_target: None, 
+                    ops:self.operations 
+                });
+                let pass_desc = wgpu::RenderPassDescriptor {
+                    label:None,
+                    color_attachments:color_attachments.as_slice(),
+                    depth_stencil_attachment:None
+                };
+                
+                let mut render_pass = command.begin_render_pass(&pass_desc);
+                if let Some(pipeline) = ctx.pipeline_cache.get_pipeline(&material.def.name,&quad_mesh,&self.cache_pass_format,None, pass_index) {
+                    if let Some(mesh_buffer_id)  = ctx.resources.get_render_resource(&quad_mesh_id, 0) {
+                        
+                        let vert_buffer = ctx.resources.get_buffer_by_resid(&mesh_buffer_id).unwrap();
+                        
+                        for (index,ubo_name_index) in pipeline.ubos.iter().enumerate() {
+                            match ubo_name_index.apply_type {
+                             UBOApplyType::Camera => {
+                                 if ubo_name_index.index == uniform_index {
+                                    let src_bind_group = self.cur_src_bind_group()?;
+                                    render_pass.set_bind_group(index as u32,src_bind_group, &[]);
+                                 } else {
+                                    let bind_group = ctx.ubo_ctx.get_bind_group(ubo_name_index, Some( self.camera_entity.id() )).get()?;
+                                    render_pass.set_bind_group(index as u32, &bind_group, &[]);
+                                 }
+                              },
+                             UBOApplyType::RenderObject => { log::error!("post effect shader has object backend"); },
+                             UBOApplyType::Frame => {
+                                let bind_group = ctx.ubo_ctx.get_bind_group(ubo_name_index, None).get()?;
+                                render_pass.set_bind_group(index as u32, bind_group, &[]);
+                             }
+                            }
+                        }
+                        let mut set_index = pipeline.ubos.len() as u32;
+                            if material.props.def.infos.len() > 0 {
+                                if let Some(bind_group) = material.bind_group.as_ref() {
+                                    render_pass.set_bind_group(set_index, bind_group, &[]);
+                                    set_index += 1;
+                                } else {
+                                    continue;
+                                }
+                            }
+                            if material.texture_props.textures.len() > 0  {
+                                if let Some(bind_group) = material.texture_props.bind_group.as_ref() {
+                                    render_pass.set_bind_group(set_index, bind_group, &[]);
+                                } else {
+                                    continue;
+                                }
+                            }
+
+                            render_pass.set_vertex_buffer(0, vert_buffer.slice(0..));
+                            if let Some(idx_id) = ctx.resources.get_render_resource(&quad_mesh_id, 1) {
+                               
+                                let idx_buffer = ctx.resources.get_buffer_by_resid(&idx_id).unwrap();
+                                render_pass.set_index_buffer(idx_buffer.slice(0..), quad_mesh.index_format().unwrap());
+                                render_pass.set_pipeline(&pipeline.pipeline);
+                                render_pass.draw_indexed(quad_mesh.indices_range().unwrap(),0, 0..1);
+                                    
+                            } else {
+                               
+                                render_pass.set_pipeline(&pipeline.pipeline);
+                                render_pass.draw(0..quad_mesh.count_vertices() as u32, 0..1);
+                            }
+                            drop(render_pass);
+                            match self.last_state {
+                                LastTextureState::SrcToCache => {
+                                    self.last_state = LastTextureState::CacheToSrc;    
+                                },
+                                LastTextureState::CacheToSrc => {
+                                    self.last_state = LastTextureState::SrcToCache;   
+                                }
+                            }
+
+                    }
+                }
             }
         }
         Ok(true)
     }
 
-    fn get_cur_target_texture(&self,is_last:bool) -> Result<&RenderResourceId> {
-        if is_last {
-            return Ok(self.dst_texture.as_ref().get()?)
-        }
+    fn cur_target_texture(&self,is_last:bool) -> Result<&RenderResourceId> {
+        if is_last {  return Ok(self.dst_texture.as_ref().get()?)  }
         match self.last_state {
-            LastTextureState::None | LastTextureState::SrcToCache => {
+             LastTextureState::SrcToCache => {
                 return Ok(self.cache_texture_id.as_ref().get()?)
             },
-            _ => { return Ok(self.src_texture.as_ref().get()?) }
+            _ => { return Ok(self.src_texture.as_ref().get()?)}
+        }
+    }
+
+    fn cur_src_bind_group(&self) -> Result<&wgpu::BindGroup> {
+        match self.last_state {
+            LastTextureState::SrcToCache => {
+                return Ok(self.src_bind_group.as_ref().get()?)
+            },
+            _ => { 
+                return Ok(self.cache_bind_group.as_ref().get()?)
+            }
         }
     }
     
@@ -206,6 +294,11 @@ impl IUpdateNode for PostStackNode {
     fn update(&mut self,world:&mut World,ctx:&mut RenderContext,frp_system:&mut FRPSystem) -> Result<()> {
         self.update_textures(frp_system, world, ctx)?;
         self.update_cache_quads(world)?;
+        let mut command = ctx.command_encoder.take().get()?;
+        if let Err(err) = self.draw(world, ctx, &mut command) {
+            log::error!("post stack node draw error:{:?}",err);
+        }
+        ctx.command_encoder = Some(command);
         Ok(())
     }
 }

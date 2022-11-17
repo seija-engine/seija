@@ -148,7 +148,7 @@ impl DrawPassNode {
         let mut render_query = world.query::<(&Handle<Mesh>,&Handle<Material>)>();
         let meshs = world.get_resource::<Assets<Mesh>>().unwrap();
         let materials = world.get_resource::<Assets<Material>>().unwrap();
-
+       
         let query_system = world.get_resource::<QuerySystem>().unwrap();
         let view_query = &query_system.querys[self.query_index];
         //check build pipeline
@@ -157,14 +157,18 @@ impl DrawPassNode {
                 let mesh = meshs.get(&hmesh.id).ok_or(PassError::MissMesh)?;
                 let material = materials.get(&hmat.id).ok_or(PassError::MissMaterial)?;
                 for pass_index in 0..material.def.pass_list.len() {
-                    ctx.build_pipeine(&material.def, mesh,&self.cache_formats,None,pass_index);
+                    ctx.build_pipeine(&material.def, mesh,&self.cache_formats,Some(wgpu::TextureFormat::Depth32Float),pass_index);
                 }
             }
         }
         let mut draw_count:u32 = 0;
+        
         let mut render_pass = self.create_render_pass(&ctx.resources,  command)?;
+       
         for entity in view_query.list.read().iter() {
+           
             if let Ok((hmesh,hmat)) = render_query.get(world, *entity) { 
+               
                 let mesh = meshs.get(&hmesh.id).ok_or(PassError::MissMesh)?;
                 let material = materials.get(&hmat.id).ok_or(PassError::MissMaterial)?;
                 if !material.is_ready(&ctx.resources) { continue }
@@ -174,12 +178,13 @@ impl DrawPassNode {
                                                                    mesh,&self.cache_formats,
                                                                    Some(wgpu::TextureFormat::Depth32Float),pass_index);
                     if let Some(pipeline) = pipeline {
-                        if pipeline.tag != self.pass_name { continue; }
+                       
+                        if pipeline.tag != self.pass_name {  continue; }
                         if let Some(mesh_buffer_id)  = ctx.resources.get_render_resource(&hmesh.id, 0) {
 
                             let vert_buffer = ctx.resources.get_buffer_by_resid(&mesh_buffer_id).unwrap();
                             let oset_index = pipeline.set_binds(self.camera_entity,Some(entity.clone()), &mut render_pass, &ctx.ubo_ctx);
-                            if oset_index.is_none()  { continue }
+                            if oset_index.is_none()  {  continue }
                             let mut set_index = oset_index.unwrap();
 
                             if material.props.def.infos.len() > 0 {

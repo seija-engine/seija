@@ -34,7 +34,7 @@
 
 (defn hdr-draw [camera-id camera-query depth-texture camera-target]
   (__frp_enter__ "hdr-draw")
-  (let [hdr-texture (texture {:format "Rgba16Float"})]
+  (let [hdr-texture (texture {:format "Rgba8Unorm"})]
     (node WinResizeNodeID [hdr-texture])
     (node DrawPassNodeID camera-id camera-query [hdr-texture] depth-texture "Foward")
     (node PostStackNodeID camera-id hdr-texture camera-target)

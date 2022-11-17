@@ -222,8 +222,10 @@ fn write_ubo_uniform<W:Write>(info:&UniformInfo, writer:&mut W,index:usize) {
         }
     }
     writer.write_str("\r\n").unwrap();
+    let mut binding_index = 0;
     if info.props.infos.len() > 0 {
         writer.write_str(&format!("layout(set = {}, binding = 0) uniform {} {{\r\n",index,&info.name)).unwrap();
+        binding_index += 1;
     }
     for prop in info.props.infos.iter() {
         match prop {
@@ -239,7 +241,7 @@ fn write_ubo_uniform<W:Write>(info:&UniformInfo, writer:&mut W,index:usize) {
         writer.write_str(&format!("}} _{};\r\n",&info.name)).unwrap();
     }
 
-    let mut binding_index = 1;
+    
     for texture_prop in info.textures.iter() {
         writer.write_str(&format!("layout(set = {}, binding = {}) uniform {} {}_{};\r\n",index,binding_index,&texture_prop.str_type,&info.name,&texture_prop.name)).unwrap();
         binding_index += 1;

@@ -43,7 +43,7 @@
     (declare-uniform set "PostEffect" {
         :type :Component
         :sort index
-        :apply :RenderObject
+        :apply :Camera
         :shader-stage SS_VERTEX_FRAGMENT
         :props []
         :textures [
