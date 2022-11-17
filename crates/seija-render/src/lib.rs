@@ -1,6 +1,6 @@
 use std::path::{PathBuf, Path};
 use std::sync::Arc;
-use camera::camera_event_system;
+use camera::camera_frp_event_system;
 use dsl_frp::RenderScriptPlugin;
 use query::QuerySystem;
 use render::{AppRender, Config };
@@ -83,7 +83,7 @@ impl IModule for RenderModule {
         app.schedule.add_stage_before(RenderStage::Render, RenderStage::PostRender, SystemStage::parallel());
         query::init_system(app);
 
-        app.add_system(CoreStage::PostUpdate, camera_event_system);
+        app.add_system(CoreStage::PostUpdate, camera_frp_event_system);
         app.init_resource::<SceneEnv>();
     }
 }

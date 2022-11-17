@@ -25,22 +25,32 @@
         camera-id (env :camera-id)
         camera-query (env :camera-query)
         camera-target (env :path-target)
-        hdr-draw-comp [hdr-draw camera-id camera-query depth-texture camera-target] ]
+        hdr-draw-comp [hdr-draw camera-id camera-query depth-texture camera-target]
+        normal-draw-comp [normal-draw camera-id camera-query depth-texture camera-target]
+      ]
     (node WinResizeNodeID [depth-texture])
-    (if-comp dynIsHDR hdr-draw-comp)
+    (if-comp dynIsHDR 
+              hdr-draw-comp 
+              normal-draw-comp)
+    
   )
   (__frp_exit__)
 )
 
 (defn hdr-draw [camera-id camera-query depth-texture camera-target]
   (__frp_enter__ "hdr-draw")
-  (let [hdr-texture (texture {:format "Rgba8Unorm"})]
+  (let [hdr-texture (texture {:format "Rgba16Float"})]
     (node WinResizeNodeID [hdr-texture])
-    (node DrawPassNodeID camera-id camera-query [hdr-texture] depth-texture "Foward")
+    (node DrawPassNodeID  camera-id camera-query [hdr-texture] depth-texture "Foward")
     (node PostStackNodeID camera-id hdr-texture camera-target)
   )
   (__frp_exit__)
 )
 
+(defn normal-draw [camera-id camera-query depth-texture camera-target]
+  (__frp_enter__ "hdr-draw")
+   
+  (__frp_exit__)
+)
 
 (add-render-path "Foward" foward-path)
