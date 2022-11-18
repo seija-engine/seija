@@ -19,8 +19,9 @@ pub struct FRPContextInner {
     pub system:FRPSystem,
     global_events:HashMap<SmolStr,EventID>,
     global_dyns:HashMap<SmolStr,DynamicID>,
+
     camera_events:HashMap<(Entity,SmolStr),EventID>,
-    dynamic_events:HashMap<(Entity,SmolStr),EventID>,
+    camera_dyns:HashMap<(Entity,SmolStr),DynamicID>,
 }
 
 impl FRPContext {
@@ -31,7 +32,7 @@ impl FRPContext {
                 global_events:HashMap::default(),
                 global_dyns:HashMap::default(),
                 camera_events:HashMap::default(),
-                dynamic_events:HashMap::default()
+                camera_dyns:HashMap::default()
             }.into()
         }
     }
@@ -62,7 +63,16 @@ impl FRPContextInner {
 
     pub fn new_camera_dynamic(&mut self,entity:Entity,name:SmolStr,value:Variable) -> DynamicID {
         let dyn_id = self.system.new_dynamic(value,self.system.never(),None).unwrap();
-        self.dynamic_events.insert((entity,name), dyn_id);
+        self.camera_dyns.insert((entity,name), dyn_id);
         dyn_id
+    }
+
+    pub fn set_camera_dynamic(&mut self,entity:Entity,name:SmolStr,value:Variable) {
+        let k = (entity,name);
+        if let Some(dyn_id) = self.camera_dyns.get(&k) {
+           if let Some(dynamic) = self.system.dynamics.get_mut(dyn_id) {
+                dynamic.set_value(value);
+           }
+        }
     }
 }

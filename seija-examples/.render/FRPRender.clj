@@ -49,7 +49,7 @@
 
 (defn normal-draw [camera-id camera-query depth-texture camera-target]
   (__frp_enter__ "hdr-draw")
-   
+   (node DrawPassNodeID  camera-id camera-query [camera-target] depth-texture "Foward")
   (__frp_exit__)
 )
 

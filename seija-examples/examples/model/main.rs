@@ -1,12 +1,12 @@
 use bevy_ecs::system::{Commands, ResMut, CommandQueue, EntityCommands};
 use glam::{Vec3, Quat};
 use seija_asset::{Assets, AssetServer,  Handle, AssetRequest};
-use seija_core::{CoreStage, StartupStage, window::AppWindow};
+use seija_core::{CoreStage, StartupStage, window::AppWindow, time::Time};
 use seija_examples::{init_core_app, add_pbr_camera, load_material, update_camera_trans_system};
 use seija_gltf::{create_gltf, asset::GltfAsset};
 use seija_pbr::lights::PBRLight;
 use bevy_ecs::prelude::*;
-use seija_render::{material::{MaterialDefineAsset, Material}, dsl_frp::PostEffectStack};
+use seija_render::{material::{MaterialDefineAsset, Material}, dsl_frp::PostEffectStack, camera::camera::Camera};
 use seija_transform::Transform;
 
 #[derive(Default)]
@@ -55,8 +55,9 @@ fn start(world:&mut World) {
     };
 }
 
-fn on_update(mut commands:Commands,mut mats:ResMut<Assets<Material>>,
-    server:Res<AssetServer>,mut data:ResMut<GameData>,gltfs:Res<Assets<GltfAsset>>,defs: Res<Assets<MaterialDefineAsset>>) {
+fn on_update(mut commands:Commands,mut mats:ResMut<Assets<Material>>,time:Res<Time>,
+    server:Res<AssetServer>,mut data:ResMut<GameData>,gltfs:Res<Assets<GltfAsset>>,
+    defs:Res<Assets<MaterialDefineAsset>>,mut cameras:Query<(Entity,&mut Camera)>) {
     let is_finish = data.track.as_ref().map(|v| v.is_finish()).unwrap_or(false);
     if is_finish {
        let h_def = server.get_asset("materials/baseTexture.mat.clj").unwrap().make_handle().typed::<MaterialDefineAsset>();
@@ -71,5 +72,11 @@ fn on_update(mut commands:Commands,mut mats:ResMut<Assets<Material>>,
             mats.add(mat).into()
         });
        }
+    }
+
+    if time.frame() == 8 * 30 {
+        for (_,mut camera) in cameras.iter_mut() {
+            camera.is_hdr = false;
+        }
     }
 }

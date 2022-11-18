@@ -18,9 +18,9 @@ pub use ubo_array_collect::UBOArrayCollect;
 pub use lite_clojure_frp::FRPSystem;
 pub use post_stack::PostEffectStack;
 
-use self::post_stack::post_material_to_global;
+//use self::post_stack::post_material_to_global;
 
 
 pub fn init_dsl_frp(app:&mut App) {
-    app.add_system(CoreStage::PostUpdate, post_material_to_global);
+    //app.add_system(CoreStage::PostUpdate, post_material_to_global);
 }

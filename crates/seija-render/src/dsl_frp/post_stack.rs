@@ -23,7 +23,7 @@ impl PostEffectStack {
     }
 }
 
-
+/*
 pub fn post_material_to_global(mut posteffects:Query<&mut PostEffectStack>,materials:Res<Assets<Material>>,mut global_material:ResMut<GlobalImportMaterials>) {
     for mut effect in posteffects.iter_mut() {
         if effect.is_dirty {
@@ -35,4 +35,4 @@ pub fn post_material_to_global(mut posteffects:Query<&mut PostEffectStack>,mater
             effect.is_dirty = false;
         }
     }
-}
+}*/

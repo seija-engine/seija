@@ -76,10 +76,13 @@ impl FRPDSLSystem {
                let evid = ctx_inner.new_event(Some(event.clone()));
                self.vm.global_context().set_var(event.as_str(), Variable::Int(evid as i64));
             }
+            
             for (name,default_value) in plugin.global_dynamics.iter() {
                 let dynid = ctx_inner.new_dynamic(Some(name.clone()),default_value.clone());
                 self.vm.global_context().set_var(name.as_str(), Variable::Int(dynid as i64));
-             }
+            }
+
+            
         }
     }
 
