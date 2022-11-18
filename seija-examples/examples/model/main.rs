@@ -35,7 +35,7 @@ fn start(world:&mut World) {
         let mut effect_stack = PostEffectStack::default();
         effect_stack.add_item(htonemap, 1000);
         //effect_stack.add_item(htonemap, 1000);
-        cmds.insert(effect_stack);
+        //cmds.insert(effect_stack);
     },None,None);
     queue.apply(world);
     
@@ -76,7 +76,7 @@ fn on_update(mut commands:Commands,mut mats:ResMut<Assets<Material>>,time:Res<Ti
 
     if time.frame() == 8 * 30 {
         for (_,mut camera) in cameras.iter_mut() {
-            camera.is_hdr = false;
+            //camera.is_hdr = false;
         }
     }
 }

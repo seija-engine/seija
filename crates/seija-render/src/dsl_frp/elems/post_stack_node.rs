@@ -133,7 +133,9 @@ impl PostStackNode {
 
     fn update_cache_quads(&mut self,world:&mut World) -> Result<()> {
         let camera_entity = world.get_entity(self.camera_entity).get()?;
-        let post_stack = camera_entity.get::<PostEffectStack>().get()?;
+        let post_stack = camera_entity.get::<PostEffectStack>();
+        if post_stack.is_none() { return Ok(()); }
+        let post_stack = post_stack.get()?;
         let mut new_lst:Vec<Handle<Material>> = vec![];
         for effect in post_stack.items.iter() {
             if !self.cache_quads.contains_key(&effect.material) {
@@ -154,7 +156,10 @@ impl PostStackNode {
     fn draw(&mut self,world:&mut World,ctx:&mut RenderContext,command:&mut CommandEncoder) -> Result<bool> {
         self.last_state = LastTextureState::SrcToCache;
         let camera_entity = world.get_entity(self.camera_entity).get()?;
-        let post_stack = camera_entity.get::<PostEffectStack>().get()?;
+        let post_stack =  camera_entity.get::<PostEffectStack>();
+        if post_stack.is_none() { return Ok(true); }
+        let post_stack = post_stack.get()?;
+        
         let materials = world.get_resource::<Assets<Material>>().get()?;
         let meshs = world.get_resource::<Assets<Mesh>>().get()?;
         let quad_mesh_id = self.quad_mesh.as_ref().get()?.id.clone();
@@ -292,6 +297,7 @@ impl IUpdateNode for PostStackNode {
     }
 
     fn update(&mut self,world:&mut World,ctx:&mut RenderContext,frp_system:&mut FRPSystem) -> Result<()> {
+        
         self.update_textures(frp_system, world, ctx)?;
         self.update_cache_quads(world)?;
         let mut command = ctx.command_encoder.take().get()?;

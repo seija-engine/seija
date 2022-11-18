@@ -62,17 +62,24 @@ impl FRPContextInner {
     }
 
     pub fn new_camera_dynamic(&mut self,entity:Entity,name:SmolStr,value:Variable) -> DynamicID {
+        let key = (entity,name);
+        if let Some(id) = self.camera_dyns.get(&key) {
+            return *id;
+        }
         let dyn_id = self.system.new_dynamic(value,self.system.never(),None).unwrap();
-        self.camera_dyns.insert((entity,name), dyn_id);
+        self.camera_dyns.insert(key, dyn_id);
         dyn_id
     }
 
     pub fn set_camera_dynamic(&mut self,entity:Entity,name:SmolStr,value:Variable) {
-        let k = (entity,name);
+        let k = (entity,name.clone());
         if let Some(dyn_id) = self.camera_dyns.get(&k) {
            if let Some(dynamic) = self.system.dynamics.get_mut(dyn_id) {
+                
                 dynamic.set_value(value);
            }
+        } else {
+            self.new_camera_dynamic(entity, name, value);
         }
     }
 }

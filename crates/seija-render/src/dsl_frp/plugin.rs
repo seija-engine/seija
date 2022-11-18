@@ -39,7 +39,8 @@ pub fn create_buildin_plugin() -> RenderScriptPlugin {
     plugin.global_dynamics.push(("dynBase3D".into(),Variable::Bool(true)));
 
     let mut camera_dyns = vec![];
-    camera_dyns.push((ApplyCameraType::ALL,":dynIsHDR".into(),Variable::Bool(true)));
+    camera_dyns.push((ApplyCameraType::ALL,":dynIsHDR".into(),Variable::Bool(false)));
+    camera_dyns.push((ApplyCameraType::ALL,":dynHasPostEffect".into(),Variable::Bool(false)));
     plugin.camera_dynamics = Arc::new(camera_dyns);
     plugin
 }

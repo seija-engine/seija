@@ -110,7 +110,6 @@ pub fn color_texture(color:[u8;4],size:usize) -> Texture {
 
 
 pub fn update_texture_system(world:&mut World,texture_reader:&mut ManualEventReader<AssetEvent<Texture>>,ctx:&mut RenderContext) {
-    let command = ctx.command_encoder.as_mut().unwrap();
     let texture_events = world.get_resource::<Events<AssetEvent<Texture>>>().unwrap();
     let mut changed_textures:HashSet<Handle<Texture>> = Default::default();
     for event in texture_reader.iter(texture_events) {

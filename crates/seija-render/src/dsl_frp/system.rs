@@ -3,6 +3,7 @@ use seija_app::ecs::{world::World,change_detection::Mut};
 use lite_clojure_eval::{EvalRT, Variable};
 use lite_clojure_frp::{FRPSystem,fns::add_frp_fns};
 use anyhow::Result;
+use seija_core::window::AppWindow;
 use crate::{UniformInfoSet, RenderContext, frp_context::{FRPContext, FRPContextInner}};
 
 use super::{fns, builder::FRPCompBuilder, frp_comp::{IElement, FRPComponent}, 
@@ -39,6 +40,7 @@ impl FRPDSLSystem {
             self.vm.add_search_path(lib_path);
         }
         fns::init_fns(&mut self.vm);
+    
         let path_ctx_ptr = &mut self.path_context as *mut RenderPathContext as *mut u8;
         self.vm.global_context().set_var("*PATH_DEFINE_SET*", Variable::UserData(path_ctx_ptr));
         self.vm.eval_string(String::default() ,code_string);
@@ -50,6 +52,10 @@ impl FRPDSLSystem {
     }
 
     pub fn start(&mut self,ctx:&mut RenderContext,world:&mut World) -> Result<()> {
+        if let Some(window) = world.get_resource::<AppWindow>() {
+            self.vm.global_context().set_var("WINDOW_WIDTH", Variable::Int(window.width() as i64));
+            self.vm.global_context().set_var("WINDOW_HEIGHT", Variable::Int(window.height() as i64));
+        }
         world.resource_scope(|world:&mut World,frp_ctx:Mut<FRPContext>| {
             let mut builder = FRPCompBuilder::new();
             let mut write_frp = frp_ctx.inner.write();
@@ -105,6 +111,8 @@ impl FRPDSLSystem {
         let frp_ptr = system as *mut FRPSystem as *mut u8;
         vm.global_context().set_var("*FRPSystem*", Variable::UserData(frp_ptr));
     }
+
+    
 
 }
 

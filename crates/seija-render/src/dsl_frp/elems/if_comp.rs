@@ -69,7 +69,6 @@ impl IElement for IfCompElement {
     fn active(&mut self,world:&mut World,ctx:&mut RenderContext,frp_sys:&mut FRPSystem) -> Result<()> {
         let bool_value = frp_sys.dynamics.get(&self.dynamic_id).ok_or(anyhow!("if-comp bool err"))?.get_value().cast_bool().unwrap_or(true);
         self.cur_bool_value = bool_value;
-        
         if bool_value {
             if let Some(true_comp) = self.true_comp.as_mut() {
                 true_comp.active(world, ctx, frp_sys)?;
