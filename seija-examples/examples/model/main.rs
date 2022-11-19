@@ -27,13 +27,14 @@ pub fn main() {
 fn start(world:&mut World) {
     let server = world.get_resource::<AssetServer>().unwrap().clone();
     load_material("materials/baseTexture.mat.clj", world);
-    let htonemap = server.load_sync::<Material>(world, "mats/tonemap.json", None).unwrap();
+    load_material("materials/tonemap.mat.clj", world);
+    //let htonemap = server.load_sync::<Material>(world, "mats/tonemap.json", None).unwrap();
     let mut queue = CommandQueue::default();
     let mut commands = Commands::new(&mut queue, world);
     let window = world.get_resource::<AppWindow>().unwrap();
     add_pbr_camera(&mut commands,&window,Vec3::new(0f32, -0.2f32, 2f32),Quat::IDENTITY,|cmds:&mut EntityCommands| {
-        let mut effect_stack = PostEffectStack::default();
-        effect_stack.add_item(htonemap, 1000);
+        //let mut effect_stack = PostEffectStack::default();
+        //effect_stack.add_item(htonemap, 1000);
         //effect_stack.add_item(htonemap, 1000);
         //cmds.insert(effect_stack);
     },None,None);
@@ -76,7 +77,7 @@ fn on_update(mut commands:Commands,mut mats:ResMut<Assets<Material>>,time:Res<Ti
 
     if time.frame() == 8 * 30 {
         for (_,mut camera) in cameras.iter_mut() {
-            //camera.is_hdr = false;
+            camera.is_hdr = true;
         }
     }
 }

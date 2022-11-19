@@ -41,6 +41,7 @@
 
 (defn hdr-draw [camera-id camera-query depth-texture camera-target]
   (__frp_enter__ "hdr-draw")
+  (posteffect-item camera-id "mats/tonemap.json" 1000)
   (let [hdr-texture (texture {:format "Rgba16Float" :width WINDOW_WIDTH :height WINDOW_HEIGHT})]
     (node WinResizeNodeID [hdr-texture])
     (node DrawPassNodeID  camera-id camera-query [hdr-texture] depth-texture "Foward")

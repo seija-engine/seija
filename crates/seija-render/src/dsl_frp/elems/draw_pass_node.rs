@@ -3,6 +3,7 @@ use lite_clojure_eval::Variable;
 use anyhow::{Result, anyhow};
 use lite_clojure_frp::{DynamicID, FRPSystem};
 use seija_asset::{Handle, Assets};
+use seija_core::{time::Time, OptionExt};
 use wgpu::{TextureFormat, CommandEncoder,Operations,Color};
 use crate::{dsl_frp::errors::Errors, resource::{RenderResourceId, RenderResources, Mesh}, RenderContext, material::Material, query::QuerySystem};
 use super::IUpdateNode;
@@ -145,6 +146,8 @@ impl DrawPassNode {
     }
 
     pub fn draw(&self,world:&mut World,ctx:&mut RenderContext,command:&mut CommandEncoder) -> Result<u32,PassError> {
+        let ff = world.get_resource::<Time>().get().unwrap().frame();
+      
         let mut render_query = world.query::<(&Handle<Mesh>,&Handle<Material>)>();
         let meshs = world.get_resource::<Assets<Mesh>>().unwrap();
         let materials = world.get_resource::<Assets<Material>>().unwrap();
@@ -171,7 +174,9 @@ impl DrawPassNode {
                
                 let mesh = meshs.get(&hmesh.id).ok_or(PassError::MissMesh)?;
                 let material = materials.get(&hmat.id).ok_or(PassError::MissMaterial)?;
-                if !material.is_ready(&ctx.resources) { continue }
+                if !material.is_ready(&ctx.resources) { 
+                    continue 
+                }
                 for pass_index in 0..material.def.pass_list.len() {
                     
                     let pipeline = ctx.pipeline_cache.get_pipeline(material.def.name.as_str(), 

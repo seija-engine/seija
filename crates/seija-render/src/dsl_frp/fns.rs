@@ -1,12 +1,16 @@
+use bevy_ecs::prelude::Entity;
 use bevy_ecs::world::World;
 use lite_clojure_eval::{EvalRT, ExecScope, Variable, run_native_fn};
 use lite_clojure_frp::{FRPSystem, DynamicID};
+use seija_asset::AssetServer;
+use seija_core::OptionExt;
 use serde_json::Value;
 use anyhow::{anyhow,Result};
 use std::{convert::TryFrom, sync::Arc};
-use crate::material::STextureDescriptor;
+use crate::material::{STextureDescriptor, Material};
 use crate::resource::TextureDescInfo;
 use crate::{UniformInfo, UniformInfoSet};
+use super::PostEffectStack;
 use super::errors::Errors;
 use super::builder::{FRPCompBuilder, BuilderCommand};
 use super::render_path::{RenderPathDefine, RenderPathContext};
@@ -22,6 +26,7 @@ pub fn init_fns(vm:&mut EvalRT) {
     vm.global_context().push_native_fn("texture", texture);
     vm.global_context().push_native_fn("if-comp", if_comp);
     vm.global_context().push_native_fn("add-render-path", add_render_path);
+    vm.global_context().push_native_fn("posteffect-item", posteffect_item);
 
     vm.global_context().push_var("SS_VERTEX", wgpu::ShaderStage::VERTEX.bits() as i64 );
     vm.global_context().push_var("SS_FRAGMENT", wgpu::ShaderStage::FRAGMENT.bits() as i64 );
@@ -142,6 +147,19 @@ pub fn add_render_path(s:&mut ExecScope,a:Vec<Variable>) -> Variable {
             let path_define = RenderPathDefine {name:path_name.borrow().as_str().into(),start_func:frp_fn};
             path_ctx.add_define(path_define);
         }
+        Ok(Variable::Nil)
+    })
+}
+
+pub fn posteffect_item(s:&mut ExecScope,a:Vec<Variable>) -> Variable {
+    run_native_fn("posteffect-item", s, a, |scope,args| {
+        let entity_id = args.get(0).and_then(Variable::cast_int).get()?;
+        let entity = Entity::from_bits(entity_id as u64);
+        let material_path = args.get(1).and_then(Variable::cast_string).get()?;
+        let sort_order = args.get(2).and_then(Variable::cast_int).get()? as u32;
+        let builder = find_frp_builder(scope)?;
+        builder.push_command(BuilderCommand::PostEffectItem(entity,material_path.borrow().as_str().into(),sort_order));
+        
         Ok(Variable::Nil)
     })
 }

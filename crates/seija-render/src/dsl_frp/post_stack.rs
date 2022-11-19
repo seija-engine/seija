@@ -21,6 +21,16 @@ impl PostEffectStack {
         self.items.sort_by(|a,b|a.order.cmp(&b.order));
         self.is_dirty = true;
     }
+
+    pub fn remove_item_by_material(&mut self,handle:&Handle<Material>) {
+        for idx in (self.items.len() .. 0).rev() {
+            let item = &self.items[idx];
+            if item.material.id == handle.id {
+                self.items.remove(idx);
+                return;
+            }
+        } 
+    }
 }
 
 /*
@@ -36,3 +46,4 @@ pub fn post_material_to_global(mut posteffects:Query<&mut PostEffectStack>,mater
         }
     }
 }*/
+

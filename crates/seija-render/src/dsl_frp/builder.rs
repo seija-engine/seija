@@ -1,9 +1,10 @@
-use crate::{dsl_frp::{elems::{UniformElement, TextureElement, if_comp::IfCompElement}}, resource::TextureDescInfo};
-
+use crate::{dsl_frp::{elems::{UniformElement, TextureElement, if_comp::IfCompElement, posteffect_item::PostEffectItem}}, resource::TextureDescInfo};
 use super::{frp_comp::FRPComponent, system::ElementCreator};
 use anyhow::{Result,anyhow};
+use seija_app::ecs::entity::Entity;
 use lite_clojure_eval::{Variable, EvalRT};
 use lite_clojure_frp::DynamicID;
+use smol_str::SmolStr;
 
 #[derive(Debug)]
 pub enum BuilderCommand {
@@ -12,7 +13,8 @@ pub enum BuilderCommand {
     Uniform(String),
     Node(i64,Vec<Variable>),
     Texture(TextureDescInfo,DynamicID),
-    IfComp(DynamicID,Variable,Option<Variable>)
+    IfComp(DynamicID,Variable,Option<Variable>),
+    PostEffectItem(Entity,SmolStr,u32)
 }
 
 pub struct FRPCompBuilder {
@@ -66,6 +68,12 @@ impl FRPCompBuilder {
                  
                     cur_comp.add_element(element);
                 },
+                BuilderCommand::PostEffectItem(camera_entity, material_path, sort_order) => {
+                    let item_comp = PostEffectItem::new(camera_entity, material_path, sort_order)?;
+                    let element = Box::new(item_comp);
+                    let cur_comp = self.comp_stack.last_mut().ok_or(anyhow!("stack comp is nil"))?;
+                    cur_comp.add_element(element);
+                }
             }
         }
         Err(anyhow!("error eof"))
