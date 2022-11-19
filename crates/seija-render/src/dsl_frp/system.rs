@@ -1,12 +1,12 @@
 use std::path::PathBuf;
 use seija_app::ecs::{world::World,change_detection::Mut};
 use lite_clojure_eval::{EvalRT, Variable};
-use lite_clojure_frp::{FRPSystem,fns::add_frp_fns};
+use lite_clojure_frp::{FRPSystem,fns::{add_frp_fns}};
 use anyhow::Result;
 use seija_core::window::AppWindow;
 use crate::{UniformInfoSet, RenderContext, frp_context::{FRPContext, FRPContextInner}};
 
-use super::{fns, builder::FRPCompBuilder, frp_comp::{IElement, FRPComponent}, 
+use super::{fns::{self, add_macros}, builder::FRPCompBuilder, frp_comp::{IElement, FRPComponent}, 
             plugin::{RenderScriptPlugin, create_buildin_plugin, NodeCreateFn}, 
             elems::{ElementNode}, errors::Errors, render_path::{RenderPathContext}};
 
@@ -24,6 +24,7 @@ impl FRPDSLSystem {
         let mut vm = EvalRT::new();
         vm.init();
         add_frp_fns(&mut vm);
+        add_macros();
         FRPDSLSystem {
             vm,
             path_context:RenderPathContext::default(),

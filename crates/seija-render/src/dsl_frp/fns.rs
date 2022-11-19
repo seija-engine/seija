@@ -1,20 +1,91 @@
 use bevy_ecs::prelude::Entity;
 use bevy_ecs::world::World;
-use lite_clojure_eval::{EvalRT, ExecScope, Variable, run_native_fn};
+use lite_clojure_eval::parser::cexpr::CExpr;
+use lite_clojure_eval::parser::value::Symbol;
+use lite_clojure_eval::{EvalRT, ExecScope, Variable, run_native_fn,parser};
 use lite_clojure_frp::{FRPSystem, DynamicID};
-use seija_asset::AssetServer;
 use seija_core::OptionExt;
 use serde_json::Value;
 use anyhow::{anyhow,Result};
 use std::{convert::TryFrom, sync::Arc};
-use crate::material::{STextureDescriptor, Material};
+use crate::material::{STextureDescriptor};
 use crate::resource::TextureDescInfo;
 use crate::{UniformInfo, UniformInfoSet};
-use super::PostEffectStack;
 use super::errors::Errors;
 use super::builder::{FRPCompBuilder, BuilderCommand};
 use super::render_path::{RenderPathDefine, RenderPathContext};
 
+
+
+pub fn add_macros() {
+    parser::add_macro_func(frp_macros);
+    
+}
+
+
+fn frp_macros(expr:&mut CExpr) {
+    match expr {
+        CExpr::List(lst) => {
+            match lst.first() {
+                
+                Some(CExpr::Symbol(sym)) => {
+                    match sym.name.as_str() {
+                        "fc" => { ex_fc(lst) },
+                        "defcomp" => { ex_defcomp(lst) },
+                        _ => { lst.iter_mut().for_each(frp_macros); }
+                    }
+                }
+                _ => { lst.iter_mut().for_each(frp_macros); }
+            }
+        },
+        CExpr::Vector(lst) => { lst.iter_mut().for_each(frp_macros); },
+        CExpr::Map(lst) => { lst.iter_mut().for_each(frp_macros); },
+        _ => {}
+    }
+}
+
+fn ex_fc(lst:&mut Vec<CExpr>) {
+    //(fc [args] expr1 expr2) to (fn [args]  (__frp_enter__ "start") expr1 expr2 (__frp_exit__))
+    lst.remove(0);
+    let fn_expr = CExpr::Symbol(Symbol::intern(None, "fn".into()));
+    let enter_expr = CExpr::Symbol(Symbol::intern(None, "__frp_enter__".into()));
+    let exit_expr = CExpr::Symbol(Symbol::intern(None, "__frp_exit__".into()));
+    let enter_fn = CExpr::List(vec![enter_expr]);
+    let exit_fn = CExpr::List(vec![exit_expr]);
+    lst.insert(0,fn_expr);
+    lst.insert(2, enter_fn);
+    lst.push(exit_fn);
+    lst.iter_mut().for_each(frp_macros);
+}
+
+fn ex_defcomp(lst:&mut Vec<CExpr>) {
+    /*
+    (defcomp fnname [args] expr1 expr2) to 
+    (def fnname (fn [args]
+        (__frp_enter__ "start")
+        expr1
+        expr2
+        (__frp_exit__)
+    ))
+    */
+    lst.remove(0);
+    let fn_name_expr = lst.remove(0);
+    let fn_name_string = fn_name_expr.clone().cast_string().unwrap_or_default();
+
+    let fn_expr = CExpr::Symbol(Symbol::intern(None, "fn".into()));
+    lst.insert(0, fn_expr);
+    let enter_expr = CExpr::Symbol(Symbol::intern(None, "__frp_enter__".into()));
+    let exit_expr = CExpr::Symbol(Symbol::intern(None, "__frp_exit__".into()));
+    let enter_fn = CExpr::List(vec![enter_expr,CExpr::String(fn_name_string)]);
+    let exit_fn = CExpr::List(vec![exit_expr]);
+    lst.insert(2, enter_fn);
+    lst.push(exit_fn);
+    lst.iter_mut().for_each(frp_macros);
+
+    let def_expr = CExpr::Symbol(Symbol::intern(None, "def".into()));
+    let new_expr = vec![def_expr,fn_name_expr, CExpr::List(lst.drain(..).collect())];
+    *lst = new_expr;
+}
 
 pub fn init_fns(vm:&mut EvalRT) {
     
@@ -70,7 +141,10 @@ fn find_frp_system(scope:&mut ExecScope) -> Result<&'static mut FRPSystem> {
 
 pub fn __frp_enter__(s:&mut ExecScope,a:Vec<Variable>) -> Variable {
     run_native_fn("__frp_enter__", s, a, |scope,args| {
-        let name:String = args[0].cast_string().ok_or(Errors::TypeCastError("string"))?.borrow().clone();
+        let name:String = if args.len() > 0 {
+            args[0].cast_string().ok_or(Errors::TypeCastError("string"))?.borrow().clone()
+        } else { "".into() }; 
+        
         let command = BuilderCommand::StartComp(name);
         let builder = find_frp_builder(scope)?;
         builder.push_command(command);

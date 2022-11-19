@@ -1750,6 +1750,9 @@ dependencies = [
 [[package]]
 name = "lite-clojure-parser"
 version = "0.1.0"
+dependencies = [
+ "lazy_static",
+]
 
 [[package]]
 name = "lite-clojure-parser"

@@ -1,4 +1,4 @@
 mod backend;
 mod render_info;
 mod material_compiler;
-pub use material_compiler::{MaterialCompiler,CompilerConfig};
+pub use crate::material_compiler::{MaterialCompiler,CompilerConfig};

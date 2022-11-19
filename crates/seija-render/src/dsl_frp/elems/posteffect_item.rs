@@ -41,7 +41,6 @@ impl IElement for PostEffectItem {
         let mut stack_mut = camera_entity.get_mut::<PostEffectStack>().get()?;
         let h_material = self.material.clone().get()?;
         stack_mut.add_item(h_material, self.sort_order);
-        log::error!("active???");
         Ok(())
     }
 
