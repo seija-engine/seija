@@ -20,6 +20,11 @@
   (uniform  "ShadowCast")
   (uniform  "ShadowRecv")
   (node ShadowNodeID "ShadowCast" "ShadowRecv")
+  (let [shadow-query   (add-query "Shadow" 2)
+        shadow-texture (texture {:format "Depth32Float" :width 4096 :height 4096})]
+    (uniform-set nil "ShadowRecv" "shadowMap" shadow-texture)
+    (node DrawPassNodeID shadow-query  nil  [] shadow-texture "ShadowCaster")
+  )
 )
 
 (defcomp foward-path [env]

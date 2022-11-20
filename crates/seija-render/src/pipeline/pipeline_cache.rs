@@ -146,8 +146,6 @@ impl PipelineCache {
        let vert_shader = Self::read_shader_module(&vs_path,&ctx.device).context("read shader error")?;
        let frag_shader = Self::read_shader_module(fs_path,&ctx.device).context("read shader error")?;
        
-      
-      
        let mut targets = pass.get_color_targets();
        for idx in 0..formats.len() {
          if idx <= targets.len() {

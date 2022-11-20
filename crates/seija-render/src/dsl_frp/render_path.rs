@@ -6,6 +6,7 @@ use bevy_ecs::{
 };
 use lite_clojure_eval::{Variable, EvalRT, GcRefCell};
 use lite_clojure_frp::FRPSystem;
+use seija_core::OptionExt;
 use seija_transform::Transform;
 use smol_str::SmolStr;
 use std::{collections::HashMap, sync::Arc};
@@ -40,7 +41,8 @@ impl RenderPath {
         let query_id = IdOrName::Id(entity.to_bits());
         let query_index = query_system.get(query_id).unwrap();
         let camera_query_key = Variable::Keyword(GcRefCell::new(":camera-query".to_string()));
-        env_map.insert(camera_query_key, Variable::Int(query_index as i64));
+        let dynamic_id = frp_sys.new_dynamic(Variable::Int(query_index as i64) , frp_sys.never(), None).get()?;
+        env_map.insert(camera_query_key, Variable::Int(dynamic_id as i64));
 
         //:path-target
         let res_id = if let Some(texture) = camera.target.as_ref() {

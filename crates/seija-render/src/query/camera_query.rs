@@ -25,7 +25,7 @@ pub(crate) fn camera_query_check_add(
         system.add_query(IdOrName::Id(eid), CAMERA_TYPE);
     }
     for rm in remove_cameras.iter() {
-        system.rmove_query(IdOrName::Id(rm.to_bits()));
+        system.rmove_query(&IdOrName::Id(rm.to_bits()));
     }
 }
 

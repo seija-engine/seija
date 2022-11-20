@@ -1,9 +1,11 @@
-use bevy_ecs::world::World;
+use bevy_ecs::{world::World, prelude::Entity};
 use anyhow::Result;
 use lite_clojure_eval::{Variable, EvalRT};
 use lite_clojure_frp::{DynamicID, FRPSystem};
 use seija_asset::Assets;
-use crate::{RenderContext, resource::{TextureDescInfo, Texture, RenderResourceId}};
+use seija_core::OptionExt;
+use smol_str::SmolStr;
+use crate::{RenderContext, resource::{TextureDescInfo, Texture, RenderResourceId}, query::{IdOrName, QuerySystem}};
 pub mod camera_node;
 pub mod transform_node;
 pub mod window_resize_node;
@@ -108,6 +110,57 @@ impl IElement for TextureElement {
             }
             dynamic.set_value(Variable::Nil);
         }
+        Ok(())
+    }
+}
+
+pub struct AddQueryElement {
+   pub dynamic_id:DynamicID,
+   pub query_name:IdOrName,
+   pub query_type:u32
+}
+
+impl IElement for AddQueryElement {
+    fn active(&mut self,world:&mut World,_:&mut RenderContext,frp_sys:&mut FRPSystem) -> Result<()> {
+        let mut query_system = world.get_resource_mut::<QuerySystem>().get()?;
+        let query_index = query_system.add_query(self.query_name.clone(), self.query_type);
+        if let Some(dynamic) = frp_sys.dynamics.get_mut(&self.dynamic_id) {
+            dynamic.set_value(Variable::Int(query_index as i64));
+        }
+        Ok(())
+    }
+
+    fn deactive(&mut self,world:&mut World,_:&mut RenderContext,_frp_sys:&mut FRPSystem) -> Result<()> {
+        let mut query_system = world.get_resource_mut::<QuerySystem>().get()?;
+        query_system.rmove_query(&self.query_name);
+        Ok(())
+    }
+}
+
+
+pub struct UniformSetElement {
+    pub entity:Option<Entity>,
+    pub uniform_name:SmolStr,
+    pub prop_name:SmolStr,
+    pub dynamic_id:DynamicID
+}
+
+impl IElement for UniformSetElement {
+    fn active(&mut self,_:&mut World,ctx:&mut RenderContext,frp_sys:&mut FRPSystem) -> Result<()> {
+        let dynamic = frp_sys.dynamics.get(&self.dynamic_id).get()?;
+        let ptr = dynamic.get_value().cast_userdata().get()? as *mut RenderResourceId;
+        let res_id = unsafe { &*ptr };
+        match res_id {
+            RenderResourceId::Texture(texture) => {
+                ctx.ubo_ctx.set_texture(self.entity.map(|v| v.id()), 
+                &self.uniform_name, &self.prop_name, texture.clone())?;
+            },
+            _ => {}
+        }
+        Ok(())
+    }
+
+    fn deactive(&mut self,world:&mut World,ctx:&mut RenderContext,_frp_sys:&mut FRPSystem) -> Result<()> {
         Ok(())
     }
 }

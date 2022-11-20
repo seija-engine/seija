@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 
 use seija_asset::Handle;
+use seija_core::OptionExt;
 use wgpu::CommandEncoder;
 
 use crate::{UniformInfoSet, resource::{RenderResources, Texture}, memory::TypedUniformBuffer,};
@@ -93,8 +94,8 @@ impl UniformContext {
 
     
 
-    pub fn set_texture(&mut self,eid:Option<u32>,ubo_name:&str,texture_name:&str,texture:Handle<Texture>) -> Result<(),i32> {
-        let index = self.get_index(ubo_name).ok_or(0)?;
+    pub fn set_texture(&mut self,eid:Option<u32>,ubo_name:&str,texture_name:&str,texture:Handle<Texture>) -> anyhow::Result<()> {
+        let index = self.get_index(ubo_name).get()?;
         match index.typ {
             UniformType::Global => {
                 let object = &mut self.globals[index.index];

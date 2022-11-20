@@ -3,7 +3,6 @@ use lite_clojure_eval::Variable;
 use anyhow::{Result, anyhow};
 use lite_clojure_frp::{DynamicID, FRPSystem};
 use seija_asset::{Handle, Assets};
-use seija_core::{time::Time, OptionExt};
 use wgpu::{TextureFormat, CommandEncoder,Operations,Color};
 use crate::{dsl_frp::errors::Errors, resource::{RenderResourceId, RenderResources, Mesh}, RenderContext, material::Material, query::QuerySystem};
 use super::IUpdateNode;
@@ -14,11 +13,12 @@ pub enum PassError {
     ErrTargetView,
     ErrDepthView,
     MissMesh,
-    MissMaterial
+    MissMaterial,
+    ErrQueryIndex
 }
 
 pub struct DrawPassNode {
-    query_index:usize,
+    query_dynid:u32,
     camera_entity:Option<Entity>,
     targets:Vec<DynamicID>,
     depth_texture_id:DynamicID,
@@ -35,7 +35,7 @@ pub struct DrawPassNode {
 
 impl DrawPassNode {
     pub fn from_args(params:Vec<Variable>) -> Result<Box<dyn IUpdateNode>> {
-        let query_index = params.get(0).and_then(Variable::cast_int).ok_or(Errors::TypeCastError("int"))? as usize;
+        let query_dynid = params.get(0).and_then(Variable::cast_int).ok_or(Errors::TypeCastError("int"))? as u32;
         let mut camera_entity = None;
         if let Some(index) = params.get(1).and_then(Variable::cast_int) {
             camera_entity = Some(Entity::from_bits(index as u64)); 
@@ -50,7 +50,7 @@ impl DrawPassNode {
         let depth_texture_id = params.get(3).and_then(Variable::cast_int).ok_or(Errors::TypeCastError("int"))? as DynamicID;
         let path_name = params.get(4).and_then(Variable::cast_string).ok_or(Errors::TypeCastError("string"))?.borrow().clone();
         Ok(Box::new(DrawPassNode {
-            query_index,
+            query_dynid,
             camera_entity,
             targets,
             depth_texture_id,
@@ -145,21 +145,24 @@ impl DrawPassNode {
         Ok(pass)
     }
 
-    pub fn draw(&self,world:&mut World,ctx:&mut RenderContext,command:&mut CommandEncoder) -> Result<u32,PassError> {
-        let ff = world.get_resource::<Time>().get().unwrap().frame();
-      
+    pub fn draw(&self,world:&mut World,ctx:&mut RenderContext,command:&mut CommandEncoder,frp_sys:&FRPSystem) -> Result<u32,PassError> {
+        let dynamic = frp_sys.dynamics.get(&self.query_dynid).ok_or(PassError::ErrQueryIndex)?;
+        let query_index = dynamic.get_value().cast_int().ok_or(PassError::ErrQueryIndex)? as usize;
         let mut render_query = world.query::<(&Handle<Mesh>,&Handle<Material>)>();
         let meshs = world.get_resource::<Assets<Mesh>>().unwrap();
         let materials = world.get_resource::<Assets<Material>>().unwrap();
        
         let query_system = world.get_resource::<QuerySystem>().unwrap();
-        let view_query = &query_system.querys[self.query_index];
+        let view_query = &query_system.querys[query_index];
         //check build pipeline
         for entity in view_query.list.read().iter() {
             if let Ok((hmesh,hmat)) = render_query.get(world, *entity) { 
                 let mesh = meshs.get(&hmesh.id).ok_or(PassError::MissMesh)?;
                 let material = materials.get(&hmat.id).ok_or(PassError::MissMaterial)?;
                 for pass_index in 0..material.def.pass_list.len() {
+                    if let Some(pass_tag)  = material.def.pass_list[pass_index].tag.as_ref() {
+                        if pass_tag.as_str() != self.pass_name.as_str() {  continue; }
+                    }
                     ctx.build_pipeine(&material.def, mesh,&self.cache_formats,Some(wgpu::TextureFormat::Depth32Float),pass_index);
                 }
             }
@@ -240,7 +243,7 @@ impl IUpdateNode for DrawPassNode {
         self.check_update_textures(frp_sys,ctx,world)?;
 
         let mut command = ctx.command_encoder.take().unwrap();
-        match self.draw(world, ctx, &mut command) {
+        match self.draw(world, ctx, &mut command,frp_sys) {
             Err(err) => {
                 if err != PassError::TextureNotReady {
                     log::error!("draw pass error:{:?}",err);

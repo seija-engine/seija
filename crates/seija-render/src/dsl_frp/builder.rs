@@ -1,4 +1,4 @@
-use crate::{dsl_frp::{elems::{UniformElement, TextureElement, if_comp::IfCompElement, posteffect_item::PostEffectItem}}, resource::TextureDescInfo, query::IdOrName};
+use crate::{dsl_frp::{elems::{UniformElement, TextureElement, if_comp::IfCompElement, posteffect_item::PostEffectItem, AddQueryElement, UniformSetElement}}, resource::TextureDescInfo, query::IdOrName};
 use super::{frp_comp::FRPComponent, system::ElementCreator};
 use anyhow::{Result,anyhow};
 use seija_app::ecs::entity::Entity;
@@ -15,7 +15,8 @@ pub enum BuilderCommand {
     Texture(TextureDescInfo,DynamicID),
     IfComp(DynamicID,Variable,Option<Variable>),
     PostEffectItem(Entity,SmolStr,u32),
-    AddQuery(IdOrName,u32)
+    AddQuery(DynamicID,IdOrName,u32),
+    UniformSet(Option<Entity>,SmolStr,SmolStr,DynamicID)
 }
 
 pub struct FRPCompBuilder {
@@ -75,8 +76,17 @@ impl FRPCompBuilder {
                     let cur_comp = self.comp_stack.last_mut().ok_or(anyhow!("stack comp is nil"))?;
                     cur_comp.add_element(element);
                 },
-                BuilderCommand::AddQuery(id_or_name,typ ) => {
-                    
+                BuilderCommand::AddQuery(dyn_id,id_or_name,typ ) => {
+                    let add_query_comp = AddQueryElement {dynamic_id:dyn_id,query_name:id_or_name,query_type:typ };
+                    let element = Box::new(add_query_comp);
+                    let cur_comp = self.comp_stack.last_mut().ok_or(anyhow!("stack comp is nil"))?;
+                    cur_comp.add_element(element);
+                },
+                BuilderCommand::UniformSet(eid, uniform_name, prop_name,dynamic_id) => {
+                    let comp = UniformSetElement { entity:eid,uniform_name,prop_name,dynamic_id };
+                    let element = Box::new(comp);
+                    let cur_comp = self.comp_stack.last_mut().ok_or(anyhow!("stack comp is nil"))?;
+                    cur_comp.add_element(element);
                 }
             }
         }

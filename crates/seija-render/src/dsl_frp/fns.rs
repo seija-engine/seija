@@ -100,6 +100,7 @@ pub fn init_fns(vm:&mut EvalRT) {
     vm.global_context().push_native_fn("add-render-path", add_render_path);
     vm.global_context().push_native_fn("posteffect-item", posteffect_item);
     vm.global_context().push_native_fn("add-query", add_query);
+    vm.global_context().push_native_fn("uniform-set", uniform_set);
 
     vm.global_context().push_var("SS_VERTEX", wgpu::ShaderStage::VERTEX.bits() as i64 );
     vm.global_context().push_var("SS_FRAGMENT", wgpu::ShaderStage::FRAGMENT.bits() as i64 );
@@ -244,9 +245,14 @@ pub fn add_query(s:&mut ExecScope,a:Vec<Variable>) -> Variable {
     run_native_fn("add-query", s, a, |scope,args| {
         let id_or_name = get_query_name(args.get(0).get()?)?;
         let query_type = args.get(1).and_then(Variable::cast_int).get()? as u32;
+
+        let dyn_query = {
+            let frp_sys = find_frp_system(scope)?;
+            frp_sys.new_dynamic(Variable::Nil, frp_sys.never(), None).get()?
+        };
         let builder = find_frp_builder(scope)?;
-        builder.push_command(todo!());
-        Ok(Variable::Nil)
+        builder.push_command(BuilderCommand::AddQuery(dyn_query, id_or_name, query_type));
+        Ok(Variable::Int(dyn_query as i64))
     })
 }
 
@@ -256,4 +262,18 @@ fn get_query_name(var:&Variable) -> Result<IdOrName> {
         Variable::Int(i) => { Ok(IdOrName::Id(*i as u64)) },
         _ => { return Err(anyhow!("query type error")); }
     }
+}
+
+pub fn uniform_set(s:&mut ExecScope,a:Vec<Variable>) -> Variable {
+    run_native_fn("uniform-set", s, a, |scope,args| {
+        let entity_id = args.get(0).and_then(Variable::cast_int).map(|v| Entity::from_bits(v as u64));
+        let uniform_name = args.get(1).and_then(Variable::cast_string).get()?;
+        let prop_name = args.get(2).and_then(Variable::cast_string).get()?;
+        let dyn_id = args.get(3).and_then(Variable::cast_int).get()? as DynamicID;
+
+        let builder = find_frp_builder(scope)?;
+        builder.push_command(BuilderCommand::UniformSet(entity_id, uniform_name.borrow().as_str().into(), 
+                                                        prop_name.borrow().as_str().into(),dyn_id));
+        Ok(Variable::Nil)
+    })
 }
