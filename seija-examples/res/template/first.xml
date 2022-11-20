@@ -14,7 +14,7 @@
         <Entity name="Skybox">
             <Components>
                 <Transform />
-                <Mesh res="res://mesh:cube" />
+                <Mesh res="res://mesh:skybox" />
                 <Material res="res://mats/yoko_sky.json" />
             </Components>
         </Entity> 

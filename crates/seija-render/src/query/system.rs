@@ -9,8 +9,7 @@ pub struct ViewQuery {
     pub list:RwLock<ViewList>
 }
 
-#[derive(PartialEq,Eq,Hash,Clone)]
-
+#[derive(PartialEq,Eq,Hash,Clone,Debug)]
 pub enum IdOrName {
     Id(u64),
     Name(String)
@@ -47,6 +46,7 @@ pub struct QuerySystem {
 
 impl QuerySystem {
    pub fn add_query(&mut self,key:IdOrName,typ:u32) {
+      
       let view_query = ViewQuery::new(typ, key.clone());
       self.querys.push(view_query);
       let index = self.querys.len() - 1;

@@ -16,7 +16,7 @@
 )
 
 (defcomp foward-path [env]
-  (let [depth-texture (texture {:format "Depth32Float"}) 
+  (let [depth-texture (texture {:format "Depth32Float" :width WINDOW_WIDTH :height WINDOW_HEIGHT}) 
         dynIsHDR  (env :dynIsHDR)
         dynHasPostEffect  (env :dynHasPostEffect)
         camera-id (env :camera-id)
@@ -37,7 +37,7 @@
   (posteffect-item camera-id "mats/tonemap.json" 1000)
   (let [hdr-texture (texture {:format "Rgba16Float" :width WINDOW_WIDTH :height WINDOW_HEIGHT})]
     (node WinResizeNodeID [hdr-texture])
-    (node DrawPassNodeID  camera-id camera-query [hdr-texture] depth-texture "Foward")
+    (node DrawPassNodeID camera-query camera-id  [hdr-texture] depth-texture "Foward")
     (node PostStackNodeID camera-id hdr-texture camera-target)
   )
 )
@@ -46,7 +46,7 @@
   (if-comp dynHasPostEffect
       [posteffect-draw camera-id camera-query depth-texture camera-target]
       [
-        (fc [] (node DrawPassNodeID  camera-id camera-query [camera-target] depth-texture "Foward")) 
+        (fc [] (node DrawPassNodeID camera-query camera-id  [camera-target] depth-texture "Foward")) 
       ]
   )
 )
@@ -55,7 +55,7 @@
 (defcomp posteffect-draw [camera-id camera-query depth-texture camera-target]
   (let [cache-texture (texture {:format "Bgra8Unorm" :width WINDOW_WIDTH :height WINDOW_HEIGHT})]
     (node WinResizeNodeID [cache-texture])
-    (node DrawPassNodeID  camera-id camera-query [cache-texture] depth-texture "Foward")
+    (node DrawPassNodeID camera-query camera-id  [cache-texture] depth-texture "Foward")
     (node PostStackNodeID camera-id cache-texture camera-target)
   )
 )
