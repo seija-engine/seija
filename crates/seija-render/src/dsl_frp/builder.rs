@@ -1,4 +1,4 @@
-use crate::{dsl_frp::{elems::{UniformElement, TextureElement, if_comp::IfCompElement, posteffect_item::PostEffectItem}}, resource::TextureDescInfo};
+use crate::{dsl_frp::{elems::{UniformElement, TextureElement, if_comp::IfCompElement, posteffect_item::PostEffectItem}}, resource::TextureDescInfo, query::IdOrName};
 use super::{frp_comp::FRPComponent, system::ElementCreator};
 use anyhow::{Result,anyhow};
 use seija_app::ecs::entity::Entity;
@@ -14,7 +14,8 @@ pub enum BuilderCommand {
     Node(i64,Vec<Variable>),
     Texture(TextureDescInfo,DynamicID),
     IfComp(DynamicID,Variable,Option<Variable>),
-    PostEffectItem(Entity,SmolStr,u32)
+    PostEffectItem(Entity,SmolStr,u32),
+    AddQuery(IdOrName,u32)
 }
 
 pub struct FRPCompBuilder {
@@ -73,6 +74,9 @@ impl FRPCompBuilder {
                     let element = Box::new(item_comp);
                     let cur_comp = self.comp_stack.last_mut().ok_or(anyhow!("stack comp is nil"))?;
                     cur_comp.add_element(element);
+                },
+                BuilderCommand::AddQuery(id_or_name,typ ) => {
+                    
                 }
             }
         }

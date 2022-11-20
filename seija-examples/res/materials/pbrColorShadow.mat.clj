@@ -23,7 +23,6 @@
 
         {
             :tag "ShadowCaster"
-            :targets []
             :shader { :name "core.shadowDepth" }
         }
         

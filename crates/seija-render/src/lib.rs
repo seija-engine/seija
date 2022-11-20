@@ -73,6 +73,8 @@ impl IModule for RenderModule {
         material::init_material(app);
         dsl_frp::init_dsl_frp(app);
         light::init_light(app);
+        shadow::init_shadow(app);
+
         
         app.add_resource(FRPContext::new());
         Self::init_buildin_assets(&mut app.world);

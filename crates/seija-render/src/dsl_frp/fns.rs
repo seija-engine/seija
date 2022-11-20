@@ -9,6 +9,7 @@ use serde_json::Value;
 use anyhow::{anyhow,Result};
 use std::{convert::TryFrom, sync::Arc};
 use crate::material::{STextureDescriptor};
+use crate::query::IdOrName;
 use crate::resource::TextureDescInfo;
 use crate::{UniformInfo, UniformInfoSet};
 use super::errors::Errors;
@@ -98,6 +99,7 @@ pub fn init_fns(vm:&mut EvalRT) {
     vm.global_context().push_native_fn("if-comp", if_comp);
     vm.global_context().push_native_fn("add-render-path", add_render_path);
     vm.global_context().push_native_fn("posteffect-item", posteffect_item);
+    vm.global_context().push_native_fn("add-query", add_query);
 
     vm.global_context().push_var("SS_VERTEX", wgpu::ShaderStage::VERTEX.bits() as i64 );
     vm.global_context().push_var("SS_FRAGMENT", wgpu::ShaderStage::FRAGMENT.bits() as i64 );
@@ -236,4 +238,22 @@ pub fn posteffect_item(s:&mut ExecScope,a:Vec<Variable>) -> Variable {
         
         Ok(Variable::Nil)
     })
+}
+
+pub fn add_query(s:&mut ExecScope,a:Vec<Variable>) -> Variable {
+    run_native_fn("add-query", s, a, |scope,args| {
+        let id_or_name = get_query_name(args.get(0).get()?)?;
+        let query_type = args.get(1).and_then(Variable::cast_int).get()? as u32;
+        let builder = find_frp_builder(scope)?;
+        builder.push_command(todo!());
+        Ok(Variable::Nil)
+    })
+}
+
+fn get_query_name(var:&Variable) -> Result<IdOrName> {
+    match var {
+        Variable::String(s) => { Ok(IdOrName::Name(s.borrow().clone())) },
+        Variable::Int(i) => { Ok(IdOrName::Id(*i as u64)) },
+        _ => { return Err(anyhow!("query type error")); }
+    }
 }

@@ -13,6 +13,13 @@
     (node TransformNodeID "ObjectBuffer")
     (node PBRCameraExNodeID "CameraBuffer")
     (node PBRLightNodeID "LightBuffer")
+    (if-comp dynShadow [shadow-global])
+)
+
+(defcomp shadow-global []
+  (uniform  "ShadowCast")
+  (uniform  "ShadowRecv")
+  (node ShadowNodeID "ShadowCast" "ShadowRecv")
 )
 
 (defcomp foward-path [env]

@@ -2,6 +2,8 @@ use std::{collections::HashMap, sync::Arc};
 use lite_clojure_eval::Variable;
 use smol_str::SmolStr;
 use anyhow::Result;
+use crate::shadow::ShadowNode;
+
 use super::elems::{camera_node::CameraNode, IUpdateNode, transform_node::TransfromNode, 
     window_resize_node::WindowReSizeNode, draw_pass_node::DrawPassNode, post_stack_node::PostStackNode};
 
@@ -35,8 +37,10 @@ pub fn create_buildin_plugin() -> RenderScriptPlugin {
     plugin.add_node_creator("WinResize", WindowReSizeNode::from_args);
     plugin.add_node_creator("DrawPass", DrawPassNode::from_args);
     plugin.add_node_creator("PostStack", PostStackNode::from_args);
+    plugin.add_node_creator("Shadow", ShadowNode::from_args);
 
     plugin.global_dynamics.push(("dynBase3D".into(),Variable::Bool(true)));
+    plugin.global_dynamics.push(("dynShadow".into(),Variable::Bool(false)));
 
     let mut camera_dyns = vec![];
     camera_dyns.push((ApplyCameraType::ALL,":dynIsHDR".into(),Variable::Bool(false)));
