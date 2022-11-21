@@ -37,7 +37,7 @@ fn start(world:&mut World) {
         //effect_stack.add_item(htonemap, 1000);
         //effect_stack.add_item(htonemap, 1000);
         //cmds.insert(effect_stack);
-    },None,None);
+    },None,None,false);
     queue.apply(world);
     
     let track = server.load_async::<GltfAsset>("gltf/shiba/scene.gltf", None).unwrap();

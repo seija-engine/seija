@@ -1,7 +1,7 @@
 use std::path::Path;
 
 use image::ImageError;
-use seija_core::bytes::cast_slice;
+use seija_core::bytes::{cast_slice, AsBytes};
 use wgpu::TextureFormat;
 
 #[derive(Debug)]
@@ -14,9 +14,12 @@ pub struct ImageInfo {
 
 
 pub fn load_image_info<P>(path:P) -> Result<ImageInfo,ImageError> where P: AsRef<Path> {
-    let bytes = std::fs::read(path)?;
+    
+    let bytes = std::fs::read(path.as_ref())?;
+    
     let dyn_image = image::load_from_memory(&bytes)?;
     let image_info = read_image_info(dyn_image);
+    
     Ok(image_info)
 }
 
@@ -25,7 +28,7 @@ pub fn read_image_info(dyn_image:image::DynamicImage) -> ImageInfo {
     let format: TextureFormat;
     let width;
     let height;
-
+    log::error!("color:{:?}",dyn_image.color());
     match dyn_image {
         image::DynamicImage::ImageLuma8(i) => {
             let buffer = i;
@@ -54,20 +57,10 @@ pub fn read_image_info(dyn_image:image::DynamicImage) -> ImageInfo {
             format = TextureFormat::Rgba8UnormSrgb;
             data = i.into_raw();
         }
-        image::DynamicImage::ImageBgr8(i) => {
-            let i = image::DynamicImage::ImageBgr8(i).into_bgra8();
-
-            width = i.width();
-            height = i.height();
-            format = TextureFormat::Bgra8UnormSrgb;
-            data = i.into_raw();
-        }
-        image::DynamicImage::ImageBgra8(i) => {
-            width = i.width();
-            height = i.height();
-            format = TextureFormat::Bgra8UnormSrgb;
-            data = i.into_raw();
-        }
+       
+        image::DynamicImage::ImageRgba32F(i) => {},
+        image::DynamicImage::ImageRgb32F(i) => {},
+       
         image::DynamicImage::ImageLuma16(i) => {
             width = i.width();
             height = i.height();
@@ -83,6 +76,7 @@ pub fn read_image_info(dyn_image:image::DynamicImage) -> ImageInfo {
             data = cast_slice(&raw_data).to_owned();
         },
         image::DynamicImage::ImageRgb16(image) => {
+           
             width = image.width();
             height = image.height();
             format = TextureFormat::Rgba16Uint;
@@ -101,12 +95,14 @@ pub fn read_image_info(dyn_image:image::DynamicImage) -> ImageInfo {
             data = local_data;
         },
         image::DynamicImage::ImageRgba16(i) => {
+            
             width = i.width();
             height = i.height();
             format = TextureFormat::Rgba16Uint;
             let raw_data = i.into_raw();
             data = cast_slice(&raw_data).to_owned();
-        }
+        },
+        _ => {}
     }
 
     ImageInfo {width,height,format,data }

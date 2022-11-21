@@ -80,7 +80,7 @@ pub struct ArrayObject {
 
 impl ArrayObject {
     pub fn new(info:&UniformInfo,res:&RenderResources) -> Self {
-        let buffer_item_size:u64 = align_num_to(info.props.size() as u64, wgpu::BIND_BUFFER_ALIGNMENT);
+        let buffer_item_size:u64 = align_num_to(info.props.size() as u64, res.device.limits().min_uniform_buffer_offset_alignment.into());
         ArrayObject {
             buffer_def:info.props.clone(),
             texture_def:info.textures.clone(),
@@ -136,7 +136,7 @@ impl ArrayObject {
         let cache_buffer = res.create_buffer(&wgpu::BufferDescriptor {
             label:None,
             size: self.cap as u64 * self.buffer_item_size as u64,
-            usage: wgpu::BufferUsage::COPY_SRC | wgpu::BufferUsage::MAP_WRITE,
+            usage: wgpu::BufferUsages::COPY_SRC | wgpu::BufferUsages::MAP_WRITE,
             mapped_at_creation:false
         });
         self.cache_buffer = Some(cache_buffer);
@@ -144,7 +144,7 @@ impl ArrayObject {
         let uniform_buffer = res.create_buffer(&wgpu::BufferDescriptor {
             label:None,
             size: self.cap as u64 * self.buffer_item_size as u64,
-            usage: wgpu::BufferUsage::COPY_DST | wgpu::BufferUsage::UNIFORM,
+            usage: wgpu::BufferUsages::COPY_DST | wgpu::BufferUsages::UNIFORM,
             mapped_at_creation:false
         });
         self.buffer = Some(uniform_buffer);

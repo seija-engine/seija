@@ -1,4 +1,4 @@
-use raw_window_handle::{HasRawWindowHandle, RawWindowHandle};
+use raw_window_handle::{HasRawWindowHandle, RawWindowHandle, HasRawDisplayHandle};
 use seija_core::window::{IWindow, WindowConfig,WindowMode};
 use winit::{dpi::LogicalSize, event_loop::EventLoop, monitor::{MonitorHandle, VideoMode}, window::{Window,Fullscreen}};
 #[cfg(target_os = "windows")] 
@@ -13,6 +13,12 @@ unsafe impl HasRawWindowHandle for WinitWindow {
     fn raw_window_handle(&self) -> RawWindowHandle {
         
         self.window.raw_window_handle()
+    }
+}
+
+unsafe impl HasRawDisplayHandle for WinitWindow {
+    fn raw_display_handle(&self) -> raw_window_handle::RawDisplayHandle {
+        self.window.raw_display_handle()
     }
 }
 
@@ -63,7 +69,7 @@ fn get_max_video_mode(monitor: &MonitorHandle) -> VideoMode {
         use std::cmp::Ordering::*;
         match b.size().width.cmp(&a.size().width) {
             Equal => match b.size().height.cmp(&a.size().height) {
-                Equal => b.refresh_rate().cmp(&a.refresh_rate()),
+                Equal => b.refresh_rate_millihertz().cmp(&a.refresh_rate_millihertz()),
                 default => default,
             },
             default => default,

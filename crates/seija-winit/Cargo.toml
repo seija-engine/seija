@@ -5,8 +5,8 @@ edition = "2018"
 
 
 [dependencies]
-raw-window-handle = "0.3.3"
+raw-window-handle = "0.5.0"
 seija-app = {path = "../seija-app"}
 seija-core = {path = "../seija-core"}
 seija-input = {path = "../seija-input"}
-winit = "0.25.0"
+winit = "0.27.5"

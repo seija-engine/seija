@@ -25,7 +25,7 @@ fn start(world:&mut World) {
     let mut queue = CommandQueue::default();
     let mut commands = Commands::new(&mut queue, world);
     let window = world.get_resource::<AppWindow>().unwrap();
-    add_pbr_camera(&mut commands,&window,camera_pos,r,|_| {}, Some(150f32),Some(1));
+    add_pbr_camera(&mut commands,&window,camera_pos,r,|_| {}, Some(150f32),Some(1),false);
     queue.apply(world);
     
     load_material("materials/pbrColor.mat.clj", world);

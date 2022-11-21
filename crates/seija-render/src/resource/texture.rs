@@ -5,9 +5,7 @@ use seija_asset::{Assets, AssetEvent, Handle};
 use uuid::Uuid;
 use seija_core::{TypeUuid, IDGenU32, OptionExt};
 use bevy_ecs::event::{ManualEventReader, Events};
-
 use once_cell::sync::Lazy;
-use wgpu::CommandEncoder;
 use crate::{resource::{read_image_info, image_info::color_image_info}, RenderContext};
 use seija_core::{anyhow::{Result}};
 use super::{ImageInfo, RenderResourceId};
@@ -46,6 +44,8 @@ impl Texture {
     }
 
     pub fn from_image_bytes(bytes:&[u8],mut desc:TextureDescInfo) -> Result<Texture,ImageError> {
+        let test_format = image::guess_format(bytes);
+        log::error!("test format:{:?}",test_format);
         let dyn_image = image::load_from_memory(bytes)?;
         let info = read_image_info(dyn_image);
         desc.desc.size.width = info.width;
@@ -96,7 +96,8 @@ impl Default for TextureDescInfo {
                 sample_count:1,
                 dimension:wgpu::TextureDimension::D2,
                 format:wgpu::TextureFormat::Rgba32Float,
-                usage:wgpu::TextureUsage::SAMPLED | wgpu::TextureUsage::COPY_DST
+                //TODO ?
+                usage:wgpu::TextureUsages::TEXTURE_BINDING | wgpu::TextureUsages::RENDER_ATTACHMENT | wgpu::TextureUsages::COPY_DST
             }, 
             view_desc: wgpu::TextureViewDescriptor::default(), 
             sampler_desc: wgpu::SamplerDescriptor::default() 

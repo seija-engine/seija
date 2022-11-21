@@ -109,7 +109,6 @@ impl PipelineCache {
         let mut cur_primstate = mesh.primitive_state().clone();
         cur_primstate.cull_mode = (&pass.cull).into();
         cur_primstate.front_face = pass.front_face.0;
-        cur_primstate.clamp_depth = pass.clamp_depth;
         cur_primstate.polygon_mode = pass.polygon_mode.0;
         cur_primstate.conservative = pass.conservative;
         
@@ -149,14 +148,14 @@ impl PipelineCache {
        let mut targets = pass.get_color_targets();
        for idx in 0..formats.len() {
          if idx <= targets.len() {
-            targets[idx].format = formats[idx];
+            targets[idx].map(|v| v.format = formats[idx]);
          } else {
             let target = wgpu::ColorTargetState {
                 format:formats[idx],
                 blend: Default::default(),
                 write_mask: Default::default(),
             };
-            targets.push(target);
+            targets.push(Some(target));
          }
        }
        let render_pipeline_desc = RenderPipelineDescriptor {
@@ -170,7 +169,8 @@ impl PipelineCache {
                             module:&frag_shader, 
                             entry_point:"main", 
                             targets:&targets 
-                        })
+                        }),
+           multiview:None
        };
        let gpu_pipeline = ctx.device.create_render_pipeline(&render_pipeline_desc);
 
@@ -238,10 +238,9 @@ impl PipelineCache {
     fn read_shader_module<P:AsRef<Path>>(path:P,device:&Device) -> Option<ShaderModule> {
        let code_bytes = fs::read(path.as_ref()).ok()?;
        let bytes = read_spirv(std::io::Cursor::new(&code_bytes)).unwrap();
-       let shader_module = device.create_shader_module(&ShaderModuleDescriptor {
-        label:None,
-        source:wgpu::ShaderSource::SpirV(bytes.into()),
-        flags:Default::default()
+       let shader_module = device.create_shader_module(ShaderModuleDescriptor {
+         label:None,
+         source:wgpu::ShaderSource::Wgsl(todo!()) //TODO WGPU
        });
        log::info!("create shader module {:?}",path.as_ref());
        Some(shader_module)

@@ -5,7 +5,7 @@ use seija_asset::{AssetEvent, Assets, Handle, HandleId};
 use seija_core::{bytes::AsBytes};
 use bevy_ecs::{ event::{Events, ManualEventReader}};
 use seija_geometry::volume::AABB3;
-use wgpu::{BufferUsage, IndexFormat, PrimitiveState, PrimitiveTopology, VertexAttribute, VertexBufferLayout, VertexFormat};
+use wgpu::{BufferUsages, IndexFormat, PrimitiveState, PrimitiveTopology, VertexAttribute, VertexBufferLayout, VertexFormat};
 use seija_core::TypeUuid;
 use uuid::Uuid;
 use bitflags::bitflags;
@@ -270,9 +270,10 @@ impl Mesh {
     }
 
     pub fn vert_layout(&self) -> VertexBufferLayout {
+        
         VertexBufferLayout {
             array_stride:self.array_stride,
-            step_mode:wgpu::InputStepMode::Vertex,
+            step_mode:wgpu::VertexStepMode::Vertex,
             attributes:&self.attrs
         }
     }
@@ -305,10 +306,10 @@ impl Mesh {
             topology:self.typ,
             front_face:Default::default(),
             cull_mode:None,
-            clamp_depth:false,
             polygon_mode:wgpu::PolygonMode::Fill,
             strip_index_format:None,
-            conservative:false
+            conservative:false,
+            unclipped_depth:false
         }
     }
 
@@ -404,11 +405,11 @@ pub fn update_mesh_system(world:&mut World,mesh_reader:&mut ManualEventReader<As
     for mesh_handle in changed_meshes.iter() {
         if let Some(mesh) = meshs.get(&mesh_handle.id) {
             let vert_bytes = mesh.get_vertex_buffer_data();
-            let vert_buffer = ctx.resources.create_buffer_with_data(BufferUsage::VERTEX, &vert_bytes);
+            let vert_buffer = ctx.resources.create_buffer_with_data(BufferUsages::VERTEX, &vert_bytes);
             ctx.resources.set_render_resource(&mesh_handle.id, RenderResourceId::Buffer(vert_buffer), 0);
 
             if let Some(idx_bytes) = mesh.get_index_buffer_bytes() {
-               let index_buffer = ctx.resources.create_buffer_with_data(BufferUsage::INDEX, &idx_bytes);
+               let index_buffer = ctx.resources.create_buffer_with_data(BufferUsages::INDEX, &idx_bytes);
                ctx.resources.set_render_resource(&mesh_handle.id, RenderResourceId::Buffer(index_buffer), 1);
             }
         }

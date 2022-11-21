@@ -23,7 +23,7 @@ pub struct AppRender {
 
 pub struct Config {
     pub device_label: Option<Cow<'static, str>>,
-    pub backed: wgpu::BackendBit,
+    pub backed: wgpu::Backends,
     pub power_pref: wgpu::PowerPreference,
     pub features: wgpu::Features,
     pub limits: wgpu::Limits,
@@ -35,7 +35,7 @@ impl Default for Config {
         limits.max_bind_groups = 8;
         Self {
             device_label: None,
-            backed: wgpu::BackendBit::VULKAN,
+            backed: wgpu::Backends::VULKAN,
             power_pref: wgpu::PowerPreference::HighPerformance,
             features: Default::default(),
             limits,
@@ -68,6 +68,7 @@ impl AppRender {
             .request_adapter(&wgpu::RequestAdapterOptions {
                 power_preference: config.power_pref,
                 compatible_surface: None,
+                force_fallback_adapter:false
             })
             .await
             .expect("Unable to find a GPU!");

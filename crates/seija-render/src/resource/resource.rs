@@ -2,7 +2,7 @@ use std::{collections::HashMap, num::NonZeroU32, ops::Range, sync::Arc};
 use bevy_ecs::world::World;
 use seija_asset::{HandleId, Handle, AssetServer, Assets};
 use seija_core::IDGenU64;
-use wgpu::{BufferUsage, SwapChainError, TextureView, util::DeviceExt, TextureFormat};
+use wgpu::{BufferUsages,  TextureView, util::DeviceExt, TextureFormat};
 
 use super::{Texture, TextureType, TextureDescInfo};
 
@@ -127,7 +127,7 @@ impl RenderResources {
         self.buffers.remove(&id);
     }
 
-    pub fn create_buffer_with_data(&mut self,usage:BufferUsage,data:&[u8]) -> BufferId {
+    pub fn create_buffer_with_data(&mut self,usage:BufferUsages,data:&[u8]) -> BufferId {
         let buffer = self.device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
             contents:data,
             label:None,
@@ -141,11 +141,10 @@ impl RenderResources {
     pub fn map_buffer(&mut self,id:&BufferId,mode:wgpu::MapMode) {
         let buffer = self.buffers.get(id).unwrap();
         let buffer_slice = buffer.slice(..);
-        let data = buffer_slice.map_async(mode);
+        
+        buffer_slice.map_async(mode,|_| ());
         self.device.poll(wgpu::Maintain::Wait);
-        if futures_lite::future::block_on(data).is_err() {
-            panic!("Failed to map buffer to host.");
-        }
+        
     }
 
     pub fn unmap_buffer(&self, id: &BufferId) {
@@ -163,7 +162,7 @@ impl RenderResources {
 
     pub fn create_swap_chain(&mut self,w:u32,h:u32,vsync:bool) {
         let desc = &wgpu::SwapChainDescriptor {
-            usage:wgpu::TextureUsage::RENDER_ATTACHMENT,
+            usage:wgpu::TextureUsages::RENDER_ATTACHMENT,
             format:wgpu::TextureFormat::Bgra8Unorm,
             width:w,
             height:h,
@@ -318,7 +317,7 @@ impl RenderResources {
                                         .copy_from_slice(row);
                                   });
     
-            let texture_buffer = self.create_buffer_with_data(wgpu::BufferUsage::COPY_SRC,&aligned_data);
+            let texture_buffer = self.create_buffer_with_data(wgpu::BufferUsages::COPY_SRC,&aligned_data);
             self.copy_buffer_to_texture(command, 
                            texture_buffer, 
                            0, 
@@ -367,7 +366,8 @@ impl RenderResources {
             },wgpu::ImageCopyTexture { 
                 texture: dest, 
                 mip_level: dest_mip_level, 
-                origin: dest_origin 
+                origin: dest_origin,
+                aspect:Default::default()
             },size);                          
     }
 

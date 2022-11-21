@@ -24,18 +24,17 @@ pub struct UniformObject {
 impl UniformObject {
     pub fn new(res:&mut RenderResources,info:&UniformInfo) -> Self {
         let buffer_local = TypedUniformBuffer::from_def(info.props.clone());
-        
         let buffer = res.create_buffer(&wgpu::BufferDescriptor {
             label:None,
             size:buffer_local.def.size() as u64,
-            usage:wgpu::BufferUsage::COPY_DST | wgpu::BufferUsage::UNIFORM,
+            usage:wgpu::BufferUsages::COPY_DST | wgpu::BufferUsages::UNIFORM,
             mapped_at_creation:false
         });
 
         let cache_id = res.create_buffer(&wgpu::BufferDescriptor {
             label:None,
             size:buffer_local.def.size() as u64,
-            usage:wgpu::BufferUsage::COPY_SRC | wgpu::BufferUsage::MAP_WRITE,
+            usage:wgpu::BufferUsages::COPY_SRC | wgpu::BufferUsages::MAP_WRITE,
             mapped_at_creation:false
         });
         let cache_buffer = cache_id;

@@ -169,18 +169,18 @@ impl PostStackNode {
             let material = materials.get(&effect_item.material.id).get()?;
             if !material.is_ready(&ctx.resources) { continue }
             for pass_index in 0..material.def.pass_list.len() {
-                let mut color_attachments:Vec<wgpu::RenderPassColorAttachment> = vec![];
+                let mut color_attachments:Vec<Option<wgpu::RenderPassColorAttachment>> = vec![];
                 let is_last = pass_index == material.def.pass_list.len() - 1 && index == post_stack.items.len() - 1;
                 let target_format = if is_last { self.dst_format.get()? } else { self.src_format.get()? };
                 self.cache_pass_format[0] = target_format;
                 ctx.build_pipeine(&material.def, quad_mesh, &self.cache_pass_format, None,pass_index);
                 let dst_res_id = self.cur_target_texture(is_last)?;
                 let dst_texture_view = ctx.resources.get_texture_view_by_resid(dst_res_id).get()?;
-                color_attachments.push(wgpu::RenderPassColorAttachment { 
+                color_attachments.push(Some(wgpu::RenderPassColorAttachment { 
                     view: dst_texture_view, 
                     resolve_target: None, 
                     ops:self.operations 
-                });
+                }));
                 let pass_desc = wgpu::RenderPassDescriptor {
                     label:None,
                     color_attachments:color_attachments.as_slice(),

@@ -25,7 +25,7 @@ pub struct MaterialSystem {
 impl MaterialSystem {
     pub fn new(device: &wgpu::Device) -> Self {
         let mut layout_builder = BindGroupLayoutBuilder::new();
-        layout_builder.add_uniform(wgpu::ShaderStage::VERTEX_FRAGMENT);
+        layout_builder.add_uniform(wgpu::ShaderStages::VERTEX_FRAGMENT);
         let common_buffer_layout = layout_builder.build(device);
         MaterialSystem {
             common_buffer_layout,
@@ -190,7 +190,7 @@ pub struct MaterialDefine {
 impl MaterialDefine {
     pub fn new(define: Arc<MaterialDef>, res: &mut RenderResources) -> Self {
         let buffer_item_size: u64 =
-            align_num_to(define.prop_def.size() as u64, wgpu::BIND_BUFFER_ALIGNMENT);
+            align_num_to(define.prop_def.size() as u64, res.device.limits().min_uniform_buffer_offset_alignment.into());
         let texture_layout = define.tex_prop_def.layout_builder.build(&res.device);
         let default_cap = 4;
         let (cache_buffer, gpu_buffer) = Self::alloc_buffer(default_cap, buffer_item_size, res);
@@ -211,14 +211,14 @@ impl MaterialDefine {
         let cache_buffer = res.create_buffer(&wgpu::BufferDescriptor {
             label: None,
             size: cap as u64 * item_size as u64,
-            usage: wgpu::BufferUsage::COPY_SRC | wgpu::BufferUsage::MAP_WRITE,
+            usage: wgpu::BufferUsages::COPY_SRC | wgpu::BufferUsages::MAP_WRITE,
             mapped_at_creation: false,
         });
 
         let uniform_buffer = res.create_buffer(&wgpu::BufferDescriptor {
             label: None,
             size: cap as u64 * item_size as u64,
-            usage: wgpu::BufferUsage::COPY_DST | wgpu::BufferUsage::UNIFORM,
+            usage: wgpu::BufferUsages::COPY_DST | wgpu::BufferUsages::UNIFORM,
             mapped_at_creation: false,
         });
 

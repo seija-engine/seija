@@ -1,6 +1,6 @@
 use std::{ops::{Deref, DerefMut}};
 
-use raw_window_handle::{HasRawWindowHandle, RawWindowHandle};
+use raw_window_handle::{HasRawWindowHandle, RawWindowHandle, HasRawDisplayHandle};
 
 #[repr(u32)]
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -10,7 +10,7 @@ pub enum WindowMode {
     Fullscreen,
 }
 
-pub trait IWindow : HasRawWindowHandle {
+pub trait IWindow : HasRawWindowHandle + HasRawDisplayHandle {
     fn set_title(&mut self,str:&str);
     fn title(&self) -> &str;
     fn width(&self) -> u32;
@@ -27,6 +27,12 @@ pub struct AppWindow {
 unsafe impl HasRawWindowHandle for AppWindow {
     fn raw_window_handle(&self) -> RawWindowHandle {
         self.inner.raw_window_handle()
+    }
+}
+
+unsafe impl HasRawDisplayHandle for AppWindow {
+    fn raw_display_handle(&self) -> raw_window_handle::RawDisplayHandle {
+        self.inner.raw_display_handle()
     }
 }
 

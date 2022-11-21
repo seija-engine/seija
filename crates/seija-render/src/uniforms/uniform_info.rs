@@ -58,7 +58,7 @@ pub struct UniformInfo {
     pub props:Arc<UniformBufferDef>,
     pub textures:Arc<Vec<UniformTextureDef>>,
     pub backends:Vec<String>,
-    pub shader_stage:wgpu::ShaderStage
+    pub shader_stage:wgpu::ShaderStages
 }
 
 
@@ -79,7 +79,7 @@ impl TryFrom<&Value> for UniformInfo {
         let prop_sort = object.get(":sort").and_then(|v| v.as_i64()).unwrap_or(0);
         let udf = UniformBufferDef::try_from(&props).map_err(|_| ":props".to_string() )?;
         let shader_stage = object.get(":shader-stage").and_then(Value::as_i64).unwrap_or(
-            wgpu::ShaderStage::VERTEX_FRAGMENT.bits() as i64
+            wgpu::ShaderStages::VERTEX_FRAGMENT.bits() as i64
         ) as u32;
 
         let mut textures:Vec<UniformTextureDef> = vec![];
@@ -101,8 +101,8 @@ impl TryFrom<&Value> for UniformInfo {
             backends,
             sort:prop_sort as usize,
             textures:Arc::new(textures),
-            shader_stage:wgpu::ShaderStage::from_bits(shader_stage)
-                               .unwrap_or(wgpu::ShaderStage::VERTEX_FRAGMENT) 
+            shader_stage:wgpu::ShaderStages::from_bits(shader_stage)
+                               .unwrap_or(wgpu::ShaderStages::VERTEX_FRAGMENT) 
         })
     }
 }

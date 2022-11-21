@@ -49,22 +49,25 @@ impl IAssetLoader for GLTFLoader {
         let mut skeleton:Option<Handle<Skeleton>> = None;
         if let Some(take_skeleton) = _skeleton.take() {
            if let Some(skin) = load_skin(&gltf_data, &buffers, &take_skeleton) {
-              let mut assets = w.get_resource_mut::<Assets<Skin>>().unwrap();
-              let h_skin = assets.add(skin);
-              server.set_asset(&format!("{}#skin",path), h_skin.id);
-              skins = Some(h_skin);
+              if let Some(mut assets)  = w.get_resource_mut::<Assets<Skin>>() {
+                let h_skin = assets.add(skin);
+                server.set_asset(&format!("{}#skin",path), h_skin.id);
+                skins = Some(h_skin);
+              }
            }
            
            let anim_set = load_animations(&gltf_data,&buffers, &take_skeleton)?;
-           let mut assets = w.get_resource_mut::<Assets<AnimationSet>>().unwrap();
-           let h_anim = assets.add(anim_set);
-           server.set_asset(&format!("{}#animset",path), h_anim.id);
-           anims = Some(h_anim);
+           if let Some(mut assets)  = w.get_resource_mut::<Assets<AnimationSet>>() {
+                let h_anim = assets.add(anim_set);
+                server.set_asset(&format!("{}#animset",path), h_anim.id);
+                anims = Some(h_anim);
+           }
 
-           let mut assets = w.get_resource_mut::<Assets<Skeleton>>().unwrap();
-           let h_skeleton = assets.add(take_skeleton);
-           server.set_asset(&format!("{}#skeleton",path), h_skeleton.id);
-           skeleton = Some(h_skeleton);
+           if let Some(mut assets) = w.get_resource_mut::<Assets<Skeleton>>() {
+             let h_skeleton = assets.add(take_skeleton);
+             server.set_asset(&format!("{}#skeleton",path), h_skeleton.id);
+             skeleton = Some(h_skeleton);
+           }
         }
         
 

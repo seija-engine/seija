@@ -1,0 +1,25 @@
+<Entity name="Root" >
+    <Components>
+        <Transform />
+    </Components>
+    <Children>
+        
+    
+        <Entity name="Skybox">
+            <Components>
+                <Transform />
+                <Mesh res="res://mesh:skybox" />
+                <Material res="res://mats/yoko_sky.json" />
+            </Components>
+        </Entity>
+
+
+        <Entity name="Quad">
+            <Components>
+                <Transform />
+                <Mesh res="res://mesh:cube" />
+                <Material res="res://mats/hdrTexture.json" />
+            </Components>
+        </Entity> 
+    </Children>
+</Entity>

@@ -45,7 +45,7 @@ pub struct PassDef {
 pub struct TargetInfo {
     format:Option<wgpu::TextureFormat>,
     blend:Option<wgpu::BlendState>,
-    write_mask:wgpu::ColorWrite
+    write_mask:wgpu::ColorWrites
 }
 
 impl Default for PassDef {
@@ -233,15 +233,15 @@ fn read_shader_info(value:&Value,read_slot:bool) -> Result<ShaderInfoDef,Materia
 }
 
 impl PassDef {
-    pub fn get_color_targets(&self) -> Vec<wgpu::ColorTargetState> {
-        let mut color_targets:Vec<wgpu::ColorTargetState> = vec![];
+    pub fn get_color_targets(&self) -> Vec<Option<wgpu::ColorTargetState>> {
+        let mut color_targets:Vec<Option<wgpu::ColorTargetState>> = vec![];
         for target in self.targets.iter() {
             let target = wgpu::ColorTargetState {
                 format:target.format.unwrap_or(wgpu::TextureFormat::Bgra8Unorm),
                 blend: target.blend.clone(),
                 write_mask: target.write_mask.clone(),
             };
-            color_targets.push(target);
+            color_targets.push(Some(target));
         }
         color_targets
     }
@@ -284,7 +284,7 @@ impl Default for TargetInfo {
                     operation: wgpu::BlendOperation::Add,
                 },
             }), 
-             write_mask: wgpu::ColorWrite::ALL
+             write_mask: wgpu::ColorWrites::ALL
         }
     }
 }

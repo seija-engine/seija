@@ -19,10 +19,10 @@ serde_derive = "1.0.136"
 serde = "1.0.136"
 uuid = "0.8.2"
 bitflags = "1.2.1"
-wgpu = {version = "0.9.0"} 
+wgpu = {version = "0.14.0",futures = ["spirv","glsl"]} 
 futures-lite = "1.12.0"
 bevy_ecs = "0.7.0"
-raw-window-handle = "0.3.3"
+raw-window-handle = "0.5.0"
 thiserror = "1.0.25"
 glam = "0.20.3"
 num_enum = "0.5.1"
@@ -30,7 +30,7 @@ parking_lot = "0.11.1"
 fnv = "1.0.7"
 once_cell = "1.8.0"
 log = "0.4.14"
-image = "0.23.14"
+image = {version = "0.24.5",futures=["hdr"]} 
 env_logger = "0.9.0"
 glsl-pack-rtbase = {path = "../../../glsl-pack/glsl-pack-rtbase"}
 fixedbitset = "0.4.1"

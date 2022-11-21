@@ -102,11 +102,11 @@ pub fn init_fns(vm:&mut EvalRT) {
     vm.global_context().push_native_fn("add-query", add_query);
     vm.global_context().push_native_fn("uniform-set", uniform_set);
 
-    vm.global_context().push_var("SS_VERTEX", wgpu::ShaderStage::VERTEX.bits() as i64 );
-    vm.global_context().push_var("SS_FRAGMENT", wgpu::ShaderStage::FRAGMENT.bits() as i64 );
-    vm.global_context().push_var("SS_VERTEX_FRAGMENT", wgpu::ShaderStage::VERTEX_FRAGMENT.bits() as i64 );
-    vm.global_context().push_var("SS_COMPUTE", wgpu::ShaderStage::COMPUTE.bits() as i64 );
-    vm.global_context().push_var("SS_ALL", wgpu::ShaderStage::all().bits() as i64 );
+    vm.global_context().push_var("SS_VERTEX", wgpu::ShaderStages::VERTEX.bits() as i64 );
+    vm.global_context().push_var("SS_FRAGMENT", wgpu::ShaderStages::FRAGMENT.bits() as i64 );
+    vm.global_context().push_var("SS_VERTEX_FRAGMENT", wgpu::ShaderStages::VERTEX_FRAGMENT.bits() as i64 );
+    vm.global_context().push_var("SS_COMPUTE", wgpu::ShaderStages::COMPUTE.bits() as i64 );
+    vm.global_context().push_var("SS_ALL", wgpu::ShaderStages::all().bits() as i64 );
 }
 
 pub fn declare_uniform(s:&mut ExecScope,a:Vec<Variable>) -> Variable { 

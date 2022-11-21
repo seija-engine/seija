@@ -235,7 +235,7 @@ impl TryFrom<&Value> for STextureDescriptor {
             sample_count: 1, 
             dimension: wgpu::TextureDimension::D2, 
             format: format.0, 
-            usage: wgpu::TextureUsage::RENDER_ATTACHMENT | wgpu::TextureUsage::SAMPLED
+            usage: wgpu::TextureUsages::RENDER_ATTACHMENT | wgpu::TextureUsages::TEXTURE_BINDING
         };
         if let Some(sample_count) = map_value.get(":sample-count").and_then(Value::as_i64) {
             default_value.sample_count = sample_count as u32;

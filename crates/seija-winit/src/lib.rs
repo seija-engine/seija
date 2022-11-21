@@ -30,6 +30,7 @@ impl IModule for WinitModule {
 
 
 fn winit_runner(event_loop:EventLoop<()>,mut app:App) {
+    
     let event_handle = move |event: Event<()>,_event_loop: &EventLoopWindowTarget<()>,control_flow: &mut ControlFlow| {
         let t = app.last_call.elapsed();
         if t > app.frame_duration {

@@ -1,6 +1,6 @@
 use std::{ num::{NonZeroU64}};
 use seija_asset::Handle;
-use wgpu::{BindGroupEntry, Device, ShaderStage};
+use wgpu::{BindGroupEntry, Device, ShaderStages};
 
 use crate::resource::{BufferId, RenderResourceId, RenderResources, Texture};
 
@@ -23,10 +23,11 @@ impl BindGroupLayoutBuilder {
     }
 
     pub fn add_sampler(&mut self,filtering:bool) {
+        let st = if filtering {wgpu::SamplerBindingType::Filtering } else { wgpu::SamplerBindingType::NonFiltering };
         let entry = wgpu::BindGroupLayoutEntry {
             binding:self.layout_entrys.len() as u32,
-            visibility:ShaderStage::VERTEX_FRAGMENT,
-            ty:wgpu::BindingType::Sampler {comparison: false, filtering },
+            visibility:ShaderStages::VERTEX_FRAGMENT,
+            ty:wgpu::BindingType::Sampler(st),
             count:None
         };
         self.layout_entrys.push(entry);
@@ -36,7 +37,7 @@ impl BindGroupLayoutBuilder {
     pub fn add_texture(&mut self,is_cube_map:bool,sample_type:Option<wgpu::TextureSampleType>) {
         let texture_entry = wgpu::BindGroupLayoutEntry {
             binding:self.layout_entrys.len() as u32,
-            visibility:ShaderStage::VERTEX_FRAGMENT,
+            visibility:ShaderStages::VERTEX_FRAGMENT,
             ty:wgpu::BindingType::Texture {
                 sample_type: sample_type.unwrap_or(wgpu::TextureSampleType::Float { filterable: false }),
                 view_dimension:if is_cube_map {wgpu::TextureViewDimension::Cube } else { wgpu::TextureViewDimension::D2 },
@@ -47,7 +48,7 @@ impl BindGroupLayoutBuilder {
         self.layout_entrys.push(texture_entry);
     }
 
-    pub fn add_uniform(&mut self,stage:wgpu::ShaderStage) {
+    pub fn add_uniform(&mut self,stage:wgpu::ShaderStages) {
         let entry = wgpu::BindGroupLayoutEntry {
             binding:self.layout_entrys.len() as u32,
             visibility:stage,

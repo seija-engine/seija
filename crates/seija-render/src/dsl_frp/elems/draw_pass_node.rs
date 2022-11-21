@@ -108,18 +108,18 @@ impl DrawPassNode {
 
     pub fn create_render_pass<'a>(&self,res:&'a RenderResources,
         command:&'a mut CommandEncoder) -> Result<wgpu::RenderPass<'a>,PassError> {
-        let mut color_attachments:Vec<wgpu::RenderPassColorAttachment> = vec![];
+        let mut color_attachments:Vec<Option<wgpu::RenderPassColorAttachment>> = vec![];
         for target in self.cache_textures.iter() {
             if !res.is_ready(target) {
                 return Err(PassError::TextureNotReady);
             }
             let texture = res.get_texture_view_by_resid(target)
                                            .ok_or(PassError::ErrTargetView)?;
-            color_attachments.push(wgpu::RenderPassColorAttachment {
+            color_attachments.push(Some(wgpu::RenderPassColorAttachment {
                 view:texture,
                 resolve_target:None,
                 ops:self.operations
-            });
+            }));
         }
         let mut depth_view:Option<wgpu::RenderPassDepthStencilAttachment> = None;
         if let Some(depth_res_id) = self.depth_texture.as_ref() {
