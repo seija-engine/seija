@@ -1,7 +1,7 @@
 use std::path::Path;
 
 use image::ImageError;
-use seija_core::bytes::{cast_slice, AsBytes};
+use seija_core::bytes::{cast_slice};
 use wgpu::TextureFormat;
 
 #[derive(Debug)]
@@ -58,8 +58,32 @@ pub fn read_image_info(dyn_image:image::DynamicImage) -> ImageInfo {
             data = i.into_raw();
         }
        
-        image::DynamicImage::ImageRgba32F(i) => {},
-        image::DynamicImage::ImageRgb32F(i) => {},
+        image::DynamicImage::ImageRgba32F(i) => {
+            width = i.width();
+            height = i.height();
+            format = TextureFormat::Rgba32Float;
+            let raw_data = i.into_raw();
+            data = cast_slice(&raw_data).to_owned();
+        },
+        image::DynamicImage::ImageRgb32F(i) => {
+            width = i.width();
+            height = i.height();
+            format = TextureFormat::Rgba32Float;
+            
+            let mut local_data = Vec::with_capacity(width as usize * height as usize * format.describe().block_size as usize);
+            for pixel in i.into_raw().chunks_exact(3) {
+                let r = pixel[0];
+                let g = pixel[1];
+                let b = pixel[2];
+                let a = 1f32;
+
+                local_data.extend_from_slice(&r.to_ne_bytes());
+                local_data.extend_from_slice(&g.to_ne_bytes());
+                local_data.extend_from_slice(&b.to_ne_bytes());
+                local_data.extend_from_slice(&a.to_ne_bytes());
+            }
+            data = local_data;
+        },
        
         image::DynamicImage::ImageLuma16(i) => {
             width = i.width();
@@ -102,7 +126,7 @@ pub fn read_image_info(dyn_image:image::DynamicImage) -> ImageInfo {
             let raw_data = i.into_raw();
             data = cast_slice(&raw_data).to_owned();
         },
-        _ => {}
+        _ => {panic!("unsupport texture") }  
     }
 
     ImageInfo {width,height,format,data }

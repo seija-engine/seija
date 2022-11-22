@@ -2,7 +2,7 @@ use clap::{App,Arg};
 use material_compiler::{CompilerConfig,MaterialCompiler};
 fn main() {
     let mut builder = env_logger::builder();
-    builder.filter_level(log::LevelFilter::Trace);
+    builder.filter_level(log::LevelFilter::Info);
     builder.init();
 
     let matchs = App::new("mc-cli")

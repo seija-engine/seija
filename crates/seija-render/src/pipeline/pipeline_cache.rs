@@ -148,7 +148,7 @@ impl PipelineCache {
        let mut targets = pass.get_color_targets();
        for idx in 0..formats.len() {
          if idx <= targets.len() {
-            targets[idx].map(|v| v.format = formats[idx]);
+            targets[idx].as_mut().map(|v| v.format = formats[idx]);
          } else {
             let target = wgpu::ColorTargetState {
                 format:formats[idx],
@@ -236,11 +236,13 @@ impl PipelineCache {
     }
 
     fn read_shader_module<P:AsRef<Path>>(path:P,device:&Device) -> Option<ShaderModule> {
+       
        let code_bytes = fs::read(path.as_ref()).ok()?;
-       let bytes = read_spirv(std::io::Cursor::new(&code_bytes)).unwrap();
+       let source = wgpu::util::make_spirv(code_bytes.as_slice());
+       
        let shader_module = device.create_shader_module(ShaderModuleDescriptor {
          label:None,
-         source:wgpu::ShaderSource::Wgsl(todo!()) //TODO WGPU
+         source
        });
        log::info!("create shader module {:?}",path.as_ref());
        Some(shader_module)
@@ -249,6 +251,7 @@ impl PipelineCache {
    
 }
 
+//TODO Delete it
 pub fn read_spirv<R: io::Read + io::Seek>(mut x: R) -> io::Result<Vec<u32>> {
     let size = x.seek(io::SeekFrom::End(0))?;
     if size % 4 != 0 {

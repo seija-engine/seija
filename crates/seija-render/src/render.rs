@@ -92,7 +92,7 @@ impl AppRender {
         ctx.frame_draw_pass = 0;
         ctx.command_encoder = Some(self.device.create_command_encoder(&CommandEncoderDescriptor::default()));
         self.update_winodw_surface(world,&mut ctx.resources);
-        let _ = ctx.resources.next_swap_chain_texture();
+        ctx.resources.fetch_surface_texture();
         ctx.ubo_ctx.update(&mut ctx.resources,ctx.command_encoder.as_mut().unwrap());
        
         ctx.material_system.update(world, &mut ctx.resources, ctx.command_encoder.as_mut().unwrap());
@@ -106,8 +106,9 @@ impl AppRender {
         let command_buffer = ctx.command_encoder.take().unwrap().finish();
         self.queue.submit(Some(command_buffer));
         if ctx.frame_draw_pass > 0 {
-          ctx.resources.clear_swap_chain_texture();
+          ctx.resources.submit_surface_texture();
           ctx.frame_draw_pass = 0;
+          ctx.device.poll(wgpu::Maintain::Wait);
         }
        
     }
@@ -123,8 +124,9 @@ impl AppRender {
         if is_create_window {
             let app_window = world.get_resource::<AppWindow>().unwrap();   
             let surface = unsafe { self.instance.create_surface(app_window) };
+            
             render_res.set_main_surface(surface);
-            render_res.create_swap_chain(app_window.width(), app_window.height(), app_window.vsync());
+            render_res.config_surface(app_window.width(), app_window.height(), app_window.vsync());
         }
 
         let mut resize:Option<WindowResized> = None;
@@ -137,8 +139,8 @@ impl AppRender {
         if let Some(_) = resize {
             let app_window = world.get_resource::<AppWindow>().unwrap();   
             if app_window.width() > 0 && app_window.height() > 0 {
-                render_res.clear_swap_chain_texture();
-                render_res.create_swap_chain(app_window.width(), app_window.height(), app_window.vsync());
+                render_res.clear_surface_texture();
+                render_res.config_surface(app_window.width(), app_window.height(), app_window.vsync());
             }
         }
         

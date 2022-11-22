@@ -56,9 +56,8 @@ pub struct SamplerId(u64);
 pub struct RenderResources {
     pub device: Arc<wgpu::Device>,
     main_surface:Option<wgpu::Surface>,
-    main_swap_chain:Option<wgpu::SwapChain>,
-    pub main_swap_chain_frame:Option<wgpu::SwapChainFrame>,
-
+    main_surface_texture:Option<wgpu::SurfaceTexture>,
+    main_surface_texture_view:Option<wgpu::TextureView>,
     pub default_textures:Vec<Handle<Texture>>,
    
     pub buffers: HashMap<BufferId, wgpu::Buffer>,
@@ -79,8 +78,8 @@ impl RenderResources {
         RenderResources {
             device,
             main_surface:None,
-            main_swap_chain:None,
-            main_swap_chain_frame:None,
+            main_surface_texture:None,
+            main_surface_texture_view:None,
             buffers:HashMap::default(),
             textures:HashMap::default(),
             resources:HashMap::default(),
@@ -141,7 +140,6 @@ impl RenderResources {
     pub fn map_buffer(&mut self,id:&BufferId,mode:wgpu::MapMode) {
         let buffer = self.buffers.get(id).unwrap();
         let buffer_slice = buffer.slice(..);
-        
         buffer_slice.map_async(mode,|_| ());
         self.device.poll(wgpu::Maintain::Wait);
         
@@ -160,37 +158,12 @@ impl RenderResources {
     }
    
 
-    pub fn create_swap_chain(&mut self,w:u32,h:u32,vsync:bool) {
-        let desc = &wgpu::SwapChainDescriptor {
-            usage:wgpu::TextureUsages::RENDER_ATTACHMENT,
-            format:wgpu::TextureFormat::Bgra8Unorm,
-            width:w,
-            height:h,
-            present_mode: if vsync {wgpu::PresentMode::Fifo} else {wgpu::PresentMode::Immediate}
-        };
-        let surface = self.main_surface.as_ref().unwrap();
-        let swap_chain = self.device.create_swap_chain(surface, desc);
-        self.main_swap_chain = Some(swap_chain);
-        
-    }
 
-    pub fn next_swap_chain_texture(&mut self) -> Result<RenderResourceId,SwapChainError> {
-       if self.main_swap_chain_frame.is_some() {
-           return Ok(RenderResourceId::MainSwap)
-       }
-       self.main_swap_chain.as_mut().ok_or(SwapChainError::Lost)
-                                    .and_then(|v| v.get_current_frame())
-                                    .map(|s| {
-                                        self.main_swap_chain_frame = Some(s);
-                                        RenderResourceId::MainSwap
-                                    })
-    }
 
     pub fn get_texture_view_by_resid(&self,res_id:&RenderResourceId) -> Option<&TextureView> {
         match res_id {
             RenderResourceId::MainSwap => {
-                
-                self.main_swap_chain_frame.as_ref().map(|v| &v.output.view)
+                self.main_surface_texture_view.as_ref()
             }
             RenderResourceId::TextureView(texture_id) => {
                 self.texture_views.get(texture_id)
@@ -374,9 +347,40 @@ impl RenderResources {
     fn get_aligned_texture_size(size: usize) -> usize {
         (size + COPY_BYTES_PER_ROW_ALIGNMENT - 1) & !(COPY_BYTES_PER_ROW_ALIGNMENT - 1)
     }
+   
+    pub fn config_surface(& self,w:u32,h:u32,vsync:bool) {
+        if let Some(surface) = self.main_surface.as_ref() {
+            let config = wgpu::SurfaceConfiguration {
+                usage:wgpu::TextureUsages::RENDER_ATTACHMENT,
+                format:wgpu::TextureFormat::Bgra8Unorm,
+                width:w,
+                height:h,
+                present_mode: if vsync {wgpu::PresentMode::Fifo} else {wgpu::PresentMode::Immediate},
+                alpha_mode:wgpu::CompositeAlphaMode::Auto
+            };
+            surface.configure(&self.device, &config);
+        }
+    }
 
-    pub fn clear_swap_chain_texture(&mut self) {
-        self.main_swap_chain_frame = None;
+    pub fn clear_surface_texture(&mut self) {
+        self.main_surface_texture = None;
+        self.main_surface_texture_view = None;
+    }
+
+    pub fn fetch_surface_texture(&mut self) {
+        if let Some(surface) = self.main_surface.as_ref() {
+            if self.main_surface_texture.is_none() {
+                let surface_texture = surface.get_current_texture().unwrap();
+                let texture_view = surface_texture.texture.create_view(&Default::default());
+                self.main_surface_texture = Some(surface_texture);
+                self.main_surface_texture_view = Some(texture_view);
+            }
+        }
+    }
+
+    pub fn submit_surface_texture(&mut self) {
+        self.main_surface_texture.take().map(|v|v.present());
+        self.main_surface_texture_view = None;
     }
 
     pub fn is_ready(&self,res_id:&RenderResourceId) -> bool {

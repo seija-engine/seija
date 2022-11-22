@@ -13,7 +13,7 @@
     (node TransformNodeID "ObjectBuffer")
     (node PBRCameraExNodeID "CameraBuffer")
     (node PBRLightNodeID "LightBuffer")
-    (if-comp dynShadow [shadow-global])
+    ;(if-comp dynShadow [shadow-global])
 )
 
 (defcomp shadow-global []
@@ -38,10 +38,11 @@
         no-hdr-draw-comp [no-hdr-draw camera-id camera-query depth-texture camera-target dynHasPostEffect]
       ]
     (node WinResizeNodeID [depth-texture])
-    (if-comp dynIsHDR 
-              hdr-draw-comp 
-              no-hdr-draw-comp
-    )
+    ;(if-comp dynIsHDR 
+    ;          hdr-draw-comp 
+    ;          no-hdr-draw-comp
+    ;)
+    (node DrawPassNodeID camera-query camera-id  [camera-target] depth-texture "Foward")
   )
 )
 

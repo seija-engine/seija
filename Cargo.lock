@@ -1234,10 +1234,11 @@ dependencies = [
  "lang-util",
  "lazy_static",
  "log",
+ "naga",
+ "rspirv",
  "serde",
  "serde_derive",
  "serde_json",
- "shaderc",
  "smol_str",
  "text-macro",
  "thiserror",
@@ -1703,6 +1704,7 @@ dependencies = [
  "log",
  "seija-render",
  "serde",
+ "serde_derive",
  "serde_json",
  "smol_str",
  "walkdir",
@@ -1814,6 +1816,8 @@ dependencies = [
  "indexmap",
  "log",
  "num-traits",
+ "petgraph 0.6.2",
+ "pp-rs",
  "rustc-hash",
  "spirv",
  "termcolor",
@@ -2221,6 +2225,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "pp-rs"
+version = "0.2.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "bb458bb7f6e250e6eb79d5026badc10a3ebb8f9a15d1fff0f13d17c71f4d6dee"
+dependencies = [
+ "unicode-xid",
+]
+
+[[package]]
 name = "ppv-lite86"
 version = "0.2.17"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2404,12 +2417,14 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f1382d1f0a252c4bf97dc20d979a2fdd05b024acd7c2ed0f7595d7817666a157"
 
 [[package]]
-name = "roxmltree"
-version = "0.14.1"
+name = "rspirv"
+version = "0.11.0+1.5.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "921904a62e410e37e215c40381b7117f830d9d89ba60ab5236170541dd25646b"
+checksum = "1503993b59ca9ae4127365c3293517576d7ce56be9f3d8abb1625c85ddc583ba"
 dependencies = [
- "xmlparser",
+ "fxhash",
+ "num-traits",
+ "spirv",
 ]
 
 [[package]]
@@ -2775,27 +2790,6 @@ dependencies = [
  "expat-sys",
  "freetype-sys",
  "pkg-config",
-]
-
-[[package]]
-name = "shaderc"
-version = "0.8.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "80e6fe602a861622769530a23bc40bfba31adbf186d0c8412e83f5519c5d6bee"
-dependencies = [
- "libc",
- "shaderc-sys",
-]
-
-[[package]]
-name = "shaderc-sys"
-version = "0.8.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3794498651f8173d0afbc0bb8aca45ced111098227e755dde4c0ef2888c8d0bf"
-dependencies = [
- "cmake",
- "libc",
- "roxmltree",
 ]
 
 [[package]]
@@ -3649,9 +3643,3 @@ name = "xml-rs"
 version = "0.8.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d2d7d3948613f75c98fd9328cfdcc45acc4d360655289d0a7d4ec931392200a3"
-
-[[package]]
-name = "xmlparser"
-version = "0.13.5"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4d25c75bf9ea12c4040a97f829154768bbbce366287e2dc044af160cd79a13fd"

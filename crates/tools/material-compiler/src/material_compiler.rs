@@ -5,7 +5,7 @@ use glsl_pack_rtbase::shader::Shader;
 use glsl_pkg::PackageManager;
 use lite_clojure_eval::EvalRT;
 use seija_render::material::{read_material_def, PassDef, MaterialDef};
-use serde::{Deserialize};
+use serde_derive::Deserialize;
 
 use crate::backend::{SeijaShaderBackend, ShaderTask};
 #[derive(Default,Deserialize)]
