@@ -1,0 +1,38 @@
+<Entity name="Root" >
+    <Components>
+        <Transform />
+    </Components>
+    <Children>
+        <Entity>
+            <Components>
+                <Transform />
+                <Mesh res="res://gltf/low_poly_winter_scene/scene.gltf#mesh.0.0"/>
+                <Material res="res://mats/snow_house.json"  />
+            </Components>
+        </Entity>
+        <Entity>
+            <Components>
+                <Transform 
+                <Mesh res="res://gltf/low_poly_winter_scene/scene.gltf#mesh.1.0"/>
+                <Material res="res://mats/snow_house.json"  />
+            </Components>
+        </Entity>
+        <Entity>
+            <Components>
+                <Transform />
+                <Mesh res="res://gltf/low_poly_winter_scene/scene.gltf#mesh.2.0"/>
+                <Material res="res://mats/snow_house.json"  />
+            </Components>
+        </Entity>
+        <Entity>
+            <Components>
+                <Transform />
+                <Mesh res="res://gltf/low_poly_winter_scene/scene.gltf#mesh.3.0"/>
+                <Material res="res://mats/snow_house.json"  />
+            </Components>
+        </Entity>
+        
+        
+        
+    </Children>
+</Entity>

@@ -1283,6 +1283,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "gltf2template"
+version = "0.1.0"
+dependencies = [
+ "gltf",
+]
+
+[[package]]
 name = "gpu-alloc"
 version = "0.5.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"

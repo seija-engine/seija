@@ -1,0 +1,7 @@
+{
+    "material":"materials/baseTexture.mat.clj",
+    "props":{
+        "color":[1,1,1,1],
+        "mainTexture":"gltf/low_poly_winter_scene/textures/Main_baseColor.png"
+    }
+ }

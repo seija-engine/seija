@@ -5,7 +5,6 @@ use seija_core::{CoreStage, StartupStage, window::AppWindow};
 use seija_examples::{init_core_app, update_camera_trans_system, add_pbr_camera};
 use seija_app::ecs::prelude::*;
 use seija_pbr::lights::PBRLight;
-use seija_render::{dsl_frp::PostEffectStack, material::Material};
 use seija_template::Template;
 use seija_transform::Transform;
 fn main() {
@@ -17,7 +16,6 @@ fn main() {
 }
 
 fn on_start(world:&mut World) {
-    let server = world.get_resource::<AssetServer>().unwrap().clone();
     //light
      {
         let light = PBRLight::directional(Vec3::new(1f32, 1f32, 1f32)  , 62000f32);
@@ -28,21 +26,18 @@ fn on_start(world:&mut World) {
         l.insert(light);
         l.insert(t);
     }
-    let h_tonemap = server.load_sync::<Material>(world, "mats/tonemap.json", None).unwrap();
     let mut queue = CommandQueue::default();
     let mut commands = Commands::new(&mut queue, world);
     let window = world.get_resource::<AppWindow>().unwrap();
     
-    add_pbr_camera(&mut commands,&window,Vec3::new(0f32, 3.09f32, 6.18f32),Quat::IDENTITY,|cmds:&mut EntityCommands| {
-        let mut effect_stack = PostEffectStack::default();
-        effect_stack.add_item(h_tonemap, 1000);
-        cmds.insert(effect_stack);
-    },None,None,true);
+    add_pbr_camera(&mut commands,&window,Vec3::new(0f32, 3.09f32, 6.18f32),Quat::IDENTITY,|_:&mut EntityCommands| {
+       
+    },None,None,false);
     queue.apply(world);
     
 
     let asset_server = world.get_resource::<AssetServer>().unwrap().clone();
-    let mut handle = asset_server.load_sync::<Template>(world,"template/hdr.xml", None).unwrap();
+    let mut handle = asset_server.load_sync::<Template>(world,"template/snow_house.xml", None).unwrap();
     let templates = world.get_resource::<Assets<Template>>().unwrap();
     let template = templates.get(&handle.id).unwrap().clone();
     template.instance(world).unwrap();

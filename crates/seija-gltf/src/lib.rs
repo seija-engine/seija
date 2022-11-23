@@ -10,7 +10,7 @@ use loader::GLTFLoader;
 use seija_app::{IModule, App};
 use seija_asset::{Handle, AddAsset};
 
-use seija_render::material::{Material};
+use seija_render::{material::{Material}, shadow::Shadow};
 use seija_transform::{BuildChildren, Transform};
 
 pub struct GLTFModule;
@@ -31,6 +31,9 @@ pub fn create_gltf<T>(asset:&GltfAsset,commands:&mut Commands,mut mat_fn:T) -> E
             let mut mesh_render = commands.spawn();
             mesh_render.insert(primitive.mesh.clone());
             mesh_render.insert(Transform::from_t_matrix(mesh_mat.clone()));
+            
+            let shadow = Shadow {cast_shadow:true,receive_shadow:true };
+            mesh_render.insert(shadow);
             if let Some(mat) = primitive.material.as_ref().and_then(|v| mat_fn(&v)) {
                 mesh_render.insert(mat);
             }
