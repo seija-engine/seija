@@ -28,7 +28,6 @@ pub fn read_image_info(dyn_image:image::DynamicImage) -> ImageInfo {
     let format: TextureFormat;
     let width;
     let height;
-    log::error!("color:{:?}",dyn_image.color());
     match dyn_image {
         image::DynamicImage::ImageLuma8(i) => {
             let buffer = i;

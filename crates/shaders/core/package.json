@@ -181,7 +181,7 @@
           "POSITION": "require",
           "UV0":"require"
         },
-        "backend": ["PostEffect"],
+        "backend": ["PostEffect","PBRCameraEx"],
         "vs": "tonemap.vs_main",
         "fs": "tonemap.fs_main"
       }

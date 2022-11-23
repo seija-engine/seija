@@ -4,8 +4,8 @@
     
     :props [
         {:name "color" :type "float4" :default [1,1,1,1]}
-        {:name "texture0" :type "Texture" :default "white"}
-        {:name "texture1" :type "Texture" :default "white"}
+        {:name "texture0" :type "texture2D" :default "white"}
+        {:name "texture1" :type "texture2D" :default "white"}
     ]
     :pass [
         {

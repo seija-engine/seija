@@ -8,7 +8,7 @@ use super::{RenderOrder, errors::MaterialDefReadError, texture_prop_def::Texture
 use lite_clojure_eval::EvalRT;
 use serde_json::{Value};
 use uuid::Uuid;
-use crate::{memory::UniformBufferDef};
+use crate::{memory::UniformBufferDef, uniforms::UniformTextureDef};
 
 #[derive(Debug)]
 pub struct MaterialDef {
@@ -125,21 +125,25 @@ fn read_texture_prop(json_value:&Value) -> Result<TexturePropDef,()> {
                 name:prop_name.to_string(),
                 index:texture_index,
                 def_asset,
-                is_cube_map:false
+                is_cube_map:false,
+                texture_def:None
             };
+            
+            
             match prop_type {
-                "Texture" => {
-                    texture_props.layout_builder.add_texture(false,None);
-                    texture_props.layout_builder.add_sampler(filtering);
-                    texture_prop.is_cube_map = false;
-                    texture_props.indexs.insert(prop_name.to_string(), texture_prop);
-                   
-                    texture_index += 1;
-                },
                 "CubeMap" => {
                     texture_props.layout_builder.add_texture(true,None);
                     texture_props.layout_builder.add_sampler(filtering);
                     texture_prop.is_cube_map = true;
+                    texture_props.indexs.insert(prop_name.to_string(), texture_prop);
+                    texture_index += 1;
+                },
+                "texture2D" | "texture2DShadow" | "itexture2D" | "utexture2D" => {
+                    let texture_def = UniformTextureDef::try_from(item)?;
+                    texture_props.layout_builder.add_texture(false,Some(texture_def.sample_type));
+                    texture_props.layout_builder.add_sampler(texture_def.is_filterable());
+                    texture_prop.is_cube_map = false;
+                    texture_prop.texture_def = Some(texture_def);
                     texture_props.indexs.insert(prop_name.to_string(), texture_prop);
                     texture_index += 1;
                 },

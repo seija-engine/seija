@@ -1,11 +1,12 @@
 use std::{collections::HashSet};
 use bevy_ecs::prelude::World;
-use image::ImageError;
+use image::{ImageError, ImageFormat};
 use seija_asset::{Assets, AssetEvent, Handle};
 use uuid::Uuid;
 use seija_core::{TypeUuid, IDGenU32, OptionExt};
 use bevy_ecs::event::{ManualEventReader, Events};
 use once_cell::sync::Lazy;
+use wgpu::TextureFormat;
 use crate::{resource::{read_image_info, image_info::color_image_info}, RenderContext};
 use seija_core::{anyhow::{Result}};
 use super::{ImageInfo, RenderResourceId};
@@ -44,10 +45,26 @@ impl Texture {
     }
 
     pub fn from_image_bytes(bytes:&[u8],mut desc:TextureDescInfo) -> Result<Texture,ImageError> {
-        let test_format = image::guess_format(bytes);
-        log::error!("test format:{:?}",test_format);
-        let dyn_image = image::load_from_memory(bytes)?;
-        let info = read_image_info(dyn_image);
+        let guess_format = image::guess_format(bytes)?;
+        let info = if guess_format == ImageFormat::Hdr {
+            let format: TextureFormat = TextureFormat::Rgba32Float;
+            let decoder = image::codecs::hdr::HdrDecoder::new(bytes)?;
+            let info = decoder.metadata();
+            let rgb_data = decoder.read_image_hdr()?;
+            let mut rgba_data = Vec::with_capacity(rgb_data.len() * format.describe().block_size as usize);
+            for rgb in rgb_data {
+                let alpha = 1.0f32;
+                rgba_data.extend_from_slice(&rgb.0[0].to_ne_bytes());
+                rgba_data.extend_from_slice(&rgb.0[1].to_ne_bytes());
+                rgba_data.extend_from_slice(&rgb.0[2].to_ne_bytes());
+                rgba_data.extend_from_slice(&alpha.to_ne_bytes());
+            }
+           ImageInfo {width:info.width,height:info.height,format,data:rgba_data }
+        } else {
+            let dyn_image = image::load_from_memory(bytes)?;
+            read_image_info(dyn_image)
+        };
+        
         desc.desc.size.width = info.width;
         desc.desc.size.height = info.height;
         desc.desc.size.depth_or_array_layers = 1;

@@ -3,7 +3,7 @@
     :order "Opaque"
     :props [
         {:name "color"       :type "float4" :default [1,1,1,1]}
-        {:name "mainTexture" :type "texture2D" :default "white"}
+        {:name "mainTexture" :type "texture2D" :filterable false :default "white"}
     ]
     :pass [
         { 

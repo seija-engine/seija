@@ -3,7 +3,7 @@ use lite_clojure_eval::{Variable, GcRefCell};
 use seija_render::{dsl_frp::{IUpdateNode, FRPSystem}, RenderContext, UniformIndex};
 use anyhow::{Result,anyhow};
 
-use crate::PBRCameraInfo;
+use crate::{PBRCameraInfo, Exposure};
 pub struct PBRCameraNode {
     pub ubo_name:String,
     name_index:UniformIndex,
@@ -24,7 +24,7 @@ impl PBRCameraNode {
 }
 
 impl IUpdateNode for PBRCameraNode {
-    fn active(&mut self,_:&mut World,ctx:&mut RenderContext,frp_sys:&mut FRPSystem) -> Result<()> {
+    fn active(&mut self,_:&mut World,ctx:&mut RenderContext,_:&mut FRPSystem) -> Result<()> {
         self.name_index = ctx.ubo_ctx.get_index(self.ubo_name.as_str())
                                      .ok_or(anyhow!("not found ubo {}",&self.ubo_name))?;
         let info = ctx.ubo_ctx.info.get_info(&self.ubo_name)
@@ -34,7 +34,7 @@ impl IUpdateNode for PBRCameraNode {
         Ok(())
     }
 
-    fn update(&mut self,world:&mut World,ctx:&mut RenderContext,frp_sys:&mut FRPSystem) -> Result<()> {
+    fn update(&mut self,world:&mut World,ctx:&mut RenderContext,_:&mut FRPSystem) -> Result<()> {
         let mut cameras = world.query_filtered::<(Entity,&PBRCameraInfo),Or<(Changed<PBRCameraInfo>,Added<PBRCameraInfo>)>>();
         for (e,ex_info) in cameras.iter(world) {
             ctx.ubo_ctx.set_buffer(&self.name_index, Some(e.id()),|buffer| {

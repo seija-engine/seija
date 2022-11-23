@@ -16,8 +16,8 @@
 
         <Entity name="Quad">
             <Components>
-                <Transform />
-                <Mesh res="res://mesh:cube" />
+                <Transform scale="4,4,1" />
+                <Mesh res="res://mesh:quad" />
                 <Material res="res://mats/hdrTexture.json" />
             </Components>
         </Entity> 
