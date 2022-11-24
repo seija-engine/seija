@@ -34,11 +34,11 @@ fn start(world:&mut World) {
     let window = world.get_resource::<AppWindow>().unwrap();
     add_pbr_camera(&mut commands,&window,Vec3::new(0f32, -0.2f32, 2f32),Quat::IDENTITY,|cmds:&mut EntityCommands| {
         cmds.insert(ShadowCamera);
-    },Some(20f32),None,true);
+    },Some(70f32),None,false);
     queue.apply(world);
     let ambient = PBRGlobalAmbient::default();
     world.insert_resource(ambient);
-    let track = server.load_async::<GltfAsset>("gltf/low_poly_winter_scene/scene.gltf", None).unwrap();
+    let track = server.load_async::<GltfAsset>("gltf/autumn_house/scene.gltf", None).unwrap();
     let mut data = world.get_resource_mut::<GameData>().unwrap();
     data.track = Some(track);
     
@@ -46,7 +46,7 @@ fn start(world:&mut World) {
     {
         let light = PBRLight::directional(Vec3::new(1f32, 1f32, 1f32)  , 92000f32);
         let mut t = Transform::default();
-        let r = Quat::from_euler(glam::EulerRot::default()  , -30f32.to_radians(),  145f32.to_radians(), 0f32.to_radians());
+        let r = Quat::from_euler(glam::EulerRot::default()  , -90f32.to_radians(),  35f32.to_radians(), 0f32.to_radians());
         t.local.rotation = r;
         let mut l = world.spawn();
         l.insert(light);
@@ -70,7 +70,10 @@ fn on_update(mut commands:Commands,mut mats:ResMut<Assets<Material>>,time:Res<Ti
        if let Some(asset) = gltfs.get(&data.shiba_asset.as_ref().unwrap().id) {
         let _ = create_gltf(&asset, &mut commands,  |gltf_mat| {
             let mut mat = Material::from_def(define.clone(), &server).unwrap();
-            mat.texture_props.set("mainTexture", gltf_mat.base_color_texture.as_ref().unwrap().clone());
+            if let Some(base_texture) = gltf_mat.base_color_texture.as_ref() {
+                mat.texture_props.set("mainTexture", base_texture.clone());
+            }
+            
             mat.props.set_float4("color", Vec4::new(0.4f32, 0.4f32, 0.4f32, 1f32), 0);
             mats.add(mat).into()
         });
