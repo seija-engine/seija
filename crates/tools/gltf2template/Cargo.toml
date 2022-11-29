@@ -5,3 +5,13 @@ edition = "2021"
 
 [dependencies]
 gltf = "1.0.0"
+clap = "4.0.26"
+log = "0.4.14"
+env_logger = "0.9.3"
+anyhow = "1.0.66"
+base64 = { version = "0.12.3" }
+relative-path = "1.7.2"
+serde = "1.0.147"
+serde_json = "1.0.89"
+xml-rs = "0.8.4"
+glam = "0.22.0"
