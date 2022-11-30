@@ -1,4 +1,4 @@
-use std::{env::current_dir, path::PathBuf, fs::File};
+use std::{env::current_dir, path::PathBuf, fs::File, io};
 use glam::Mat4;
 use gltf::{Gltf, json::Value, Material};
 use anyhow::{Result, anyhow};
@@ -18,10 +18,12 @@ impl Default for ExportConfig {
 #[derive(Default)]
 pub struct GlTF2Template {
     gltf_path:PathBuf,
+    gltf_name:String,
     template_path:PathBuf,
     material_path:PathBuf,
     texture_path:PathBuf,
-    textures:Vec<String>
+    textures:Vec<String>,
+    materials:Vec<String>
 }
 
 
@@ -30,6 +32,7 @@ impl GlTF2Template {
         let cur_dir = current_dir()?;
         let gltf_path:PathBuf = path.into();
         let file_stem = gltf_path.file_stem().map(|v| v.to_string_lossy()).ok_or(anyhow!("file_name is nil"))?;
+        self.gltf_name = file_stem.as_ref().to_string();
         self.gltf_path = cur_dir.join(path).parent().ok_or(anyhow!("parent is nil"))?.into();
         self.template_path = RelativePath::new(&config.relative_export).join(file_stem.as_ref()).to_path(&self.gltf_path);
         self.texture_path = self.template_path.join("textures").into();
@@ -90,11 +93,14 @@ impl GlTF2Template {
             std::fs::create_dir_all(&self.material_path)?;
         }
         for (index,material) in gltf.materials().enumerate() {
-            let material_name = material.name().map(|v| v.to_string()).unwrap_or(format!("mat_{}",index));
+            let mut material_name = material.name().map(|v| v.to_string()).unwrap_or(format!("mat_{}",index));
             let json_value = self.into_material_to_json(&material)?;
-            let cur_material_path = self.material_path.join(format!("{}.json",material_name));
+            material_name = format!("{}.json",material_name);
+            self.materials.push(format!("mats/{}",material_name.as_str()));
+            let cur_material_path = self.material_path.join(material_name);
             let json_string = serde_json::to_string_pretty(&json_value)?;
             std::fs::write(&cur_material_path, json_string.as_str())?;
+           
         }
 
         Ok(())
@@ -151,19 +157,75 @@ impl GlTF2Template {
     }
 
     fn process_template(&mut self,gltf:&Gltf) -> Result<()> {
-        let mut gltf_name = self.gltf_path.file_stem().map(|v| v.to_string_lossy().to_string()).unwrap_or("template".into());
-        gltf_name.push_str(".xml");
-        let mut file = File::create(self.template_path.join(gltf_name))?;
+        let gltf_name = self.gltf_path.file_stem().map(|v| v.to_string_lossy().to_string()).unwrap_or("template".into());
+       
+        let mut file = File::create(self.template_path.join(format!("{}.xml",gltf_name)))?;
         let mut writer = EmitterConfig::new().perform_indent(true).create_writer(&mut file);
         
-
+        let all_meshs = get_gltf_meshs(gltf);
+        let root_node:XmlEvent = XmlEvent::start_element("Entity").attr("name", gltf_name.as_str()).into();
+        writer.write(root_node)?;
+        match all_meshs.len() {
+            0 => {},
+            1 => {
+                self.write_components(&all_meshs[0], &mut writer)?;
+            },
+            _ => {
+                writer.write(XmlEvent::start_element("Children"))?;
+                for mesh in all_meshs.iter() {
+                    self.write_entity(mesh,&mut writer)?;
+                }
+                writer.write(XmlEvent::end_element())?;
+            }
+        }
+        writer.write(XmlEvent::end_element())?;
         file.sync_all()?;
+        Ok(())
+    }
+
+    fn write_components<W:io::Write>(&self,info:&MeshPrimitiveInfo,writer:&mut xml::EventWriter<W>) -> Result<()> {
+        writer.write(XmlEvent::start_element("Components"))?;
+        let (s,r,t) = info.mat4.to_scale_rotation_translation();
+        let s_str = format!("{},{},{}",s.x,s.y,s.z);
+        let t_str = format!("{},{},{}",t.x,t.y,t.z);
+        let (ry,rx,rz) = r.to_euler(glam::EulerRot::YXZ);
+        let r_str = format!("{},{},{}",rx,ry,rz);
+        writer.write( XmlEvent::start_element("Transform")
+                                    .attr("position", &t_str)
+                                    .attr("rotation", &r_str)
+                                    .attr("scale", &s_str))?;
+        writer.write(XmlEvent::end_element())?;
+         //<Mesh res="res://gltf/shiba/scene.gltf#mesh.1.0"/>
+        writer.write(XmlEvent::start_element("Mesh")
+                    .attr("res", &format!("{}.gltf#mesh.{}.{}",self.gltf_name.as_str(),info.mesh_index,info.primitive_index)))?;
+        writer.write(XmlEvent::end_element())?;
+
+        if let Some(index) = info.material_index {
+            writer.write(XmlEvent::start_element("Material").attr("res", self.materials[index].as_str()))?;
+            writer.write(XmlEvent::end_element())?;
+        }
+        
+
+        writer.write(XmlEvent::end_element())?;
+        Ok(())
+    }
+
+    fn write_entity<W:io::Write>(&self,info:&MeshPrimitiveInfo,writer:&mut xml::EventWriter<W>) -> Result<()> {
+        writer.write(XmlEvent::start_element("Entity"))?;
+        self.write_components(info, writer)?;
+        writer.write(XmlEvent::end_element())?;
         Ok(())
     }
 }
 
+struct MeshPrimitiveInfo {
+    mesh_index:usize,
+    primitive_index:usize,
+    material_index:Option<usize>,
+    mat4:Mat4
+}
 
-fn get_gltf_meshs(gltf:&Gltf) {
+fn get_gltf_meshs(gltf:&Gltf) -> Vec<MeshPrimitiveInfo> {
     let mut all_nodes:Vec<Mat4> = vec![];
     for node in gltf.nodes() {
         match node.transform() {
@@ -175,26 +237,44 @@ fn get_gltf_meshs(gltf:&Gltf) {
                let p = glam::Vec3::from(translation);
                let r = glam::Quat::from_array(rotation);
                let s = glam::Vec3::from(scale);
-               Mat4::from_scale_rotation_translation(s, r, p);
+               let mat = Mat4::from_scale_rotation_translation(s, r, p);
+               all_nodes.push(mat);
             }
         }
     }
+   
+    let mut all_meshs = vec![];
     for scene in gltf.scenes() {
         for node in scene.nodes() {
-            _get_gltf_meshs(&all_nodes,&node,&Mat4::IDENTITY);
+            _get_gltf_meshs(&all_nodes,&node,&Mat4::IDENTITY,&mut all_meshs);
         }
-    } 
+    }
+    all_meshs
 }
 
-fn _get_gltf_meshs(all_nodes:&Vec<Mat4>,node:&gltf::Node,parent:&Mat4) {
-    
+fn _get_gltf_meshs(all_nodes:&Vec<Mat4>,node:&gltf::Node,parent:&Mat4,all_meshs:&mut Vec<MeshPrimitiveInfo>) {
+    let cur_mat = parent.mul_mat4(&all_nodes[node.index()]);
+    if let Some(mesh) = node.mesh() {
+        for primitive in mesh.primitives() {
+            let mesh_info = MeshPrimitiveInfo {
+                mesh_index:mesh.index(),
+                primitive_index:primitive.index(),
+                material_index:primitive.material().index(),
+                mat4:cur_mat
+            };
+            all_meshs.push(mesh_info);
+        }
+        
+    }
+    for children in node.children() {
+        _get_gltf_meshs(all_nodes, &children, &cur_mat,all_meshs);
+    }
 }
 
 
 #[test]
 fn test_conv() {
-    let mut opts = ExportConfig::default();
-   
+    let opts = ExportConfig::default();
     let mut template = GlTF2Template::default();
-    template.run("Fox/Fox.gltf", &opts).unwrap();
+    template.run("low_poly_winter_scene/scene.gltf", &opts).unwrap();
 }
