@@ -12,7 +12,7 @@ pub enum PassError {
     TextureNotReady,
     ErrTargetView,
     ErrDepthView,
-    MissMesh,
+    MissMesh(Handle<Mesh>),
     MissMaterial,
     ErrQueryIndex
 }
@@ -157,13 +157,16 @@ impl DrawPassNode {
         //check build pipeline
         for entity in view_query.list.read().iter() {
             if let Ok((hmesh,hmat)) = render_query.get(world, *entity) { 
-                let mesh = meshs.get(&hmesh.id).ok_or(PassError::MissMesh)?;
-                let material = materials.get(&hmat.id).ok_or(PassError::MissMaterial)?;
-                for pass_index in 0..material.def.pass_list.len() {
-                    if let Some(pass_tag)  = material.def.pass_list[pass_index].tag.as_ref() {
-                        if pass_tag.as_str() != self.pass_name.as_str() {  continue; }
+                if let  Some(mesh)  = meshs.get(&hmesh.id) {
+                    let material = materials.get(&hmat.id).ok_or(PassError::MissMaterial)?;
+                    for pass_index in 0..material.def.pass_list.len() {
+                        if let Some(pass_tag)  = material.def.pass_list[pass_index].tag.as_ref() {
+                            if pass_tag.as_str() != self.pass_name.as_str() {  continue; }
+                        }
+                        ctx.build_pipeine(&material.def, mesh,&self.cache_formats,Some(wgpu::TextureFormat::Depth32Float),pass_index);
                     }
-                    ctx.build_pipeine(&material.def, mesh,&self.cache_formats,Some(wgpu::TextureFormat::Depth32Float),pass_index);
+                } else {
+                    log::warn!("miss mesh:{:?}",hmesh);
                 }
             }
         }
@@ -174,58 +177,60 @@ impl DrawPassNode {
         for entity in view_query.list.read().iter() {
            
             if let Ok((hmesh,hmat)) = render_query.get(world, *entity) { 
-               
-                let mesh = meshs.get(&hmesh.id).ok_or(PassError::MissMesh)?;
                 let material = materials.get(&hmat.id).ok_or(PassError::MissMaterial)?;
                 if !material.is_ready(&ctx.resources) { 
                     continue 
                 }
-                for pass_index in 0..material.def.pass_list.len() {
+                if let Some(mesh)  = meshs.get(&hmesh.id) {
+                    for pass_index in 0..material.def.pass_list.len() {
                     
-                    let pipeline = ctx.pipeline_cache.get_pipeline(material.def.name.as_str(), 
-                                                                   mesh,&self.cache_formats,
-                                                                   Some(wgpu::TextureFormat::Depth32Float),pass_index);
-                    if let Some(pipeline) = pipeline {
-                       
-                        if pipeline.tag != self.pass_name {  continue; }
-                        if let Some(mesh_buffer_id)  = ctx.resources.get_render_resource(&hmesh.id, 0) {
-
-                            let vert_buffer = ctx.resources.get_buffer_by_resid(&mesh_buffer_id).unwrap();
-                            let oset_index = pipeline.set_binds(self.camera_entity,Some(entity.clone()), &mut render_pass, &ctx.ubo_ctx);
-                            if oset_index.is_none()  {  continue }
-                            let mut set_index = oset_index.unwrap();
-
-                            if material.props.def.infos.len() > 0 {
-                                if let Some(bind_group) = material.bind_group.as_ref() {
-                                    render_pass.set_bind_group(set_index, bind_group, &[]);
-                                    set_index += 1;
-                                } else {
-                                    continue;
+                        let pipeline = ctx.pipeline_cache.get_pipeline(material.def.name.as_str(), 
+                                                                       mesh,&self.cache_formats,
+                                                                       Some(wgpu::TextureFormat::Depth32Float),pass_index);
+                        if let Some(pipeline) = pipeline {
+                           
+                            if pipeline.tag != self.pass_name {  continue; }
+                            if let Some(mesh_buffer_id)  = ctx.resources.get_render_resource(&hmesh.id, 0) {
+    
+                                let vert_buffer = ctx.resources.get_buffer_by_resid(&mesh_buffer_id).unwrap();
+                                let oset_index = pipeline.set_binds(self.camera_entity,Some(entity.clone()), &mut render_pass, &ctx.ubo_ctx);
+                                if oset_index.is_none()  {  continue }
+                                let mut set_index = oset_index.unwrap();
+    
+                                if material.props.def.infos.len() > 0 {
+                                    if let Some(bind_group) = material.bind_group.as_ref() {
+                                        render_pass.set_bind_group(set_index, bind_group, &[]);
+                                        set_index += 1;
+                                    } else {
+                                        continue;
+                                    }
                                 }
-                            }
-
-                            if material.texture_props.textures.len() > 0  {
-                                if let Some(bind_group) = material.texture_props.bind_group.as_ref() {
-                                    render_pass.set_bind_group(set_index, bind_group, &[]);
-                                } else {
-                                    continue;
+    
+                                if material.texture_props.textures.len() > 0  {
+                                    if let Some(bind_group) = material.texture_props.bind_group.as_ref() {
+                                        render_pass.set_bind_group(set_index, bind_group, &[]);
+                                    } else {
+                                        continue;
+                                    }
                                 }
+    
+                                render_pass.set_vertex_buffer(0, vert_buffer.slice(0..));
+                                if let Some(idx_id) = ctx.resources.get_render_resource(&hmesh.id, 1) {
+                                    let idx_buffer = ctx.resources.get_buffer_by_resid(&idx_id).unwrap();
+                                    render_pass.set_index_buffer(idx_buffer.slice(0..), mesh.index_format().unwrap());
+                                    render_pass.set_pipeline(&pipeline.pipeline);
+                                    render_pass.draw_indexed(mesh.indices_range().unwrap(),0, 0..1);
+                                        
+                                } else {
+                                    render_pass.set_pipeline(&pipeline.pipeline);
+                                    render_pass.draw(0..mesh.count_vertices() as u32, 0..1);
+                                }
+                                draw_count += 1;
                             }
-
-                            render_pass.set_vertex_buffer(0, vert_buffer.slice(0..));
-                            if let Some(idx_id) = ctx.resources.get_render_resource(&hmesh.id, 1) {
-                                let idx_buffer = ctx.resources.get_buffer_by_resid(&idx_id).unwrap();
-                                render_pass.set_index_buffer(idx_buffer.slice(0..), mesh.index_format().unwrap());
-                                render_pass.set_pipeline(&pipeline.pipeline);
-                                render_pass.draw_indexed(mesh.indices_range().unwrap(),0, 0..1);
-                                    
-                            } else {
-                                render_pass.set_pipeline(&pipeline.pipeline);
-                                render_pass.draw(0..mesh.count_vertices() as u32, 0..1);
-                            }
-                            draw_count += 1;
                         }
                     }
+                } else {
+                    log::warn!("miss mesh:{:?}",hmesh);
                 }
             }
         }

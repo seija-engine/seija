@@ -374,7 +374,9 @@ fn load_meshs(path:&str,server:&AssetServer,gltf:&gltf::Gltf,buffers:&Vec<gltf::
             mesh.aabb = Some(aabb);
 
             mesh.build();
-            let mesh_handle = server.create_asset(mesh,&format!("{}#mesh.{}.{}",path,mesh_index,primitive_index));
+            let mesh_path =format!("{}#mesh.{}.{}",path,mesh_index,primitive_index);
+            //log::error!("create:{}",mesh_path.as_str());
+            let mesh_handle = server.create_asset(mesh,&mesh_path);
             let material = primitive.material().index().and_then(|idx| materials.get(idx)).map(|v|v.clone());
             primitives.push(GltfPrimitive { 
                 mesh: mesh_handle ,

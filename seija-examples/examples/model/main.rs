@@ -38,7 +38,7 @@ fn start(world:&mut World) {
     queue.apply(world);
     let ambient = PBRGlobalAmbient::default();
     world.insert_resource(ambient);
-    let track = server.load_async::<GltfAsset>("gltf/autumn_house/scene.gltf", None).unwrap();
+    let track = server.load_async::<GltfAsset>("gltf/shiba/scene.gltf", None).unwrap();
     let mut data = world.get_resource_mut::<GameData>().unwrap();
     data.track = Some(track);
     

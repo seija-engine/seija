@@ -1,0 +1,1937 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Entity name="autumn_house">
+  <Children>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.0.0" />
+        <Material res="mats/lambert16.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.1.0" />
+        <Material res="mats/House_part01_mat.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.2.0" />
+        <Material res="mats/lambert16.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.3.0" />
+        <Material res="mats/lambert16.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.4.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.5.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.6.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.7.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.8.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.9.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.10.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.11.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.12.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.13.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.14.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.15.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.16.0" />
+        <Material res="mats/House_part01_mat.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.17.0" />
+        <Material res="mats/House_part01_mat.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.18.0" />
+        <Material res="mats/House_part01_mat.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.19.0" />
+        <Material res="mats/House_part01_mat.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.20.0" />
+        <Material res="mats/House_part01_mat.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.21.0" />
+        <Material res="mats/House_part01_mat.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.22.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.23.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.24.0" />
+        <Material res="mats/lambert16.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.25.0" />
+        <Material res="mats/lambert16.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.26.0" />
+        <Material res="mats/lambert16.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.27.0" />
+        <Material res="mats/lambert16.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.28.0" />
+        <Material res="mats/lambert16.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.29.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.30.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.31.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.32.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.33.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.34.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.35.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.36.0" />
+        <Material res="mats/House_part01_mat.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.37.0" />
+        <Material res="mats/House_part01_mat.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.38.0" />
+        <Material res="mats/House_part01_mat.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.39.0" />
+        <Material res="mats/House_part01_mat.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.40.0" />
+        <Material res="mats/House_part01_mat.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.41.0" />
+        <Material res="mats/House_part01_mat.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.42.0" />
+        <Material res="mats/House_part01_mat.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.43.0" />
+        <Material res="mats/House_part01_mat.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.44.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.45.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.46.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.47.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.48.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.49.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.50.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.51.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.52.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.53.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.54.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.55.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.56.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.57.0" />
+        <Material res="mats/House_part01_mat.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.58.0" />
+        <Material res="mats/House_part01_mat.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.59.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.60.0" />
+        <Material res="mats/lambert16.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.61.0" />
+        <Material res="mats/lambert16.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.62.0" />
+        <Material res="mats/lambert16.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.63.0" />
+        <Material res="mats/lambert16.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.64.0" />
+        <Material res="mats/House_part01_mat.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.65.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.66.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.67.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.68.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.69.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.70.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.71.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.72.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.73.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.74.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.75.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.76.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.77.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.78.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.79.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.80.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.81.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.82.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.83.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.84.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.85.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.86.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.87.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.88.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.89.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.90.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.91.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.92.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.93.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.94.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.95.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.96.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.97.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.98.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.99.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.100.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.101.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.102.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.103.0" />
+        <Material res="mats/House_part01_mat.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.104.0" />
+        <Material res="mats/House_part01_mat.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.105.0" />
+        <Material res="mats/House_part01_mat.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.106.0" />
+        <Material res="mats/House_part01_mat.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.107.0" />
+        <Material res="mats/lambert16.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.108.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.109.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.110.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.111.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.112.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.113.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.114.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.115.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.116.0" />
+        <Material res="mats/lambert16.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.117.0" />
+        <Material res="mats/lambert16.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.118.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.119.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.120.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.121.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.122.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.123.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.124.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.125.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.126.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.127.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.128.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.129.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.130.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.131.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.132.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.133.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.134.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.135.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.136.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.137.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.138.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.139.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.140.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.141.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.142.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.143.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.144.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.145.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.146.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.147.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.148.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.149.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.150.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.151.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.152.0" />
+        <Material res="mats/lambert17.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.153.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.154.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.155.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.156.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.157.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.158.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.159.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.160.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.161.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.162.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.163.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.164.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.165.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.166.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.167.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.168.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.169.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.170.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.171.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.172.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.173.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.174.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.175.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.176.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.177.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.178.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.179.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.180.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.181.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.182.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.183.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.184.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.185.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.186.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.187.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.188.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.189.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.190.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.191.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.192.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.193.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.194.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.195.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.196.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.197.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.198.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.199.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.200.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.201.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.202.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.203.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.204.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.205.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.206.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.207.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.208.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.209.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.210.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.211.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.212.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.213.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.214.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.215.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.216.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.217.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.218.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.219.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.220.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.221.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.222.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.223.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.224.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.225.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.226.0" />
+        <Material res="mats/lambert16.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.227.0" />
+        <Material res="mats/lambert16.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.228.0" />
+        <Material res="mats/lambert16.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.229.0" />
+        <Material res="mats/lambert16.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.230.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.231.0" />
+        <Material res="mats/lambert16.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.232.0" />
+        <Material res="mats/lambert15.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.233.0" />
+        <Material res="mats/lambert18.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.234.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.235.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.236.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.237.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.238.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.239.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.240.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.241.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.242.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.243.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.244.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.245.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.246.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.247.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.248.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.249.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.250.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.251.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.252.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.253.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.254.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.255.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.256.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.257.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.258.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.259.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.260.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.261.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.262.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.263.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.264.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.265.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.266.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.267.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.268.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.269.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.270.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.271.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.272.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.273.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.274.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="0.0000000000000002220446,0,0" scale="1,1,1" />
+        <Mesh res="scene.gltf#mesh.275.0" />
+        <Material res="mats/lambert14.json" />
+      </Components>
+    </Entity>
+  </Children>
+</Entity>

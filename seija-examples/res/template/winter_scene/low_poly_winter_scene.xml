@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Entity name="low_poly_winter_scene">
+  <Children>
+    <Entity>
+      <Components>
+        <Transform position="-1.00919,4.34452,8.84748" rotation="-90,0.00000042688683,-172.1184" scale="0.18749113,0.18749113,0.11421" />
+        <Mesh res="scene.gltf#mesh.0.0" />
+        <Material res="mats/Main.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="-0.07483,0.86467,0.91862" rotation="-180,0,-0" scale="0.00354,0.01396,0.01416" />
+        <Mesh res="scene.gltf#mesh.1.0" />
+        <Material res="mats/Main.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="4.238,-0.02961,-2.89291" rotation="0.000000000000012722219,0,-0" scale="0.70961,0.70961,0.70961" />
+        <Mesh res="scene.gltf#mesh.2.0" />
+        <Material res="mats/Main.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="0,0,0" rotation="-90,0,0" scale="8.88473,8.88473,8.88473" />
+        <Mesh res="scene.gltf#mesh.3.0" />
+        <Material res="mats/Main.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="-1.01218,4.22353,8.70123" rotation="-90,0,-90" scale="0.03659,0.03659,0.03659" />
+        <Mesh res="scene.gltf#mesh.4.0" />
+        <Material res="mats/Main.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="3.21965,2.04698,-5.42236" rotation="-90,0,-109.95011" scale="0.11720336,0.11720336,0.41538" />
+        <Mesh res="scene.gltf#mesh.5.0" />
+        <Material res="mats/Main.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="-7.5823,0.87539,0.402" rotation="-90,0,0" scale="0.216,0.216,0.216" />
+        <Mesh res="scene.gltf#mesh.6.0" />
+        <Material res="mats/Main.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="7.50738,2.2819,3.05917" rotation="90,89.98022,-90" scale="0.33298,0.11498,0.11498" />
+        <Mesh res="scene.gltf#mesh.7.0" />
+        <Material res="mats/Main.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="-7.04905,4.40827,3.332" rotation="-90,0.0000017075473,-90" scale="0.01522,0.01522,0.01522" />
+        <Mesh res="scene.gltf#mesh.8.0" />
+        <Material res="mats/Main.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="6.70164,4.40827,3.332" rotation="-90,0.0000017075473,-90" scale="0.01522,0.01522,0.01522" />
+        <Mesh res="scene.gltf#mesh.9.0" />
+        <Material res="mats/Main.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="-5.24065,-0.0291,2.91791" rotation="-0,-89.98022,-180" scale="0.11439,0.11439,0.03052" />
+        <Mesh res="scene.gltf#mesh.10.0" />
+        <Material res="mats/Main.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="-6.4573,2.13771,3.3309" rotation="-90,89.98022,90" scale="0.24595,0.30632,0.30632" />
+        <Mesh res="scene.gltf#mesh.11.0" />
+        <Material res="mats/Main.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="4.96028,0.50511,-8.09939" rotation="-90,0,0" scale="0.89345,0.01355,0.07352" />
+        <Mesh res="scene.gltf#mesh.12.0" />
+        <Material res="mats/Main.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="-1.34498,2.37913,-1.00162" rotation="-90.04749,0,-0" scale="0.00986,0.009860005,0.41954008" />
+        <Mesh res="scene.gltf#mesh.13.0" />
+        <Material res="mats/Main.json" />
+      </Components>
+    </Entity>
+    <Entity>
+      <Components>
+        <Transform position="6.62623,0.15373,-1.3265" rotation="-90,0,-90" scale="0.3088,0.3088,0.3088" />
+        <Mesh res="scene.gltf#mesh.14.0" />
+        <Material res="mats/Main.json" />
+      </Components>
+    </Entity>
+  </Children>
+</Entity>

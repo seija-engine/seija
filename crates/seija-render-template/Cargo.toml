@@ -12,3 +12,4 @@ seija-asset = {path = "../seija-asset"}
 seija-pbr = {path = "../seija-pbr"}
 seija-gltf = {path = "../seija-gltf"}
 log = "*"
+relative-path = "1.7.2"

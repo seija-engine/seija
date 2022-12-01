@@ -1,3 +1,4 @@
+use relative_path::RelativePath;
 use seija_app::ecs::prelude::Entity;
 use seija_app::ecs::system::{CommandQueue, Insert};
 use seija_asset::AssetServer;
@@ -36,22 +37,22 @@ impl TComponentManager {
         .ok_or(TemplateError::NotFoundOpt(tcomponent.typ.clone()).into())
     }
 
-    pub fn search_assets(&self, entity: &TEntity) -> Result<Vec<(Uuid, SmolStr)>> {
+    pub fn search_assets(&self, entity: &mut TEntity,template_file_path:&RelativePath) -> Result<Vec<(Uuid, SmolStr)>> {
         let mut all_assets = vec![];
-        self._search_assets(entity, &mut all_assets)?;
+        self._search_assets(entity, &mut all_assets,template_file_path)?;
         Ok(all_assets)
     }
 
-    fn _search_assets(&self,entity: &TEntity,all_assets:&mut Vec<(Uuid,SmolStr)>)  -> Result<()> {
-        for tcomponent in entity.components.iter() {
+    fn _search_assets(&self,entity: &mut TEntity,all_assets:&mut Vec<(Uuid,SmolStr)>,template_dir:&RelativePath)  -> Result<()> {
+        for tcomponent in entity.components.iter_mut() {
             let opt = self.get_opt(tcomponent)?;
-            let mut assets = opt.search_assets(tcomponent)?;
+            let mut assets = opt.search_assets(tcomponent,template_dir)?;
             all_assets.extend(assets.drain(..));
         }
-        for centity in entity.children.iter() {
+        for centity in entity.children.iter_mut() {
              match centity {
                 TEntityChildren::TEntity(e) => {
-                    self._search_assets(&e,all_assets)?;
+                    self._search_assets(e,all_assets,template_dir)?;
                 }
                  _ => {},
              }
@@ -61,7 +62,7 @@ impl TComponentManager {
 
 }
 pub trait ITComponentOpt: Send + Sync + 'static {
-    fn search_assets(&self, _component: &TComponent) -> Result<Vec<(Uuid,SmolStr)>> { Ok(vec![]) }
+    fn search_assets(&self, _component: &mut TComponent,_template_dir:&RelativePath) -> Result<Vec<(Uuid,SmolStr)>> { Ok(vec![]) }
     fn create_component(&self,server:&AssetServer, component: &TComponent,queue:&mut CommandQueue,entity:Entity)-> Result<()>;
 }
 
@@ -69,7 +70,7 @@ pub trait ITComponentOpt: Send + Sync + 'static {
 pub(crate) struct TransformTemplateOpt;
 
 impl ITComponentOpt for TransformTemplateOpt {
-    fn search_assets(&self, _: &TComponent) -> Result<Vec<(Uuid,SmolStr)>> {
+    fn search_assets(&self, _: &mut TComponent,_:&RelativePath) -> Result<Vec<(Uuid,SmolStr)>> {
        Ok(vec![])
     }
 

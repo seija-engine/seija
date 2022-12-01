@@ -3,6 +3,7 @@ use crate::errors::TemplateError;
 use crate::reader::read_tmpl_entity;
 use crate::types::{TEntityChildren, TemplateInner};
 use crate::{TEntity, Template};
+use relative_path::RelativePath;
 use seija_app::ecs::world::World;
 use seija_asset::add_to_asset_type;
 use seija_asset::downcast_rs::DowncastSync;
@@ -11,7 +12,7 @@ use seija_asset::{
     AssetDynamic, AssetLoaderParams, AssetRequest, AssetServer, AsyncLoadMode, HandleUntyped
 };
 use seija_core::anyhow::{anyhow, Result};
-use seija_core::smol;
+use seija_core::{smol, OptionExt};
 use seija_core::TypeUuid;
 use smol_str::SmolStr;
 use std::collections::HashMap;
@@ -41,17 +42,21 @@ impl IAssetLoader for TemplateLoader {
         server: &AssetServer,
         _: Option<Box<dyn AssetLoaderParams>>,
     ) -> Result<Box<dyn AssetDynamic>> {
+        let file_path = RelativePath::new(path);
+        let template_dir = file_path.parent().get()?;
+    
         let mgr = world.get_resource::<TComponentManager>().unwrap().clone();
         let full_path = server.full_path(path)?;
         let xml_string = std::fs::read_to_string(full_path)?;
-        let entity = read_tmpl_entity(&xml_string)?;
+        let mut entity = read_tmpl_entity(&xml_string)?;
         let mut assets: Vec<HandleUntyped> = vec![];
-        let childrens = load_dep_template_sync(world,&entity, &server, &mgr, &mut assets)?;
-        for (asset_typ, asset_path) in mgr.search_assets(&entity)? {
+      
+        let childrens = load_dep_template_sync(world,&mut entity, &server, &mgr, &mut assets,template_dir)?;
+        for (asset_typ, asset_path) in mgr.search_assets(&mut entity,template_dir)? {
+            //log::error!("load_sync_untyped:{}",asset_path.as_str());
             let handle = server.load_sync_untyped(world,&asset_typ, asset_path.as_str(), None)?;
             assets.push(handle);
         }
-
         let inner = TemplateInner {
             assets,
             childrens,
@@ -87,13 +92,15 @@ impl IAssetLoader for TemplateLoader {
                 .map_err(|_| TemplateError::TypeCastError)?;
 
             let full_path = server.full_path(path.as_str())?;
+            let path_buf = RelativePath::new(path.as_str());
+            let template_dir = path_buf.parent().get()?;
 
             let xml_string = smol::fs::read_to_string(full_path).await?;
-            let entity = read_tmpl_entity(&xml_string)?;
+            let mut entity = read_tmpl_entity(&xml_string)?;
 
             let mut assets = vec![];
-            let childrens = load_dep_template(&entity, &server, &mgr, &mut assets).await?;
-            for (asset_typ, asset_path) in mgr.search_assets(&entity)? {
+            let childrens = load_dep_template(&mut entity, &server, &mgr, &mut assets,template_dir).await?;
+            for (asset_typ, asset_path) in mgr.search_assets(&mut entity,template_dir)? {
                 let req = server.load_async_untyped(&asset_typ, asset_path.as_str(), None)?;
                 let handle = req
                     .wait_handle()
@@ -118,19 +125,20 @@ impl IAssetLoader for TemplateLoader {
 }
 
 async fn load_dep_template(
-    tentiy: &TEntity,
+    tentiy: &mut TEntity,
     server: &AssetServer,
     mgr: &Box<TComponentManager>,
     all_assets: &mut Vec<HandleUntyped>,
+    template_dir:&RelativePath
 ) -> Result<HashMap<SmolStr, HandleUntyped>> {
     let mut req_list: Vec<(AssetRequest, SmolStr)> = vec![];
-    for children in tentiy.children.iter() {
+    for children in tentiy.children.iter_mut() {
         if let TEntityChildren::Template(template) = children {
             let req = server.load_async::<Template>(template.res.as_str(), None)?;
             req_list.push((req, template.res.clone()));
-            for comp in template.components.iter() {
+            for comp in template.components.iter_mut() {
                 let opt = mgr.get_opt(comp)?;
-                for (asset_typ, asset_path) in opt.search_assets(comp)? {
+                for (asset_typ, asset_path) in opt.search_assets(comp,template_dir)? {
                     let req = server.load_async_untyped(&asset_typ, asset_path.as_str(), None)?;
                     let handle = req
                         .wait_handle()
@@ -155,19 +163,20 @@ async fn load_dep_template(
 
 fn load_dep_template_sync(
     world:&mut World,
-    tentiy: &TEntity,
+    tentiy: &mut TEntity,
     server: &AssetServer,
     mgr: &TComponentManager,
     all_assets: &mut Vec<HandleUntyped>,
+    template_dir:&RelativePath
 ) -> Result<HashMap<SmolStr, HandleUntyped>> {
     let mut ret_map:HashMap<SmolStr,HandleUntyped> = HashMap::default();
-    for children in tentiy.children.iter() {
+    for children in tentiy.children.iter_mut() {
         if let TEntityChildren::Template(template) = children {
             let res = server.load_sync::<Template>(world,template.res.as_str(), None)?;
             ret_map.insert(template.res.clone(), res.untyped());
-            for comp in template.components.iter() {
+            for comp in template.components.iter_mut() {
                 let opt = mgr.get_opt(comp)?;
-                for (asset_typ, asset_path) in opt.search_assets(comp)? {
+                for (asset_typ, asset_path) in opt.search_assets(comp,template_dir)? {
                     let cres = server.load_sync_untyped(world,&asset_typ, asset_path.as_str(), None)?;
                     all_assets.push(cres);
                 }

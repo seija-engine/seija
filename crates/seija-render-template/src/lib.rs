@@ -1,3 +1,4 @@
+use relative_path::RelativePath;
 use seija_asset::AssetServer;
 use seija_core::{bevy_ecs::{system::{CommandQueue, Insert}, prelude::Entity}, anyhow::{Result,anyhow, bail}, smol_str::SmolStr, uuid::Uuid, TypeUuid, math::Vec3};
 use seija_gltf::asset::GltfAsset;
@@ -17,7 +18,7 @@ pub fn add_render_templates(app:&mut App) {
 pub(crate) struct TComponentCameraOpt;
 
 impl ITComponentOpt for TComponentCameraOpt {
-    fn search_assets(&self, _: &TComponent) -> Result<Vec<(Uuid,SmolStr)>> {
+    fn search_assets(&self, _: &mut TComponent,_:&RelativePath) -> Result<Vec<(Uuid,SmolStr)>> {
        Ok(vec![])
     }
 
@@ -56,22 +57,25 @@ impl ITComponentOpt for TComponentCameraOpt {
 pub(crate) struct TComponentMeshOpt;
 
 impl ITComponentOpt for TComponentMeshOpt {
-    fn search_assets(&self, component: &TComponent) -> Result<Vec<(Uuid,SmolStr)>> {
+    fn search_assets(&self, component: &mut TComponent,template_path:&RelativePath) -> Result<Vec<(Uuid,SmolStr)>> {
         if let Some(res_path) = component.attrs.get("res") {
-            let real_path = res_path.strip_prefix("res://").ok_or(anyhow!("mesh res path err"))?;
-            if real_path.contains(".gltf") {
-                let path = real_path.split(".gltf").collect::<Vec<_>>()[0];
-                let gltf_path = format!("{}.gltf",path); 
-                return Ok(vec![(GltfAsset::TYPE_UUID,gltf_path.into())]);
+            if res_path.contains(".gltf") {
+                let split_names = res_path.split(".gltf").collect::<Vec<_>>();
+                let path = split_names[0];
+                let file_path = format!("{}.gltf",path);
+                let asset_path = template_path.join_normalized(file_path.as_str());
+                let mesh_path = format!("{}{}",asset_path.as_str(),split_names[1]) ;
+                component.rt_attrs.insert("res".into(),mesh_path.into());
+                return Ok(vec![(GltfAsset::TYPE_UUID,asset_path.as_str().into())]);
             }
         }
         Ok(vec![])
     }
 
     fn create_component(&self,server:&AssetServer,component: &TComponent,queue:&mut CommandQueue,entity:Entity)-> Result<()> {
-        if let Some(res_path) = component.attrs.get("res") {
-            let real_path = res_path.strip_prefix("res://").ok_or(anyhow!("mesh res path err"))?;
-            let handle = server.get_asset(real_path).ok_or(anyhow!("not found mesh res:{}",real_path))?;
+        if let Some(res_path) = component.rt_attrs.get("res") {
+            
+            let handle = server.get_asset(res_path).ok_or(anyhow!("not found mesh res:{}",res_path))?;
             let h_mesh = handle.make_handle().typed::<Mesh>();
             queue.push(Insert {entity,component:h_mesh });
             return Ok(());
@@ -93,18 +97,19 @@ impl ITComponentOpt for TComponentPBRCameraInfoOpt {
 pub(crate) struct TComponentMaterialOpt;
 
 impl ITComponentOpt for TComponentMaterialOpt {
-    fn search_assets(&self, component: &TComponent) -> Result<Vec<(Uuid,SmolStr)>> {
+    fn search_assets(&self, component: &mut TComponent,template_path:&RelativePath) -> Result<Vec<(Uuid,SmolStr)>> {
         if let Some(res_path) = component.attrs.get("res") {
-            let real_path = res_path.strip_prefix("res://").ok_or(anyhow!("mesh res path err"))?;
-            return Ok(vec![(Material::TYPE_UUID,real_path.into())]);
+            let asset_path = template_path.join_normalized(res_path.as_str());
+            component.rt_attrs.insert("res".into(), asset_path.as_str().into());
+            return Ok(vec![(Material::TYPE_UUID,asset_path.as_str().into())]);
         }
         Ok(vec![])
     }
 
     fn create_component(&self,server:&AssetServer, component: &TComponent,queue:&mut CommandQueue,entity:Entity)-> Result<()> {
-        if let Some(res_path) = component.attrs.get("res") {
-            let real_path = res_path.strip_prefix("res://").ok_or(anyhow!("mesh res path err"))?;
-            let info = server.get_asset(real_path).ok_or(anyhow!("not found material res:{}",real_path))?;
+        if let Some(res_path) = component.rt_attrs.get("res") {
+           
+            let info = server.get_asset(res_path).ok_or(anyhow!("not found material res:{}",res_path))?;
             let h_material = info.make_handle().typed::<Material>();
             queue.push(Insert {entity,component:h_material });
         }

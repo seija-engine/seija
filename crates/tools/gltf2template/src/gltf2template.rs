@@ -43,6 +43,8 @@ impl GlTF2Template {
         self.process_textures(&gltf_data)?;
         self.process_material(&gltf_data)?;
         self.process_template(&gltf_data)?;
+        self.process_buffers(&gltf_data)?;
+        std::fs::copy(path, self.template_path.join(format!("{}.gltf",self.gltf_name)))?;
         Ok(())
     }
 
@@ -74,7 +76,7 @@ impl GlTF2Template {
                         let move_to_path = self.texture_path.join(cur_texture_path.file_name().unwrap());
                         std::fs::copy(cur_texture_path, &move_to_path)?;
                         let file_name = move_to_path.file_name().map(|v| v.to_string_lossy()).ok_or(anyhow!("err"))?;
-                        self.textures.push(format!("textures/{}",file_name));
+                        self.textures.push(format!("../textures/{}",file_name));
                     }
                     _ => {
                         log::error!("gltf texture error:{}",uri);
@@ -103,6 +105,20 @@ impl GlTF2Template {
            
         }
 
+        Ok(())
+    }
+
+    fn process_buffers(&self,gltf:&Gltf) -> Result<()> {
+        for buffer in gltf.buffers() {
+           match buffer.source() {
+                gltf::buffer::Source::Bin => {},
+                gltf::buffer::Source::Uri(uri) => {
+                    let bin_path = self.gltf_path.join(uri);
+                    let file_name = bin_path.file_name().ok_or(anyhow!("bin file name err"))?;
+                    std::fs::copy(&bin_path, self.template_path.join(file_name))?;
+                }
+           }
+        }
         Ok(())
     }
 
@@ -188,8 +204,8 @@ impl GlTF2Template {
         let (s,r,t) = info.mat4.to_scale_rotation_translation();
         let s_str = format!("{},{},{}",s.x,s.y,s.z);
         let t_str = format!("{},{},{}",t.x,t.y,t.z);
-        let (ry,rx,rz) = r.to_euler(glam::EulerRot::YXZ);
-        let r_str = format!("{},{},{}",rx,ry,rz);
+        let (ra,rb,rc) = r.to_euler(glam::EulerRot::XYZ);
+        let r_str = format!("{},{},{}",ra.to_degrees(), rb.to_degrees(),rc.to_degrees());
         writer.write( XmlEvent::start_element("Transform")
                                     .attr("position", &t_str)
                                     .attr("rotation", &r_str)
@@ -276,5 +292,11 @@ fn _get_gltf_meshs(all_nodes:&Vec<Mat4>,node:&gltf::Node,parent:&Mat4,all_meshs:
 fn test_conv() {
     let opts = ExportConfig::default();
     let mut template = GlTF2Template::default();
-    template.run("low_poly_winter_scene/scene.gltf", &opts).unwrap();
+    template.run("Fox/Fox.gltf", &opts).unwrap();
+}
+
+#[test]
+fn test_r() {
+    let r = glam::Quat::from_euler(Default::default(), 45f32.to_radians(), 0f32, 0f32);
+    dbg!(r.to_euler(glam::EulerRot::YXZ));
 }

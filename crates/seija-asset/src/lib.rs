@@ -4,6 +4,7 @@ use bevy_ecs::schedule::{StageLabel};
 use bevy_ecs::schedule::SystemStage;
 use bevy_ecs::system::IntoExclusiveSystem;
 use loading_queue::AssetLoadingQueue;
+use relative_path::RelativePath;
 use seija_app::{App, IModule};
 use seija_core::{AddCore, CoreStage};
 mod server;
@@ -82,4 +83,12 @@ fn update_asset_system(world:&mut World) {
        }
        loading_queue.update(w);
     })
+}
+
+pub fn this_asset_path(this_dir:&RelativePath,cur_path:&str) -> String {
+    if cur_path.starts_with('/') {
+        cur_path.trim_start_matches('/').into()
+    } else {
+        this_dir.join_normalized(cur_path).as_str().into()
+    }
 }

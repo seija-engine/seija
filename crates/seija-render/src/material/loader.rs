@@ -3,8 +3,9 @@ use std::{sync::Arc};
 use anyhow::Context;
 use bevy_ecs::prelude::World;
 use lite_clojure_eval::EvalRT;
-use seija_asset::{AssetServer,async_trait::async_trait ,AssetLoaderParams, AssetDynamic, Assets, downcast_rs::*,IAssetLoader, AsyncLoadMode, HandleUntyped, add_to_asset_type};
-use seija_core::{anyhow::{Result,anyhow},smol, bytes::AsBytes};
+use relative_path::RelativePath;
+use seija_asset::{AssetServer,async_trait::async_trait ,AssetLoaderParams, AssetDynamic, Assets, downcast_rs::*,IAssetLoader, AsyncLoadMode, HandleUntyped, add_to_asset_type, this_asset_path};
+use seija_core::{anyhow::{Result,anyhow},smol, bytes::AsBytes, OptionExt};
 use seija_core::TypeUuid;
 use serde_json::Value;
 use smol_str::SmolStr;
@@ -69,19 +70,23 @@ impl IAssetLoader for MaterialLoader {
     }
 
     fn sync_load(&self,w:&mut World,path:&str,server:&AssetServer,_:Option<Box<dyn AssetLoaderParams>>) -> Result<Box<dyn AssetDynamic>> {
-       
+        let file_path = RelativePath::new(path);
+        let cur_dir = file_path.parent().get()?;
+        
         let full_path = server.full_path(path)?;
         let bytes = std::fs::read(full_path)?;
         let json_value:Value = serde_json::from_slice(&bytes)?;
-        let json_map = json_value.as_object().context(0)?;
-        let material_def_path = json_map.get("material").and_then(Value::as_str).context(1)?;
-        let h_def = server.load_sync::<MaterialDefineAsset>(w, material_def_path, None).context(2)?;
-        let defs = w.get_resource::<Assets<MaterialDefineAsset>>().context(3)?;
-        let def_asset = defs.get(&h_def.id).context(4)?;
-        let mut material = Material::from_def(def_asset.define.clone(), &server).context(5)?;
-        let json_props = json_map.get("props").context(6)?;
+        let json_map = json_value.as_object().get()?;
+        let material_def_path = json_map.get("material").and_then(Value::as_str).get()?;
+        let asset_material_def_path = this_asset_path(cur_dir, material_def_path);
+        
+        let h_def = server.load_sync::<MaterialDefineAsset>(w, asset_material_def_path.as_str(), None)?;
+        let defs = w.get_resource::<Assets<MaterialDefineAsset>>().get()?;
+        let def_asset = defs.get(&h_def.id).get()?;
+        let mut material = Material::from_def(def_asset.define.clone(), &server).get()?;
+        let json_props = json_map.get("props").get()?;
         set_material_props(&mut material,json_props)?;
-        set_material_textures_sync(w,&mut material,json_props,&server)?;
+        set_material_textures_sync(w,&mut material,json_props,&server,cur_dir)?;
         Ok(Box::new(material))
     }
 
@@ -142,13 +147,14 @@ async fn set_material_textures(material:&mut Material,value:&Value,server:&Asset
     Ok(())
 }
 
-fn set_material_textures_sync(world:&mut World,material:&mut Material,value:&Value,server:&AssetServer) -> Result<()> {
-    let props = value.as_object().context(1)?;
+fn set_material_textures_sync(world:&mut World,material:&mut Material,value:&Value,server:&AssetServer,cur_dir:&RelativePath) -> Result<()> {
+    let props = value.as_object().get()?;
     let define = material.def.clone();
     for (k,v) in props.iter() {
         if let Some(_) = define.tex_prop_def.get_info(k) {
-            let texture_path = v.as_str().context(2)?;
-            let handle = server.load_sync::<Texture>(world,texture_path, None)?;
+            let texture_path = v.as_str().get()?;
+            let asset_texture_path = this_asset_path(cur_dir, texture_path);
+            let handle = server.load_sync::<Texture>(world,asset_texture_path.as_str(), None)?;
             material.texture_props.set(k, handle);
         }
     }

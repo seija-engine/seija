@@ -1,0 +1,19 @@
+{
+  "material": "/materials/pbrLite.mat.clj",
+  "props": {
+    "baseColorFactor": [
+      1.0,
+      1.0,
+      1.0,
+      1.0
+    ],
+    "mainTexture": "../textures/lambert16_baseColor.png",
+    "emissiveFactor": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "metallicFactor": 0.0,
+    "roughnessFactor": 0.6000000238418579
+  }
+}

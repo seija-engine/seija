@@ -83,12 +83,13 @@ impl TEntity {
 #[derive(Default,Debug)]
 pub struct TComponent {
     pub typ:SmolStr,
-    pub attrs:HashMap<SmolStr,SmolStr> 
+    pub attrs:HashMap<SmolStr,SmolStr>,
+    pub rt_attrs:HashMap<SmolStr,SmolStr>,
 }
 
 impl TComponent {
     pub fn new(typ:SmolStr) -> Self {
-        TComponent { typ, attrs:HashMap::default() }
+        TComponent { typ, attrs:HashMap::default(),rt_attrs:HashMap::default() }
     }
     
     pub fn read_float(&self,name:&str,default:f32) -> f32 {
