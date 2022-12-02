@@ -20,3 +20,18 @@ vec4 fs_main(VSOutput ino) {
     outColor.rgb *= material.color.rgb;
     return outColor;
 }
+
+vec2 sampleSphericalMap(vec3 v)
+{
+    vec2 uv = vec2(atan(v.z, v.x), asin(-v.y));
+    uv *= vec2(0.1591, 0.3183);
+    uv += 0.5;
+    return uv;
+}
+
+vec4 sphere_fs_main(VSOutput ino) {
+    vec3 uv = ino.uv;
+    vec2 uv2 = sampleSphericalMap(normalize(uv));
+    vec4 color = texture(sampler2D(tex_mainTexture,tex_mainTextureSampler),uv2);
+    return color;
+}

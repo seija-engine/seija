@@ -163,7 +163,16 @@
         "vs": "skybox.vs_main",
         "fs": "skybox.fs_main"
       },
-
+      {
+        "name":"spheresky",
+        "vertex": {
+          "POSITION": "require",
+          "UV0":"require"
+        },
+        "backend": ["Camera3D","Transform"],
+        "vs": "skybox.vs_main",
+        "fs": "skybox.sphere_fs_main"
+      },
       {
         "name":"wireframe",
         "vertex": {

@@ -1,0 +1,32 @@
+<Entity name="Root">
+    <Components>
+        <Transform />
+    </Components>
+    <Children>
+        <Entity name="Camera">
+            <Components>
+                <Transform position="0,3.09,6.18" rotation="-30.78,0,0" />
+                <PBRCameraInfo />
+                <Camera type="Perspective" isHDR="true" fov="60" aspect="1.333" near="0.01" far="1000" />
+            </Components>
+        </Entity>
+
+        <Entity name="Skybox">
+            <Components>
+                <Transform />
+                <Mesh res="mesh:skybox" />
+                <Material res="/mats/spheresky.json" />
+            </Components>
+        </Entity>
+
+        <Entity name="Light">
+            <Components>
+                <Transform rotation="45,-180,0" />
+                <PBRLight  type="Directional" intensity="92000" color="1,1,1" />
+            </Components>
+        </Entity>
+
+      
+
+    </Children>
+</Entity>

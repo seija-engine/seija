@@ -28,6 +28,9 @@ impl ITComponentOpt for TComponentCameraOpt {
         if let Some(cull_str) = component.attrs.get("cull").map(|v| v.as_str()) {
             camera.cull_type = cull_str.parse()?;
         }
+        if let Some(is_hdr_str) = component.attrs.get("isHDR").map(|v| v.as_str()) {
+            camera.is_hdr = is_hdr_str.parse()?;
+        }
         match camera_type {
             "Perspective" =>  {
                 let mut per = Perspective::default();
@@ -67,6 +70,8 @@ impl ITComponentOpt for TComponentMeshOpt {
                 let mesh_path = format!("{}{}",asset_path.as_str(),split_names[1]) ;
                 component.rt_attrs.insert("res".into(),mesh_path.into());
                 return Ok(vec![(GltfAsset::TYPE_UUID,asset_path.as_str().into())]);
+            } else {
+                component.rt_attrs.insert("res".into(),res_path.clone());
             }
         }
         Ok(vec![])
@@ -99,9 +104,16 @@ pub(crate) struct TComponentMaterialOpt;
 impl ITComponentOpt for TComponentMaterialOpt {
     fn search_assets(&self, component: &mut TComponent,template_path:&RelativePath) -> Result<Vec<(Uuid,SmolStr)>> {
         if let Some(res_path) = component.attrs.get("res") {
-            let asset_path = template_path.join_normalized(res_path.as_str());
-            component.rt_attrs.insert("res".into(), asset_path.as_str().into());
-            return Ok(vec![(Material::TYPE_UUID,asset_path.as_str().into())]);
+            if res_path.starts_with('/') {
+                let asset_path = res_path.trim_start_matches('/');
+                component.rt_attrs.insert("res".into(), asset_path.into());
+                return Ok(vec![(Material::TYPE_UUID,asset_path.into())]);
+            } else {
+                let asset_path = template_path.join_normalized(res_path.as_str());
+                component.rt_attrs.insert("res".into(), asset_path.as_str().into());
+                return Ok(vec![(Material::TYPE_UUID,asset_path.as_str().into())]);
+            }
+            
         }
         Ok(vec![])
     }

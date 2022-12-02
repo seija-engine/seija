@@ -28,7 +28,7 @@ fn start(world:&mut World) {
     let window = world.get_resource::<AppWindow>().unwrap();
     let camera_pos = Vec3::new(0f32, -0.2f32, 2f32);
     let r = Quat::IDENTITY;
-    add_pbr_camera(&mut commands, window,camera_pos ,r , |_| {}, Some(70f32), None, false);
+    add_pbr_camera(&mut commands, window,camera_pos ,r , |_| {}, Some(70f32), None, true);
     queue.apply(world);
      //light
      {

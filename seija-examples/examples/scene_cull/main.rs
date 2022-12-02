@@ -50,7 +50,7 @@ fn create_many_cubes(world:&mut World) {
     let mat = Material::from_world(world, "materials/pbrColor.mat.clj").unwrap();
     let mut mats = world.get_resource_mut::<Assets<Material>>().unwrap();
     let hmat = mats.add(mat);
-    let hmesh:Handle<Mesh> = world.get_resource::<AssetServer>().unwrap().get_asset("mesh:cube").unwrap().make_handle().typed();
+    let hmesh:Handle<Mesh> = world.get_resource::<AssetServer>().unwrap().get_asset("mesh:sphere").unwrap().make_handle().typed();
     
     for radius in 1..10 {
         for angle in 0..36 {

@@ -16,6 +16,8 @@
                     void slot_fs_material(inout MaterialInputs inputs,vec2 uv,inout vec4 normal) {
                         inputs.baseColor  = material.color;
                         inputs.metallic   = material.metallic;
+                        inputs.roughness   = material.roughness;
+                        inputs.occlusion = 1;
                     }
                 "
             } 

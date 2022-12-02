@@ -166,13 +166,8 @@ vec4 evaluateLights(const MaterialInputs inputs,vec3 vertPos,vec3 viewDir) {
 }
 
 vec4 evaluateMaterial(MaterialInputs inputs,vec3 vertPos,vec3 viewDir) {
-    vec4 color = evaluateLights(inputs,vertPos,viewDir);
-    color.rgb += inputs.emissiveColor;
-    
+    vec4 color = evaluateLights(inputs,vertPos,viewDir);  
    
-    vec3 ambileColor = getAmbileColor();
-    
-    color.rgb += inputs.baseColor.rgb * ambileColor * inputs.occlusion;
     
     return color;
 }

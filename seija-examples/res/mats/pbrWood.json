@@ -1,0 +1,9 @@
+{
+    "material":"/materials/pbrStandard.mat.clj",
+    "props":{
+        "baseColor":"/texture/WoodFloor043_1K_Color.jpg",
+        "normal":"/texture/WoodFloor043_1K_Normal.jpg",
+        "metallicTex":"/texture/WoodFloor043_1K_Metalness.jpg",
+        "roughnessTex":"/texture/WoodFloor043_1K_Roughness.jpg"
+    }
+ }

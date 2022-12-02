@@ -1,5 +1,5 @@
 {
-   "material":"materials/baseTextureHDR.mat.clj",
+   "material":"/materials/baseTextureHDR.mat.clj",
    "props":{
        "color":[1,1,1,1],
        "mainTexture":"texture/snow_low.hdr"

@@ -1,8 +1,8 @@
 {
-   "material":"materials/pbrColor.mat.clj",
+   "material":"/materials/pbrColor.mat.clj",
    "props":{
        "color":[1,1,1,1],
-       "metallic":0.2,
-       "roughness":0.8
+       "metallic":0.8,
+       "roughness":0.5
    }
 }

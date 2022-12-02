@@ -17,6 +17,7 @@
                         inputs.baseColor  = material.color;
                         inputs.metallic   = material.metallic;
                         inputs.roughness   = material.roughness;
+                        inputs.occlusion = 1;
                     }
                 "
             

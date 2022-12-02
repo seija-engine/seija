@@ -1,5 +1,5 @@
 {
-    "material":"materials/tonemap.mat.clj",
+    "material":"/materials/tonemap.mat.clj",
     "props":{
         "color":[1,1,1,1]
     }

@@ -1,0 +1,6 @@
+{
+    "material":"/materials/spheresky.mat.clj",
+    "props":{
+        "mainTexture":"/texture/WinterForest_8k.jpg"
+    }
+ }
