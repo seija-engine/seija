@@ -66,6 +66,10 @@ impl TypedUniformBuffer {
        ret
     }
 
+    pub fn is_empty(&self) -> bool {
+        self.def.infos.is_empty()
+    }
+
     pub fn get_buffer(&self) -> &[u8] {
         &self.buffer.bytes
     }

@@ -89,6 +89,22 @@
     })
 )
 
+(defn declare-ibl-uniform [set index]
+    (declare-uniform set "IBLEnv" {
+        :type :Global
+        :sort index
+        :apply :Frame
+        :shader-stage SS_FRAGMENT
+        :props []
+        :textures [
+            { :name "irradianceMap" :type "cubeMap" :filterable true }
+            { :name "prefilterMap" :type "cubeMap" :filterable true }
+            { :name "brdfLUT" :type "texture2D" :filterable true }
+        ]
+        :backends ["IBLEnv"]
+    })
+)
+
 
 
 

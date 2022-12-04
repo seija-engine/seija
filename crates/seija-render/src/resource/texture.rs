@@ -126,6 +126,12 @@ pub fn color_texture(color:[u8;4],size:usize) -> Texture {
     Texture::create_image(color_image_info(color, size),TextureDescInfo::default())
 }
 
+pub fn cube_texture(color:[u8;4],size:usize) -> Texture {
+    let mut desc = TextureDescInfo::default();
+    desc.desc.size.depth_or_array_layers = 6;
+    desc.view_desc.dimension = Some(wgpu::TextureViewDimension::Cube);
+    Texture::create_image(color_image_info(color, size),desc)
+}
 
 pub fn update_texture_system(world:&mut World,texture_reader:&mut ManualEventReader<AssetEvent<Texture>>,ctx:&mut RenderContext) {
     let texture_events = world.get_resource::<Events<AssetEvent<Texture>>>().unwrap();

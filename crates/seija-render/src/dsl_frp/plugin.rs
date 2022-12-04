@@ -5,7 +5,7 @@ use anyhow::Result;
 use crate::shadow::ShadowNode;
 
 use super::elems::{camera_node::CameraNode, IUpdateNode, transform_node::TransfromNode, 
-    window_resize_node::WindowReSizeNode, draw_pass_node::DrawPassNode, post_stack_node::PostStackNode};
+    window_resize_node::WindowReSizeNode, draw_pass_node::DrawPassNode, post_stack_node::PostStackNode, ibl_node::IBLNode};
 
 pub type NodeCreateFn = fn(args:Vec<Variable>) -> Result<Box<dyn IUpdateNode>>;
 
@@ -38,6 +38,7 @@ pub fn create_buildin_plugin() -> RenderScriptPlugin {
     plugin.add_node_creator("DrawPass", DrawPassNode::from_args);
     plugin.add_node_creator("PostStack", PostStackNode::from_args);
     plugin.add_node_creator("Shadow", ShadowNode::from_args);
+    plugin.add_node_creator("IBL", IBLNode::from_args);
 
     plugin.global_dynamics.push(("dynBase3D".into(),Variable::Bool(true)));
     plugin.global_dynamics.push(("dynShadow".into(),Variable::Bool(false)));

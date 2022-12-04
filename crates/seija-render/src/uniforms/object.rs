@@ -11,8 +11,8 @@ use crate::{
 pub struct UniformObject {
     //buffer
     pub local_buffer:TypedUniformBuffer,
-    buffer:BufferId,
-    cache_buffer:BufferId,
+    buffer:Option<BufferId>,
+    cache_buffer:Option<BufferId>,
     //texture
     texture_idxs:HashMap<SmolStr,usize>,
     textures:Vec<Handle<Texture>>,
@@ -24,24 +24,34 @@ pub struct UniformObject {
 impl UniformObject {
     pub fn new(res:&mut RenderResources,info:&UniformInfo) -> Self {
         let buffer_local = TypedUniformBuffer::from_def(info.props.clone());
-        let buffer = res.create_buffer(&wgpu::BufferDescriptor {
-            label:None,
-            size:buffer_local.def.size() as u64,
-            usage:wgpu::BufferUsages::COPY_DST | wgpu::BufferUsages::UNIFORM,
-            mapped_at_creation:false
-        });
+        
+        let buffer = if !buffer_local.is_empty() {
+            Some(res.create_buffer(&wgpu::BufferDescriptor {
+                label:None,
+                size:buffer_local.def.size() as u64,
+                usage:wgpu::BufferUsages::COPY_DST | wgpu::BufferUsages::UNIFORM,
+                mapped_at_creation:false
+            }))
+        } else { None };
 
-        let cache_id = res.create_buffer(&wgpu::BufferDescriptor {
-            label:None,
-            size:buffer_local.def.size() as u64,
-            usage:wgpu::BufferUsages::COPY_SRC | wgpu::BufferUsages::MAP_WRITE,
-            mapped_at_creation:false
-        });
-        let cache_buffer = cache_id;
+
+        let cache_buffer = if !buffer_local.is_empty() {
+            Some(res.create_buffer(&wgpu::BufferDescriptor {
+                label:None,
+                size:buffer_local.def.size() as u64,
+                usage:wgpu::BufferUsages::COPY_SRC | wgpu::BufferUsages::MAP_WRITE,
+                mapped_at_creation:false
+            }))
+        } else { None };
+
         let mut texture_idxs:HashMap<SmolStr,usize> = HashMap::default();
         let mut textures = vec![];
         for (index,def) in info.textures.iter().enumerate() {
-            textures.push(res.default_textures[0].clone_weak());
+            if def.is_cubemap {
+                textures.push(res.default_textures[1].clone_weak());
+            } else {
+                textures.push(res.default_textures[0].clone_weak());
+            }
             texture_idxs.insert(def.name.as_str().into(), index);
         }
        
@@ -61,9 +71,10 @@ impl UniformObject {
 
     fn update_bind_group(&mut self,res:&RenderResources)  {
         if !self.texture_dirty || !res.is_textures_ready(&self.textures)   { return };
-        
         let mut builder = BindGroupBuilder::new();
-        builder.add_buffer(self.buffer);
+        if let Some(buffer) = self.buffer {
+            builder.add_buffer(buffer);
+        }
         for texture in self.textures.iter() {
             builder.add_texture(texture.clone());
         }
@@ -82,21 +93,23 @@ impl UniformObject {
 
     fn update_buffer(&mut self,res:&mut RenderResources,cmd:&mut CommandEncoder) {
         if !self.local_buffer.is_dirty() { return; }
-        let cache_id = self.cache_buffer;
-        let buffer_size = self.local_buffer.def.size() as u64;
-        res.map_buffer(&cache_id, wgpu::MapMode::Write);
-        res.write_mapped_buffer(&cache_id, 0.. buffer_size,&mut |bytes,_| {
-           
-            bytes[0..buffer_size as usize].copy_from_slice(self.local_buffer.get_buffer());
-        });
-        res.unmap_buffer(&cache_id);
-
-        res.copy_buffer_to_buffer(cmd,
-            &cache_id,
-            0,
-        &self.buffer,
-        0, 
-                    self.local_buffer.def.size() as u64);
+        if let (Some(cache_id),Some(buffer)) = (self.cache_buffer,self.buffer) {
+            let buffer_size = self.local_buffer.def.size() as u64;
+            res.map_buffer(&cache_id, wgpu::MapMode::Write);
+            res.write_mapped_buffer(&cache_id, 0.. buffer_size,&mut |bytes,_| {
+               
+                bytes[0..buffer_size as usize].copy_from_slice(self.local_buffer.get_buffer());
+            });
+            res.unmap_buffer(&cache_id);
+    
+            res.copy_buffer_to_buffer(cmd,
+                &cache_id,
+                0,
+            &buffer,
+            0, 
+                        self.local_buffer.def.size() as u64);
+            
+        }
         self.local_buffer.clear_dirty();
 
     }

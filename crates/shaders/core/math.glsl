@@ -26,3 +26,7 @@ vec3 grayColor(vec3 color) {
     float grayValue = color.r * 0.299 + color.g * 0.587 + color.b * 0.114;
     return vec3(grayValue,grayValue,grayValue);
 }
+
+float fd_Lambert() {
+    return 1.0 / 3.14159265359;
+}

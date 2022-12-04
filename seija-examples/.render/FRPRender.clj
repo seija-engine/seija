@@ -9,10 +9,12 @@
     (uniform "CameraBuffer")
     (uniform "LightBuffer")
     (uniform "PostEffect")
+    (uniform "IBLEnv")
     (node CameraNodeID "CameraBuffer")
     (node TransformNodeID "ObjectBuffer")
     (node PBRCameraExNodeID "CameraBuffer")
     (node PBRLightNodeID "LightBuffer")
+    (node IBLNodeID "IBLEnv")
     (if-comp dynShadow [shadow-global])
 )
 

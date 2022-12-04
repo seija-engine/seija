@@ -5,7 +5,7 @@ use dsl_frp::RenderScriptPlugin;
 use query::QuerySystem;
 use render::{AppRender, Config };
 use frp_context::FRPContext;
-use resource::{Mesh, Texture, color_texture};
+use resource::{Mesh, Texture, color_texture,cube_texture};
 use resource::shape::{Cube, Sphere, Plane, Quad, SkyBox};
 use scene::SceneEnv;
 use seija_app::IModule;
@@ -142,6 +142,8 @@ impl RenderModule {
         let h_white = textures.add_weak(color_texture([255,255,255,255], 16));
         let h_blue  = textures.add_weak(color_texture([0,0,255,255], 16));
         let h_black = textures.add_weak(color_texture([0,0,0,255], 16));
+        let h_cubemap  = textures.add_weak(cube_texture([255,255,255,255], 16));
+        
         if let Some(assets) = world.get_resource::<AssetServer>() {
             assets.set_asset("mesh:cube", h_cube.id);
             assets.set_asset("mesh:sphere", h_sphere.id);
@@ -153,6 +155,7 @@ impl RenderModule {
             assets.set_asset("texture:white", h_white.id);
             assets.set_asset("texture:blue", h_blue.id);
             assets.set_asset("texture:black", h_black.id);
+            assets.set_asset("texture:cube", h_cubemap.id);
         }
     }
 }

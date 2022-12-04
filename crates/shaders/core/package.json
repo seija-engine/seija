@@ -64,7 +64,7 @@
           "UV0":"require",
           "TANGENT":"option"
         },
-        "backend": [ "Camera3D", "Transform","PBRLight","PBRCameraEx"],
+        "backend": [ "Camera3D", "Transform","PBRLight","PBRCameraEx","IBLEnv"],
         "features":{ 
           "Shadow": {
               "macros":["HAS_SHADOW"],

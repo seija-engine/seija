@@ -176,16 +176,18 @@ impl SeijaShaderBackend {
                 //    writer.write_str(&format!("return {}_{}S;",&ubo_info.name,fn_info.name)).unwrap();
                 //}
                 //writer.write_str("}\r\n").unwrap();
-
+               
                 writer.write_str(&format!("vec4 texture_{}(vec2 uv){{",new_name)).unwrap();
                 if let Some(ubo_info) = self.render_info.backend2ubo.get(backend_name) {
-                    writer.write_str(&format!("return texture(sampler2D({}_{},{}_{}S),uv);",&ubo_info.name,fn_info.name,&ubo_info.name,fn_info.name)).unwrap();
+                    let low_name = ubo_info.name.to_lowercase();
+                    writer.write_str(&format!("return texture(sampler2D({}_{},{}_{}S),uv);",&low_name,fn_info.name,&low_name,fn_info.name)).unwrap();
                 }
                 writer.write_str("}\r\n").unwrap();
                 
                 writer.write_str(&format!("ivec2  textureSize_{}(){{",new_name)).unwrap();
                 if let Some(ubo_info) = self.render_info.backend2ubo.get(backend_name) {
-                    writer.write_str(&format!("return textureSize({}_{},0);",&ubo_info.name,fn_info.name)).unwrap();
+                    let low_name = ubo_info.name.to_lowercase();
+                    writer.write_str(&format!("return textureSize({}_{},0);",&low_name,fn_info.name)).unwrap();
                 }
                 writer.write_str("}\r\n").unwrap();
                 /* 
@@ -194,6 +196,8 @@ impl SeijaShaderBackend {
                     writer.write_str(&format!("return {}_{}S;",&ubo_info.name,fn_info.name)).unwrap();
                 }
                 writer.write_str("}\r\n").unwrap();*/
+            } else if  fn_info.typ == "cubeMap" {
+
             } else {
                 writer.write_str(&format!("{} get{}(){{",fn_info.typ,new_name)).unwrap();
                 if let Some(ubo_info) = self.render_info.backend2ubo.get(backend_name) {
@@ -243,9 +247,14 @@ fn write_ubo_uniform<W:Write>(info:&UniformInfo, writer:&mut W,index:usize) {
 
     
     for texture_prop in info.textures.iter() {
-        writer.write_str(&format!("layout(set = {}, binding = {}) uniform {} {}_{};\r\n",index,binding_index,&texture_prop.str_type,&info.name,&texture_prop.name)).unwrap();
+        let low_name = info.name.to_lowercase();
+        if texture_prop.is_cubemap {
+            writer.write_str(&format!("layout(set = {}, binding = {}) uniform textureCube {}_{};\r\n",index,binding_index,&low_name,&texture_prop.name)).unwrap();
+        } else {
+            writer.write_str(&format!("layout(set = {}, binding = {}) uniform {} {}_{};\r\n",index,binding_index,&texture_prop.str_type,&low_name,&texture_prop.name)).unwrap();
+        }
         binding_index += 1;
-        writer.write_str(&format!("layout(set = {}, binding = {}) uniform sampler {}_{}S;\r\n",index,binding_index,&info.name,&texture_prop.name)).unwrap();
+        writer.write_str(&format!("layout(set = {}, binding = {}) uniform sampler {}_{}S;\r\n",index,binding_index,&low_name,&texture_prop.name)).unwrap();
         binding_index += 1;
     }
 }

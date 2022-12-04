@@ -75,6 +75,8 @@ pub struct RenderResources {
 impl RenderResources {
     pub fn new(device:Arc<wgpu::Device>,assets:&AssetServer) -> RenderResources {
        let h_white = assets.get_asset("texture:white").unwrap();
+       let h_cube = assets.get_asset("texture:cube").unwrap();
+       
         RenderResources {
             device,
             main_surface:None,
@@ -88,7 +90,7 @@ impl RenderResources {
             texture_views:HashMap::default(),
             samplers:HashMap::default(),
             sampler_id_gen:IDGenU64::new(),
-            default_textures:vec![h_white.make_handle().typed()]
+            default_textures:vec![h_white.make_handle().typed(),h_cube.make_handle().typed()]
         }
     }
 

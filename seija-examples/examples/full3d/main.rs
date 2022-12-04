@@ -4,7 +4,7 @@ use seija_asset::{AssetServer, Assets, Handle};
 use seija_core::{CoreStage, StartupStage, window::AppWindow};
 use seija_examples::{init_core_app, update_camera_trans_system, add_pbr_camera};
 use seija_pbr::lights::PBRLight;
-use seija_render::{shadow::{ShadowLight, Shadow}, resource::{Mesh, shape::Sphere}, material::Material};
+use seija_render::{shadow::{ShadowLight, Shadow}, resource::{Mesh, shape::Sphere, Texture}, material::Material, dsl_frp::IBLEnv};
 use seija_template::Template;
 use seija_transform::Transform;
 
@@ -45,10 +45,20 @@ fn start(world:&mut World) {
         l.insert(shadow);
     };
 
-   
+    {
+        let server = world.get_resource::<AssetServer>().unwrap().clone();
+        let diff_map = server.load_sync::<Texture>(world, "texture/cubemap/snow/diff/diff.cubemap.json", None).unwrap();
+        let specular_map = server.load_sync::<Texture>(world, "texture/cubemap/snow/specular/specular.cubemap.json", None).unwrap();
+        let brdf_lut = server.load_sync::<Texture>(world, "texture/snowBrdf.jpg", None).unwrap();
+        world.insert_resource(IBLEnv {
+            irradiance_map:Some(diff_map),
+            brdf_lut:Some(brdf_lut),
+            specular_map:Some(specular_map)
+        });
+    }
 
     let server = world.get_resource::<AssetServer>().unwrap().clone();
-    let mut handle = server.load_sync::<Template>(world,"template/winter_scene/low_poly_winter_scene.xml", None).unwrap();
+    let mut handle = server.load_sync::<Template>(world,"template/autumn_house/autumn_house.xml", None).unwrap();
    
 
     let templates = world.get_resource::<Assets<Template>>().unwrap();

@@ -140,19 +140,21 @@ vec3 surfaceShading(const PixelParams pixel,const Light light,float occlusion,ve
     float noL = clamp(light.noL,0.0,1.0);
     float noH = clamp(dot(normal, h),0.0,1.0);
     float loH = clamp(dot(light.l, h),0.0,1.0);
-
+   
     vec3 fr = specularLobe(pixel, light, h, noV, noL, noH, loH);
     vec3 fd = diffuseLobe(pixel, noV, noL, loH);
+   
 
     vec3 color = fd + fr * pixel.energyCompensation;
     
     return (color * light.colorIntensity.rgb) * (light.colorIntensity.w * light.attenuation * noL * occlusion);
 }
 
-vec4 evaluateLights(const MaterialInputs inputs,vec3 vertPos,vec3 viewDir) {
-   PixelParams pixel;
-   getPixelParams(inputs, pixel);
+vec4 evaluateLights(PixelParams pixel,const MaterialInputs inputs,vec3 vertPos,vec3 viewDir) {
    vec3 color = vec3(0.0);
+   
+   evaluateIBL(pixel,inputs,color,viewDir);
+
    for(int i = 0; i < getLightCount();i++) {
       Light light = getLight(i,vertPos,inputs.normal);
       if (light.noL <= 0.0 || light.attenuation <= 0.0) {
@@ -166,8 +168,50 @@ vec4 evaluateLights(const MaterialInputs inputs,vec3 vertPos,vec3 viewDir) {
 }
 
 vec4 evaluateMaterial(MaterialInputs inputs,vec3 vertPos,vec3 viewDir) {
-    vec4 color = evaluateLights(inputs,vertPos,viewDir);  
-   
+    PixelParams pixel;
+    getPixelParams(inputs, pixel);
     
+    vec4 color = evaluateLights(pixel,inputs,vertPos,viewDir);
+   
     return color;
+}
+
+vec3 lerpV3(vec3 a,vec3 b,float v) {
+    return vec3(mix(a.x,b.x,v),mix(a.y,b.y,v),mix(a.z,b.z,v));
+}
+
+void evaluateIBL(const PixelParams pixel,const MaterialInputs inputs,inout vec3 color,vec3 viewDir) {
+    vec3 irradiance = texture(samplerCube(iblenv_irradianceMap,iblenv_irradianceMapS), inputs.normal).rgb;
+    vec3 ambient = pixel.diffuseColor * irradiance * fd_Lambert();
+    
+    vec3 r = reflect(-viewDir,inputs.normal);
+    vec2 ldfg = textureLod(sampler2D(iblenv_brdfLUT,iblenv_brdfLUTS), vec2(dot(inputs.normal, viewDir), pixel.perceptualRoughness), 0.0).xy;
+    float lodRoughness = computeLODFromRoughness(pixel.perceptualRoughness);
+    vec4 specularEnvironment = texture(samplerCube(iblenv_prefilterMap,iblenv_prefilterMapS), r, lodRoughness);
+  
+    vec3 dielectricColor  = vec3(0.0);
+    float metallic = inputs.metallic;
+    vec3 specular  = mix(dielectricColor, inputs.baseColor.rgb,metallic) * ldfg.x;
+
+    specular  = specularEnvironment.rgb * specular;
+
+    /*
+    vec3 irradiance = texture(irradianceMap, N).rgb;
+vec3 diffuse    = irradiance * albedo;
+
+const float MAX_REFLECTION_LOD = 4.0;
+vec3 prefilteredColor = textureLod(prefilterMap, R,  roughness * MAX_REFLECTION_LOD).rgb;   
+vec2 envBRDF  = texture(brdfLUT, vec2(max(dot(N, V), 0.0), roughness)).rg;
+vec3 specular = prefilteredColor * (F * envBRDF.x + envBRDF.y);
+
+vec3 ambient = (kD * diffuse + specular) * ao; 
+    */
+
+    color.rgb += ambient;
+    color.rgb += specular.rgb;
+}
+
+float computeLODFromRoughness(float perceptualRoughness) {
+    float roughnessMipCount = 9; 
+    return perceptualRoughness * roughnessMipCount;
 }

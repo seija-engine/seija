@@ -74,8 +74,10 @@ impl TryFrom<&Value> for UniformInfo {
                                         .map(|lst| lst.iter()
                                         .filter_map(|v| v.as_str().map(String::from)).collect::<Vec<String>>())
                                         .ok_or(":backends")?;
-        let prop_json = object.get(":props").ok_or(":props".to_string())?;
-        let props:PropInfoList = prop_json.try_into().map_err(|_| ":props".to_string())?;
+        let prop_json = object.get(":props");
+        let props:PropInfoList = if let Some(prop_json) = prop_json {
+            prop_json.try_into().map_err(|_| ":props".to_string())?
+        } else { PropInfoList(vec![]) };
         let prop_sort = object.get(":sort").and_then(|v| v.as_i64()).unwrap_or(0);
         let udf = UniformBufferDef::try_from(&props).map_err(|_| ":props".to_string() )?;
         let shader_stage = object.get(":shader-stage").and_then(Value::as_i64).unwrap_or(
@@ -115,7 +117,7 @@ impl UniformInfo {
             builder.add_uniform(self.shader_stage);
         }
         for texture_desc in self.textures.iter() {
-            builder.add_texture(false, Some(texture_desc.sample_type));
+            builder.add_texture(texture_desc.is_cubemap, Some(texture_desc.sample_type));
             builder.add_sampler(texture_desc.is_filterable());
         }
         let layout = builder.build(device);

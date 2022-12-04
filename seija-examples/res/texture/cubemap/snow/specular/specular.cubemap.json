@@ -1,0 +1,8 @@
+{
+    "left":"X+.hdr",
+    "right":"X-.hdr",
+    "top":"Y+.hdr",
+    "bottom":"Y-.hdr",
+    "back":"Z+.hdr",
+    "front":"Z-.hdr"
+}

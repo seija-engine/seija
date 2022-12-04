@@ -92,10 +92,7 @@ impl UniformContext {
         }
     }
 
-    
-
-    pub fn set_texture(&mut self,eid:Option<u32>,ubo_name:&str,texture_name:&str,texture:Handle<Texture>) -> anyhow::Result<()> {
-        let index = self.get_index(ubo_name).get()?;
+    pub fn set_texture_byindex(&mut self,eid:Option<u32>,index:&UniformIndex,texture_name:&str,texture:Handle<Texture>) -> anyhow::Result<()> {
         match index.typ {
             UniformType::Global => {
                 let object = &mut self.globals[index.index];
@@ -111,7 +108,10 @@ impl UniformContext {
         Ok(())
     }
 
-    
+    pub fn set_texture(&mut self,eid:Option<u32>,ubo_name:&str,texture_name:&str,texture:Handle<Texture>) -> anyhow::Result<()> {
+        let index = self.get_index(ubo_name).get()?;
+        self.set_texture_byindex(eid, &index, texture_name, texture)
+    }
 
     pub fn add_component(&mut self,index:&UniformIndex,eid:u32,res:&mut RenderResources) {
         let array_object = &mut self.components[index.index];
