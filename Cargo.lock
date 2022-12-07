@@ -2743,6 +2743,7 @@ dependencies = [
  "seija-skeleton3d",
  "seija-template",
  "seija-transform",
+ "seija-ui",
  "seija-winit",
 ]
 
@@ -2896,6 +2897,11 @@ dependencies = [
 [[package]]
 name = "seija-ui"
 version = "0.1.0"
+dependencies = [
+ "bevy_ecs",
+ "seija-app",
+ "seija-core",
+]
 
 [[package]]
 name = "seija-winit"

@@ -21,6 +21,7 @@ seija-transform = {path = "../crates/seija-transform"}
 seija-skeleton3d = {path = "../crates/seija-skeleton3d"}
 seija-geometry = {path = "../crates/seija-geometry"}
 seija-template = {path = "../crates/seija-template"}
+seija-ui = {path = "../crates/seija-ui"}
 seija-render-template = {path = "../crates/seija-render-template"}
 lite-clojure-eval = {git = "https://github.com/seija-engine/lite-clojure.git"}
 bevy_ecs = "0.7.0"

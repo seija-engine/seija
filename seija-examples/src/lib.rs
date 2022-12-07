@@ -15,6 +15,7 @@ use seija_render::{camera::{camera::Perspective,camera::Camera},
 use seija_render_template::add_render_templates;
 use seija_template::TemplateModule;
 use seija_transform::{Transform, TransformModule};
+use seija_ui::UIModule;
 use seija_winit::WinitModule;
 
 
@@ -30,6 +31,7 @@ pub fn init_core_app(render_file:&str) -> App {
     app.add_module(win);
     app.add_module(TransformModule);
     app.add_module(TemplateModule);
+    app.add_module(UIModule);
    
     add_render_templates(&mut app);
     app.add_module(GLTFModule);

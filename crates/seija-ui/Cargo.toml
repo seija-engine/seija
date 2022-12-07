@@ -3,6 +3,7 @@ name = "seija-ui"
 version = "0.1.0"
 edition = "2021"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
 [dependencies]
+bevy_ecs = "0.7.0"
+seija-core = {path = "../seija-core"}
+seija-app = {path = "../seija-app"}
