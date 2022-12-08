@@ -7,3 +7,4 @@ edition = "2021"
 bevy_ecs = "0.7.0"
 seija-core = {path = "../seija-core"}
 seija-app = {path = "../seija-app"}
+seija-transform = {path = "../seija-transform"}

@@ -27,6 +27,12 @@ pub struct PreviousParent(pub(crate) Entity);
 pub struct Children(pub(crate) SmallVec<[Entity; 8]>);
 
 impl Children {
+    pub fn children(&self) -> &SmallVec<[Entity;8]> {
+        &self.0
+    }
+}
+
+impl Children {
     pub fn from(entity: &[Entity]) -> Self {
         Self(SmallVec::from_slice(entity))
     }

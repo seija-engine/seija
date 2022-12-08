@@ -35,10 +35,13 @@ pub(crate) fn parent_update_system(
             commands.entity(entity).insert(PreviousParent(parent.0));
         }
         
+        
         //把自己插入到新的父节点的Children里
         if let Ok(mut new_parent_children) = children_query.get_mut(parent.0) {
+            
             (*new_parent_children).0.push(entity);
         } else {
+
             children_additions.entry(parent.0).or_insert_with(Default::default).push(entity);
         }
     }

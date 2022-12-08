@@ -2745,6 +2745,7 @@ dependencies = [
  "seija-transform",
  "seija-ui",
  "seija-winit",
+ "smallvec",
 ]
 
 [[package]]
@@ -2901,6 +2902,7 @@ dependencies = [
  "bevy_ecs",
  "seija-app",
  "seija-core",
+ "seija-transform",
 ]
 
 [[package]]

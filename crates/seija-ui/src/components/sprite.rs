@@ -48,9 +48,19 @@ impl Default for ImageGenericInfo {
 }
 
 
-#[derive(Component,Default)]
+#[derive(Component)]
 pub struct Sprite {
     pub info:ImageGenericInfo,
     pub sprite_name:Option<SmolStr>,
+    pub is_dirty:bool
 }
 
+impl Sprite {
+    pub fn simple(sprite:SmolStr,color:Vec4) -> Sprite {
+        Sprite {
+            info:ImageGenericInfo { typ: ImageType::Simple, color },
+            sprite_name:Some(sprite),
+            is_dirty:true
+        }
+    }
+}
