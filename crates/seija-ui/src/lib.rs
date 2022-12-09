@@ -1,14 +1,13 @@
 use std::collections::HashSet;
-
 use components::{sprite::Sprite, panel::Panel};
 use seija_app::{IModule, App};
 use seija_core::CoreStage; 
 use seija_app::ecs::prelude::*;
 use seija_transform::hierarchy::{Parent, Children};
-use seija_core::log;
 pub mod types;
 mod sprite_alloc;
 pub mod components;
+pub mod mesh2d;
 
 pub struct UIModule;
 
@@ -33,15 +32,8 @@ fn update_render_system(mut sprites:Query<(Entity,&mut Sprite)>,
     }
 
     for panel_entity in top_panels.iter() {
-        if let Ok((entity,top_panel)) = panels.get_mut(*panel_entity) {
-            if let Ok(children) = childrens.get(entity) {
-                for child in children.children() {
-                    
-                }
-            }
-        }
+        rebuild_mesh(*panel_entity,&mut panels,&childrens,&sprites);
     }
-
     sprites.iter_mut().for_each(|mut v| v.1.is_dirty = false);
 }
 
@@ -57,3 +49,22 @@ fn calc_top_panel(entity:&Entity,panels:&mut Query<(Entity,&mut Panel)>,parents:
     }
     top_panel_entity
 }
+
+fn rebuild_mesh(panel_entity:Entity,
+                panels:&mut Query<(Entity,&mut Panel)>,
+                childrens: &Query<&Children>,
+                sprites:&Query<(Entity,&mut Sprite)>) {
+    if let Ok((entity,panel)) = panels.get_mut(panel_entity) {
+       if let Ok(children) = childrens.get(entity) {
+          for child in children.iter() {
+            //sprite
+            if let Ok(sprite) = sprites.get(*child) {
+                if sprite.1.is_dirty {
+
+                }
+            }
+
+          }
+       }
+    }
+} 

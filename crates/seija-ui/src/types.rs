@@ -1,4 +1,10 @@
-use seija_core::math::Vec2;
+#[derive(Debug,Clone)]
+pub struct Rect<T> {
+    pub x:T,
+    pub y:T,
+    pub width:T,
+    pub height:T
+}
 
 #[derive(PartialEq,Clone,Default)]
 pub struct Thickness {
