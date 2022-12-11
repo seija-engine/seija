@@ -1,7 +1,5 @@
 use seija_core::math::{Vec4, Mat4,Vec4Swizzles};
-
 use crate::{types::{Thickness, Rect}, mesh2d::{Mesh2D, Vertex2D}};
-
 use super::rect2d::Rect2D;
 
 #[derive(Copy,Clone,PartialEq,Eq)]
@@ -76,7 +74,7 @@ impl ImageGenericInfo {
              },
              Vertex2D {//left bottom
                 pos:  mat.mul_vec4(Vec4::new(0f32 + offset_x,0f32 + offset_y, 0f32,1f32)).xyz(),
-                uv:  [uv.x,uv.y + rect2d.height].into()
+                uv:  [uv.x,uv.y + uv.height].into()
              },
              Vertex2D {//right bottom
                 pos:  mat.mul_vec4(Vec4::new(rect2d.width + offset_x,0f32 + offset_y, 0f32,1f32)).xyz(),

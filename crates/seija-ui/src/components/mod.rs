@@ -1,8 +1,6 @@
 use bevy_ecs::prelude::Component;
-use seija_app::{IModule, App};
-
-use crate::mesh2d::Mesh2D;
-
+use seija_core::math::Mat4;
+use crate::{mesh2d::Mesh2D, types::Rect};
 use self::rect2d::Rect2D;
 
 pub mod sprite;
@@ -15,5 +13,5 @@ mod image_info;
 pub struct ElementTrack;
 
 pub trait IBuildMesh2D {
-   fn build(&self,rect2d:&Rect2D) -> Mesh2D;
+   fn build(&self,rect2d:&Rect2D,uv:Rect<f32>,mat:&Mat4) -> Mesh2D;
 }

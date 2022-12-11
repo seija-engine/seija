@@ -1,5 +1,6 @@
 use seija_core::math::{Vec3, Vec4, Vec2};
 
+#[derive(Debug)]
 pub struct Mesh2D {
     pub color:Vec4,
     pub points:Vec<Vertex2D>,

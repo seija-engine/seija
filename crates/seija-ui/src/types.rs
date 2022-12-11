@@ -1,10 +1,11 @@
-#[derive(Debug,Clone)]
-pub struct Rect<T> {
+#[derive(Debug,Clone,Default)]
+pub struct Rect<T:Default> {
     pub x:T,
     pub y:T,
     pub width:T,
     pub height:T
 }
+
 
 #[derive(PartialEq,Clone,Default)]
 pub struct Thickness {
