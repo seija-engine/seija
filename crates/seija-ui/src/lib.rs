@@ -17,7 +17,7 @@ pub struct UIModule;
 
 impl IModule for UIModule {
     fn init(&mut self,app:&mut App) {
-        app.init_resource::<SpriteAllocator>();
+        app.world.insert_resource(SpriteAllocator::new());
         app.add_system(CoreStage::Update, update_render_system);
     }
 }

@@ -1,10 +1,20 @@
 use seija_render::resource::ImageInfo;
-use seija_core::log;
+use seija_core::{log, IDGenU32};
 use super::atlas::DynamicAtlas;
 
-#[derive(Default)]
+
 pub struct SpriteAllocator {
+    id_gen:IDGenU32,
     atlas_list:Vec<DynamicAtlas>
+}
+
+impl SpriteAllocator {
+    pub fn new() -> Self {
+        SpriteAllocator { 
+            id_gen:IDGenU32::new(), 
+            atlas_list: vec![] 
+        }
+    }
 }
 
 impl SpriteAllocator {
