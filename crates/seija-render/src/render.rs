@@ -19,6 +19,7 @@ pub struct AppRender {
     pub window_created_event_reader: ManualEventReader<WindowCreated>,
     mesh_event_reader:ManualEventReader<AssetEvent<Mesh>>,
     texture_event_reader:ManualEventReader<AssetEvent<Texture>>,
+    pub pre_render_updates:Vec<fn(world:&mut World,ctx:&mut RenderContext)>
 }
 
 pub struct Config {
@@ -59,6 +60,7 @@ impl AppRender {
             mesh_event_reader:Default::default(),
             texture_event_reader:Default::default(),
             frp_render:FRPDSLSystem::new(),
+            pre_render_updates:vec![]
         }
     }
 
@@ -93,14 +95,14 @@ impl AppRender {
         ctx.command_encoder = Some(self.device.create_command_encoder(&CommandEncoderDescriptor::default()));
         self.update_winodw_surface(world,&mut ctx.resources);
         ctx.resources.fetch_surface_texture();
+
         ctx.ubo_ctx.update(&mut ctx.resources,ctx.command_encoder.as_mut().unwrap());
-       
         ctx.material_system.update(world, &mut ctx.resources, ctx.command_encoder.as_mut().unwrap());
-       
-        
         resource::update_mesh_system(world,&mut self.mesh_event_reader,ctx);
-       
         resource::update_texture_system(world, &mut self.texture_event_reader, ctx);
+        for pre_update in self.pre_render_updates.iter() {
+            pre_update(world,ctx);
+        }
         self.frp_render.update(ctx,world);
         
         let command_buffer = ctx.command_encoder.take().unwrap().finish();

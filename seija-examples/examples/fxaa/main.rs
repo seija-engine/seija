@@ -9,7 +9,7 @@ use seija_render::{resource::{Mesh, shape::{Sphere}}, material::Material};
 use bevy_ecs::prelude::*;
 use seija_transform::Transform;
 pub fn main() {
-    let mut app = init_core_app("fxaa_render.clj");
+    let mut app = init_core_app("fxaa_render.clj",vec![]);
     app.add_system2(CoreStage::Startup, StartupStage::PreStartup, start.exclusive_system());
     app.add_system(CoreStage::Update, update_camera_trans_system);
     app.run();

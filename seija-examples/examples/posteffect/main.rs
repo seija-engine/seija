@@ -14,7 +14,7 @@ struct GameData {
 }
 
 pub fn main() {
-    let mut app = init_core_app("render.clj");
+    let mut app = init_core_app("render.clj",vec![]);
     app.add_module(Skeleton3dModule);
     app.add_system2(CoreStage::Startup, StartupStage::Startup, on_start.exclusive_system());
     app.run();

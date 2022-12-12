@@ -4,7 +4,7 @@ use seija_asset::{AssetServer, Assets, Handle};
 use seija_core::{CoreStage, StartupStage, window::AppWindow};
 use seija_examples::{init_core_app, update_camera_trans_system, add_pbr_camera};
 use seija_pbr::lights::PBRLight;
-use seija_render::{shadow::{ShadowLight, Shadow}, resource::{Mesh, shape::Sphere, Texture}, material::Material, dsl_frp::IBLEnv};
+use seija_render::{shadow::{ShadowLight, Shadow}, resource::{Mesh, shape::Sphere, Texture},dsl_frp::IBLEnv};
 use seija_template::Template;
 use seija_transform::Transform;
 
@@ -14,7 +14,7 @@ struct DemoGame {
 }
 
 fn main() {
-    let mut app = init_core_app("FRPRender.clj");
+    let mut app = init_core_app("FRPRender.clj",vec![]);
     app.add_system2(CoreStage::Startup, StartupStage::PreStartup, start.exclusive_system());
     app.add_system(CoreStage::Update, update_camera_trans_system);
     app.add_system(CoreStage::Update, on_update);

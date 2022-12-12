@@ -14,7 +14,7 @@ pub struct LocalData {
 }
 
 pub fn main() {
-    let mut app = init_core_app("FRPRender.clj");
+    let mut app = init_core_app("FRPRender.clj",vec![]);
     app.add_system2(CoreStage::Startup, StartupStage::Startup, start.exclusive_system());
     app.add_system(CoreStage::Update, update_camera_trans_system);
     app.add_system(CoreStage::Update, async_system.exclusive_system());

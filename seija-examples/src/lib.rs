@@ -10,7 +10,7 @@ use seija_input::{InputModule, Input, event::MouseButton};
 use seija_pbr::{PBRCameraInfo, create_pbr_plugin};
 use seija_render::{camera::{camera::Perspective,camera::Camera}, 
                    material::{MaterialDefineAsset}, resource::{Texture, TextureDescInfo}
-                  ,RenderConfig, GraphSetting, RenderModule};
+                  ,RenderConfig, GraphSetting, RenderModule, RenderContext};
 
 use seija_render_template::add_render_templates;
 use seija_template::TemplateModule;
@@ -19,7 +19,7 @@ use seija_ui::UIModule;
 use seija_winit::WinitModule;
 
 
-pub fn init_core_app(render_file:&str) -> App {
+pub fn init_core_app(render_file:&str,pre_renders:Vec<fn(world:&mut World,ctx:&mut RenderContext)>) -> App {
     env_logger::Builder::new().filter_level(log::LevelFilter::Info).try_init().unwrap();
     let mut app = App::new();
     app.add_module(CoreModule);
@@ -41,6 +41,7 @@ pub fn init_core_app(render_file:&str) -> App {
         setting:Arc::new(GraphSetting::default() ),
         plugins:vec![create_pbr_plugin()],
         render_lib_paths:vec!["../crates/seija-pbr/res".into(),"../crates/seija-render/res".into(),"examples".into()],
+        pre_render_updates:vec![]
     };
     app.add_module(RenderModule(Arc::new(render_config)));
 

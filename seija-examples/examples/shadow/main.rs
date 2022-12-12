@@ -7,7 +7,7 @@ use seija_render::{resource::{Mesh, shape::{Sphere, Cube, Plane}},  shadow::{Sha
 use bevy_ecs::{prelude::*, system::CommandQueue};
 use seija_transform::Transform;
 pub fn main() {
-    let mut app = init_core_app("FRPRender.clj");
+    let mut app = init_core_app("FRPRender.clj",vec![]);
     app.add_system2(CoreStage::Startup, StartupStage::PreStartup, start.exclusive_system());
     app.add_system(CoreStage::Update, update_camera_trans_system);
     app.run();

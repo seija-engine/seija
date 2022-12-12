@@ -8,7 +8,7 @@ use seija_pbr::lights::PBRLight;
 use seija_template::Template;
 use seija_transform::Transform;
 fn main() {
-    let mut app = init_core_app("FRPRender.clj");
+    let mut app = init_core_app("FRPRender.clj",vec![]);
     app.add_system2(CoreStage::Startup, StartupStage::Startup, on_start.exclusive_system());
     app.add_system(CoreStage::Update, update_camera_trans_system);
 

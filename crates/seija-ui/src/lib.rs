@@ -4,13 +4,14 @@ use seija_app::{IModule, App};
 use seija_core::CoreStage; 
 use seija_app::ecs::prelude::*;
 use seija_transform::{hierarchy::{Parent, Children}, Transform};
-use sprite_alloc::alloc::SpriteAllocator;
 use types::Rect;
 pub mod types;
 mod sprite_alloc;
 pub mod components;
 pub mod mesh2d;
 use crate::components::IBuildMesh2D;
+pub use sprite_alloc::system::update_sprite_alloc_render;
+pub use sprite_alloc::alloc::SpriteAllocator;
 
 pub struct UIModule;
 
@@ -75,4 +76,4 @@ fn rebuild_mesh(panel_entity:Entity,
           }
        }
     }
-} 
+}

@@ -34,10 +34,10 @@ mod mesh_render;
 mod render_context;
 mod render;
 mod memory;
-pub use graph_setting::{GraphSetting};
-pub use render_context::{RenderContext};
+pub use graph_setting::GraphSetting;
+pub use render_context::RenderContext;
 pub use uniforms::{UniformInfoSet,UniformInfo,UniformIndex};
-pub use uniforms::backends::{IShaderBackend};
+pub use uniforms::backends::IShaderBackend;
 pub use memory::{UniformInfo as MemUniformInfo,RawUniformInfo,UniformType,UniformBufferDef,UniformBuffer,ArrayPropInfo};
 pub use query::SceneOctreeModule;
 
@@ -55,7 +55,8 @@ pub struct RenderConfig {
     pub script_path:PathBuf,
     pub setting:Arc<GraphSetting>,
     pub plugins:Vec<RenderScriptPlugin>,
-    pub render_lib_paths:Vec<PathBuf>
+    pub render_lib_paths:Vec<PathBuf>,
+    pub pre_render_updates:Vec<fn(world:&mut World,ctx:&mut RenderContext)>
 }
 
 impl RenderConfig {
@@ -94,6 +95,7 @@ impl IModule for RenderModule {
 impl RenderModule {
     fn get_render_system(&self,w:&mut World,config:Arc<RenderConfig>) -> impl FnMut(&mut World) {
         let mut app_render = AppRender::new_sync(Config::default());
+        app_render.pre_render_updates = config.pre_render_updates.clone();
         let assets = w.get_resource::<AssetServer>().unwrap();
         let render_ctx = RenderContext::new(app_render.device.clone(),self.0.clone(),assets);
        

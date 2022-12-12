@@ -1,14 +1,16 @@
 use bevy_ecs::{prelude::*, system::Command};
 use glam::Vec4;
+use seija_asset::AssetServer;
 use seija_core::{CoreStage, StartupStage};
 use seija_examples::{init_core_app};
+use seija_render::resource::load_image_info;
 use seija_transform::{Transform, PushChildren};
-use seija_ui::components::{panel::Panel, rect2d::Rect2D, sprite::Sprite};
+use seija_ui::{components::{panel::Panel, rect2d::Rect2D, sprite::Sprite}, update_sprite_alloc_render, SpriteAllocator};
 use smallvec::SmallVec;
 
 
 fn main() {
-    let mut app = init_core_app("FRPRender.clj");
+    let mut app = init_core_app("FRPRender.clj",vec![update_sprite_alloc_render]);
     app.add_system2(CoreStage::Startup, StartupStage::PreStartup, start.exclusive_system());
     app.add_system(CoreStage::Update, on_update);
    
@@ -29,7 +31,11 @@ fn start(world:&mut World) {
         parent:panel_id,
         children:SmallVec::from_slice(&[sprite_id])
     }.write(world);
-
+    let server:AssetServer = world.get_resource::<AssetServer>().unwrap().clone();
+    let mut sprite_alloc = world.get_resource_mut::<SpriteAllocator>().unwrap();
+    let btn_path = server.full_path("ui/Btn_V03.png").unwrap();
+    let image_info = load_image_info(btn_path).unwrap();
+    sprite_alloc.alloc(image_info);
 }
 
 fn on_update() {
