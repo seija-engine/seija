@@ -19,19 +19,6 @@ fn main() {
 }
 
 fn start(world:&mut World) {
-    let mut rect2d = Rect2D::default();
-    rect2d.width = 1024f32;
-    rect2d.height = 768f32;
-    let panel_id = world.spawn().insert(Panel::default()).insert(Transform::default()).insert(rect2d).id();
-
-    let mut rect2d = Rect2D::default();
-    rect2d.width = 100f32;
-    rect2d.height = 100f32;
-    let sprite_id = world.spawn().insert(Sprite::simple("sprite".into(), Vec4::ONE)).insert(Transform::default()).id();
-    PushChildren {
-        parent:panel_id,
-        children:SmallVec::from_slice(&[sprite_id])
-    }.write(world);
     let server:AssetServer = world.get_resource::<AssetServer>().unwrap().clone();
     let mut sprite_alloc = world.get_resource_mut::<SpriteAllocator>().unwrap();
     let btn_path = server.full_path("ui/Btn_V03.png").unwrap();
@@ -40,8 +27,24 @@ fn start(world:&mut World) {
     let image_info2 = load_image_info(btn2_path).unwrap();
     let index = sprite_alloc.alloc(image_info).unwrap();
     let index2 = sprite_alloc.alloc(image_info2).unwrap();
-    let info = sprite_alloc.get_sprite_info(index).unwrap();
-    dbg!(&info.uv);
+
+    let mut rect2d = Rect2D::default();
+    rect2d.width = 1024f32;
+    rect2d.height = 768f32;
+    let panel_id = world.spawn().insert(Panel::default()).insert(Transform::default()).insert(rect2d).id();
+
+    let mut rect2d = Rect2D::default();
+    rect2d.width = 100f32;
+    rect2d.height = 100f32;
+    let sprite_id = world.spawn().insert(Sprite::simple(index, Vec4::ONE))
+                                         .insert(rect2d)
+                                         .insert(Transform::default()).id();
+    PushChildren {
+        parent:panel_id,
+        children:SmallVec::from_slice(&[sprite_id])
+    }.write(world);
+    
+    
 
     let server = world.get_resource::<AssetServer>().unwrap().clone();
     let mut handle = server.load_sync::<Template>(world,"template/sky.xml", None).unwrap();

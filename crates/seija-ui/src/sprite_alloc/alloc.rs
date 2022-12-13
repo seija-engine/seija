@@ -3,13 +3,17 @@ use seija_render::resource::ImageInfo;
 use seija_core::{IDGenU32, anyhow::anyhow};
 use super::atlas::{DynamicAtlas, SpriteInfo};
 use seija_core::anyhow::Result;
-pub struct SpriteIndex {
+
+#[derive(Debug)]
+pub struct IndexInfo {
     pub atlas_index:usize,
     pub sprite_index:usize
 }
 
+pub type SpriteIndex = u32;
+
 pub struct SpriteAllocator {
-    id_map:FnvHashMap<u32,SpriteIndex>,
+    id_map:FnvHashMap<SpriteIndex,IndexInfo>,
     id_gen:IDGenU32,
     pub(crate) atlas_list:Vec<DynamicAtlas>
 }
@@ -25,18 +29,18 @@ impl SpriteAllocator {
 }
 
 impl SpriteAllocator {
-    pub fn alloc(&mut self,image_info:ImageInfo) -> Result<u32> {
+    pub fn alloc(&mut self,image_info:ImageInfo) -> Result<SpriteIndex> {
         let index = self.insert_image(image_info)?;
         Ok(index)
     }
 
-    fn insert_image(&mut self,image_info:ImageInfo) -> Result<u32> {
+    fn insert_image(&mut self,image_info:ImageInfo) -> Result<SpriteIndex> {
         let new_index = self.id_gen.next();
         for idx in 0.. self.atlas_list.len() {
             let dyn_atlas = &mut self.atlas_list[idx];
             if let Some(index) = dyn_atlas.insert(image_info.width,image_info.height) {
                 dyn_atlas.used_sprites[index].image = Some(image_info);
-                let sprite_index = SpriteIndex { atlas_index:idx,sprite_index:index };
+                let sprite_index = IndexInfo { atlas_index:idx,sprite_index:index };
                 self.id_map.insert(new_index, sprite_index);
                 return Ok(new_index);
             }
@@ -46,7 +50,7 @@ impl SpriteAllocator {
         if let Some(index) = new_atlas.insert(image_info.width, image_info.height) {
             new_atlas.used_sprites[index].image = Some(image_info);
             self.atlas_list.push(new_atlas);
-            let sprite_index = SpriteIndex { atlas_index:self.atlas_list.len() - 1,sprite_index:index };
+            let sprite_index = IndexInfo { atlas_index:self.atlas_list.len() - 1,sprite_index:index };
             self.id_map.insert(new_index, sprite_index);
             return Ok(new_index);
         }
@@ -54,8 +58,10 @@ impl SpriteAllocator {
     }
 
     pub fn get_sprite_info(&self,key:u32) -> Option<&SpriteInfo> {
+        seija_core::log::error!("get_sprite_info {:?} {}",&self.id_map,key);
         if let Some(index) = self.id_map.get(&key) {
             let sprite_info = &self.atlas_list[index.atlas_index].used_sprites[index.sprite_index];
+            seija_core::log::error!("get_sprite_info222");
             return Some(sprite_info);
         }
         None

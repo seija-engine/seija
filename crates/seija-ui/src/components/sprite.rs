@@ -1,7 +1,7 @@
 use bevy_ecs::prelude::Component;
 use seija_core::{smol_str::SmolStr, math::{Vec4, Mat4}};
 
-use crate::{mesh2d::Mesh2D, types::Rect};
+use crate::{mesh2d::Mesh2D, types::Rect, sprite_alloc::alloc::SpriteIndex};
 
 use super::{IBuildMesh2D, rect2d::Rect2D, image_info::{ImageGenericInfo, ImageType}};
 
@@ -9,15 +9,15 @@ use super::{IBuildMesh2D, rect2d::Rect2D, image_info::{ImageGenericInfo, ImageTy
 #[derive(Component)]
 pub struct Sprite {
     pub info:ImageGenericInfo,
-    pub sprite_name:Option<SmolStr>,
+    pub sprite_index:Option<SpriteIndex>,
     pub is_dirty:bool
 }
 
 impl Sprite {
-    pub fn simple(sprite:SmolStr,color:Vec4) -> Sprite {
+    pub fn simple(sprite:SpriteIndex,color:Vec4) -> Sprite {
         Sprite {
             info:ImageGenericInfo { typ: ImageType::Simple, color },
-            sprite_name:Some(sprite),
+            sprite_index:Some(sprite),
             is_dirty:true
         }
     }
