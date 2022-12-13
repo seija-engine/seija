@@ -10,3 +10,4 @@ seija-app = {path = "../seija-app"}
 seija-asset = {path = "../seija-asset"}
 seija-render = {path = "../seija-render"}
 seija-transform = {path = "../seija-transform"}
+fnv = "1.0.7"

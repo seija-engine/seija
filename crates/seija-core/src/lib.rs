@@ -89,7 +89,7 @@ macro_rules! idgen {
                 $name { atom:<$type>::default() }
             }
             pub fn next(&self) -> $type2 {
-                self.atom.fetch_add(1, Ordering::Relaxed)
+                self.atom.fetch_add(1, Ordering::SeqCst)
             }
         }
     }

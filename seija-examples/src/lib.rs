@@ -41,7 +41,7 @@ pub fn init_core_app(render_file:&str,pre_renders:Vec<fn(world:&mut World,ctx:&m
         setting:Arc::new(GraphSetting::default() ),
         plugins:vec![create_pbr_plugin()],
         render_lib_paths:vec!["../crates/seija-pbr/res".into(),"../crates/seija-render/res".into(),"examples".into()],
-        pre_render_updates:vec![]
+        pre_render_updates:pre_renders
     };
     app.add_module(RenderModule(Arc::new(render_config)));
 

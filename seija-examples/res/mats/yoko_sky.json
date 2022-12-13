@@ -1,6 +1,6 @@
 {
     "material":"/materials/skybox.mat.clj",
     "props":{
-        "mainTexture":"/texture/cubemap/snow/diff/diff.cubemap.json"
+        "mainTexture":"/texture/cubemap/Yokohama3/yoko.cubemap.json"
     }
  }

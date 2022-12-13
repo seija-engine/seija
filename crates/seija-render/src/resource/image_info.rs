@@ -40,7 +40,7 @@ pub fn read_image_info(dyn_image:image::DynamicImage) -> ImageInfo {
             let i = image::DynamicImage::ImageLumaA8(i).into_rgba8();
             width = i.width();
             height = i.height();
-            format = TextureFormat::Rgba8UnormSrgb;
+            format = TextureFormat::Rgba8Unorm;
             data = i.into_raw();
         }
         ,image::DynamicImage::ImageRgb8(i) => {
@@ -53,7 +53,7 @@ pub fn read_image_info(dyn_image:image::DynamicImage) -> ImageInfo {
         image::DynamicImage::ImageRgba8(i) => {
             width = i.width();
             height = i.height();
-            format = TextureFormat::Rgba8UnormSrgb;
+            format = TextureFormat::Rgba8Unorm;
             data = i.into_raw();
         }
        
