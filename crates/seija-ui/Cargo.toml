@@ -11,3 +11,4 @@ seija-asset = {path = "../seija-asset"}
 seija-render = {path = "../seija-render"}
 seija-transform = {path = "../seija-transform"}
 fnv = "1.0.7"
+fixedbitset = "0.4.2"

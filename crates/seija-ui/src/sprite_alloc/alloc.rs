@@ -58,10 +58,8 @@ impl SpriteAllocator {
     }
 
     pub fn get_sprite_info(&self,key:u32) -> Option<&SpriteInfo> {
-        seija_core::log::error!("get_sprite_info {:?} {}",&self.id_map,key);
         if let Some(index) = self.id_map.get(&key) {
             let sprite_info = &self.atlas_list[index.atlas_index].used_sprites[index.sprite_index];
-            seija_core::log::error!("get_sprite_info222");
             return Some(sprite_info);
         }
         None

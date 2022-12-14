@@ -1,27 +1,58 @@
-use std::collections::{HashSet, HashMap};
+use std::{collections::{HashSet, HashMap}, sync::Arc};
+use bevy_ecs::{entity::Entities, schedule::RunOnce};
 use components::{sprite::Sprite, panel::Panel, rect2d::Rect2D};
 use mesh2d::Mesh2D;
+use root_render::RootRender;
 use seija_app::{IModule, App};
-use seija_core::CoreStage; 
+use seija_asset::{Assets, AssetServer, Handle};
+use seija_core::{CoreStage, StartupStage}; 
 use seija_app::ecs::prelude::*;
+use seija_render::{resource::Mesh, material::{MaterialDefineAsset, MaterialDef, Material}};
 use seija_transform::{hierarchy::{Parent, Children}, Transform, TransformLabel};
-use seija_core::log;
 pub mod types;
 mod sprite_alloc;
 pub mod components;
 pub mod mesh2d;
+mod root_render;
 use crate::components::IBuildMesh2D;
 pub use sprite_alloc::system::update_sprite_alloc_render;
 pub use sprite_alloc::alloc::SpriteAllocator;
+
+#[derive(Clone, Copy,Hash,Debug,PartialEq, Eq,StageLabel)]
+pub enum UIStageLabel {
+    AfterStartup
+}
 
 pub struct UIModule;
 
 impl IModule for UIModule {
     fn init(&mut self,app:&mut App) {
         app.world.insert_resource(SpriteAllocator::new());
-        
+        app.init_resource::<UIRootDatas>();
+        app.schedule.add_stage_after(CoreStage::Startup, UIStageLabel::AfterStartup, 
+                                     SystemStage::single(on_after_start.exclusive_system()).with_run_criteria(RunOnce::default()));
         app.add_system(CoreStage::PostUpdate, update_render_system.after(TransformLabel::Propagate));
     }
+}
+
+#[derive(Default)]
+struct UIRootDatas {
+   baseui:Option<Arc<MaterialDef>>,
+   pub(crate) renders:HashMap<Entity,RootRender>
+}
+
+
+fn on_after_start(world:&mut World) {
+   let server = world.get_resource::<AssetServer>().unwrap().clone();
+   
+   let mut h_baseui = server.load_sync::<MaterialDefineAsset>(world, "materials/ui.mat.clj", None).unwrap();
+   h_baseui.forget(); //常驻
+
+   let mats = world.get_resource::<Assets<MaterialDefineAsset>>().unwrap();
+   let arc_mat_define = mats.get(&h_baseui.id).unwrap().define.clone();
+   if let Some(mut ui_data) = world.get_resource_mut::<UIRootDatas>() {
+      ui_data.baseui = Some(arc_mat_define);
+   }
 }
 
 fn update_render_system(mut sprites:Query<(Entity,&mut Sprite)>,
@@ -29,22 +60,52 @@ fn update_render_system(mut sprites:Query<(Entity,&mut Sprite)>,
                         parents: Query<(Entity,&Parent)>,
                         childrens: Query<&Children>,
                         infos:Query<(Entity,&Transform,&Rect2D)>,
-                        sprite_alloc:Res<SpriteAllocator>) {
-    let mut top_panels:HashSet<Entity> = HashSet::default();
+                        sprite_alloc:Res<SpriteAllocator>,
+                        mut ui_datas:ResMut<UIRootDatas>,
+                        entities:&Entities,
+                        mut commands:Commands,
+                        mut meshs:ResMut<Assets<Mesh>>,
+                        mut materials:ResMut<Assets<Material>>,
+                        server:Res<AssetServer>) {
+    //calc dirty top top_panels
+    let mut dirty_top_panels:HashSet<Entity> = HashSet::default();
     for (entity,sprite) in sprites.iter() {
         if sprite.is_dirty {
             if let Some(top_entity) = calc_top_panel(&entity,&mut panels,&parents) {
-                top_panels.insert(top_entity);
+                dirty_top_panels.insert(top_entity);
+            }
+        }
+    }
+   
+    for panel_entity in dirty_top_panels.iter() {
+        if let Some(top_mesh) = rebuild_panel_mesh(*panel_entity,&mut panels,&childrens,&mut sprites,&infos,&sprite_alloc) {
+            if ui_datas.renders.contains_key(&panel_entity) {
+                //update 
+            } else {
+                //add
+                let mesh:Mesh = top_mesh.into();
+                let h_mesh = meshs.add(mesh);
+               
+                let material_def = ui_datas.baseui.as_ref().unwrap();
+                let material = Material::from_def(material_def.clone(), &server).unwrap();
+                let h_mat = materials.add(material);
+                let render_entity = commands.spawn().insert(Transform::default()).insert(h_mesh).insert(h_mat).id();
+                ui_datas.renders.insert(*panel_entity, RootRender {
+                    panel_entity:*panel_entity,
+                    render_entity
+                });
             }
         }
     }
 
-    for panel_entity in top_panels.iter() {
-        rebuild_panel_mesh(*panel_entity,&mut panels,
-                     &childrens,&mut sprites,&infos,&sprite_alloc);
+    //remove
+    for render_id in ui_datas.renders.keys() {
+        if !entities.contains(*render_id) {
+
+        }
     }
-    //sprites.iter_mut().for_each(|mut v| v.1.is_dirty = false);
 }
+
 
 fn calc_top_panel(entity:&Entity,panels:&mut Query<(Entity,&mut Panel)>,parents:&Query<(Entity,&Parent)>) -> Option<Entity> {
     let mut cur_entity:Entity = *entity;
@@ -102,12 +163,12 @@ fn rebuild_sprite_mesh(sprites:&mut Query<(Entity,&mut Sprite)>,
                         sprite.is_dirty = false;
                         return Some(mesh2d);
                     }
-                    
                 }
-                
             }
         }
     }
     None
 }
+
+
 
