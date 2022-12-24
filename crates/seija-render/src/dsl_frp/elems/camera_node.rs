@@ -1,5 +1,5 @@
 use bevy_ecs::{world::World, prelude::Entity, query::{Added, With}};
-use glam::Vec4;
+use glam::{Vec4, Vec3};
 use lite_clojure_eval::Variable;
 use lite_clojure_frp::FRPSystem;
 use seija_transform::Transform;
@@ -71,9 +71,13 @@ impl CameraNode {
 
     fn update_camera_buffer(&self,buffer:&mut TypedUniformBuffer,t:&Transform,camera:&Camera) {
         if let Some(backend) = self.backend.as_ref() {
+            let mut clone_global = t.global().clone();
+            clone_global.scale = Vec3::ONE;
+            let inv_global =  clone_global.matrix().inverse();
+
             let proj = camera.projection.matrix();
-            let proj_view = proj * t.global().matrix().inverse();
-            let view = t.global().matrix().inverse();
+            let proj_view = proj * inv_global;
+            let view = inv_global;
             let v3 = t.global().position;
             let pos = Vec4::new(v3.x,v3.y,v3.z,1f32);
             let buffer = &mut buffer.buffer;

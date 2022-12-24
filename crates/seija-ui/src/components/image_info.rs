@@ -61,7 +61,7 @@ impl ImageGenericInfo {
     pub fn build_simple_mesh(&self,mat:&Mat4,rect2d:&Rect2D,uv:Rect<f32>) -> Mesh2D {
         let offset_x = -rect2d.width  * rect2d.anchor[0];
         let offset_y = -rect2d.height * rect2d.anchor[1];
-        let indexs = vec![0,1,2,1,3,2];
+        let indexs = vec![2,1,0,2,3,1];
         
         let points = vec![
               Vertex2D { //left top
@@ -81,6 +81,8 @@ impl ImageGenericInfo {
                 uv:  [uv.x + uv.width,uv.y + uv.height].into()
              },
         ];
+
+        dbg!(&points);
         Mesh2D { 
             color:self.color, 
             points, 

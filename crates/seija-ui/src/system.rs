@@ -132,13 +132,14 @@ fn rebuild_panel_mesh(panel_entity:Entity,
 fn rebuild_sprite_mesh(sprites:&mut Query<(Entity,&mut Sprite)>,
                        child:Entity,infos:&Query<(Entity,&Transform,&Rect2D)>,
                        sprite_alloc:&SpriteAllocator) -> Option<Mesh2D> {
-    if let Ok((_,mut sprite)) = sprites.get_mut(child) {
+    if let Ok((_,mut sprite)) = sprites.get_mut(child) { 
         if sprite.is_dirty {
             if let Ok((_,t,rect2d)) = infos.get(child) {
                 if let Some(sprite_index) = sprite.sprite_index {
                     if let Some(info) = sprite_alloc.get_sprite_info(sprite_index) {
                         let mat = t.global().matrix();
                         let uv = info.uv.clone();
+                        seija_core::log::error!("{:?}",&t.global().scale);
                         let mesh2d = sprite.build(rect2d, uv, &mat);
                         sprite.is_dirty = false;
                         return Some(mesh2d);

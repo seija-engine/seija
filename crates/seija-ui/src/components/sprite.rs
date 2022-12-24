@@ -1,5 +1,5 @@
 use bevy_ecs::prelude::Component;
-use seija_core::{smol_str::SmolStr, math::{Vec4, Mat4}};
+use seija_core::{ math::{Vec4, Mat4}};
 
 use crate::{mesh2d::Mesh2D, types::Rect, sprite_alloc::alloc::SpriteIndex};
 
