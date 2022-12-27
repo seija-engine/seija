@@ -1,8 +1,8 @@
-use std::{ num::{NonZeroU64}};
+use std::{ num::{NonZeroU64, NonZeroU32}};
 use seija_asset::Handle;
-use wgpu::{BindGroupEntry, Device, ShaderStages};
+use wgpu::{BindGroupEntry, Device, ShaderStages, TextureView};
 
-use crate::resource::{BufferId, RenderResourceId, RenderResources, Texture};
+use crate::resource::{BufferId, RenderResourceId, RenderResources, Texture, TextureId,SamplerId};
 
 #[derive(Debug,Default)]
 pub struct BindGroupLayoutBuilder {
@@ -48,6 +48,17 @@ impl BindGroupLayoutBuilder {
         self.layout_entrys.push(texture_entry);
     }
 
+    pub fn add_texture_array(&mut self,count:u32,visibility:wgpu::ShaderStages,sample_type:wgpu::TextureSampleType) {
+        let entry = wgpu::BindGroupLayoutEntry {
+            binding:self.layout_entrys.len() as u32,
+            visibility,
+            ty:wgpu::BindingType::Texture { sample_type, view_dimension: wgpu::TextureViewDimension::D2Array, multisampled: false },
+            count:Some(NonZeroU32::new(count).unwrap())
+        };
+       
+        self.layout_entrys.push(entry);
+    }
+
     pub fn add_uniform(&mut self,stage:wgpu::ShaderStages) {
         let entry = wgpu::BindGroupLayoutEntry {
             binding:self.layout_entrys.len() as u32,
@@ -73,11 +84,13 @@ impl BindGroupLayoutBuilder {
 
 enum BindGroupItem {
     Texture(Handle<Texture>),
+    TextureArray(Vec<TextureId>,SamplerId),
     ResId(RenderResourceId)
 }
 
 pub struct BindGroupBuilder {
-    entrys:Vec<BindGroupItem>
+    entrys:Vec<BindGroupItem>,
+    
 }
 
 impl BindGroupBuilder {
@@ -93,13 +106,36 @@ impl BindGroupBuilder {
         self.entrys.push(BindGroupItem::Texture(texture));
     }
 
+    pub fn is_empty(&self) -> bool {
+        self.entrys.is_empty()
+    }
+
+    pub fn add_texture_array(&mut self,textures:Vec<TextureId>,sample_id:SamplerId) {
+        self.entrys.push(BindGroupItem::TextureArray(textures,sample_id));
+    }
+
     pub fn add_buffer_addr(&mut self,buffer_id:BufferId,start:u64,count:u64) {
         self.entrys.push(BindGroupItem::ResId(RenderResourceId::BufferAddr(buffer_id,start,count)));
     }
 
     pub fn build(&self,layout:&wgpu::BindGroupLayout,device:&Device,resources:&RenderResources) -> wgpu::BindGroup {
         let mut entrys:Vec<BindGroupEntry> = Vec::new();
+        let mut view_list:Vec<Vec<&TextureView>> = vec![];
         let mut index:u32 = 0;
+        for item in self.entrys.iter() {
+            match item {
+                BindGroupItem::TextureArray(textures,_) => {
+                    let mut new_lst = vec![];
+                    for texture_id in textures.iter() {
+                        new_lst.push(resources.get_texture_view(texture_id).unwrap());
+                    }
+                    view_list.push(new_lst);
+                },
+                _ => {}
+            }
+        }
+
+        let mut view_index = 0;
         for item in self.entrys.iter() {
             match item {
                 BindGroupItem::ResId(RenderResourceId::Buffer(buffer_id)) => {
@@ -127,6 +163,16 @@ impl BindGroupBuilder {
                     index += 1;
                 },
                 BindGroupItem::ResId(_) => {},
+                BindGroupItem::TextureArray(_,sample_id) => {
+                    let entry = BindGroupEntry { binding:index,resource:wgpu::BindingResource::TextureViewArray(view_list[view_index].as_slice()) };
+                    entrys.push(entry);
+                    index += 1;
+                    let sampler = resources.get_sampler(&sample_id).unwrap();
+                    let entry = BindGroupEntry { binding:index, resource:wgpu::BindingResource::Sampler(sampler) };
+                    entrys.push(entry);
+                    index += 1;
+                    view_index += 1;
+                },
                 BindGroupItem::Texture(texture_handle) => {
                     let res_texture_id = resources.get_render_resource(&texture_handle.id, 0).and_then(|v|v.into_texture_id()).unwrap();
                     let res_sampler_id = resources.get_render_resource(&texture_handle.id, 1).and_then(|v|v.into_sampler_id()).unwrap();

@@ -139,7 +139,6 @@ fn rebuild_sprite_mesh(sprites:&mut Query<(Entity,&mut Sprite)>,
                     if let Some(info) = sprite_alloc.get_sprite_info(sprite_index) {
                         let mat = t.global().matrix();
                         let uv = info.uv.clone();
-                        seija_core::log::error!("{:?}",&t.global().scale);
                         let mesh2d = sprite.build(rect2d, uv, &mat);
                         sprite.is_dirty = false;
                         return Some(mesh2d);

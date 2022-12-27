@@ -165,17 +165,6 @@ impl SeijaShaderBackend {
             }
         } else {
             if fn_info.typ == "texture2D" {
-                //writer.write_str(&format!("{} get{}(){{",fn_info.typ,new_name)).unwrap();
-                //if let Some(ubo_info) = self.render_info.backend2ubo.get(backend_name) {
-                //    writer.write_str(&format!("return {}_{};",&ubo_info.name,fn_info.name)).unwrap();
-                //}
-                //writer.write_str("}\r\n").unwrap();
-
-                //writer.write_str(&format!("sampler get{}Sampler(){{",new_name)).unwrap();
-                //if let Some(ubo_info) = self.render_info.backend2ubo.get(backend_name) {
-                //    writer.write_str(&format!("return {}_{}S;",&ubo_info.name,fn_info.name)).unwrap();
-                //}
-                //writer.write_str("}\r\n").unwrap();
                
                 writer.write_str(&format!("vec4 texture_{}(vec2 uv){{",new_name)).unwrap();
                 if let Some(ubo_info) = self.render_info.backend2ubo.get(backend_name) {
@@ -190,14 +179,11 @@ impl SeijaShaderBackend {
                     writer.write_str(&format!("return textureSize({}_{},0);",&low_name,fn_info.name)).unwrap();
                 }
                 writer.write_str("}\r\n").unwrap();
-                /* 
-                writer.write_str(&format!("sampler get{}Sampler(){{",new_name)).unwrap();
-                if let Some(ubo_info) = self.render_info.backend2ubo.get(backend_name) {
-                    writer.write_str(&format!("return {}_{}S;",&ubo_info.name,fn_info.name)).unwrap();
-                }
-                writer.write_str("}\r\n").unwrap();*/
+               
             } else if  fn_info.typ == "cubeMap" {
 
+            } else if fn_info.typ == "texture2DArray" {
+                
             } else {
                 writer.write_str(&format!("{} get{}(){{",fn_info.typ,new_name)).unwrap();
                 if let Some(ubo_info) = self.render_info.backend2ubo.get(backend_name) {

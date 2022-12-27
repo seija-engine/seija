@@ -13,6 +13,17 @@
         "fs": "pures.color_fs_main"
       },
       {
+        "name": "ui",
+        "vertex": {
+          "POSITION": "require",
+          "UV0":"require"
+        },
+        "backend": [ "Camera3D", "Transform","UIAtlas" ],
+       
+        "vs": "ui.ui_vs_main",
+        "fs": "ui.ui_fs_main"
+      },
+      {
         "name": "shadowDepth",
         "vertex": {
           "POSITION": "require"

@@ -82,7 +82,6 @@ impl ImageGenericInfo {
              },
         ];
 
-        dbg!(&points);
         Mesh2D { 
             color:self.color, 
             points, 

@@ -7,7 +7,7 @@
     :pass [
         { 
             :shader { 
-                :name "core.color" 
+                :name "core.ui" 
                 
             } 
         }

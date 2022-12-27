@@ -26,6 +26,7 @@ impl Into<Mesh> for Mesh2D {
         }
         mesh.set(MeshAttributeType::POSITION, positons);
         mesh.set(MeshAttributeType::UV0, uvs);
+       
         mesh.set_indices(Some(Indices::U32(self.indexs)));
         mesh.build();
         mesh

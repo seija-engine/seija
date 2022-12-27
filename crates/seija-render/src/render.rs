@@ -38,7 +38,7 @@ impl Default for Config {
             device_label: None,
             backed: wgpu::Backends::VULKAN,
             power_pref: wgpu::PowerPreference::HighPerformance,
-            features: Default::default(),
+            features: wgpu::Features::TEXTURE_BINDING_ARRAY,
             limits,
         }
     }

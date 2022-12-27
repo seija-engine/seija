@@ -23,7 +23,7 @@ impl TryFrom<&Value> for UniformTextureDef {
                 is_cubemap = true;
                 wgpu::TextureSampleType::Float { filterable }
             },
-            "texture2D" => {
+            "texture2D" | "texture2DArray" => {
                 let filterable = json_map.get(":filterable").and_then(Value::as_bool).unwrap_or(true);
                 wgpu::TextureSampleType::Float { filterable }
             },

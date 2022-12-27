@@ -1,5 +1,5 @@
 use std::collections::HashMap;
-
+use seija_core::anyhow::Result;
 use seija_asset::Handle;
 use seija_core::OptionExt;
 use wgpu::CommandEncoder;
@@ -152,6 +152,19 @@ impl UniformContext {
                 }
             },
         }
+    }
+
+    pub fn set_layout(&mut self,name:&str,layout:wgpu::BindGroupLayout) -> Result<()> {
+        let index = self.get_index(name).get()?;
+        match index.typ {
+            UniformType::Global => {
+                self.globals[index.index].layout = layout;
+            },
+            UniformType::Component => {
+                self.components[index.index].layout = layout;
+            },
+        }
+        Ok(())
     }
 
     pub fn get_layout(&self,name:&str) -> Option<&wgpu::BindGroupLayout> {

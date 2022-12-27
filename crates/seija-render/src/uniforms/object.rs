@@ -47,12 +47,14 @@ impl UniformObject {
         let mut texture_idxs:HashMap<SmolStr,usize> = HashMap::default();
         let mut textures = vec![];
         for (index,def) in info.textures.iter().enumerate() {
-            if def.is_cubemap {
-                textures.push(res.default_textures[1].clone_weak());
-            } else {
-                textures.push(res.default_textures[0].clone_weak());
+            if def.str_type != "texture2DArray" {
+                if def.is_cubemap {
+                    textures.push(res.default_textures[1].clone_weak());
+                } else {
+                    textures.push(res.default_textures[0].clone_weak());
+                }
+                texture_idxs.insert(def.name.as_str().into(), index);
             }
-            texture_idxs.insert(def.name.as_str().into(), index);
         }
        
         let layout = info.create_layout(&res.device);
@@ -78,8 +80,10 @@ impl UniformObject {
         for texture in self.textures.iter() {
             builder.add_texture(texture.clone());
         }
-        let bind_group = builder.build(&self.layout, &res.device, &res);
-        self.bind_group = Some(bind_group);
+        if !builder.is_empty() {
+            let bind_group = builder.build(&self.layout, &res.device, &res);
+            self.bind_group = Some(bind_group);
+        }
         self.texture_dirty = false;
        
     }

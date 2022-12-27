@@ -40,8 +40,8 @@ fn start(world:&mut World) {
     let panel_id = world.spawn().insert(Panel::default()).insert(panel_t).insert(Parent(canvas_id)).insert(rect2d).id();
 
     let mut rect2d = Rect2D::default();
-    rect2d.width = 100f32;
-    rect2d.height = 760f32;
+    rect2d.width = 366f32;
+    rect2d.height = 67f32;
     let sprite_id = world.spawn().insert(Sprite::simple(index, Vec4::ONE))
                                          .insert(rect2d)
                                          .insert(Transform::default())

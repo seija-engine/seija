@@ -10,6 +10,7 @@
     (uniform "LightBuffer")
     (uniform "PostEffect")
     (uniform "IBLEnv")
+    (uniform "UIAtlas")
     (node CameraNodeID "CameraBuffer")
     (node TransformNodeID "ObjectBuffer")
     (node PBRCameraExNodeID "CameraBuffer")
