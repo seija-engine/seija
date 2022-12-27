@@ -1,6 +1,6 @@
 {
     :name "baseColor"
-    :order "Opaque"
+    :order "Transparent"
     :props [
         {:name "color"       :type "float4" :default [0.2,0.2,0,1]}
     ]
@@ -10,6 +10,7 @@
                 :name "core.ui" 
                 
             } 
+            
         }
 
        
