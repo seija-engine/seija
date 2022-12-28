@@ -27,7 +27,7 @@ impl IModule for UIModule {
         app.schedule.add_stage_after(CoreStage::Startup, UIStageLabel::AfterStartup, 
                                      SystemStage::single(on_after_start.exclusive_system())
                                      .with_run_criteria(RunOnce::default()));
-        app.add_system(CoreStage::PostUpdate, update_render_system.after(TransformLabel::Propagate));
+        app.add_system(CoreStage::PostUpdate, update_render_system.exclusive_system().after(TransformLabel::Propagate));
         app.add_system(CoreStage::PreUpdate,update_ui_canvas.exclusive_system());
     }
 }

@@ -10,23 +10,20 @@ use super::{IBuildMesh2D, rect2d::Rect2D, image_info::{ImageGenericInfo, ImageTy
 pub struct Sprite {
     pub info:ImageGenericInfo,
     pub sprite_index:Option<SpriteIndex>,
-    pub is_dirty:bool
 }
 
 impl Sprite {
     pub fn simple(sprite:SpriteIndex,color:Vec4) -> Sprite {
         Sprite {
             info:ImageGenericInfo { typ: ImageType::Simple, color },
-            sprite_index:Some(sprite),
-            is_dirty:true
+            sprite_index:Some(sprite)
         }
     }
 
     pub fn sliced(sprite:SpriteIndex,thickness:Thickness,color:Vec4) -> Sprite {
         Sprite {
             info:ImageGenericInfo { typ: ImageType::Sliced(thickness), color },
-            sprite_index:Some(sprite),
-            is_dirty:true
+            sprite_index:Some(sprite)
         }
     }
 }

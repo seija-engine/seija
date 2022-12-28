@@ -18,5 +18,8 @@ vec4 ui_fs_main(VSInput inv) {
     float uv_y = inv.uv.y;
 
     vec4 color = texture(sampler2DArray(uiatlas_uiAtlas, uiatlas_uiAtlasS),vec3(uv_x,uv_y,0) );
+    if(color.a < 0.0001) {
+      discard;
+    }
     return color;
 }

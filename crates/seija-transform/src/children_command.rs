@@ -24,14 +24,11 @@ impl Command for PushChildren {
         for child in self.children.iter() {
             world.entity_mut(*child).insert(Parent(self.parent));
         }
-        /*
         if let Some(mut parent_children) = world.get_mut::<Children>(self.parent) {
-
             parent_children.0.extend(self.children.iter().cloned());
         } else {
-           
             world.entity_mut(self.parent).insert(Children(self.children));
-        }*/
+        }
     }
 }
 

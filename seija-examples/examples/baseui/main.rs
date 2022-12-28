@@ -40,9 +40,9 @@ fn start(world:&mut World) {
     rect2d.height = 768f32;
     let mut panel_t = Transform::default();
     panel_t.local.position = Vec3::new(0f32, 0f32, -60f32);
-    let panel_id = world.spawn().insert(Panel::default()).insert(panel_t).insert(Parent(canvas_id)).insert(rect2d).id();
-
-    {
+    let panel_id = world.spawn().insert(Panel::default()).insert(panel_t).insert(rect2d).id();
+    PushChildren {children:SmallVec::from_slice(&[panel_id]),parent:canvas_id}.write(world);   
+    let bg_sprite_id = {
         let mut rect2d = Rect2D::default();
         rect2d.width = 640f32;
         rect2d.height = 480f32;
@@ -50,9 +50,9 @@ fn start(world:&mut World) {
         world.spawn().insert(Sprite::sliced(index3,Thickness::new1(35f32),Vec4::ONE))
                                              .insert(rect2d)
                                              .insert(t)
-                                             .insert(Parent(panel_id));
+                                             .insert(Parent(panel_id)).id()
     };
-    {
+    let btn_sprite_id = {
         let mut rect2d = Rect2D::default();
         rect2d.width = 138f32;
         rect2d.height = 138f32;
@@ -62,9 +62,10 @@ fn start(world:&mut World) {
         world.spawn().insert(Sprite::simple(index, Vec4::ONE))
                                              .insert(rect2d)
                                              .insert(t)
-                                             .insert(Parent(panel_id));
+                                             .insert(Parent(panel_id)).id()
     };
-    
+    log::error!("children:{:?}",&[bg_sprite_id,btn_sprite_id]);
+    PushChildren {children:SmallVec::from_slice(&[bg_sprite_id,btn_sprite_id]),parent:panel_id}.write(world);   
    
    
 }

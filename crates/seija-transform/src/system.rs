@@ -20,7 +20,7 @@ pub(crate) fn parent_update_system(
         }
     }
 
-    let mut children_additions = HashMap::<Entity, SmallVec<[Entity; 8]>>::default();
+    //let mut children_additions = HashMap::<Entity, SmallVec<[Entity; 8]>>::default();
     for (entity, parent, opre_parent) in parent_query.iter_mut() {
         if let Some(mut pre_parent) = opre_parent {
             if pre_parent.0 == parent.0 { continue; }
@@ -35,7 +35,7 @@ pub(crate) fn parent_update_system(
             commands.entity(entity).insert(PreviousParent(parent.0));
         }
         
-        
+        /*
         //把自己插入到新的父节点的Children里
         if let Ok(mut new_parent_children) = children_query.get_mut(parent.0) {
             
@@ -43,12 +43,12 @@ pub(crate) fn parent_update_system(
         } else {
 
             children_additions.entry(parent.0).or_insert_with(Default::default).push(entity);
-        }
+        }*/
     }
-
+    /*
     children_additions.iter().for_each(|(e, v)| {
         commands.entity(*e).insert(Children::from(v));
-    });
+    });*/
 }
 
 

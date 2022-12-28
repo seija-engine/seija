@@ -8,7 +8,6 @@ use super::{rect2d::Rect2D};
 #[derive(Component)]
 pub struct Panel {
     pub is_static:bool,
-    pub is_dirty:bool,
     pub(crate) child_meshs:HashMap<u32,Mesh2D>
 }
 
@@ -16,7 +15,6 @@ impl Default for Panel {
     fn default() -> Self {
         Panel { 
             is_static: true,
-            is_dirty:false,
             child_meshs:HashMap::default() 
         }
     }
