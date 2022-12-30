@@ -1,3 +1,5 @@
+use bevy_ecs::prelude::Component;
+
 #[derive(Debug,Clone,Default)]
 pub struct Rect<T:Default> {
     pub x:T,
@@ -20,4 +22,10 @@ impl Thickness {
     pub fn new1(num:f32) -> Self {
         Thickness { left: num, top: num, right: num, bottom: num }
     }
+}
+
+#[derive(Component)]
+pub struct ZOrder {
+    pub last:i32,
+    pub value:i32
 }
