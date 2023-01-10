@@ -12,7 +12,7 @@ mod root_render;
 use components::ui_canvas::update_ui_canvas;
 pub use sprite_alloc::system::update_sprite_alloc_render;
 pub use sprite_alloc::alloc::SpriteAllocator;
-use system::{UIRootDatas, on_after_start, update_render_system};
+use system::{UISystemData, on_after_start, update_render_system};
 #[derive(Clone, Copy,Hash,Debug,PartialEq, Eq,StageLabel)]
 pub enum UIStageLabel {
     AfterStartup
@@ -23,7 +23,7 @@ pub struct UIModule;
 impl IModule for UIModule {
     fn init(&mut self,app:&mut App) {
         app.world.insert_resource(SpriteAllocator::new());
-        app.init_resource::<UIRootDatas>();
+        app.init_resource::<UISystemData>();
         app.schedule.add_stage_after(CoreStage::Startup, UIStageLabel::AfterStartup, 
                                      SystemStage::single(on_after_start.exclusive_system())
                                      .with_run_criteria(RunOnce::default()));

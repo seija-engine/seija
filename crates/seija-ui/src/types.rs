@@ -25,7 +25,7 @@ impl Thickness {
 }
 
 #[derive(Component)]
-pub struct ZOrder {
+pub struct UIZOrder {
     pub last:i32,
     pub value:i32
 }
