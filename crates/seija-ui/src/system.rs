@@ -47,17 +47,24 @@ Panel0                ZOrder(0)
      Sprite3          ZOrder(6)
    Sprite4            ZOrder(7)
 
-to
-
-Drawcall(1)[Panel0][Sprite0] max-0.1
-Drawcall(2)[Panel1][Sprite1] max-0.3
-Drawcall(3)[Panel1][Sprite2,Sprite3,Sprite4] max-0.7
-
    1. 获取所有dirty Sprite
    2. 计算出所有变动的TopPanel
    3. 对TopPanel的ZOrder进行重排
    4. 进行UIDrawcall的比对更新
    5. 根据ZOrder进行UIDrawcall的Z位置调整
+
+进行UIDrawcall的比对算法
+Tick:1 
+  Panel0 = [s0,Split,s2,s3,s4,s5]
+Tick:2
+  Panel0 = [s0,Split,s2,Split,s3,s4,s5]
+  1. entity id做hash
+       [hash(s0),hash(s2,s3,s4),hash(s5)]
+       [hash(s0),hash(s2),hash(s3,s4,s5)]
+  2. 重新遍历一遍同Hash的复用，不同Hash的删除生成新的(处理增删)
+      复用:hash(s0) 新生成:hash(s2),hash(s3,s4,s5)
+  3. 遍历Update的Entity,从已经更新的Drawcall中找到需要更新的更新一下
+
 */
 
 
@@ -124,3 +131,8 @@ fn _fill_ui_zorders(world:&mut World,entity:Entity,number:i32,zorders:&mut Query
       
    }
 }
+
+/*
+r0 r1(d) r2 r3 r4(d) r5
+draw[r0] draw[r1] draw[r2,r3] draw[r4] draw[r5]
+*/
