@@ -1,7 +1,7 @@
 use bevy_ecs::prelude::Entity;
-use std::{collections::HashSet, sync::Arc};
+use std::{collections::{HashSet, HashMap}, sync::Arc};
 
-use crate::{ types::UIZOrder};
+use crate::{ types::UIZOrder, render_info::PanelInfo};
 
 use seija_core::log;
 use super::components::{sprite::Sprite, panel::Panel, rect2d::Rect2D};
@@ -10,15 +10,11 @@ use seija_asset::{Assets, AssetServer};
 use seija_app::ecs::prelude::*;
 use seija_render::{ material::{MaterialDefineAsset, MaterialDef}};
 use seija_transform::{hierarchy::{Parent, Children}, Transform};
-pub(crate) struct RootRender {
-    pub panel_entity:Entity,
-    pub render_entity:Entity
-}
-
 
 #[derive(Default)]
 pub(crate) struct UISystemData {
    baseui:Option<Arc<MaterialDef>>,
+   panel_infos:HashMap<Entity,PanelInfo>
 }
 
 
@@ -69,25 +65,61 @@ Tick:2
 
 
 pub(crate) fn update_render_system(world:&mut World) {
-   let mut dirty_sprites = world.query_filtered::<Entity,Or<(Changed<Sprite>,Changed<Rect2D>,Changed<Transform>)>>();
+   let mut update_sprites = world.query_filtered::<Entity,Or<(Changed<Sprite>,Changed<Rect2D>,Changed<Transform>)>>();
+   let mut remove_sprites = world.removed::<Sprite>();
+   let mut add_sprites = world.query_filtered::<Entity,Added<Sprite>>();
+
    let mut panels = world.query::<(Entity,&Panel)>();
    let mut parents = world.query::<&Parent>();
    let mut zorders = world.query::<&mut UIZOrder>();
    let mut childrens = world.query::<&Children>();
-    //计算出所有变动的TopPanel
-    let mut dirty_panels:HashSet<Entity> = HashSet::default();
-    for e in dirty_sprites.iter(world) {
-      log::info!("dirty_sprites iter:{:?}",e);
+   //计算出所有变动的Top Panel(穿透到最顶层)
+   let mut dirty_top_panels:HashSet<Entity> = HashSet::default();
+   for e in update_sprites.iter(world) {
       if let Some(e) = calc_top_panel(world,e,&mut panels,&mut parents) {
-         dirty_panels.insert(e); 
+         dirty_top_panels.insert(e); 
       }
-    }
-    
-    //对TopPanel的ZOrder进行重排
-    fill_ui_zorders(world,dirty_panels,&mut zorders,&mut childrens);
+   }
+   //对TopPanel的ZOrder进行重排
+   fill_ui_zorders(world,dirty_top_panels,&mut zorders,&mut childrens);
 
-    //开始比对更新Drawcall
+   //计算出所有变动的Panel
+   let mut dirty_panels:HashSet<Entity> = Default::default();
+   //增 + 改
+   for entity in update_sprites.iter(world) {
+      fill_dirty_panel(world,entity,&mut panels,&mut parents,&mut dirty_panels);
+   }
 
+   //TODO 删
+
+   if let Some(mut system_data) = world.get_resource_mut::<UISystemData>() {
+      //比对更新Panel的Drawcall
+      for panel_entity in dirty_panels.iter() {
+         if let Some(panel_info) = system_data.panel_infos.get_mut(panel_entity) {
+                     
+         } else {
+         }
+      }
+   }
+}
+
+fn fill_dirty_panel(world:&World,entity:Entity,panels:&mut QueryState<(Entity,&Panel)>,parents:&mut QueryState<&Parent>,dirty_panels:&mut HashSet<Entity>) {
+   let mut cur_entity:Entity = entity;
+   let mut last_panel:Option<Entity> = None; 
+   while let Ok(parent) = parents.get(world,cur_entity) {
+      cur_entity = parent.0;
+      if let Ok((e,panel)) = panels.get(world,cur_entity) {
+         last_panel = Some(e);
+          if !panel.is_static {
+            dirty_panels.insert(e);
+            return;
+          }
+      }
+   }
+   
+   if let Some(last) = last_panel.take() {
+      dirty_panels.insert(last);
+   }
 }
 
 fn calc_top_panel(world:&World,entity:Entity,panels:&mut QueryState<(Entity,&Panel)>,parents:&mut QueryState<&Parent>) -> Option<Entity> {
@@ -131,8 +163,3 @@ fn _fill_ui_zorders(world:&mut World,entity:Entity,number:i32,zorders:&mut Query
       
    }
 }
-
-/*
-r0 r1(d) r2 r3 r4(d) r5
-draw[r0] draw[r1] draw[r2,r3] draw[r4] draw[r5]
-*/

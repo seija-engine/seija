@@ -8,7 +8,7 @@ mod sprite_alloc;
 pub mod components;
 pub mod mesh2d;
 mod system;
-mod root_render;
+mod render_info;
 use components::ui_canvas::update_ui_canvas;
 pub use sprite_alloc::system::update_sprite_alloc_render;
 pub use sprite_alloc::alloc::SpriteAllocator;
