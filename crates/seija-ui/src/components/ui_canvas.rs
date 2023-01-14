@@ -2,6 +2,7 @@ use bevy_ecs::{prelude::{Component, Entity}, world::World, query::{Changed, Adde
 use seija_core::{window::AppWindow, math::Vec3};
 use seija_render::camera::camera::{Camera, Projection};
 use seija_transform::Transform;
+use seija_core::log;
 pub enum UIScaleMode {
     WithScreenSize,
     ConstantPhysicalSize
@@ -25,7 +26,8 @@ pub(crate) fn update_ui_canvas(world:&mut World) {
        let app_window = world.get_resource::<AppWindow>().unwrap();
        (app_window.inner.width(),app_window.inner.height())
    };
-   for (entity,camera,canvas,mut t) in changed_canvas.iter_mut(world) {
+   
+   for (_,camera,_,mut t) in changed_canvas.iter_mut(world) {
       if let Projection::Ortho(ref ortho) = camera.projection {
           let ortho_w = ortho.left.abs() + ortho.right.abs();
           let ortho_h = ortho.top.abs() + ortho.bottom.abs();

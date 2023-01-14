@@ -29,9 +29,9 @@ impl Sprite {
 }
 
 
-impl IBuildMesh2D for Sprite {
-    fn build(&self,rect2d:&Rect2D,uv:Rect<f32>,mat:&Mat4,raw_size:&Rect<u32>) -> Mesh2D {
-        let mesh2d = self.info.build_mesh(mat, rect2d, uv,raw_size);
+impl Sprite {
+   pub fn build(&self,rect2d:&Rect2D,uv:Rect<f32>,mat:&Mat4,raw_size:&Rect<u32>,z_order:f32) -> Mesh2D {
+        let mesh2d = self.info.build_mesh(mat, rect2d, uv,raw_size,z_order);
         mesh2d
     }
 }

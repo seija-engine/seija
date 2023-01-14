@@ -49,36 +49,36 @@ impl Default for ImageGenericInfo {
 
 
 impl ImageGenericInfo {
-    pub fn build_mesh(&self,mat:&Mat4,rect2d:&Rect2D,uv:Rect<f32>,raw_size:&Rect<u32>) -> Mesh2D {
+    pub fn build_mesh(&self,mat:&Mat4,rect2d:&Rect2D,uv:Rect<f32>,raw_size:&Rect<u32>,z_order:f32) -> Mesh2D {
         match &self.typ {
-            ImageType::Simple => { self.build_simple_mesh(mat,rect2d,uv) },
-            ImageType::Sliced(thinkness) => { self.build_slice_mesh(thinkness,mat,rect2d,uv,raw_size) },
+            ImageType::Simple => { self.build_simple_mesh(mat,rect2d,uv,z_order) },
+            ImageType::Sliced(thinkness) => { self.build_slice_mesh(thinkness,mat,rect2d,uv,raw_size,z_order) },
             _ => {
                 todo!()
             }
         }
     }
 
-    pub fn build_simple_mesh(&self,mat:&Mat4,rect2d:&Rect2D,uv:Rect<f32>) -> Mesh2D {
+    pub fn build_simple_mesh(&self,mat:&Mat4,rect2d:&Rect2D,uv:Rect<f32>,z_order:f32) -> Mesh2D {
         let offset_x = -rect2d.width  * rect2d.anchor[0];
         let offset_y = -rect2d.height * rect2d.anchor[1];
         let indexs = vec![2,1,0,2,3,1];
         
         let points = vec![
               Vertex2D { //left top
-                 pos: mat.mul_vec4(Vec4::new(0f32 + offset_x, rect2d.height + offset_y, 0f32,1f32)).xyz(),
+                 pos: mat.mul_vec4(Vec4::new(0f32 + offset_x, rect2d.height + offset_y, z_order,1f32)).xyz(),
                  uv:  [uv.x,uv.y].into()
               },
               Vertex2D { //right top
-                pos: mat.mul_vec4(Vec4::new(rect2d.width + offset_x,rect2d.height + offset_y, 0f32,1f32)).xyz(),
+                pos: mat.mul_vec4(Vec4::new(rect2d.width + offset_x,rect2d.height + offset_y,z_order,1f32)).xyz(),
                 uv:  [uv.x + uv.width,uv.y].into()
              },
              Vertex2D {//left bottom
-                pos:  mat.mul_vec4(Vec4::new(0f32 + offset_x,0f32 + offset_y, 0f32,1f32)).xyz(),
+                pos:  mat.mul_vec4(Vec4::new(0f32 + offset_x,0f32 + offset_y,z_order,1f32)).xyz(),
                 uv:  [uv.x,uv.y + uv.height].into()
              },
              Vertex2D {//right bottom
-                pos:  mat.mul_vec4(Vec4::new(rect2d.width + offset_x,0f32 + offset_y, 0f32,1f32)).xyz(),
+                pos:  mat.mul_vec4(Vec4::new(rect2d.width + offset_x,0f32 + offset_y,z_order,1f32)).xyz(),
                 uv:  [uv.x + uv.width,uv.y + uv.height].into()
              },
         ];
@@ -90,7 +90,8 @@ impl ImageGenericInfo {
         }
     }
 
-    pub fn build_slice_mesh(&self,thickness:&Thickness,mat:&Mat4,rect2d:&Rect2D,uv:Rect<f32>,raw_size:&Rect<u32>) -> Mesh2D {
+    pub fn build_slice_mesh(&self,thickness:&Thickness,mat:&Mat4,rect2d:&Rect2D,uv:Rect<f32>,raw_size:&Rect<u32>,z_order:f32) -> Mesh2D {
+      
         let offset_x = rect2d.width  * rect2d.anchor[0];
         let offset_y = rect2d.height * rect2d.anchor[1];
         //left -> right
@@ -110,53 +111,53 @@ impl ImageGenericInfo {
         let mut meshes:Vec<Vertex2D> = vec![];
         let mut indexs:Vec<u32> = vec![];
         //center
-        ImageGenericInfo::fill_quad_mesh(&mut meshes,mat,x1,x2,y1,y2,uv_x1,uv_x2,uv_y1,uv_y2, 0f32);
+        ImageGenericInfo::fill_quad_mesh(&mut meshes,mat,x1,x2,y1,y2,uv_x1,uv_x2,uv_y1,uv_y2, z_order);
         ImageGenericInfo::fill_quad_index(&mut indexs, ia);
         //left top
         if thickness.left > 0f32 && thickness.top > 0f32 {
-            ImageGenericInfo::fill_quad_mesh(&mut meshes,mat,x0,x1,y0,y1,uv_x0,uv_x1,uv_y0,uv_y1, 0f32);
+            ImageGenericInfo::fill_quad_mesh(&mut meshes,mat,x0,x1,y0,y1,uv_x0,uv_x1,uv_y0,uv_y1, z_order);
             ia += 4;
             ImageGenericInfo::fill_quad_index(&mut indexs, ia);
         }
         //top
         if thickness.top > 0f32 {
-            ImageGenericInfo::fill_quad_mesh(&mut meshes,mat,x1,x2,y0,y1,uv_x1,uv_x2,uv_y0,uv_y1,0f32);
+            ImageGenericInfo::fill_quad_mesh(&mut meshes,mat,x1,x2,y0,y1,uv_x1,uv_x2,uv_y0,uv_y1,z_order);
             ia += 4;
             ImageGenericInfo::fill_quad_index(&mut indexs, ia);
         }
         //right top
         if thickness.right > 0f32 && thickness.top > 0f32 {
-            ImageGenericInfo::fill_quad_mesh(&mut meshes,mat,x2,x3,y0,y1,uv_x2,uv_x3,uv_y0,uv_y1,0f32);
+            ImageGenericInfo::fill_quad_mesh(&mut meshes,mat,x2,x3,y0,y1,uv_x2,uv_x3,uv_y0,uv_y1,z_order);
             ia += 4;
             ImageGenericInfo::fill_quad_index(&mut indexs,ia);
         }
         //left
         if thickness.left > 0f32 {
-            ImageGenericInfo::fill_quad_mesh(&mut meshes,mat,x0,x1,y1,y2,uv_x0,uv_x1,uv_y1,uv_y2,0f32);
+            ImageGenericInfo::fill_quad_mesh(&mut meshes,mat,x0,x1,y1,y2,uv_x0,uv_x1,uv_y1,uv_y2,z_order);
             ia += 4;
             ImageGenericInfo::fill_quad_index(&mut indexs,ia);
         }
         //right
         if thickness.right > 0f32 {
-            ImageGenericInfo::fill_quad_mesh(&mut meshes,mat,x2,x3,y1,y2,uv_x2,uv_x3,uv_y1,uv_y2,0f32);
+            ImageGenericInfo::fill_quad_mesh(&mut meshes,mat,x2,x3,y1,y2,uv_x2,uv_x3,uv_y1,uv_y2,z_order);
             ia += 4;
             ImageGenericInfo::fill_quad_index(&mut indexs,ia);
         }
         //bottom left
         if thickness.bottom > 0f32 && thickness.left > 0f32 {
-            ImageGenericInfo::fill_quad_mesh(&mut meshes,mat,x0,x1,y2,y3,uv_x0,uv_x1,uv_y2,uv_y3,0f32);
+            ImageGenericInfo::fill_quad_mesh(&mut meshes,mat,x0,x1,y2,y3,uv_x0,uv_x1,uv_y2,uv_y3,z_order);
             ia += 4;
             ImageGenericInfo::fill_quad_index(&mut indexs,ia);
         }
         //bottom
         if thickness.bottom > 0f32 {
-            ImageGenericInfo::fill_quad_mesh(&mut meshes,mat,x1,x2,y2,y3,uv_x1,uv_x2,uv_y2,uv_y3,0f32);
+            ImageGenericInfo::fill_quad_mesh(&mut meshes,mat,x1,x2,y2,y3,uv_x1,uv_x2,uv_y2,uv_y3,z_order);
             ia += 4;
             ImageGenericInfo::fill_quad_index(&mut indexs,ia);
         }
         //bottom right
         if thickness.right > 0f32 && thickness.bottom > 0f32 {
-            ImageGenericInfo::fill_quad_mesh(&mut meshes,mat,x2,x3,y2,y3,uv_x2,uv_x3,uv_y2,uv_y3,0f32);
+            ImageGenericInfo::fill_quad_mesh(&mut meshes,mat,x2,x3,y2,y3,uv_x2,uv_x3,uv_y2,uv_y3,z_order);
             ia += 4;
             ImageGenericInfo::fill_quad_index(&mut indexs,ia);
         }
