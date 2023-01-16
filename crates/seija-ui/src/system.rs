@@ -1,9 +1,9 @@
 use bevy_ecs::{prelude::Entity, system::CommandQueue};
 use std::{collections::{HashSet, HashMap}, sync::Arc};
 
-use crate::{ types::UIZOrder, render_info::{PanelInfo, DrawCallInfo}, components::IBuildMesh2D, SpriteAllocator, mesh2d::Mesh2D};
+use crate::{ types::UIZOrder, render_info::{PanelInfo, DrawCallInfo}, SpriteAllocator};
 
-use seija_core::{log, math::Mat4};
+use seija_core::{log};
 use super::components::{sprite::Sprite, panel::Panel, rect2d::Rect2D};
 
 use seija_asset::{Assets, AssetServer};
@@ -92,13 +92,16 @@ pub(crate) fn update_render_system(world:&mut World) {
    }
    //TODO 删
    
+   //开始比对PanelInfo
    let mut fst_create:Vec<Entity> = Vec::new();
+   let mut diff_update:Vec<Entity> = Vec::new();
    let mut material_def = None;
    if let Some(mut system_data) = world.get_resource_mut::<UISystemData>() {
       material_def = Some(system_data.baseui.as_ref().unwrap().clone());
       //比对更新Panel的Drawcall
       for panel_entity in dirty_panels.iter() {
          if let Some(panel_info) = system_data.panel_infos.get_mut(panel_entity) {
+            
             //TODO Diff         
          } else {
             fst_create.push(*panel_entity);
@@ -106,12 +109,25 @@ pub(crate) fn update_render_system(world:&mut World) {
       }
    }
 
+   //处理首次创建的Panel
+   process_fst_create(world, fst_create, &mut panels, &mut childrens, &mut zorders, &mut sprites, material_def);
+
+}
+
+fn process_fst_create(world:&mut World,
+                      mut fst_create:Vec<Entity>,
+                      mut panels:&mut QueryState<(Entity,&Panel)>,
+                      mut childrens:&mut QueryState<&Children>,
+                      zorders:&mut QueryState<&mut UIZOrder>,
+                      mut sprites:&mut QueryState<(&Sprite,&Rect2D,&Transform)>,
+                      material_def:Option<Arc<MaterialDef>>) {
    let mut fst_panel_infos:Vec<PanelInfo> = vec![];
    let sprite_alloc = world.get_resource::<SpriteAllocator>().unwrap();
+   //扫描并生成PanelInfo
    for panel_entity in fst_create.drain(..) {
       let mut drawcall_infos = vec![];
       let drawcalls = PanelInfo::scan_drawcalls(world,panel_entity,&mut childrens,&mut sprites,&mut panels);
-      log::error!("scan_drawcalls:{}",drawcalls.len());
+      log::info!("scan_drawcalls:{}",drawcalls.len());
       for drawcall in drawcalls {
            let mut meshs = vec![]; 
            for sprite_id in drawcall {
@@ -120,7 +136,6 @@ pub(crate) fn update_render_system(world:&mut World) {
                      if let Some(info) = sprite_alloc.get_sprite_info(k) {
                         let global = trans.global();
                         let zorder = zorders.get(world, sprite_id).unwrap().value;
-                        dbg!(&global);
                         let mesh2d = sprite.build(rect2d, info.uv.clone(), &global.matrix(), &info.rect,zorder as f32 * 0.01f32);
                         meshs.push(mesh2d);
                      }
@@ -134,6 +149,7 @@ pub(crate) fn update_render_system(world:&mut World) {
       fst_panel_infos.push(panel_info);
    }
    
+   //根据PanelInfo里的DrawcallInfo创建实际渲染物体
    let mut asset_meshs = unsafe { world.get_resource_unchecked_mut::<Assets<Mesh>>().unwrap() };
    let mut asset_materials = unsafe { world.get_resource_unchecked_mut::<Assets<Material>>().unwrap() };
    let server = world.get_resource::<AssetServer>().unwrap();
@@ -154,7 +170,6 @@ pub(crate) fn update_render_system(world:&mut World) {
          system_data.panel_infos.insert(info.panel_id, info);
       }
    }
-
 }
 
 fn fill_dirty_panel(world:&World,entity:Entity,panels:&mut QueryState<(Entity,&Panel)>,parents:&mut QueryState<&Parent>,dirty_panels:&mut HashSet<Entity>) {

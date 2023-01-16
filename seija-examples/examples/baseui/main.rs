@@ -49,8 +49,7 @@ fn start(world:&mut World) {
         let mut t = Transform::default();
         world.spawn().insert(Sprite::sliced(index3,Thickness::new1(35f32),Vec4::ONE))
                                              .insert(rect2d)
-                                             .insert(t)
-                                             .insert(Parent(panel_id)).id()
+                                             .insert(t).id()
     };
     let btn_sprite_id = {
         let mut rect2d = Rect2D::default();
@@ -58,13 +57,10 @@ fn start(world:&mut World) {
         rect2d.height = 138f32;
         let mut t = Transform::default();
         t.local.position.y = -100f32;
-        t.local.position.z = 2f32;
         world.spawn().insert(Sprite::simple(index, Vec4::ONE))
                                              .insert(rect2d)
-                                             .insert(t)
-                                             .insert(Parent(panel_id)).id()
+                                             .insert(t).id()
     };
-    log::error!("children:{:?}",&[bg_sprite_id,btn_sprite_id]);
     PushChildren {children:SmallVec::from_slice(&[bg_sprite_id,btn_sprite_id]),parent:panel_id}.write(world);   
    
    

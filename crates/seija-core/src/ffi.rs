@@ -31,7 +31,11 @@ pub unsafe extern "C" fn core_time_get_delta_seconds(time_ptr:* const u8) -> f32
     time_ref.delta_seconds()
 }
 
-
+#[no_mangle]
+pub unsafe extern "C" fn core_spawn_entity(world_ptr:*mut u8) -> u32 {
+    let world_ptr = &mut *(world_ptr as *mut World);
+    world_ptr.spawn().id().id()
+}
 
 type WorldFN = extern fn(world:*mut World);
 
