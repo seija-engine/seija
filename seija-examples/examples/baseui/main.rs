@@ -88,8 +88,8 @@ fn on_update(mut commands:Commands,input:Res<Input>,ui_data:ResMut<UIData>,mut s
    } else if input.get_key_down(KeyCode::A) {
         let btn_sprite_id = {
             let mut rect2d = Rect2D::default();
-            rect2d.width = 138f32;
-            rect2d.height = 138f32;
+            rect2d.width = 366f32;
+            rect2d.height = 67f32;
             let mut t = Transform::default();
             t.local.position.y = 0f32;
             commands.spawn().insert(Sprite::simple(ui_data.sprite_index, Vec4::ONE)) .insert(rect2d).insert(t).id() 

@@ -1,5 +1,6 @@
 use std::{sync::Arc, collections::HashMap};
 
+use bevy_ecs::prelude::Entity;
 use seija_asset::Handle;
 use wgpu::CommandEncoder;
 
@@ -66,7 +67,7 @@ pub struct ArrayObject {
     texture_def:Arc<Vec<UniformTextureDef>>,
     pub layout:wgpu::BindGroupLayout,
 
-    infos:fnv::FnvHashMap<u32,ArrayObjectItem>,
+    infos:fnv::FnvHashMap<Entity,ArrayObjectItem>,
     free_items:Vec<ArrayObjectItem>,
 
     cap:usize,
@@ -96,7 +97,7 @@ impl ArrayObject {
         }
     }
 
-    pub fn add_item(&mut self,eid:u32,res:&mut RenderResources) {
+    pub fn add_item(&mut self,eid:Entity,res:&mut RenderResources) {
         if self.infos.contains_key(&eid) { return; }
         if let Some(free_item) = self.free_items.pop() {
             self.infos.insert(eid, free_item);
@@ -115,15 +116,15 @@ impl ArrayObject {
         self.infos.insert(eid, item);
     }
 
-    pub fn get_item_mut(&mut self,eid:u32) -> Option<&mut ArrayObjectItem> {
+    pub fn get_item_mut(&mut self,eid:Entity) -> Option<&mut ArrayObjectItem> {
         self.infos.get_mut(&eid)
     }
 
-    pub fn get_item(&self,eid:u32) -> Option<&ArrayObjectItem> {
+    pub fn get_item(&self,eid:Entity) -> Option<&ArrayObjectItem> {
         self.infos.get(&eid)
     }
 
-    pub fn remove_item(&mut self,eid:u32) {
+    pub fn remove_item(&mut self,eid:Entity) {
         if let Some(rm_item) = self.infos.remove(&eid) {
             self.free_items.push(rm_item);   
         }

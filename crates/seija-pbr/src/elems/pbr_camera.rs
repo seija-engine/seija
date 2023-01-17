@@ -3,7 +3,7 @@ use lite_clojure_eval::{Variable, GcRefCell};
 use seija_render::{dsl_frp::{IUpdateNode, FRPSystem}, RenderContext, UniformIndex};
 use anyhow::{Result,anyhow};
 
-use crate::{PBRCameraInfo, Exposure};
+use crate::{PBRCameraInfo};
 pub struct PBRCameraNode {
     pub ubo_name:String,
     name_index:UniformIndex,
@@ -37,7 +37,7 @@ impl IUpdateNode for PBRCameraNode {
     fn update(&mut self,world:&mut World,ctx:&mut RenderContext,_:&mut FRPSystem) -> Result<()> {
         let mut cameras = world.query_filtered::<(Entity,&PBRCameraInfo),Or<(Changed<PBRCameraInfo>,Added<PBRCameraInfo>)>>();
         for (e,ex_info) in cameras.iter(world) {
-            ctx.ubo_ctx.set_buffer(&self.name_index, Some(e.id()),|buffer| {
+            ctx.ubo_ctx.set_buffer(&self.name_index, Some(e),|buffer| {
                 buffer.buffer.write_bytes(self.exposure_index, ex_info.exposure.exposure_self());
             })
         }

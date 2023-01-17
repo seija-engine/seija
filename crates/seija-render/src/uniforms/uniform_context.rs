@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use bevy_ecs::prelude::Entity;
 use seija_core::anyhow::Result;
 use seija_asset::Handle;
 use seija_core::OptionExt;
@@ -77,7 +78,7 @@ impl UniformContext {
          }
     }
 
-    pub fn set_buffer<F>(&mut self,index:&UniformIndex,eid:Option<u32>,set_fn:F) where F:FnOnce(&mut TypedUniformBuffer) {
+    pub fn set_buffer<F>(&mut self,index:&UniformIndex,eid:Option<Entity>,set_fn:F) where F:FnOnce(&mut TypedUniformBuffer) {
         match index.typ {
             UniformType::Global => {
                 let object = &mut self.globals[index.index];
@@ -92,7 +93,7 @@ impl UniformContext {
         }
     }
 
-    pub fn set_texture_byindex(&mut self,eid:Option<u32>,index:&UniformIndex,texture_name:&str,texture:Handle<Texture>) -> anyhow::Result<()> {
+    pub fn set_texture_byindex(&mut self,eid:Option<Entity>,index:&UniformIndex,texture_name:&str,texture:Handle<Texture>) -> anyhow::Result<()> {
         match index.typ {
             UniformType::Global => {
                 let object = &mut self.globals[index.index];
@@ -108,22 +109,22 @@ impl UniformContext {
         Ok(())
     }
 
-    pub fn set_texture(&mut self,eid:Option<u32>,ubo_name:&str,texture_name:&str,texture:Handle<Texture>) -> anyhow::Result<()> {
+    pub fn set_texture(&mut self,eid:Option<Entity>,ubo_name:&str,texture_name:&str,texture:Handle<Texture>) -> anyhow::Result<()> {
         let index = self.get_index(ubo_name).get()?;
         self.set_texture_byindex(eid, &index, texture_name, texture)
     }
 
-    pub fn add_component(&mut self,index:&UniformIndex,eid:u32,res:&mut RenderResources) {
+    pub fn add_component(&mut self,index:&UniformIndex,eid:Entity,res:&mut RenderResources) {
         let array_object = &mut self.components[index.index];
         array_object.add_item(eid, res);
     }
 
-    pub fn remove_component(&mut self,index:&UniformIndex,eid:u32) {
+    pub fn remove_component(&mut self,index:&UniformIndex,eid:Entity) {
         let array_object = &mut self.components[index.index];
         array_object.remove_item(eid);
     }
 
-    pub fn get_bind_group(&self,index:&UniformIndex,eid:Option<u32>) -> Option<&wgpu::BindGroup> {
+    pub fn get_bind_group(&self,index:&UniformIndex,eid:Option<Entity>) -> Option<&wgpu::BindGroup> {
         match index.typ {
             UniformType::Global => {
                 let object = &self.globals[index.index];
@@ -137,7 +138,7 @@ impl UniformContext {
         }
     }
 
-    pub fn set_bind_group(&mut self,index:&UniformIndex,eid:Option<u32>,bind_group:wgpu::BindGroup) {
+    pub fn set_bind_group(&mut self,index:&UniformIndex,eid:Option<Entity>,bind_group:wgpu::BindGroup) {
         match index.typ {
             UniformType::Global => {
                 let object = &mut self.globals[index.index];

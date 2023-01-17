@@ -29,11 +29,11 @@ impl TransfromNode {
         let mut added_transform = world.query_filtered::<Entity,(Added<Transform>,With<Handle<Mesh>>,With<Handle<Material>>)>();
         if let Some(name_index) = self.name_index {
             for v in added_transform.iter(&world) {
-                ctx.ubo_ctx.add_component(&name_index,v.id(),&mut ctx.resources)
+                ctx.ubo_ctx.add_component(&name_index,v,&mut ctx.resources)
             }
     
             for rm_e in world.removed::<Transform>() {
-               ctx.ubo_ctx.remove_component(&name_index, rm_e.id());
+               ctx.ubo_ctx.remove_component(&name_index, rm_e);
             }
         }
         Ok(())
@@ -60,7 +60,7 @@ impl IUpdateNode for TransfromNode {
         for (e,t) in trans.iter(world) { 
             if let Some(key) = self.name_index {
                 if let Some(backend) = self.backend.as_ref() {
-                    ctx.ubo_ctx.set_buffer(&key, Some(e.id()), |buffer| {
+                    ctx.ubo_ctx.set_buffer(&key, Some(e), |buffer| {
                         backend.set_transform(&mut buffer.buffer,  &t.global().matrix());
                     });  
                 }

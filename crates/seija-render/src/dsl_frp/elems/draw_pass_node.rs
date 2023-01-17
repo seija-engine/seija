@@ -189,12 +189,17 @@ impl DrawPassNode {
                                                                        Some(wgpu::TextureFormat::Depth32Float),pass_index);
                         if let Some(pipeline) = pipeline {
                            
-                            if pipeline.tag != self.pass_name {  continue; }
+                            if pipeline.tag != self.pass_name {
+                                continue; 
+                            }
                             if let Some(mesh_buffer_id)  = ctx.resources.get_render_resource(&hmesh.id, 0) {
     
                                 let vert_buffer = ctx.resources.get_buffer_by_resid(&mesh_buffer_id).unwrap();
                                 let oset_index = pipeline.set_binds(self.camera_entity,Some(entity.clone()), &mut render_pass, &ctx.ubo_ctx);
-                                if oset_index.is_none()  {  continue }
+                                if oset_index.is_none()  {
+                                    log::error!("skip??");
+                                    continue;
+                                }
                                 let mut set_index = oset_index.unwrap();
     
                                 if material.props.def.infos.len() > 0 {
@@ -220,6 +225,7 @@ impl DrawPassNode {
                                     render_pass.set_index_buffer(idx_buffer.slice(0..), mesh.index_format().unwrap());
                                     render_pass.set_pipeline(&pipeline.pipeline);
                                     render_pass.draw_indexed(mesh.indices_range().unwrap(),0, 0..1);
+                                    
                                         
                                 } else {
                                     render_pass.set_pipeline(&pipeline.pipeline);

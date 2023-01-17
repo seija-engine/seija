@@ -84,7 +84,7 @@ impl IUpdateNode for ShadowNode {
 
                 self.recv_backend.set_bias(&mut ctx.ubo_ctx, shadow_light.bias);
                 self.recv_backend.set_strength(&mut ctx.ubo_ctx, shadow_light.strength);
-                ctx.ubo_ctx.set_buffer(&self.name_index, Some(e.id()), |buffer| {
+                ctx.ubo_ctx.set_buffer(&self.name_index, Some(e), |buffer| {
                     buffer.buffer.write_bytes_(self.proj_view_index, light_proj_view.to_cols_array().as_bytes());
                 });
             }

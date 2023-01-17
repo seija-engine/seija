@@ -200,7 +200,7 @@ impl PostStackNode {
                                     let src_bind_group = self.cur_src_bind_group()?;
                                     render_pass.set_bind_group(index as u32,src_bind_group, &[]);
                                  } else {
-                                    let bind_group = ctx.ubo_ctx.get_bind_group(ubo_name_index, Some( self.camera_entity.id() )).get()?;
+                                    let bind_group = ctx.ubo_ctx.get_bind_group(ubo_name_index, Some( self.camera_entity )).get()?;
                                     render_pass.set_bind_group(index as u32, &bind_group, &[]);
                                  }
                               },

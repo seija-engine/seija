@@ -43,7 +43,7 @@ impl IUpdateNode for CameraNode {
         let mut cameras = world.query::<(Entity,&Transform,&Camera)>();
         for (e,t,camera) in cameras.iter(world) {
             if let Some(key) = self.name_index {
-                ctx.ubo_ctx.set_buffer(&key, Some(e.id()), |buffer| {
+                ctx.ubo_ctx.set_buffer(&key, Some(e), |buffer| {
                     self.update_camera_buffer(buffer, t, camera);
                 })
             }
@@ -59,11 +59,11 @@ impl CameraNode {
         if let Some(name_index) = self.name_index.as_ref() {
             let mut added_cameras = world.query_filtered::<Entity,(Added<Camera>,With<Transform>)>(); 
             for v in added_cameras.iter(&world) {
-                ctx.ubo_ctx.add_component(name_index, v.id(), &mut ctx.resources);
+                ctx.ubo_ctx.add_component(name_index, v, &mut ctx.resources);
             }
 
             for rm_e in world.removed::<Camera>() {
-                ctx.ubo_ctx.remove_component(name_index, rm_e.id());
+                ctx.ubo_ctx.remove_component(name_index, rm_e);
             }
         }
         Ok(())

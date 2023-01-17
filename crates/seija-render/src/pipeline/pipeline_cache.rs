@@ -50,7 +50,7 @@ impl RenderPipeline {
             match ubo_name_index.apply_type {
              UBOApplyType::Camera => {
                 if let Some(camera_entity) = camera_e {
-                    let bind_group = buf_ctx.get_bind_group(ubo_name_index, Some( camera_entity.id() ))?;
+                    let bind_group = buf_ctx.get_bind_group(ubo_name_index, Some( camera_entity ))?;
                     pass.set_bind_group(index as u32, &bind_group, &[]);
                 } else {
                     return None;
@@ -58,7 +58,7 @@ impl RenderPipeline {
              },
              UBOApplyType::RenderObject => {
                 if let Some(ve) = ve {
-                    let bind_group = buf_ctx.get_bind_group(ubo_name_index, Some(ve.id()))?;
+                    let bind_group = buf_ctx.get_bind_group(ubo_name_index, Some(ve))?;
                     pass.set_bind_group(index as u32, &bind_group, &[]);
                 } else {
                     return None;

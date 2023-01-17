@@ -153,8 +153,7 @@ impl IElement for UniformSetElement {
         let res_id = unsafe { &*ptr };
         match res_id {
             RenderResourceId::Texture(texture) => {
-                ctx.ubo_ctx.set_texture(self.entity.map(|v| v.id()), 
-                &self.uniform_name, &self.prop_name, texture.clone())?;
+                ctx.ubo_ctx.set_texture(self.entity,&self.uniform_name, &self.prop_name, texture.clone())?;
             },
             _ => {}
         }
