@@ -1,12 +1,15 @@
+use std::hash::{Hash, Hasher};
+
 use bevy_ecs::{world::World, prelude::Entity, query::QueryState};
+use fnv::FnvHasher;
 use seija_core::math::Vec4;
 use seija_transform::{hierarchy::Children, Transform};
-use crate::{components::{sprite::Sprite, panel::Panel, rect2d::Rect2D}, mesh2d::{Mesh2D, Vertex2D}};
+use crate::{components::{sprite::Sprite, panel::Panel, rect2d::Rect2D}, mesh2d::{Mesh2D, Vertex2D}, types::UIZOrder, SpriteAllocator};
 
 #[derive(Debug)]
 pub struct PanelInfo {
-    pub(crate) panel_id:Entity,
-   pub(crate)  drawcalls:Vec<DrawCallInfo>
+   pub(crate) panel_id:Entity,
+   pub(crate) drawcalls:Vec<DrawCallInfo>
 }
 
 /*example 1
@@ -21,7 +24,6 @@ Panel0                ZOrder(0)
 */
 
 impl PanelInfo {
-
     pub fn create(entity:Entity,infos:Vec<DrawCallInfo>) -> Self {
         PanelInfo {panel_id:entity, drawcalls: infos }
     }
@@ -69,13 +71,16 @@ impl ScanDrawCall {
         self.dcs.push(take_list);
     }
 }
-#[derive(Debug)]
+#[derive(Debug,Default)]
 pub struct DrawCallInfo {
-    pub(crate) mesh:Option<Mesh2D>
+    pub key:u64,
+    pub(crate) mesh:Option<Mesh2D>,
+    pub sprites:Vec<Entity>,
+    pub render_entity:Option<Entity>
 }
 
 impl DrawCallInfo {
-    pub fn create(meshs:Vec<Mesh2D>) -> Self {
+    pub fn create(meshs:Vec<Mesh2D>,sprites:Vec<Entity>) -> Self {
         let mut points:Vec<Vertex2D> = vec![];
         let mut indexs:Vec<u32> = vec![];
         let mut index_offset = 0u32;
@@ -85,9 +90,41 @@ impl DrawCallInfo {
             indexs.extend(mesh.indexs.iter().map(|v| v + index_offset));
             index_offset += mesh.points.len() as u32;
         }
-
-        DrawCallInfo { 
-            mesh:Some(Mesh2D {points,indexs,color:Vec4::ONE })
+        
+        let mut hasher = FnvHasher::default();
+        for sprite_id in sprites.iter() {
+            sprite_id.hash(&mut hasher);
         }
+        let key = hasher.finish();
+        DrawCallInfo {
+            key,
+            mesh:Some(Mesh2D {points,indexs,color:Vec4::ONE }),
+            sprites,
+            render_entity:None
+        }
+    }
+
+
+    pub fn build_from(world:&World,entitys:Vec<Entity>,
+                      sprites: &mut QueryState<(&Sprite, &Rect2D, &Transform)>,
+                      zorders:&mut QueryState<&mut UIZOrder>,
+                      sprite_alloc:&SpriteAllocator) -> DrawCallInfo {
+        let mut meshs = vec![];
+        let mut sprite_entitys: Vec<Entity> = vec![];
+        for entity in entitys {
+            if let Ok((sprite, rect2d, trans)) = sprites.get(world, entity) {
+                if let Some(k) = sprite.sprite_index {
+                    if let Some(info) = sprite_alloc.get_sprite_info(k) {
+                        let global = trans.global();
+                        let zorder = zorders.get(world, entity).unwrap().value;
+                        let mesh2d = sprite.build(rect2d,info.uv.clone(),&global.matrix(),&info.rect,zorder as f32 * 0.01f32);
+                        meshs.push(mesh2d);
+                        sprite_entitys.push(entity);
+                    }
+                }
+            }
+        }
+        DrawCallInfo::create(meshs, sprite_entitys)
+       
     }
 }

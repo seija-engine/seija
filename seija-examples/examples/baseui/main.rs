@@ -3,22 +3,30 @@ use glam::{Vec4, Vec3};
 use seija_asset::{AssetServer, Assets, Handle};
 use seija_core::{CoreStage, StartupStage};
 use seija_examples::{init_core_app, load_material};
+use seija_input::Input;
 use seija_render::{resource::{load_image_info, Mesh}, camera::camera::{Camera, Orthographic}, material::Material};
 use seija_template::Template;
-use seija_transform::{Transform, PushChildren, hierarchy::Parent};
+use seija_transform::{Transform, PushChildren, hierarchy::Parent, BuildChildren};
 use seija_ui::{components::{panel::Panel, rect2d::Rect2D, sprite::Sprite, ui_canvas::UICanvas}, update_sprite_alloc_render, SpriteAllocator, types::Thickness};
 use smallvec::SmallVec;
 
+#[derive(Default)]
+pub struct UIData {
+    btn:Option<Entity>,
+    sprite_index:u32,
+    parent:Option<Entity>
+}
 
 fn main() {
     let mut app = init_core_app("FRPRender.clj",vec![update_sprite_alloc_render]);
     app.add_system2(CoreStage::Startup, StartupStage::PreStartup, start.exclusive_system());
     app.add_system(CoreStage::Update, on_update);
-   
+    
     app.run();
 }
 
 fn start(world:&mut World) {
+    let mut ui_data = UIData::default();
     let server:AssetServer = world.get_resource::<AssetServer>().unwrap().clone();
     let mut sprite_alloc = world.get_resource_mut::<SpriteAllocator>().unwrap();
     let btn_path = server.full_path("ui/dl.png").unwrap();
@@ -62,10 +70,31 @@ fn start(world:&mut World) {
                                              .insert(t).id()
     };
     PushChildren {children:SmallVec::from_slice(&[bg_sprite_id,btn_sprite_id]),parent:panel_id}.write(world);   
-   
-   
+    ui_data.btn = Some(btn_sprite_id);
+    ui_data.sprite_index = index2;
+    ui_data.parent = Some(panel_id);
+   world.insert_resource(ui_data);
 }
 
-fn on_update() {
-
+fn on_update(mut commands:Commands,input:Res<Input>,ui_data:ResMut<UIData>,mut sprites:Query<&mut Sprite>) {
+   use seija_input::keycode::KeyCode;
+   if input.get_key_down(KeyCode::U) {
+        if let Some(id) = ui_data.btn {
+           if let Ok(mut sprite) = sprites.get_mut(id) {
+              sprite.sprite_index = Some(ui_data.sprite_index);
+              log::error!("update set sprite {:?} index:{:?}",&id,ui_data.sprite_index);
+           }
+        }
+   } else if input.get_key_down(KeyCode::A) {
+        let btn_sprite_id = {
+            let mut rect2d = Rect2D::default();
+            rect2d.width = 138f32;
+            rect2d.height = 138f32;
+            let mut t = Transform::default();
+            t.local.position.y = 0f32;
+            commands.spawn().insert(Sprite::simple(ui_data.sprite_index, Vec4::ONE)) .insert(rect2d).insert(t).id() 
+        };
+        let parent_id = *ui_data.parent.as_ref().unwrap();
+        commands.entity(parent_id).add_children(&vec![btn_sprite_id]);
+   }
 }
