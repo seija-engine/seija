@@ -96,5 +96,8 @@ fn on_update(mut commands:Commands,input:Res<Input>,ui_data:ResMut<UIData>,mut s
         };
         let parent_id = *ui_data.parent.as_ref().unwrap();
         commands.entity(parent_id).add_children(&vec![btn_sprite_id]);
+   } else if input.get_key_down(KeyCode::D) {
+        let parent_id = *ui_data.parent.as_ref().unwrap();
+        //commands.entity(parent_id).despawn();
    }
 }
