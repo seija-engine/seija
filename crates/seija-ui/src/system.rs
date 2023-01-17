@@ -75,11 +75,12 @@ Tick:2
   3. 遍历Update的Entity,从已经更新的Drawcall中找到需要更新的更新一下
 */
 
-
+//TODO Sprite的移除，Panel的增删改没有处理
 pub(crate) fn update_render_system(world: &mut World) {
     let mut update_sprites = world
         .query_filtered::<Entity, Or<(Changed<Sprite>, Changed<Rect2D>, Changed<Transform>)>>();
     let mut remove_sprites = world.removed::<Sprite>();
+    let mut remove_panels = world.removed::<Panel>();
 
     let mut panels = world.query::<(Entity, &Panel)>();
     let mut parents = world.query::<&Parent>();
