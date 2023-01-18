@@ -1,15 +1,10 @@
 use bevy_ecs::{prelude::Entity, system::CommandQueue};
 use fnv::FnvHasher;
 use std::{collections::{HashMap, HashSet},hash::{Hash, Hasher},sync::Arc};
-
-use crate::{
-    render_info::{DrawCallInfo, PanelInfo},
-    types::UIZOrder,
-    SpriteAllocator,
-};
+use crate::{ render_info::{DrawCallInfo, PanelInfo},types::UIZOrder,SpriteAllocator};
 
 use super::components::{panel::Panel, rect2d::Rect2D, sprite::Sprite};
-use seija_core::log;
+use seija_core::{log, time::Time};
 
 use seija_app::ecs::prelude::*;
 use seija_asset::{AssetServer, Assets};
@@ -26,6 +21,8 @@ use seija_transform::{
 pub(crate) struct UISystemData {
     baseui: Option<Arc<MaterialDef>>,
     panel_infos: HashMap<Entity, PanelInfo>,
+    entity2panel:HashMap<Entity,Entity>,
+    next_frame_despawns:Vec<Entity>
 }
 
 pub(crate) fn on_after_start(world: &mut World) {
@@ -75,11 +72,11 @@ Tick:2
   3. 遍历Update的Entity,从已经更新的Drawcall中找到需要更新的更新一下
 */
 
-//TODO Sprite的移除，Panel的增删改没有处理
+//TODO Panel的删改没有处理
 pub(crate) fn update_render_system(world: &mut World) {
-    let mut update_sprites = world
-        .query_filtered::<Entity, Or<(Changed<Sprite>, Changed<Rect2D>, Changed<Transform>)>>();
-    let mut remove_sprites = world.removed::<Sprite>();
+    let tick = world.get_resource::<Time>().unwrap().frame();
+    let update_sprites = world.query_filtered::<Entity, Or<(Changed<Sprite>, Changed<Rect2D>, Changed<Transform>)>>().iter(world).collect::<Vec<_>>();
+    let remove_sprites = world.removed::<Sprite>().collect::<Vec<_>>();
     let mut remove_panels = world.removed::<Panel>();
 
     let mut panels = world.query::<(Entity, &Panel)>();
@@ -87,13 +84,14 @@ pub(crate) fn update_render_system(world: &mut World) {
     let mut zorders = world.query::<&mut UIZOrder>();
     let mut childrens = world.query::<&Children>();
     let mut sprites = world.query::<(&Sprite, &Rect2D, &Transform)>();
+    
 
     //计算出所有变动的Top Panel(穿透到最顶层)
     let mut dirty_top_panels: HashSet<Entity> = HashSet::default();
     let mut dirty_sprites: HashSet<Entity> = HashSet::default();
-    for e in update_sprites.iter(world) {
-        dirty_sprites.insert(e);
-        if let Some(e) = calc_top_panel(world, e, &mut panels, &mut parents) {
+    for e in update_sprites.iter() {
+        dirty_sprites.insert(*e);
+        if let Some(e) = calc_top_panel(world, *e, &mut panels, &mut parents) {
             dirty_top_panels.insert(e);
         }
     }
@@ -103,21 +101,31 @@ pub(crate) fn update_render_system(world: &mut World) {
     //计算出所有变动的Panel
     let mut dirty_panels: HashSet<Entity> = Default::default();
     //增 + 改
-    for entity in update_sprites.iter(world) {
-        fill_dirty_panel(world, entity, &mut panels, &mut parents, &mut dirty_panels);
+    for entity in update_sprites.iter() {
+        fill_dirty_panel(world, *entity, &mut panels, &mut parents, &mut dirty_panels);
     }
-    //TODO 删
 
+    if let Some(mut system_data) = world.get_resource_mut::<UISystemData>() {
+        for remove_entity in remove_sprites.iter() {
+            if let Some(panel_entity) = system_data.entity2panel.remove(remove_entity) {
+                dirty_panels.insert(panel_entity);
+            }
+        }
+    }
     
     let mut delete_drawcall_info:Vec<DrawCallInfo> = vec![];
     let mut update_render_panels:Vec<Entity> = vec![];
+    
     world.resource_scope(|world: &mut World, mut system_data: Mut<UISystemData>| {
+        for entity in system_data.next_frame_despawns.drain(..) {
+            world.despawn(entity);
+        }
         //开始比对PanelInfo
         let mut fst_create: Vec<Entity> = Vec::new();
         let material_def = system_data.baseui.as_ref().unwrap().clone();
         let sprite_alloc = world.get_resource::<SpriteAllocator>().unwrap();
         
-        //比对更新Panel的Drawcall
+        //比对更新Panel的Drawcall 增加 + 修改
         for panel_entity in dirty_panels.iter() {
             if let Some(panel_info) = system_data.panel_infos.get_mut(&panel_entity) {
                 let panel_drawcalls = PanelInfo::scan_drawcalls(world,*panel_entity,&mut childrens,&mut sprites,&mut panels);
@@ -128,7 +136,10 @@ pub(crate) fn update_render_system(world: &mut World) {
                 
                 for drawcall in panel_drawcalls {
                     let mut hasher = FnvHasher::default();
-                    drawcall.iter().for_each(|e| e.hash(&mut hasher));
+                    for entity in drawcall.iter() {
+                        entity.hash(&mut hasher);
+                    }
+                    
                     let drawcall_key = hasher.finish();
                     if last_cache_dcs.contains_key(&drawcall_key) {
                         let is_dirty = drawcall.iter().any(|e| dirty_sprites.contains(e));
@@ -153,13 +164,28 @@ pub(crate) fn update_render_system(world: &mut World) {
                 fst_create.push(*panel_entity);
             }
         }
-        
-        
+
+        //添加Panel新增的Entiy2Panel
+        let mut new_entitys:Vec<(Entity,Entity)> = vec![];
+        for panel_entity in dirty_panels.iter() {
+            if let Some(panel_info) = system_data.panel_infos.get(&panel_entity) {
+                for drawcall in panel_info.drawcalls.iter() {
+                    for entity in drawcall.sprites.iter() {
+                       if !system_data.entity2panel.contains_key(entity) {
+                            new_entitys.push((*entity,*panel_entity));
+                       }
+                    }
+                }
+            }
+        }
+        new_entitys.drain(..).for_each(|e| {
+            system_data.entity2panel.insert(e.0, e.1);
+        });
         
         for delete_dc in delete_drawcall_info {
             if let Some(render_entity) = delete_dc.render_entity {
-                log::error!("despawn:{:?}",render_entity);
-                world.entity_mut(render_entity).despawn();
+                log::error!("despawn:{:?} {}",render_entity,tick);
+                system_data.next_frame_despawns.push(render_entity);
             }
         }
        
@@ -168,25 +194,30 @@ pub(crate) fn update_render_system(world: &mut World) {
         let server = world.get_resource::<AssetServer>().unwrap().clone();
         let mut queue = CommandQueue::default();
         let mut commands = Commands::new(&mut queue, world);
+        
         for update_panel_id in update_render_panels {
             if let Some(panel_info) = system_data.panel_infos.get_mut(&update_panel_id) {
                 for drawcall_info in panel_info.drawcalls.iter_mut() {
-                    let mesh: Mesh = drawcall_info.mesh.take().unwrap().into();
-                    let h_mesh = asset_meshs.add(mesh);
-                    let material = Material::from_def(material_def.clone(), &server).unwrap();
-                    let h_mat = asset_materials.add(material);
-                    let render_entity = commands.spawn().insert(Transform::default()).insert(h_mesh.clone()).insert(h_mat.clone()).id();
-                    log::error!("diff create:{:?}",&render_entity);
-                    drawcall_info.render_entity = Some(render_entity);
+                    if drawcall_info.render_entity.is_none() {
+                        let mesh: Mesh = drawcall_info.mesh.take().unwrap().into();
+                        let h_mesh = asset_meshs.add(mesh);
+                        let material = Material::from_def(material_def.clone(), &server).unwrap();
+                        let h_mat = asset_materials.add(material);
+                        let render_entity = commands.spawn().insert(Transform::default()).insert(h_mesh.clone()).insert(h_mat.clone()).id();
+                        log::error!("diff create:{:?} {}",&render_entity,tick);
+                        drawcall_info.render_entity = Some(render_entity);
+                    }
+                    
                 }
             }
         }
         queue.apply(world);
-
+        
 
         //处理首次创建的Panel
         process_fst_create(world,fst_create,&mut panels,&mut childrens,&mut zorders,&mut sprites,material_def.clone(),&mut system_data);
     });
+    
 }
 
 
@@ -212,6 +243,7 @@ fn process_fst_create(
             let mut meshs = vec![];
             let mut sprite_entitys: Vec<Entity> = vec![];
             for sprite_id in drawcall {
+                system_data.entity2panel.insert(sprite_id,panel_entity);
                 if let Ok((sprite, rect2d, trans)) = sprites.get(world, sprite_id) {
                     if let Some(k) = sprite.sprite_index {
                         if let Some(info) = sprite_alloc.get_sprite_info(k) {
@@ -254,13 +286,8 @@ fn process_fst_create(
     }
 }
 
-fn fill_dirty_panel(
-    world: &World,
-    entity: Entity,
-    panels: &mut QueryState<(Entity, &Panel)>,
-    parents: &mut QueryState<&Parent>,
-    dirty_panels: &mut HashSet<Entity>,
-) {
+fn fill_dirty_panel(world: &World,entity: Entity,panels: &mut QueryState<(Entity, &Panel)>,
+                    parents: &mut QueryState<&Parent>,dirty_panels: &mut HashSet<Entity>) -> Option<Entity> {
     let mut cur_entity: Entity = entity;
     let mut last_panel: Option<Entity> = None;
     while let Ok(parent) = parents.get(world, cur_entity) {
@@ -269,22 +296,19 @@ fn fill_dirty_panel(
             last_panel = Some(e);
             if !panel.is_static {
                 dirty_panels.insert(e);
-                return;
+                return Some(e);
             }
         }
     }
 
     if let Some(last) = last_panel.take() {
         dirty_panels.insert(last);
+        return Some(last);
     }
+    None
 }
 
-fn calc_top_panel(
-    world: &World,
-    entity: Entity,
-    panels: &mut QueryState<(Entity, &Panel)>,
-    parents: &mut QueryState<&Parent>,
-) -> Option<Entity> {
+fn calc_top_panel(world: &World,entity: Entity,panels: &mut QueryState<(Entity, &Panel)>,parents: &mut QueryState<&Parent>) -> Option<Entity> {
     let mut cur_entity: Entity = entity;
     let mut top_panel_entity: Option<Entity> = None;
     while let Ok(parent) = parents.get(world, cur_entity) {
@@ -296,12 +320,7 @@ fn calc_top_panel(
     top_panel_entity
 }
 
-fn fill_ui_zorders(
-    world: &mut World,
-    panels: HashSet<Entity>,
-    zorders: &mut QueryState<&mut UIZOrder>,
-    childrens: &mut QueryState<&Children>,
-) {
+fn fill_ui_zorders(world: &mut World,panels: HashSet<Entity>,zorders: &mut QueryState<&mut UIZOrder>,childrens: &mut QueryState<&Children>) {
     for panel_entity in panels.iter() {
         if let Ok(zorder) = zorders.get(world, *panel_entity) {
             let value = zorder.value;
@@ -312,13 +331,7 @@ fn fill_ui_zorders(
     }
 }
 
-fn _fill_ui_zorders(
-    world: &mut World,
-    entity: Entity,
-    number: i32,
-    zorders: &mut QueryState<&mut UIZOrder>,
-    childrens: &mut QueryState<&Children>,
-) {
+fn _fill_ui_zorders(world: &mut World,entity: Entity,number: i32,zorders: &mut QueryState<&mut UIZOrder>,childrens: &mut QueryState<&Children>) {
     let mut now_index = number;
     if let Ok(childs) = childrens.get(world, entity) {
         let children_ids = childs.children().iter().map(|v| *v).collect::<Vec<_>>();
@@ -330,6 +343,7 @@ fn _fill_ui_zorders(
                 world.entity_mut(child_entity).insert(UIZOrder {
                     last: -1,
                     value: now_index,
+                    panel_id:None
                 });
             }
             log::info!("set zorder{:?}={}", child_entity, now_index);

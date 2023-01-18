@@ -1,7 +1,7 @@
 use bevy_ecs::{prelude::*, system::Command};
 use glam::{Vec4, Vec3};
 use seija_asset::{AssetServer, Assets, Handle};
-use seija_core::{CoreStage, StartupStage};
+use seija_core::{CoreStage, StartupStage, time::Time};
 use seija_examples::{init_core_app, load_material};
 use seija_input::Input;
 use seija_render::{resource::{load_image_info, Mesh}, camera::camera::{Camera, Orthographic}, material::Material};
@@ -76,7 +76,8 @@ fn start(world:&mut World) {
    world.insert_resource(ui_data);
 }
 
-fn on_update(mut commands:Commands,input:Res<Input>,ui_data:ResMut<UIData>,mut sprites:Query<&mut Sprite>) {
+fn on_update(mut commands:Commands,input:Res<Input>,time:Res<Time>,ui_data:ResMut<UIData>,mut sprites:Query<&mut Sprite>) {
+   let tick = time.frame();
    use seija_input::keycode::KeyCode;
    if input.get_key_down(KeyCode::U) {
         if let Some(id) = ui_data.btn {
@@ -100,6 +101,7 @@ fn on_update(mut commands:Commands,input:Res<Input>,ui_data:ResMut<UIData>,mut s
         let parent_id = *ui_data.parent.as_ref().unwrap();
         commands.entity(parent_id).despawn();
    } else if input.get_key_down(KeyCode::W) {
+        log::error!("keydown W {}",tick);
         let btn_id = *ui_data.btn.as_ref().unwrap();
         commands.entity(btn_id).despawn();
    }

@@ -1,4 +1,4 @@
-use bevy_ecs::prelude::Component;
+use bevy_ecs::prelude::{Component, Entity};
 
 #[derive(Debug,Clone,Default)]
 pub struct Rect<T:Default> {
@@ -27,5 +27,6 @@ impl Thickness {
 #[derive(Component)]
 pub struct UIZOrder {
     pub last:i32,
-    pub value:i32
+    pub value:i32,
+    pub panel_id:Option<Entity>
 }
