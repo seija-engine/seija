@@ -1,4 +1,4 @@
-use bevy_ecs::{prelude::*, system::Command};
+use bevy_ecs::{prelude::*, system::Command, world};
 use glam::{Vec4, Vec3};
 use seija_asset::{AssetServer, Assets, Handle};
 use seija_core::{CoreStage, StartupStage, time::Time};
@@ -6,7 +6,7 @@ use seija_examples::{init_core_app, load_material};
 use seija_input::Input;
 use seija_render::{resource::{load_image_info, Mesh}, camera::camera::{Camera, Orthographic}, material::Material};
 use seija_template::Template;
-use seija_transform::{Transform, PushChildren, hierarchy::Parent, BuildChildren};
+use seija_transform::{Transform, PushChildren, hierarchy::Parent, BuildChildren,IEntityChildren};
 use seija_ui::{components::{panel::Panel, rect2d::Rect2D, sprite::Sprite, ui_canvas::UICanvas}, update_sprite_alloc_render, SpriteAllocator, types::Thickness};
 use smallvec::SmallVec;
 
@@ -14,7 +14,8 @@ use smallvec::SmallVec;
 pub struct UIData {
     btn:Option<Entity>,
     sprite_index:u32,
-    parent:Option<Entity>
+    parent:Option<Entity>,
+    panel2:Option<Entity>
 }
 
 fn main() {
@@ -38,6 +39,8 @@ fn start(world:&mut World) {
     let index = sprite_alloc.alloc(image_info).unwrap();
     let index2 = sprite_alloc.alloc(image_info2).unwrap();
     let index3 = sprite_alloc.alloc(image_info3).unwrap();
+    let btn3_index = sprite_alloc.alloc(load_image_info(server.full_path("ui/Btn3On.png").unwrap()).unwrap()).unwrap();
+    let btn4_index = sprite_alloc.alloc(load_image_info(server.full_path("ui/Btn4On.png").unwrap()).unwrap()).unwrap();
 
     let ui_camera = Camera::from_2d(Orthographic::default());
     
@@ -54,7 +57,7 @@ fn start(world:&mut World) {
         let mut rect2d = Rect2D::default();
         rect2d.width = 640f32;
         rect2d.height = 480f32;
-        let mut t = Transform::default();
+        let t = Transform::default();
         world.spawn().insert(Sprite::sliced(index3,Thickness::new1(35f32),Vec4::ONE))
                                              .insert(rect2d)
                                              .insert(t).id()
@@ -70,10 +73,35 @@ fn start(world:&mut World) {
                                              .insert(t).id()
     };
     PushChildren {children:SmallVec::from_slice(&[bg_sprite_id,btn_sprite_id]),parent:panel_id}.write(world);   
+    
+    let panel_entity = create_panel2(world,btn3_index,btn4_index,Some(panel_id));
+    
     ui_data.btn = Some(btn_sprite_id);
     ui_data.sprite_index = index2;
     ui_data.parent = Some(panel_id);
+    ui_data.panel2 = Some(panel_entity);
    world.insert_resource(ui_data);
+}
+
+
+fn create_panel2(world:&mut World,btn3_index:u32,btn4_index:u32,parent:Option<Entity>) -> Entity {
+    let btn3_size = Rect2D::new(100f32, 45f32);
+    let mut panel_t = Transform::default();
+    panel_t.local.position.y = 100f32;
+
+    let panel_id = world.spawn().insert(panel_t).insert(Panel::new(false)).insert(Rect2D::new(1024f32, 768f32)).id();
+    let mut sprite_t:Transform = Transform::default();
+    sprite_t.local.position.x = -100f32;
+    let sprite_id = world.spawn().insert(sprite_t).insert(btn3_size.clone()).insert(Sprite::simple(btn3_index, Vec4::ONE)).id();
+    let mut sprite2_t:Transform = Transform::default();
+    sprite2_t.local.position.x = 100f32;
+    let sprite2_id = world.spawn().insert(sprite2_t).insert(btn3_size).insert(Sprite::simple(btn4_index, Vec4::ONE)).id();
+
+    PushChildren {children:SmallVec::from_slice(&[sprite_id,sprite2_id]),parent:panel_id}.write(world);
+    if let Some(parent) = parent {
+        PushChildren {children:SmallVec::from_slice(&[panel_id]),parent}.write(world);
+    }
+    panel_id
 }
 
 fn on_update(mut commands:Commands,input:Res<Input>,time:Res<Time>,ui_data:ResMut<UIData>,mut sprites:Query<&mut Sprite>) {
@@ -104,5 +132,8 @@ fn on_update(mut commands:Commands,input:Res<Input>,time:Res<Time>,ui_data:ResMu
         log::error!("keydown W {}",tick);
         let btn_id = *ui_data.btn.as_ref().unwrap();
         commands.entity(btn_id).despawn();
+   } else if input.get_key_down(KeyCode::Q) {
+        let panel2 = *ui_data.panel2.as_ref().unwrap();
+        commands.entity(panel2).despawn_recursive();
    }
 }

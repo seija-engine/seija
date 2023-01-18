@@ -11,7 +11,7 @@ pub mod ffi;
 use seija_core::{CoreStage, StartupStage};
 use system::update_transform_system;
 pub use  transform::{Transform,TransformMatrix};
-pub use  children_command::{PushChildren,BuildChildren};
+pub use  children_command::{PushChildren,BuildChildren,IEntityChildren,DespawnRecursive};
 
 
 #[derive(Debug, Hash, PartialEq, Eq, Clone,SystemLabel)]

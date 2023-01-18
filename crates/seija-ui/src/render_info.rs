@@ -47,7 +47,7 @@ impl PanelInfo {
                     if !panel.1.is_static {
                         scan_drawcall.emit();
                     } else {
-                        Self::visit_element(world, scan_drawcall, entity, childrens, sprites, panels);
+                        Self::visit_element(world, scan_drawcall, *child, childrens, sprites, panels);
                     }
                 }
             }

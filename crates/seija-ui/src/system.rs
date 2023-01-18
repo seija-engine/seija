@@ -72,18 +72,49 @@ Tick:2
   3. 遍历Update的Entity,从已经更新的Drawcall中找到需要更新的更新一下
 */
 
-//TODO Panel的删改没有处理
+//TODO Panel的修改和Entity的父子节点变化没有处理
 pub(crate) fn update_render_system(world: &mut World) {
     let tick = world.get_resource::<Time>().unwrap().frame();
-    let update_sprites = world.query_filtered::<Entity, Or<(Changed<Sprite>, Changed<Rect2D>, Changed<Transform>)>>().iter(world).collect::<Vec<_>>();
+    let mut update_sprites = world.query_filtered::<Entity, Or<(Changed<Sprite>, Changed<Rect2D>, Changed<Transform>)>>().iter(world).collect::<Vec<_>>();
+    let update_panels = world.query_filtered::<Entity, Or<(Changed<Panel>, Changed<Rect2D>, Changed<Transform>)>>().iter(world).collect::<Vec<_>>();
     let remove_sprites = world.removed::<Sprite>().collect::<Vec<_>>();
-    let mut remove_panels = world.removed::<Panel>();
+    let remove_panels = world.removed::<Panel>().collect::<Vec<_>>();
 
     let mut panels = world.query::<(Entity, &Panel)>();
     let mut parents = world.query::<&Parent>();
     let mut zorders = world.query::<&mut UIZOrder>();
     let mut childrens = world.query::<&Children>();
     let mut sprites = world.query::<(&Sprite, &Rect2D, &Transform)>();
+    
+    let mut update_static_panels:Vec<Entity> = vec![];
+    //计算出所有变动的Panel
+    let mut dirty_panels: HashSet<Entity> = Default::default();
+
+    //手动删除顶层和动态的PanelInfo和Drawcall
+    if let Some(mut system_data) = world.get_resource_mut::<UISystemData>() {
+        for remove_panel in remove_panels.iter() {
+            if let Some(panel_info) = system_data.panel_infos.remove(remove_panel) {
+               for drawcall in panel_info.drawcalls {
+                  if let Some(render_entity) = drawcall.render_entity {
+                    log::error!("Delete {:?}.{:?}",&panel_info.panel_id,&render_entity);
+                     system_data.next_frame_despawns.push(render_entity);
+                  }
+               } 
+            }
+        }
+        //Panel的修改有问题
+        for update_panel in update_panels {
+            if let Ok((entity,panel)) = panels.get_manual(world, update_panel) {
+                if panel.is_static {
+                    update_static_panels.push(entity);
+                    //把所有的Sprite 标记为dirty?
+                } else {
+                    //
+                }
+            }
+        }
+    }
+
     
 
     //计算出所有变动的Top Panel(穿透到最顶层)
@@ -95,20 +126,25 @@ pub(crate) fn update_render_system(world: &mut World) {
             dirty_top_panels.insert(e);
         }
     }
+
     //对TopPanel的ZOrder进行重排
     fill_ui_zorders(world, dirty_top_panels, &mut zorders, &mut childrens);
 
-    //计算出所有变动的Panel
-    let mut dirty_panels: HashSet<Entity> = Default::default();
+    
     //增 + 改
     for entity in update_sprites.iter() {
+        fill_dirty_panel(world, *entity, &mut panels, &mut parents, &mut dirty_panels);
+    }
+    for entity in update_static_panels.iter() {
         fill_dirty_panel(world, *entity, &mut panels, &mut parents, &mut dirty_panels);
     }
 
     if let Some(mut system_data) = world.get_resource_mut::<UISystemData>() {
         for remove_entity in remove_sprites.iter() {
             if let Some(panel_entity) = system_data.entity2panel.remove(remove_entity) {
-                dirty_panels.insert(panel_entity);
+                if system_data.panel_infos.contains_key(&panel_entity) {
+                    dirty_panels.insert(panel_entity);
+                }
             }
         }
     }
