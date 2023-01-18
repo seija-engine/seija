@@ -3,7 +3,7 @@ use seija_app::IModule;
 use seija_app::App;
 
 pub mod hierarchy;
-mod children_command;
+mod commands;
 mod system;
 mod transform;
 pub mod ffi;
@@ -11,7 +11,7 @@ pub mod ffi;
 use seija_core::{CoreStage, StartupStage};
 use system::update_transform_system;
 pub use  transform::{Transform,TransformMatrix};
-pub use  children_command::{PushChildren,BuildChildren,IEntityChildren,DespawnRecursive};
+pub use  commands::{PushChildren,BuildChildren,IEntityChildren,DespawnRecursive};
 
 
 #[derive(Debug, Hash, PartialEq, Eq, Clone,SystemLabel)]
@@ -25,10 +25,9 @@ pub struct TransformModule;
 
 impl IModule for TransformModule {
     fn init(&mut self,app:&mut App) {
-        app.add_system2(CoreStage::Startup, StartupStage::PostStartup,system::parent_update_system.label(TransformLabel::ParentUpdate));
+        //app.add_system2(CoreStage::Startup, StartupStage::PostStartup,system::parent_update_system.label(TransformLabel::ParentUpdate));
         app.add_system2(CoreStage::Startup, StartupStage::PostStartup,update_transform_system.label(TransformLabel::Propagate).after(TransformLabel::ParentUpdate));
-        app.add_system(CoreStage::PostUpdate, 
-                           system::parent_update_system.label(TransformLabel::ParentUpdate));
+        //app.add_system(CoreStage::PostUpdate,system::parent_update_system.label(TransformLabel::ParentUpdate));
         app.add_system(CoreStage::PostUpdate, 
                            update_transform_system.label(TransformLabel::Propagate).after(TransformLabel::ParentUpdate));
     }

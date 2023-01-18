@@ -53,12 +53,22 @@ pub struct DespawnRecursive {
     pub entity: Entity,
 }
 
+pub struct SetParent {
+    pub entity:Entity,
+    pub new_parent:Option<Entity>   
+}
+
 impl Command for DespawnRecursive {
     fn write(self, world: &mut World) {
         despawn_with_children_recursive(world, self.entity);
     }
 }
 
+impl Command for SetParent {
+    fn write(self, world: &mut World) {
+       
+    }
+}
 /*
 fn despawn_children(world: &mut World, entity: Entity) {
     if let Some(mut children) = world.get_mut::<Children>(entity) {
@@ -83,12 +93,17 @@ fn despawn_with_children_recursive_inner(world: &mut World, entity: Entity) {
 
 pub trait IEntityChildren {
     fn despawn_recursive(self);
+    fn set_parent(&self);
 }
 
 impl<'a, 'b,'c> IEntityChildren for EntityCommands<'a, 'b,'c> {
     fn despawn_recursive(mut self) {
         let entity = self.id();
         self.commands().add(DespawnRecursive { entity });
+    }
+
+    fn set_parent(&self) {
+        
     }
 }
 
@@ -97,6 +112,11 @@ impl<'w> IEntityChildren for EntityMut<'w> {
         let entity = self.id();
         let world_mut = unsafe { self.world_mut() };
         despawn_with_children_recursive(world_mut, entity);
+        
+    }
+
+    fn set_parent(&self) {
+        
     }
 }
 
@@ -108,3 +128,4 @@ pub fn despawn_with_children_recursive(world: &mut World, entity: Entity) {
     }
     despawn_with_children_recursive_inner(world, entity);
 }
+

@@ -28,5 +28,4 @@ impl Thickness {
 pub struct UIZOrder {
     pub last:i32,
     pub value:i32,
-    pub panel_id:Option<Entity>
 }

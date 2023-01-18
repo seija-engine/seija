@@ -1,4 +1,4 @@
-use bevy_ecs::{prelude::Entity, system::CommandQueue};
+use bevy_ecs::{prelude::Entity, system::{CommandQueue, SystemParam}};
 use fnv::FnvHasher;
 use std::{collections::{HashMap, HashSet},hash::{Hash, Hasher},sync::Arc};
 use crate::{ render_info::{DrawCallInfo, PanelInfo},types::UIZOrder,SpriteAllocator};
@@ -16,6 +16,7 @@ use seija_transform::{
     hierarchy::{Children, Parent},
     Transform,
 };
+
 
 #[derive(Default)]
 pub(crate) struct UISystemData {
@@ -75,7 +76,7 @@ Tick:2
 //TODO Panel的修改和Entity的父子节点变化没有处理
 pub(crate) fn update_render_system(world: &mut World) {
     let tick = world.get_resource::<Time>().unwrap().frame();
-    let mut update_sprites = world.query_filtered::<Entity, Or<(Changed<Sprite>, Changed<Rect2D>, Changed<Transform>)>>().iter(world).collect::<Vec<_>>();
+    let update_sprites = world.query_filtered::<Entity, Or<(Changed<Sprite>, Changed<Rect2D>, Changed<Transform>)>>().iter(world).collect::<Vec<_>>();
     let update_panels = world.query_filtered::<Entity, Or<(Changed<Panel>, Changed<Rect2D>, Changed<Transform>)>>().iter(world).collect::<Vec<_>>();
     let remove_sprites = world.removed::<Sprite>().collect::<Vec<_>>();
     let remove_panels = world.removed::<Panel>().collect::<Vec<_>>();
@@ -109,7 +110,7 @@ pub(crate) fn update_render_system(world: &mut World) {
                     update_static_panels.push(entity);
                     //把所有的Sprite 标记为dirty?
                 } else {
-                    //
+                    //只修改动态Panel的Transform
                 }
             }
         }
@@ -126,7 +127,6 @@ pub(crate) fn update_render_system(world: &mut World) {
             dirty_top_panels.insert(e);
         }
     }
-
     //对TopPanel的ZOrder进行重排
     fill_ui_zorders(world, dirty_top_panels, &mut zorders, &mut childrens);
 
@@ -379,7 +379,6 @@ fn _fill_ui_zorders(world: &mut World,entity: Entity,number: i32,zorders: &mut Q
                 world.entity_mut(child_entity).insert(UIZOrder {
                     last: -1,
                     value: now_index,
-                    panel_id:None
                 });
             }
             log::info!("set zorder{:?}={}", child_entity, now_index);
