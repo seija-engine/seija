@@ -8,7 +8,7 @@ use bevy_ecs::{prelude::*, system::CommandQueue};
 use seija_transform::Transform;
 pub fn main() {
     let mut app = init_core_app("FRPRender.clj",vec![]);
-    app.add_system2(CoreStage::Startup, StartupStage::PreStartup, start.exclusive_system());
+    app.add_system2(CoreStage::Startup, StartupStage::PreStartup, start);
     app.add_system(CoreStage::Update, update_camera_trans_system);
     app.run();
 }
@@ -35,7 +35,7 @@ fn start(world:&mut World) {
         let mut t = Transform::default();
         let r = Quat::from_euler(glam::EulerRot::default()  , 90f32.to_radians(),  45f32.to_radians(), 0f32.to_radians());
         t.local.rotation = r;
-        let mut l = world.spawn();
+        let mut l = world.spawn_empty();
         l.insert(light);
         l.insert(t);
         let mut shadow_light = ShadowLight::default();
@@ -58,7 +58,7 @@ fn start(world:&mut World) {
             t.local.position = Vec3::new(-2f32, 0.5f32, 0f32);
             t.local.rotation = Quat::from_euler(glam::EulerRot::XYZ, 0f32, 0f32.to_radians(), 0f32);
             let shadow = Shadow {cast_shadow:true,receive_shadow:true };
-            world.spawn().insert(hmesh).insert(hmat).insert(t).insert(shadow );
+            world.spawn_empty().insert(hmesh).insert(hmat).insert(t).insert(shadow );
         };
         
         //Cube
@@ -78,7 +78,7 @@ fn start(world:&mut World) {
             t.local.position = Vec3::new(1f32, 0.5f32, 0f32);
             //t.local.rotation = Quat::from_euler(glam::EulerRot::XYZ, 0f32, -40f32.to_radians(), 0f32);
             let shadow = Shadow {cast_shadow:true,receive_shadow:true };
-            world.spawn().insert(hmesh).insert(hmat).insert(t).insert(shadow );
+            world.spawn_empty().insert(hmesh).insert(hmat).insert(t).insert(shadow );
         };
         //plane
         {
@@ -96,6 +96,6 @@ fn start(world:&mut World) {
             
            
             let shadow = Shadow {cast_shadow:true,receive_shadow:true };
-            world.spawn().insert(hmesh).insert(hmat).insert(t).insert(shadow );
+            world.spawn_empty().insert(hmesh).insert(hmat).insert(t).insert(shadow );
         };
 }

@@ -35,7 +35,7 @@ fn instance_entity_sync(world:&mut World,server:&AssetServer,tentity:&TEntity,mg
                let template = templates.get(&handle_id).ok_or(TemplateError::NotFoundChild(xml_template.res.clone()))?.clone();
                let entity = instance_template_sync(world,&template)?;
 
-               let template_entity = world.spawn();
+               let template_entity = world.spawn_empty();
                let template_entity_id = template_entity.id();
                for component in xml_template.components.iter() {
                     mgr.create(component, server,queue,template_entity_id)?
@@ -45,7 +45,7 @@ fn instance_entity_sync(world:&mut World,server:&AssetServer,tentity:&TEntity,mg
             }
         }
     }
-    let mut entity_mut = world.spawn();
+    let mut entity_mut = world.spawn_empty();
     let eid = entity_mut.id();
     let info = create_einfo(tentity);
     entity_mut.insert(info);

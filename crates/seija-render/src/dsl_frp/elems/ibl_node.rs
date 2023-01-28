@@ -1,4 +1,4 @@
-use bevy_ecs::world::World;
+use bevy_ecs::{world::World, system::Resource};
 use lite_clojure_eval::Variable;
 use lite_clojure_frp::FRPSystem;
 use seija_asset::Handle;
@@ -8,7 +8,7 @@ use anyhow::Result;
 use crate::{dsl_frp::errors::Errors, RenderContext, UniformIndex, resource::Texture};
 
 use super::IUpdateNode;
-
+#[derive(Resource)]
 pub struct IBLEnv {
    pub irradiance_map:Option<Handle<Texture>>,
    pub specular_map:Option<Handle<Texture>>,

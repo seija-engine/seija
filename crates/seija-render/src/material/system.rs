@@ -11,7 +11,7 @@ use crate::{
 use bevy_ecs::{
     change_detection::Mut,
     entity::Entity,
-    prelude::World,
+    prelude::World, system::Resource,
 };
 use seija_asset::{Assets, Handle, HandleId};
 use smol_str::SmolStr;
@@ -67,7 +67,7 @@ impl MaterialSystem {
             let rm_list: Vec<Entity> = world.removed::<Handle<Material>>().collect();
             for define in self.datas.values_mut() {
                 for rm_entity in rm_list.iter() {
-                    define.remove_material(rm_entity.id())
+                    define.remove_material(rm_entity)
                 }
             }
         };
@@ -88,12 +88,12 @@ impl MaterialSystem {
                             mat.texture_props.update(res, Some(&define.texture_layout));
                         }
 
-                        if !define.items.contains_key(&e.id()) {
-                           define.add_material(e.id(), res,h_mat.id);
+                        if !define.items.contains_key(&e) {
+                           define.add_material(e, res,h_mat.id);
                         }
 
                         
-                        define.update_bind_group(e.id(), res, &self.common_buffer_layout, mat);
+                        define.update_bind_group(e, res, &self.common_buffer_layout, mat);
                     } 
                  
                 }
@@ -181,7 +181,7 @@ pub struct MaterialDefine {
     cache_buffer: BufferId,
     gpu_buffer: BufferId,
 
-    items: fnv::FnvHashMap<u32, DefineItem>,
+    items: fnv::FnvHashMap<Entity, DefineItem>,
     free_items: Vec<DefineItem>,
 
     buffer_dirty: bool,
@@ -225,7 +225,7 @@ impl MaterialDefine {
         (cache_buffer, uniform_buffer)
     }
 
-    pub fn add_material(&mut self, id: u32, res: &mut RenderResources,mat_id:HandleId) {
+    pub fn add_material(&mut self, id: Entity, res: &mut RenderResources,mat_id:HandleId) {
         if self.items.contains_key(&id) {
             return;
         }
@@ -251,15 +251,15 @@ impl MaterialDefine {
         self.items.insert(id, DefineItem::new(index,mat_id));
     }
 
-    pub fn remove_material(&mut self, id: u32) {
-        if let Some(rm_item) = self.items.remove(&id) {
+    pub fn remove_material(&mut self, id: &Entity) {
+        if let Some(rm_item) = self.items.remove(id) {
             self.free_items.push(rm_item);
         }
     }
 
     pub fn update_bind_group(
         &mut self,
-        id: u32,
+        id: Entity,
         res: &mut RenderResources,
         layout: &wgpu::BindGroupLayout,
         material: &mut Material
@@ -283,7 +283,7 @@ impl MaterialDefine {
 }
 
 
-#[derive(Default)]
+#[derive(Default,Resource)]
 pub struct GlobalImportMaterials {
     material_defs:Vec<Arc<MaterialDef>>,
     name_set:HashSet<SmolStr>,

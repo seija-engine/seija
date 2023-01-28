@@ -10,7 +10,7 @@ use seija_transform::Transform;
 
 fn main() {
     let mut app = init_core_app("FRPRender.clj",vec![]);
-    app.add_system2(CoreStage::Startup, StartupStage::Startup, on_start.exclusive_system());
+    app.add_system2(CoreStage::Startup, StartupStage::Startup, on_start);
     app.add_system(CoreStage::Update, update_camera_trans_system);
     
     app.run();
@@ -55,7 +55,7 @@ fn on_start(world:&mut World) {
         
                 let mut t = Transform::default();
                 t.local.position = Vec3::new(m as f32 * 1.2f32, r as f32 * 1.2f32, 0f32);
-                world.spawn().insert(h_mesh.clone()).insert(hmat).insert(t);
+                world.spawn_empty().insert(h_mesh.clone()).insert(hmat).insert(t);
             };
         }
     }

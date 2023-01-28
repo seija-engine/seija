@@ -2,7 +2,7 @@ use crate::{
     Asset, Assets, lifecycle::AssetLifeCycle, HandleId, RefEvent,
     AssetDynamic, Handle, errors::AssetError, HandleUntyped, LifecycleEvent, AssetLoaderParams, IAssetLoader,
 };
-use bevy_ecs::{prelude::{Res, World}};
+use bevy_ecs::{prelude::{Res, World}, system::Resource};
 use parking_lot::RwLock;
 use parking_lot_core::SpinWait;
 use relative_path::RelativePath;
@@ -116,7 +116,7 @@ impl Future for ArcAssetInfo {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone,Resource)]
 pub struct AssetServer {
     pub inner: Arc<AssetServerInner>,
     

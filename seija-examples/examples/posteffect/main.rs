@@ -1,22 +1,22 @@
 use bevy_ecs::prelude::World;
 use seija_asset::{AssetServer, Assets};
 use seija_core::{CoreStage, StartupStage, window::AppWindow};
-use seija_examples::{init_core_app, load_material};
+use seija_examples::{init_core_app};
 use seija_app::ecs::prelude::*;
 use seija_pbr::PBRCameraInfo;
 use seija_render::{camera::camera::{Perspective, Camera}, material::Material};
 use seija_skeleton3d::Skeleton3dModule;
 use seija_template::Template;
 use seija_transform::Transform;
-
+#[derive(Resource)]
 struct GameData {
     root:Option<Entity>
 }
 
 pub fn main() {
-    let mut app = init_core_app("render.clj",vec![]);
+    let mut app = init_core_app("FRPRender.clj",vec![]);
     app.add_module(Skeleton3dModule);
-    app.add_system2(CoreStage::Startup, StartupStage::Startup, on_start.exclusive_system());
+    app.add_system2(CoreStage::Startup, StartupStage::Startup, on_start);
     app.run();
 }
 
@@ -28,7 +28,7 @@ fn on_start(world:&mut World) {
        let window = world.get_resource::<AppWindow>().unwrap();
        let w = window.width() as f32;
        let h = window.height() as f32;
-       let mut camera_entity = world.spawn();
+       let mut camera_entity = world.spawn_empty();
        let mut t = Transform::default();
        camera_entity.insert(t); 
        

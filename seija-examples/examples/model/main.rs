@@ -9,7 +9,7 @@ use bevy_ecs::prelude::*;
 use seija_render::{material::{MaterialDefineAsset, Material}, camera::camera::Camera, shadow::{ShadowLight, ShadowCamera}};
 use seija_transform::Transform;
 
-#[derive(Default)]
+#[derive(Default,Resource)]
 struct GameData {
     shiba_asset:Option<Handle<GltfAsset>>,
     track:Option<AssetRequest>
@@ -17,7 +17,7 @@ struct GameData {
 
 pub fn main() {
     let mut app = init_core_app("FRPRender.clj",vec![]);
-    app.add_system2(CoreStage::Startup, StartupStage::PreStartup, start.exclusive_system());
+    app.add_system2(CoreStage::Startup, StartupStage::PreStartup, start);
     app.add_system(CoreStage::Update, update_camera_trans_system);
     app.add_system(CoreStage::Update, on_update);
     app.init_resource::<GameData>();
@@ -48,13 +48,12 @@ fn start(world:&mut World) {
         let mut t = Transform::default();
         let r = Quat::from_euler(glam::EulerRot::default()  , -90f32.to_radians(),  35f32.to_radians(), 0f32.to_radians());
         t.local.rotation = r;
-        let mut l = world.spawn();
-        l.insert(light);
-        l.insert(t);
+        
+        
         let mut shadow = ShadowLight::default();
         shadow.bias = 0.005f32;
         shadow.strength = 0.76f32;
-        l.insert(shadow);
+        world.spawn((light,t,shadow));
     };
 }
 

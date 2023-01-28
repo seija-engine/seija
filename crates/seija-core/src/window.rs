@@ -1,5 +1,6 @@
 use std::{ops::{Deref, DerefMut}};
 
+use bevy_ecs::system::Resource;
 use raw_window_handle::{HasRawWindowHandle, RawWindowHandle, HasRawDisplayHandle};
 
 #[repr(u32)]
@@ -18,8 +19,7 @@ pub trait IWindow : HasRawWindowHandle + HasRawDisplayHandle {
     fn vsync(&self) -> bool;
 }
 
-
-
+#[derive(Resource)]
 pub struct AppWindow {
     pub inner:Box<dyn IWindow + Send + Sync>
 }

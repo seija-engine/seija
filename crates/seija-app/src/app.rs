@@ -1,6 +1,6 @@
 use std::time::{Instant, Duration};
 
-use bevy_ecs::{ schedule::{Schedule, Stage, StageLabel, IntoSystemDescriptor}, world::World};
+use bevy_ecs::{ schedule::{Schedule, Stage, StageLabel, IntoSystemDescriptor}, world::World, system::Resource};
 
 use crate::IModule;
 
@@ -45,11 +45,11 @@ impl App {
         self.frame_duration = Duration::from_secs(1) / fps;
     }
 
-    pub fn init_resource<T>(&mut self) where T:Default + Send + Sync  + 'static {
+    pub fn init_resource<T>(&mut self) where T:Default + Resource + Send + Sync  + 'static {
         self.world.insert_resource(T::default());
     }
 
-    pub fn add_resource<T>(&mut self,res:T) where T: Send + Sync  + 'static {
+    pub fn add_resource<T>(&mut self,res:T) where T: Send  + Sync + Resource  + 'static {
         self.world.insert_resource(res);
     }
 

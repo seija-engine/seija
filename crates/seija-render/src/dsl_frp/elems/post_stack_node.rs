@@ -144,7 +144,7 @@ impl PostStackNode {
         }
 
         for h_material in new_lst.drain(..) {
-            let mut new_quad = world.spawn();
+            let mut new_quad = world.spawn_empty();
             new_quad.insert(h_material.clone_weak());
             let e_new_quad = new_quad.id();
             self.cache_quads.insert(h_material, e_new_quad);

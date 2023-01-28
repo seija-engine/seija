@@ -11,7 +11,7 @@ use seija_transform::Transform;
 pub fn main() {
     let mut app = init_core_app("FRPRender.clj",vec![]);
     app.add_module(SceneOctreeModule);
-    app.add_system2(CoreStage::Startup, StartupStage::PreStartup, start.exclusive_system());
+    app.add_system2(CoreStage::Startup, StartupStage::PreStartup, start);
     app.add_system(CoreStage::Update, update_camera_trans_system);
     app.run();
 }
@@ -37,7 +37,7 @@ fn start(world:&mut World) {
         let mut t = Transform::default();
         let r = Quat::from_euler(glam::EulerRot::default()  , 180f32.to_radians(),  0f32.to_radians(), 0f32.to_radians());
         t.local.rotation = r;
-        let mut l = world.spawn();
+        let mut l = world.spawn_empty();
         l.insert(light);
         l.insert(t);
     }
@@ -60,7 +60,7 @@ fn create_many_cubes(world:&mut World) {
             vec = Quat::from_euler(Default::default(), (angle as f32 * 10f32).to_radians(), 0f32, 0f32) * vec;
             let mut t = Transform::default();
             t.local.position = vec;
-            world.spawn().insert(hmat.clone()).insert(hmesh.clone()).insert(t);
+            world.spawn_empty().insert(hmat.clone()).insert(hmesh.clone()).insert(t);
         }
     }
 }

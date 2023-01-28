@@ -7,7 +7,7 @@ use seija_pbr::lights::PBRLight;
 use seija_render::{shadow::{ShadowLight, Shadow}, resource::{Mesh, shape::Sphere, Texture},dsl_frp::IBLEnv};
 use seija_template::Template;
 use seija_transform::Transform;
-
+#[derive(Resource)]
 struct DemoGame {
     entity:Option<Entity>,
     template:Handle<Template>
@@ -15,7 +15,7 @@ struct DemoGame {
 
 fn main() {
     let mut app = init_core_app("FRPRender.clj",vec![]);
-    app.add_system2(CoreStage::Startup, StartupStage::PreStartup, start.exclusive_system());
+    app.add_system2(CoreStage::Startup, StartupStage::PreStartup, start);
     app.add_system(CoreStage::Update, update_camera_trans_system);
     app.add_system(CoreStage::Update, on_update);
    
@@ -36,7 +36,7 @@ fn start(world:&mut World) {
         let mut t = Transform::default();
         let r = Quat::from_euler(glam::EulerRot::default()  , -90f32.to_radians(),  35f32.to_radians(), 0f32.to_radians());
         t.local.rotation = r;
-        let mut l = world.spawn();
+        let mut l = world.spawn_empty();
         l.insert(light);
         l.insert(t);
         let mut shadow = ShadowLight::default();

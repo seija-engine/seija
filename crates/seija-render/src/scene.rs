@@ -1,6 +1,7 @@
+use bevy_ecs::system::Resource;
 use glam::Vec3;
 use seija_geometry::volume::AABB3;
-
+#[derive(Resource)]
 pub struct SceneEnv {
     pub aabb:AABB3
 }

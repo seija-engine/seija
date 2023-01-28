@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 
+use bevy_ecs::system::Resource;
 use seija_app::ecs::prelude::Entity;
 use lite_clojure_eval::Variable;
 use lite_clojure_frp::{FRPSystem, DynamicID, EventID};
@@ -10,7 +11,7 @@ use smol_str::SmolStr;
 //确保RenderFRPSystem只在主线程使用
 unsafe impl Send for FRPContext {}
 unsafe impl Sync for FRPContext {}
-
+#[derive(Resource)]
 pub struct FRPContext {
   pub inner:RwLock<FRPContextInner>
 }

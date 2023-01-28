@@ -21,16 +21,16 @@
         <Entity name="Cube0">
             <Components>
                 <Transform position="0,0,-4" rotation="0,0,0"/>
-                <Mesh res="res://mesh:cube"/>
-                <Material res="res://mats/pbr_red.json" />
+                <Mesh res="mesh:cube"/>
+                <Material res="/mats/pbr_red.json" />
             </Components>
         </Entity>
 
         <Entity name="Shiba">
             <Components>
                 <Transform position="0,1,1" scale="1,1,1"  rotation="-90,0,0"/>
-                <Mesh res="res://gltf/shiba/scene.gltf#mesh.1.0"/>
-                <Material res="res://mats/shiba.json"  />
+                <Mesh res="/gltf/shiba/scene.gltf#mesh.1.0"/>
+                <Material res="/mats/shiba.json"  />
             </Components>
         </Entity>
 

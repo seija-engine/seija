@@ -55,7 +55,7 @@ pub struct DespawnRecursive {
 
 pub struct SetParent {
     pub entity:Entity,
-    pub new_parent:Option<Entity>   
+    pub parent:Option<Entity>   
 }
 
 impl Command for DespawnRecursive {
@@ -93,7 +93,7 @@ fn despawn_with_children_recursive_inner(world: &mut World, entity: Entity) {
 
 pub trait IEntityChildren {
     fn despawn_recursive(self);
-    fn set_parent(&self);
+    fn set_parent(&mut self,parent:Option<Entity>);
 }
 
 impl<'a, 'b,'c> IEntityChildren for EntityCommands<'a, 'b,'c> {
@@ -102,8 +102,9 @@ impl<'a, 'b,'c> IEntityChildren for EntityCommands<'a, 'b,'c> {
         self.commands().add(DespawnRecursive { entity });
     }
 
-    fn set_parent(&self) {
-        
+    fn set_parent(&mut self,parent:Option<Entity>) {
+        let entity = self.id();
+        self.commands().add(SetParent {entity,parent });
     }
 }
 
@@ -115,7 +116,7 @@ impl<'w> IEntityChildren for EntityMut<'w> {
         
     }
 
-    fn set_parent(&self) {
+    fn set_parent(&mut self,parent:Option<Entity>) {
         
     }
 }

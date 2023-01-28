@@ -1,4 +1,4 @@
-use bevy_ecs::schedule::RunOnce;
+use bevy_ecs::schedule::ShouldRun;
 use seija_app::{IModule, App};
 use seija_core::CoreStage; 
 use seija_app::ecs::prelude::*;
@@ -26,10 +26,10 @@ impl IModule for UIModule {
         app.world.insert_resource(SpriteAllocator::new());
         app.init_resource::<UISystemData>();
         app.schedule.add_stage_after(CoreStage::Startup, UIStageLabel::AfterStartup, 
-                                     SystemStage::single(on_after_start.exclusive_system())
-                                     .with_run_criteria(RunOnce::default()));
-        app.add_system(CoreStage::PreUpdate,update_ui_canvas.exclusive_system());
-        app.add_system(CoreStage::PostUpdate, update_render_system.exclusive_system().at_end());
+                                     SystemStage::single(on_after_start)
+                                     .with_run_criteria(ShouldRun::once));
+        app.add_system(CoreStage::PreUpdate,update_ui_canvas);
+        app.add_system(CoreStage::PostUpdate, update_render_system.at_end());
         
     }
 }

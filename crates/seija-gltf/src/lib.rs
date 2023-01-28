@@ -28,7 +28,7 @@ pub fn create_gltf<T>(asset:&GltfAsset,commands:&mut Commands,mut mat_fn:T) -> E
     for mesh in asset.meshs.iter() {
         let mesh_mat = asset.nodes[mesh.node_index].transform.global();
         for primitive in mesh.primitives.iter() {
-            let mut mesh_render = commands.spawn();
+            let mut mesh_render = commands.spawn_empty();
             mesh_render.insert(primitive.mesh.clone());
             mesh_render.insert(Transform::from_t_matrix(mesh_mat.clone()));
             
@@ -40,7 +40,7 @@ pub fn create_gltf<T>(asset:&GltfAsset,commands:&mut Commands,mut mat_fn:T) -> E
             mesh_list.push(mesh_render.id());
         }
     }
-    let mut root = commands.spawn();
+    let mut root = commands.spawn_empty();
     root.insert(Transform::default());
     root.add_children(&mesh_list);
     root.id()

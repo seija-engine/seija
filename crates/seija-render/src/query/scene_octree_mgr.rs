@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use bevy_ecs::{system::{Res, Commands, Query, ResMut,  RemovedComponents}, prelude::Entity, query::Changed};
+use bevy_ecs::{system::{Res, Commands, Query, ResMut,  RemovedComponents, Resource}, prelude::Entity, query::Changed};
 
 use seija_app::{IModule, App};
 use seija_asset::{Handle, Assets};
@@ -21,9 +21,9 @@ impl IModule for SceneOctreeModule {
         app.add_system(CoreStage::Update, update_camera_octree_query);
     }
 }
-
+#[derive(Resource)]
 pub struct SceneOctreeMgr {
-    cache_entitys:HashMap<u32,NodeId>,
+    cache_entitys:HashMap<Entity,NodeId>,
     pub scene_tree:SceneOctree
 }
 
@@ -36,21 +36,21 @@ impl SceneOctreeMgr {
     pub fn add(&mut self,entity:Entity,aabb:Option<AABB3>) -> NodeId {
        let  add_aabb = aabb.clone().unwrap_or(self.scene_tree.nodes[0].aabb.clone());
        let id = self.scene_tree.add(entity, add_aabb);
-       self.cache_entitys.insert(entity.id(), id);
+       self.cache_entitys.insert(entity, id);
        log::info!("octree add:{} {:?}",id,aabb);
        id
     }
 
-    pub fn has(&self,eid:u32) -> bool {
+    pub fn has(&self,eid:Entity) -> bool {
         self.cache_entitys.contains_key(&eid)
     }
 
     pub fn update(&mut self,entity:Entity,new_aabb:Option<AABB3>) -> Option<NodeId> {
         let update_aabb = new_aabb.unwrap_or(self.scene_tree.nodes[0].aabb.clone());
         
-        if let Some(node_id) = self.cache_entitys.get(&entity.id()) {
+        if let Some(node_id) = self.cache_entitys.get(&entity) {
           if let Some(update_id) = self.scene_tree.update(*node_id, entity, update_aabb) {
-             self.cache_entitys.insert(entity.id(), update_id);
+             self.cache_entitys.insert(entity, update_id);
              return Some(update_id);
           }
           Some(*node_id)
@@ -61,7 +61,7 @@ impl SceneOctreeMgr {
 
 
     pub fn remove(&mut self,entity:Entity) {
-        if let Some(node_id) = self.cache_entitys.remove(&entity.id()) {
+        if let Some(node_id) = self.cache_entitys.remove(&entity) {
             self.scene_tree.remove_bynode(node_id, entity);
         }
     }
@@ -81,7 +81,7 @@ pub(crate) fn on_last_update(mut mgr:ResMut<SceneOctreeMgr>,
                               all_renders:Query<(Entity,&Transform,&Handle<Mesh>,&Handle<Material>,Option<&EInfo>)>) {
     for (entity,t,hmesh,_,_) in all_renders.iter() {
         //add
-        if !mgr.cache_entitys.contains_key(&entity.id()) {
+        if !mgr.cache_entitys.contains_key(&entity) {
            if let Some(mesh) = meshes.get(&hmesh.id) {
             if let Some(aabb) = mesh.aabb.as_ref() {
                 let real_aabb = aabb.transform(&t.global().matrix());
@@ -102,7 +102,7 @@ pub(crate) fn on_last_update(mut mgr:ResMut<SceneOctreeMgr>,
     }
     //remove
     for rm in removed.iter() {
-        if mgr.cache_entitys.contains_key(&rm.id()) {
+        if mgr.cache_entitys.contains_key(&rm) {
             mgr.remove(rm);
         }
     }

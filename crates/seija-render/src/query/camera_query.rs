@@ -190,7 +190,7 @@ fn update_camera_octree_query_(
     camera_position: Vec3,
 ) -> Option<()> {
     let fur_aabb = Frustum::create_aabb(&proj_view);
-    let node_id = if octree_mgr.has(camera_id.id()) {
+    let node_id = if octree_mgr.has(camera_id) {
         octree_mgr.update(camera_id, Some(fur_aabb))
     } else {
         Some(octree_mgr.add(camera_id, Some(fur_aabb)))

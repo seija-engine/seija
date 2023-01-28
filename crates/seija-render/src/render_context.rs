@@ -1,5 +1,6 @@
 use std::{sync::Arc};
 use crate::pipeline::{PipelineKey,PipelineCache};
+use bevy_ecs::system::Resource;
 use fnv::FnvHasher;
 use seija_asset::AssetServer;
 use wgpu::{CommandEncoder, Device, TextureFormat};
@@ -9,6 +10,8 @@ resource::{RenderResources, Mesh},  rt_shaders::RuntimeShaderInfo, uniforms::{Un
 
 unsafe impl Send for RenderContext {}
 unsafe impl Sync for RenderContext {}
+
+#[derive(Resource)]
 pub struct RenderContext {
     pub device:Arc<Device>,
     pub resources:RenderResources,

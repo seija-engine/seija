@@ -1,4 +1,5 @@
 use std::{sync::Arc};
+use bevy_ecs::system::Resource;
 use bevy_ecs::world::World;
 use downcast_rs::DowncastSync;
 use seija_core::smol::Task;
@@ -34,7 +35,7 @@ impl LoadContext {
         }
     }
 }
-#[derive(Default)]
+#[derive(Default,Resource)]
 pub(crate) struct AssetLoadingQueue {
     loadings:Vec<LoadContext>,
 }

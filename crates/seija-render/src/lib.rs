@@ -82,7 +82,7 @@ impl IModule for RenderModule {
         app.add_resource(QuerySystem::default());
         let render_system = self.get_render_system(&mut app.world,self.0.clone());
         app.schedule.add_stage_after(CoreStage::PostUpdate, RenderStage::AfterRender, SystemStage::parallel());
-        app.schedule.add_stage_before(RenderStage::AfterRender, RenderStage::Render, SystemStage::single(render_system.exclusive_system()));
+        app.schedule.add_stage_before(RenderStage::AfterRender, RenderStage::Render, SystemStage::single(render_system));
         app.schedule.add_stage_before(RenderStage::Render, RenderStage::PostRender, SystemStage::parallel());
         query::init_system(app);
 

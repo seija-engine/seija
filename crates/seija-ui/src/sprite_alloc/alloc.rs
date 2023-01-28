@@ -1,3 +1,4 @@
+use bevy_ecs::system::Resource;
 use fnv::FnvHashMap;
 use seija_render::resource::ImageInfo;
 use seija_core::{IDGenU32, anyhow::anyhow};
@@ -11,7 +12,7 @@ pub struct IndexInfo {
 }
 
 pub type SpriteIndex = u32;
-
+#[derive(Resource)]
 pub struct SpriteAllocator {
     id_map:FnvHashMap<SpriteIndex,IndexInfo>,
     id_gen:IDGenU32,

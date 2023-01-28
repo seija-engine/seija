@@ -18,7 +18,7 @@ use seija_transform::{
 };
 
 
-#[derive(Default)]
+#[derive(Default,Resource)]
 pub(crate) struct UISystemData {
     baseui: Option<Arc<MaterialDef>>,
     panel_infos: HashMap<Entity, PanelInfo>,
@@ -239,7 +239,7 @@ pub(crate) fn update_render_system(world: &mut World) {
                         let h_mesh = asset_meshs.add(mesh);
                         let material = Material::from_def(material_def.clone(), &server).unwrap();
                         let h_mat = asset_materials.add(material);
-                        let render_entity = commands.spawn().insert(Transform::default()).insert(h_mesh.clone()).insert(h_mat.clone()).id();
+                        let render_entity = commands.spawn_empty().insert(Transform::default()).insert(h_mesh.clone()).insert(h_mat.clone()).id();
                         log::error!("diff create:{:?} {}",&render_entity,tick);
                         drawcall_info.render_entity = Some(render_entity);
                     }
@@ -311,7 +311,7 @@ fn process_fst_create(
             let h_mesh = asset_meshs.add(mesh);
             let material = Material::from_def(material_def.clone(), &server).unwrap();
             let h_mat = asset_materials.add(material);
-            let render_entity = commands.spawn().insert(Transform::default()).insert(h_mesh).insert(h_mat).id();
+            let render_entity = commands.spawn_empty().insert(Transform::default()).insert(h_mesh).insert(h_mat).id();
             log::error!("create render:{:?}",&render_entity);
             drawcall_info.render_entity = Some(render_entity);
         }

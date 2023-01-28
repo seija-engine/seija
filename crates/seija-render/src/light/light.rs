@@ -1,5 +1,6 @@
+use bevy_ecs::system::Resource;
 use glam::{Vec4, Vec3};
-
+#[derive(Resource)]
 pub struct LightEnv {
     pub is_dirty: bool,
     pub(crate) ambient_color: Vec4

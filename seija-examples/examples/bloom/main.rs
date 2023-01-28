@@ -7,9 +7,10 @@ use seija_pbr::lights::PBRLight;
 use seija_render::{resource::{Mesh, shape::{Sphere}}, shadow::{ ShadowCamera}, material::Material};
 use bevy_ecs::prelude::*;
 use seija_transform::Transform;
+//暂时废弃
 pub fn main() {
     let mut app = init_core_app("bloom_render.clj",vec![]);
-    app.add_system2(CoreStage::Startup, StartupStage::PreStartup, start.exclusive_system());
+    app.add_system2(CoreStage::Startup, StartupStage::PreStartup, start);
     app.run();
 }
 
@@ -38,9 +39,8 @@ fn start(world:&mut World) {
         let mut t = Transform::default();
         let r = Quat::from_euler(glam::EulerRot::default()  , 180f32.to_radians(),  0f32.to_radians(), 0f32.to_radians());
         t.local.rotation = r;
-        let mut l = world.spawn();
-        l.insert(light);
-        l.insert(t);
+        let _l = world.spawn((light,t));
+       
     }
     
         //sphere
@@ -59,6 +59,6 @@ fn start(world:&mut World) {
             t.local.position = Vec3::new(0f32, 0f32, -1f32);
             t.local.rotation = Quat::from_euler(glam::EulerRot::XYZ, 0f32, 0f32.to_radians(), 0f32);
             
-            world.spawn().insert(hmesh).insert(hmat).insert(t);
+            world.spawn((hmesh,hmat,t));
         };
 }

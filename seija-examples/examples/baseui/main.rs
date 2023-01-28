@@ -10,7 +10,7 @@ use seija_transform::{Transform, PushChildren, hierarchy::Parent, BuildChildren,
 use seija_ui::{components::{panel::Panel, rect2d::Rect2D, sprite::Sprite, ui_canvas::UICanvas}, update_sprite_alloc_render, SpriteAllocator, types::Thickness};
 use smallvec::SmallVec;
 
-#[derive(Default)]
+#[derive(Default,Resource)]
 pub struct UIData {
     btn:Option<Entity>,
     sprite_index:u32,
@@ -20,7 +20,7 @@ pub struct UIData {
 
 fn main() {
     let mut app = init_core_app("FRPRender.clj",vec![update_sprite_alloc_render]);
-    app.add_system2(CoreStage::Startup, StartupStage::PreStartup, start.exclusive_system());
+    app.add_system2(CoreStage::Startup, StartupStage::PreStartup, start);
     app.add_system(CoreStage::Update, on_update);
     
     app.run();
@@ -44,21 +44,21 @@ fn start(world:&mut World) {
 
     let ui_camera = Camera::from_2d(Orthographic::default());
     
-    let canvas_id = world.spawn().insert(Transform::default()).insert(ui_camera).insert(UICanvas::default()).id();
+    let canvas_id = world.spawn_empty().insert(Transform::default()).insert(ui_camera).insert(UICanvas::default()).id();
 
     let mut rect2d = Rect2D::default();
     rect2d.width = 1024f32;
     rect2d.height = 768f32;
     let mut panel_t = Transform::default();
     panel_t.local.position = Vec3::new(0f32, 0f32, -60f32);
-    let panel_id = world.spawn().insert(Panel::default()).insert(panel_t).insert(rect2d).id();
+    let panel_id = world.spawn_empty().insert(Panel::default()).insert(panel_t).insert(rect2d).id();
     PushChildren {children:SmallVec::from_slice(&[panel_id]),parent:canvas_id}.write(world);   
     let bg_sprite_id = {
         let mut rect2d = Rect2D::default();
         rect2d.width = 640f32;
         rect2d.height = 480f32;
         let t = Transform::default();
-        world.spawn().insert(Sprite::sliced(index3,Thickness::new1(35f32),Vec4::ONE))
+        world.spawn_empty().insert(Sprite::sliced(index3,Thickness::new1(35f32),Vec4::ONE))
                                              .insert(rect2d)
                                              .insert(t).id()
     };
@@ -68,7 +68,7 @@ fn start(world:&mut World) {
         rect2d.height = 138f32;
         let mut t = Transform::default();
         t.local.position.y = -100f32;
-        world.spawn().insert(Sprite::simple(index, Vec4::ONE))
+        world.spawn_empty().insert(Sprite::simple(index, Vec4::ONE))
                                              .insert(rect2d)
                                              .insert(t).id()
     };
@@ -89,13 +89,13 @@ fn create_panel2(world:&mut World,btn3_index:u32,btn4_index:u32,parent:Option<En
     let mut panel_t = Transform::default();
     panel_t.local.position.y = 100f32;
 
-    let panel_id = world.spawn().insert(panel_t).insert(Panel::new(false)).insert(Rect2D::new(1024f32, 768f32)).id();
+    let panel_id = world.spawn_empty().insert(panel_t).insert(Panel::new(false)).insert(Rect2D::new(1024f32, 768f32)).id();
     let mut sprite_t:Transform = Transform::default();
     sprite_t.local.position.x = -100f32;
-    let sprite_id = world.spawn().insert(sprite_t).insert(btn3_size.clone()).insert(Sprite::simple(btn3_index, Vec4::ONE)).id();
+    let sprite_id = world.spawn_empty().insert(sprite_t).insert(btn3_size.clone()).insert(Sprite::simple(btn3_index, Vec4::ONE)).id();
     let mut sprite2_t:Transform = Transform::default();
     sprite2_t.local.position.x = 100f32;
-    let sprite2_id = world.spawn().insert(sprite2_t).insert(btn3_size).insert(Sprite::simple(btn4_index, Vec4::ONE)).id();
+    let sprite2_id = world.spawn_empty().insert(sprite2_t).insert(btn3_size).insert(Sprite::simple(btn4_index, Vec4::ONE)).id();
 
     PushChildren {children:SmallVec::from_slice(&[sprite_id,sprite2_id]),parent:panel_id}.write(world);
     if let Some(parent) = parent {
@@ -121,7 +121,7 @@ fn on_update(mut commands:Commands,input:Res<Input>,time:Res<Time>,ui_data:ResMu
             rect2d.height = 67f32;
             let mut t = Transform::default();
             t.local.position.y = 0f32;
-            commands.spawn().insert(Sprite::simple(ui_data.sprite_index, Vec4::ONE)) .insert(rect2d).insert(t).id() 
+            commands.spawn_empty().insert(Sprite::simple(ui_data.sprite_index, Vec4::ONE)) .insert(rect2d).insert(t).id() 
         };
         let parent_id = *ui_data.parent.as_ref().unwrap();
         commands.entity(parent_id).add_children(&vec![btn_sprite_id]);

@@ -51,7 +51,7 @@ impl ITComponentOpt for TComponentCameraOpt {
             "Orthographic" => {}
             _ => { bail!("error camera type:{}",camera_type) },
         }
-        let insert = Insert {entity,component:camera};
+        let insert = Insert {entity,bundle:camera};
         queue.push(insert);
         Ok(())
     }
@@ -82,7 +82,7 @@ impl ITComponentOpt for TComponentMeshOpt {
             
             let handle = server.get_asset(res_path).ok_or(anyhow!("not found mesh res:{}",res_path))?;
             let h_mesh = handle.make_handle().typed::<Mesh>();
-            queue.push(Insert {entity,component:h_mesh });
+            queue.push(Insert {entity,bundle:h_mesh });
             return Ok(());
         }
         Err(anyhow!("Mesh need res"))
@@ -94,7 +94,7 @@ pub(crate) struct TComponentPBRCameraInfoOpt;
 impl ITComponentOpt for TComponentPBRCameraInfoOpt {
     fn create_component(&self,_:&AssetServer, _: &TComponent,queue:&mut CommandQueue,entity:Entity)-> Result<()> {
         let info = PBRCameraInfo::default();
-        queue.push(Insert {entity,component:info });
+        queue.push(Insert {entity,bundle:info });
         Ok(())
     }
 }
@@ -123,7 +123,7 @@ impl ITComponentOpt for TComponentMaterialOpt {
            
             let info = server.get_asset(res_path).ok_or(anyhow!("not found material res:{}",res_path))?;
             let h_material = info.make_handle().typed::<Material>();
-            queue.push(Insert {entity,component:h_material });
+            queue.push(Insert {entity,bundle:h_material });
         }
         Ok(())
     }
@@ -152,7 +152,7 @@ impl ITComponentOpt for TComponentLightOpt {
                 PBRLight::spot(color, intensity, falloff, inner, outer, typ == PBRLightType::Spot)
             }
         };
-        queue.push(Insert {entity,component:light });
+        queue.push(Insert {entity,bundle:light });
         Ok(())
     }
 }

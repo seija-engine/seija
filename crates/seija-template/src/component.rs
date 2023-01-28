@@ -1,3 +1,4 @@
+use bevy_ecs::system::Resource;
 use relative_path::RelativePath;
 use seija_app::ecs::prelude::Entity;
 use seija_app::ecs::system::{CommandQueue, Insert};
@@ -13,7 +14,7 @@ use crate::errors::TemplateError;
 use crate::types::TEntityChildren;
 use crate::{TComponent, TEntity};
 
-#[derive(Clone)]
+#[derive(Clone,Resource)]
 pub struct TComponentManager {
     opts: Arc<HashMap<SmolStr, Box<dyn ITComponentOpt>>>,
 }
@@ -80,7 +81,7 @@ impl ITComponentOpt for TransformTemplateOpt {
         let s = component.read_v3("scale").unwrap_or(Vec3::ONE);
         let rr = Quat::from_euler(EulerRot::YXZ, r.y.to_radians(), r.x.to_radians(), r.z.to_radians());
         let t = Transform::new(p, rr, s);
-        let insert = Insert {entity,component:t };
+        let insert:Insert<Transform> = Insert {entity,bundle:t };
         queue.push(insert);
         Ok(())
     }

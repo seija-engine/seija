@@ -1,4 +1,4 @@
-use bevy_ecs::prelude::Component;
+use bevy_ecs::{prelude::Component, system::Resource};
 use glam::{f32, Vec2,  Vec3};
 
 #[derive(PartialEq, Eq)]
@@ -177,7 +177,7 @@ impl PBRLight {
     }
 }
 
-#[derive(Component)]
+#[derive(Component,Resource)]
 pub struct PBRGlobalAmbient {
     pub color:Vec3,
     dirty:bool

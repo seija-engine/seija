@@ -6,7 +6,7 @@ use std::collections::HashMap;
 pub use component::{ITComponentOpt,TComponentManager};
 use component::{TransformTemplateOpt};
 use loader::TemplateLoader;
-use seija_app::{IModule, App, ecs::world::World};
+use seija_app::{IModule, App, ecs::{world::World, system::Resource}};
 use seija_asset::AddAsset;
 use smol_str::SmolStr;
 pub mod errors;
@@ -31,7 +31,7 @@ impl IModule for TemplateModule {
         world.insert_resource(mgr);
     }
 }
-
+#[derive(Resource)]
 struct CacheTComponentOpts(HashMap<SmolStr,Box<dyn ITComponentOpt>>);
 
 pub trait AddTComponent {

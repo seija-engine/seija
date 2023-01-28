@@ -14,92 +14,92 @@
         <Entity name="Skybox">
             <Components>
                 <Transform />
-                <Mesh res="res://mesh:skybox" />
-                <Material res="res://mats/yoko_sky.json" />
+                <Mesh res="mesh:skybox" />
+                <Material res="/mats/yoko_sky.json" />
             </Components>
         </Entity> 
        
-        <Template res="template/shiba.xml" >
+        <Template res="/template/shiba.xml" >
             <Transform  position="5,0,0" scale="0.1,0.1,asd" />
         </Template>
        
         <Entity name="Cube0">
             <Components>
                 <Transform position="-1.5,0.5,-4.5" rotation="0,0,0"/>
-                <Mesh res="res://mesh:cube"/>
-                <Material res="res://mats/pbr_red.json" />
+                <Mesh res="mesh:cube"/>
+                <Material res="/mats/pbr_red.json" />
             </Components>
         </Entity>
         
         <Entity name="Cube0">
             <Components>
                 <Transform position="-2.5,0.5,-4.5" rotation="0,0,0"/>
-                <Mesh res="res://mesh:cube"/>
-                <Material res="res://mats/pbr_red.json" />
+                <Mesh res="mesh:cube"/>
+                <Material res="/mats/pbr_red.json" />
             </Components>
         </Entity>
 
         <Entity name="Cube0">
             <Components>
                 <Transform position="-3.5,0.5,-4.5" rotation="0,0,0"/>
-                <Mesh res="res://mesh:cube"/>
-                <Material res="res://mats/pbr_red.json" />
+                <Mesh res="mesh:cube"/>
+                <Material res="/mats/pbr_red.json" />
             </Components>
         </Entity>
 
         <Entity name="Cube0">
             <Components>
                 <Transform position="-4.5,0.5,-4.5" rotation="0,0,0"/>
-                <Mesh res="res://mesh:cube"/>
-                <Material res="res://mats/pbr_red.json" />
+                <Mesh res="mesh:cube"/>
+                <Material res="/mats/pbr_red.json" />
             </Components>
         </Entity>
  
         <Entity name="Cube0">
             <Components>
                 <Transform position="-0.5,0.5,-4.5" rotation="0,0,0"/>
-                <Mesh res="res://mesh:cube"/>
-                <Material res="res://mats/pbr_red.json" />
+                <Mesh res="mesh:cube"/>
+                <Material res="/mats/pbr_red.json" />
             </Components>
         </Entity>
 
         <Entity name="Cube0">
             <Components>
                 <Transform position="0.5,0.5,-4.5" rotation="0,0,0"/>
-                <Mesh res="res://mesh:cube"/>
-                <Material res="res://mats/pbr_red.json" />
+                <Mesh res="mesh:cube"/>
+                <Material res="/mats/pbr_red.json" />
             </Components>
         </Entity>
 
         <Entity name="Cube0">
             <Components>
                 <Transform position="1.5,0.5,-4.5" rotation="0,0,0"/>
-                <Mesh res="res://mesh:cube"/>
-                <Material res="res://mats/pbr_red.json" />
+                <Mesh res="mesh:cube"/>
+                <Material res="/mats/pbr_red.json" />
             </Components>
         </Entity>
 
         <Entity name="Cube0">
             <Components>
                 <Transform position="2.5,0.5,-4.5" rotation="0,0,0"/>
-                <Mesh res="res://mesh:cube"/>
-                <Material res="res://mats/pbr_red.json" />
+                <Mesh res="mesh:cube"/>
+                <Material res="/mats/pbr_red.json" />
             </Components>
         </Entity>
 
         <Entity name="Cube0">
             <Components>
                 <Transform position="3.5,0.5,-4.5" rotation="0,0,0"/>
-                <Mesh res="res://mesh:cube"/>
-                <Material res="res://mats/pbr_red.json"/>
+                <Mesh res="mesh:cube"/>
+                <Material res="/mats/pbr_red.json"/>
             </Components>
         </Entity>
 
         <Entity name="Cube0">
             <Components>
                 <Transform position="4.5,0.5,-4.5" rotation="0,0,0"/>
-                <Mesh res="res://mesh:cube"/>
-                <Material res="res://mats/pbr_red.json" />
+                <Mesh res="mesh:cube"/>
+                <Material res="/mats/pbr_red.json" />
             </Components>
         </Entity>
        
@@ -107,8 +107,8 @@
         <Entity name="Plane0">
             <Components>
                 <Transform position="0,0,0" rotation="0,0,0" />
-                <Mesh res="res://mesh:plane"/>
-                <Material res="res://mats/pbr_white.json" />
+                <Mesh res="mesh:plane"/>
+                <Material res="/mats/pbr_white.json" />
             </Components>
         </Entity>
 

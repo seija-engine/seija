@@ -1,6 +1,8 @@
 use std::time::{Duration, Instant};
 
-use bevy_ecs::prelude::ResMut;
+use bevy_ecs::{prelude::ResMut, system::Resource};
+
+#[derive(Resource)]
 pub struct Time {
     last_update: Instant,
     delta: Duration,

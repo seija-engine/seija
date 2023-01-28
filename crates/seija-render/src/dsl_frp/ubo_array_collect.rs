@@ -1,7 +1,5 @@
-use std::marker::PhantomData;
-
+use std::{marker::PhantomData, collections::HashSet};
 use bevy_ecs::prelude::{World, Entity, With, Changed, Or, Component};
-use fixedbitset::FixedBitSet;
 use fnv::FnvHashMap;
 use seija_core::OptionExt;
 use seija_transform::Transform;
@@ -13,8 +11,8 @@ pub struct UBOArrayCollect<T:IShaderBackend,ET:'static + Send + Sync> {
     pub name_index:Option<UniformIndex>,
     pub backend:Option<T>,
 
-    map_idxs:FnvHashMap<u32,usize>,
-    list:Vec<Option<u32>>,
+    map_idxs:FnvHashMap<Entity,usize>,
+    list:Vec<Option<Entity>>,
     cache_len:usize,
     max_size:usize,
     _mark:PhantomData<ET>
@@ -52,14 +50,14 @@ impl<T,ET> UBOArrayCollect<T,ET> where T:IShaderBackend,ET:Component {
     pub fn update(&mut self,world:&mut World,ctx:&mut RenderContext,setter:fn(&T,usize,&ET,&mut UniformBuffer,&Transform)) -> Option<()> {
         //add
         let mut frame_size = 0;
-        let mut frame_eids:FixedBitSet = FixedBitSet::with_capacity(self.max_size);
+        let mut frame_eids:HashSet<Entity> = Default::default();
         {
            let mut elems = world.query_filtered::<Entity,(With<ET>,With<Transform>)>();
            for e in elems.iter(world) {
-               if !self.map_idxs.contains_key(&e.id()) {
-                   self.add_element(e.id());
+               if !self.map_idxs.contains_key(&e) {
+                   self.add_element(e);
                }
-               frame_eids.insert(e.id() as usize);
+               frame_eids.insert(e);
                frame_size += 1;
            }
        };
@@ -71,7 +69,7 @@ impl<T,ET> UBOArrayCollect<T,ET> where T:IShaderBackend,ET:Component {
         //update
         let mut elems = world.query_filtered::<(Entity,&ET,&Transform),Or<(Changed<ET>, Changed<Transform>)>>();
         for (e,elem,t) in elems.iter(world) {
-            let index = *self.map_idxs.get(&e.id()).log_err("get index error")?;
+            let index = *self.map_idxs.get(&e).log_err("get index error")?;
             ctx.ubo_ctx.set_buffer(name_index, None, |buffer| {
                 setter(backend,index,elem,&mut buffer.buffer,t);
             });
@@ -87,7 +85,7 @@ impl<T,ET> UBOArrayCollect<T,ET> where T:IShaderBackend,ET:Component {
        Some(())
     }
 
-    fn add_element(&mut self,eid:u32) {
+    fn add_element(&mut self,eid:Entity) {
         for idx in 0..self.list.len() {
             if self.list[idx].is_none() {
                 self.list[idx] = Some(eid);

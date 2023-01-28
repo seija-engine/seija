@@ -1,7 +1,7 @@
 use bevy_ecs::{prelude::Entity, world::World};
 use seija_app::App;
 
-use crate::{Transform,TransformModule, TransformMatrix};
+use crate::{Transform,TransformModule};
 
 #[no_mangle]
 pub unsafe extern "C" fn tranrform_add_module(app_ptr: *mut App) {
@@ -11,11 +11,16 @@ pub unsafe extern "C" fn tranrform_add_module(app_ptr: *mut App) {
 #[no_mangle]
 pub unsafe extern "C" fn transform_world_entity_get(world: *mut World, eid: u32) -> *mut Transform {
     let world_mut = &mut *world;
-    let t = world_mut
-        .get_entity_mut(Entity::from_raw(eid))
-        .and_then(|v| v.get_unchecked_mut::<Transform>());
-    t.map(|mut t| t.as_mut() as *mut Transform)
-        .unwrap_or(std::ptr::null_mut())
+    if let Some(mut entity) = world_mut.get_entity_mut(Entity::from_raw(eid)) {
+        let trans = entity.get_mut::<Transform>();
+        if let Some(mut trans)  = trans {
+            trans.as_mut() as *mut Transform
+        } else {
+            std::ptr::null_mut()
+        }
+    } else {
+        std::ptr::null_mut()
+    }
 }
 
 #[no_mangle]
@@ -47,11 +52,4 @@ pub unsafe extern "C" fn tranrform_debug_log(world:*mut World,eid:u32) {
     let entity_ref = world_mut.entity(entity);
     let t = entity_ref.get::<Transform>();
     println!("{:?}",&t);
-}
-
-#[test]
-fn test_fnc() {
-    let mat = TransformMatrix::default();
-    let c = std::mem::size_of::<TransformMatrix>();
-    println!("count:{}",c);
 }

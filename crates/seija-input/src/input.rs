@@ -1,9 +1,10 @@
 use std::collections::HashSet;
+use bevy_ecs::system::Resource;
 use glam::Vec2;
 
 use crate::{keycode::KeyCode, event::MouseButton};
 
-#[derive(Default)]
+#[derive(Default,Resource)]
 pub struct Input {
     pub mouse_position:Vec2,
     pub(crate) frame_mouse_wheel:Option<Vec2>,

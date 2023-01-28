@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 
+use bevy_ecs::system::Resource;
 use parking_lot::RwLock;
 use super::view_list::ViewList;
 
@@ -38,7 +39,7 @@ impl ViewQuery {
     }
 }
 
-#[derive(Default)]
+#[derive(Default,Resource)]
 pub struct QuerySystem {
     key_map:HashMap<IdOrName,usize>,
     pub querys:Vec<ViewQuery>

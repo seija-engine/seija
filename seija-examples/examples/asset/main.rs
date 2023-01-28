@@ -9,7 +9,7 @@ use seija_render::{resource::{Mesh, shape::{Cube}, Texture}, material::{Material
 use bevy_ecs::prelude::*;
 use seija_transform::Transform;
 
-#[derive(Default)]
+#[derive(Default,Resource)]
 pub struct LocalData {
     _loading_track:Option<AssetRequest>
 }
@@ -20,7 +20,7 @@ pub fn main() {
     app.add_system2(CoreStage::Startup, StartupStage::PreStartup, pre_start);
     app.add_system(CoreStage::Update, update_camera_trans_system);
     app.add_system(CoreStage::Update, on_update);
-    app.add_system2(CoreStage::Startup, StartupStage::Startup, on_start.exclusive_system());
+    app.add_system2(CoreStage::Startup, StartupStage::Startup, on_start);
     app.init_resource::<LocalData>();
     app.run();
 }
@@ -69,7 +69,7 @@ fn on_start(world:&mut World) {
         t.local.position = Vec3::new(1f32, 0f32, -0.5f32);
         t.local.rotation = Quat::from_euler(glam::EulerRot::XYZ, 0f32, -31f32.to_radians(), 0f32);
        
-        world.spawn().insert(hmesh).insert(hmat).insert(t);
+        world.spawn((hmesh,hmat,t));
     };
 
 }
@@ -83,9 +83,8 @@ fn pre_start(mut commands:Commands,mut _local_data:ResMut<LocalData>,_:Res<Asset
         let mut t = Transform::default();
         let r = Quat::from_euler(glam::EulerRot::default()  , 90f32.to_radians(),  45f32.to_radians(), 0f32.to_radians());
         t.local.rotation = r;
-        let mut l = commands.spawn();
-        l.insert(light);
-        l.insert(t);
+        let _l = commands.spawn((light,t));
+       
     }
 
    

@@ -1,6 +1,6 @@
 use std::{collections::HashMap, fmt::Debug};
 
-use bevy_ecs::prelude::{Res, ResMut};
+use bevy_ecs::{prelude::{Res, ResMut}, system::Resource};
 use seija_core::smol::channel::{Sender, TryRecvError};
 use bevy_ecs::event::{EventWriter, Events};
 use crate::{asset::Asset, handle::{Handle, HandleId}, server::{AssetServer}, RefEvent, LifecycleEvent};
@@ -23,7 +23,7 @@ impl<T: Asset> Debug for AssetEvent<T> {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug,Resource)]
 pub struct Assets<T: Asset> {
     pub assets: HashMap<HandleId, T>,
     pub events:Events<AssetEvent<T>>,

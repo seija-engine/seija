@@ -10,7 +10,7 @@ use seija_template::Template;
 use seija_transform::Transform;
 fn main() {
     let mut app = init_core_app("FRPRender.clj",vec![]);
-    app.add_system2(CoreStage::Startup, StartupStage::Startup, on_start.exclusive_system());
+    app.add_system2(CoreStage::Startup, StartupStage::Startup, on_start);
     app.add_system(CoreStage::Update, update_camera_trans_system);
 
     app.run();
@@ -23,9 +23,8 @@ fn on_start(world:&mut World) {
         let mut t = Transform::default();
         let r = Quat::from_euler(glam::EulerRot::default()  , -30f32.to_radians(),  50f32.to_radians(), 0f32.to_radians());
         t.local.rotation = r;
-        let mut l = world.spawn();
-        l.insert(light);
-        l.insert(t);
+        world.spawn((light,t));
+       
     }
     let mut queue = CommandQueue::default();
     let mut commands = Commands::new(&mut queue, world);

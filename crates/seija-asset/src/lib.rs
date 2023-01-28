@@ -2,7 +2,6 @@ use std::path::PathBuf;
 use bevy_ecs::prelude::World;
 use bevy_ecs::schedule::{StageLabel};
 use bevy_ecs::schedule::SystemStage;
-use bevy_ecs::system::IntoExclusiveSystem;
 use loading_queue::AssetLoadingQueue;
 use relative_path::RelativePath;
 use seija_app::{App, IModule};
@@ -40,7 +39,7 @@ impl IModule for AssetModule {
         app.schedule.add_stage_before(CoreStage::PreUpdate, AssetStage::LoadAssets, SystemStage::parallel());
         app.schedule.add_stage_after(CoreStage::PostUpdate, AssetStage::AssetEvents, SystemStage::parallel());
         app.add_system(CoreStage::PreUpdate, server::free_unused_assets_system);
-        app.add_system(CoreStage::PreUpdate, update_asset_system.exclusive_system());
+        app.add_system(CoreStage::PreUpdate, update_asset_system);
     }
 }
 

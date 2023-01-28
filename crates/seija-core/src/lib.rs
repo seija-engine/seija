@@ -1,6 +1,6 @@
 use bevy_ecs::event::Events;
-use bevy_ecs::{prelude::*, schedule::RunOnce};
-use bevy_ecs::schedule::{StageLabel};
+use bevy_ecs::{prelude::*};
+use bevy_ecs::schedule::{StageLabel, ShouldRun};
 use seija_app::{IModule,App};
 use time::{Time};
 use std::fmt::Debug;
@@ -44,8 +44,8 @@ impl IModule for CoreModule {
     fn init(&mut self, app:&mut App) {
         self.add_core_stages(app);
         app.init_resource::<Time>();
-        app.add_system(CoreStage::First, time::time_system.exclusive_system());
-        app.add_system(CoreStage::Last, World::clear_trackers.exclusive_system().at_end());
+        app.add_system(CoreStage::First, time::time_system);
+        app.add_system(CoreStage::Last, World::clear_trackers.at_end());
     }
 }
 
@@ -53,7 +53,7 @@ impl CoreModule {
     fn add_core_stages(&mut self,app :&mut App) {
         app.schedule.add_stage(CoreStage::First, SystemStage::parallel());
         
-        let mut startup = Schedule::default().with_run_criteria(RunOnce::default());
+        let mut startup = Schedule::default().with_run_criteria(ShouldRun::once);
         startup.add_stage(StartupStage::PreStartup, SystemStage::parallel());
         startup.add_stage(StartupStage::Startup, SystemStage::parallel());
         startup.add_stage(StartupStage::PostStartup, SystemStage::parallel());

@@ -198,7 +198,6 @@ impl DrawPassNode {
                                 let vert_buffer = ctx.resources.get_buffer_by_resid(&mesh_buffer_id).unwrap();
                                 let oset_index = pipeline.set_binds(self.camera_entity,Some(entity.clone()), &mut render_pass, &ctx.ubo_ctx);
                                 if oset_index.is_none()  {
-                                    log::error!("skip??");
                                     continue;
                                 }
                                 let mut set_index = oset_index.unwrap();
