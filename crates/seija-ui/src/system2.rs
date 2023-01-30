@@ -80,51 +80,8 @@ impl<'w,'s> SystemParams<'w,'s> {
 //处理Sprite增删改，处理Panel增删改，处理Entity层级变化
 pub(crate) fn ui_render_system(mut params:SystemParams) {
     UpdateZOrders::default().run(&mut params);
-    let mut dirty_sprites:HashSet<Entity> = HashSet::default();
-    let mut dirty_panels:HashSet<Entity> = HashSet::default();
-    //Sprite 增 + 改
-    for sprite_entity in params.update_sprites.iter() {
-        dirty_sprites.insert(sprite_entity);
-        if let Some(entity) = params.get_render_parent_panel(sprite_entity) {
-            dirty_panels.insert(entity);
-        }
-    }
-    //Sprite 删
-    for remove_entity in params.remove_sprites.iter() {
-        if let Some(panel_entity) = params.render_data.entity2panel.remove(&remove_entity) {
-            if params.render_data.render_panels.contains_key(&panel_entity) {
-                dirty_panels.insert(panel_entity);
-            }
-        }
-    }
-   
-    //Panel 增 + 改
-    for update_panel in params.update_panels.iter() {
-        if let Ok((_,panel)) = params.panels.get(update_panel) {
-            if panel.is_static {
-                //静态Panel
-                //TODO
-            } else { 
-                //动态Panel
-                //TODO
-            }
-        }
-    }
-    //Panel 删
-    for remove_panel in params.remove_panels.iter() {
-        if let Some(panel_info) = params.render_data.render_panels.remove(&remove_panel) {
-            //TODO
-        }
-    }
-    //Entity层级变化
-    for event in params.events.iter() {
-        match event {
-            HierarchyEvent::ParentChange { entity , old_parent, new_parent } => {
-
-            }
-        }
-    }
-
+    let mut dirty_collect = DirtyCollect::default();
+    dirty_collect.run(&mut params);
     
 }
 
@@ -160,5 +117,62 @@ impl UpdateZOrders {
                now_index += 1;
             });
         }
+    }
+}
+
+#[derive(Default)]
+struct DirtyCollect {
+    dirty_sprites:HashSet<Entity>,
+    dirty_panels:HashSet<Entity>,
+    delete_panels:HashSet<Entity>
+}
+
+impl DirtyCollect {
+    pub fn run(&mut self,params:&mut SystemParams) {
+        //Sprite 增 + 改
+        for sprite_entity in params.update_sprites.iter() {
+            self.dirty_sprites.insert(sprite_entity);
+            if let Some(entity) = params.get_render_parent_panel(sprite_entity) {
+                self.dirty_panels.insert(entity);
+            }
+        }
+        //Sprite 删
+        for remove_entity in params.remove_sprites.iter() {
+            if let Some(panel_entity) = params.render_data.entity2panel.remove(&remove_entity) {
+                if params.render_data.render_panels.contains_key(&panel_entity) {
+                    self.dirty_panels.insert(panel_entity);
+                }
+            }
+        }
+
+        //Panel 增 + 改
+        for update_panel in params.update_panels.iter() {
+            if let Ok((_,panel)) = params.panels.get(update_panel) {
+                if panel.is_static {
+                    //静态Panel
+                    //TODO
+                } else { 
+                    //动态Panel
+                    //TODO
+                }
+            }
+        }
+
+        //Panel 删
+        for remove_panel in params.remove_panels.iter() {
+            if let Some(panel_info) = params.render_data.render_panels.remove(&remove_panel) {
+                //TODO
+            }
+        }
+
+        //Entity层级变化
+        for event in params.events.iter() {
+            match event {
+                HierarchyEvent::ParentChange { entity , old_parent, new_parent } => {
+
+                }
+            }
+        }
+        
     }
 }
