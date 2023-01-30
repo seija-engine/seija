@@ -1,8 +1,8 @@
-use bevy_ecs::{prelude::{Entity, World}, system::{Command, EntityCommands}, world::EntityMut};
+use bevy_ecs::{prelude::{Entity, World, Events}, system::{Command, EntityCommands}, world::EntityMut};
 
 use smallvec::{SmallVec};
 
-use crate::hierarchy::{Children, Parent};
+use crate::{hierarchy::{Children, Parent}, events::HierarchyEvent};
 
 #[derive(Debug)]
 pub struct PushChildren {
@@ -66,17 +66,10 @@ impl Command for DespawnRecursive {
 
 impl Command for SetParent {
     fn write(self, world: &mut World) {
-       
+        world.entity_mut(self.entity).set_parent(self.parent);
     }
 }
-/*
-fn despawn_children(world: &mut World, entity: Entity) {
-    if let Some(mut children) = world.get_mut::<Children>(entity) {
-        for e in std::mem::take(&mut children.0) {
-            despawn_with_children_recursive_inner(world, e);
-        }
-    }
-}*/
+
 
 fn despawn_with_children_recursive_inner(world: &mut World, entity: Entity) {
     if let Some(mut children) = world.get_mut::<Children>(entity) {
@@ -117,7 +110,30 @@ impl<'w> IEntityChildren for EntityMut<'w> {
     }
 
     fn set_parent(&mut self,parent:Option<Entity>) {
-        
+        let cur_entity = self.id();
+        self.world_scope(|w| {
+            let old_parent = w.entity_mut(cur_entity).get::<Parent>().map(|p|p.0);
+            if let Some(old) = old_parent {
+                if let Some(mut children) = w.get_mut::<Children>(old) {
+                    children.0.retain(|c| *c != cur_entity);
+                }
+            }
+            if let Some(new_parent) = parent {
+                w.entity_mut(cur_entity).get_mut::<Parent>().map(|mut p| p.0 = new_parent);
+                if let Some(mut parent_children) = w.get_mut::<Children>(new_parent) {
+                  parent_children.0.push(cur_entity);
+                } else {
+                    w.entity_mut(new_parent).insert(Children(SmallVec::from_slice(&[cur_entity])));
+                }   
+            } else {
+                w.entity_mut(cur_entity).remove::<Parent>();
+            }
+            if old_parent != parent {
+                if let Some(mut event) = w.get_resource_mut::<Events<HierarchyEvent>>() {
+                    event.send(HierarchyEvent::ParentChange { entity:cur_entity, old_parent, new_parent: parent });
+                }
+            }
+        })
     }
 }
 

@@ -9,11 +9,13 @@ pub mod components;
 pub mod mesh2d;
 mod system;
 mod render_info;
+mod info;
 mod system2;
 use components::ui_canvas::update_ui_canvas;
 pub use sprite_alloc::system::update_sprite_alloc_render;
 pub use sprite_alloc::alloc::SpriteAllocator;
 use system::{UISystemData, on_after_start, update_render_system};
+use system2::ui_render_system;
 #[derive(Clone, Copy,Hash,Debug,PartialEq, Eq,StageLabel)]
 pub enum UIStageLabel {
     AfterStartup
@@ -29,7 +31,7 @@ impl IModule for UIModule {
                                      SystemStage::single(on_after_start)
                                      .with_run_criteria(ShouldRun::once));
         app.add_system(CoreStage::PreUpdate,update_ui_canvas);
-        app.add_system(CoreStage::PostUpdate, update_render_system.at_end());
+        app.add_system(CoreStage::PostUpdate, ui_render_system.at_end());
         
     }
 }

@@ -135,5 +135,10 @@ fn on_update(mut commands:Commands,input:Res<Input>,time:Res<Time>,ui_data:ResMu
    } else if input.get_key_down(KeyCode::Q) {
         let panel2 = *ui_data.panel2.as_ref().unwrap();
         commands.entity(panel2).despawn_recursive();
+   } else if input.get_key_down(KeyCode::G) {
+        log::error!("keydown G");
+        let btn_entity = ui_data.btn.unwrap();
+        let new_parent = ui_data.panel2.unwrap();
+        commands.entity(btn_entity).set_parent(Some(new_parent));
    }
 }
