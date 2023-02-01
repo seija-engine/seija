@@ -10,7 +10,7 @@ mod transform;
 pub mod ffi;
 
 use seija_core::{CoreStage, StartupStage, AddCore};
-use system::update_transform_system;
+pub use system::update_transform_system;
 pub use  transform::{Transform,TransformMatrix};
 pub use  commands::{PushChildren,BuildChildren,IEntityChildren,DespawnRecursive};
 

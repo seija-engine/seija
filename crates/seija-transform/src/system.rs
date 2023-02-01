@@ -39,7 +39,7 @@ pub(crate) fn parent_update_system(
 }
 
 
-pub(crate) fn update_transform_system(
+pub fn update_transform_system(
     parent_query: Query<(Entity,Option<&Parent>)>,
     child_query:Query<Option<&Children>>,
     mut params:ParamSet<(Query<Entity,Changed<Transform>>,Query<&mut Transform>)>

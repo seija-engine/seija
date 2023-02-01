@@ -157,7 +157,7 @@ impl DrawPassNode {
         let view_query = &query_system.querys[query_index];
         //check build pipeline
         for entity in view_query.list.read().iter() {
-            if let Ok((hmesh,hmat)) = render_query.get_manual(world, *entity) { 
+            if let Ok((hmesh,hmat)) = render_query.get(world, *entity) { 
                 if let  Some(mesh)  = meshs.get(&hmesh.id) {
                     let material = materials.get(&hmat.id).ok_or(PassError::MissMaterial)?;
                     for pass_index in 0..material.def.pass_list.len() {
@@ -177,7 +177,7 @@ impl DrawPassNode {
        
         for entity in view_query.list.read().iter() {
            
-            if let Ok((hmesh,hmat)) = render_query.get_manual(world, *entity) { 
+            if let Ok((hmesh,hmat)) = render_query.get(world, *entity) { 
                 let material = materials.get(&hmat.id).ok_or(PassError::MissMaterial)?;
                 if !material.is_ready(&ctx.resources) { 
                     continue 

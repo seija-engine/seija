@@ -86,7 +86,7 @@ fn despawn_with_children_recursive_inner(world: &mut World, entity: Entity) {
 
 pub trait IEntityChildren {
     fn despawn_recursive(self);
-    fn set_parent(&mut self,parent:Option<Entity>);
+    fn set_parent(&mut self,parent:Option<Entity>) -> &mut Self;
 }
 
 impl<'a, 'b,'c> IEntityChildren for EntityCommands<'a, 'b,'c> {
@@ -95,9 +95,10 @@ impl<'a, 'b,'c> IEntityChildren for EntityCommands<'a, 'b,'c> {
         self.commands().add(DespawnRecursive { entity });
     }
 
-    fn set_parent(&mut self,parent:Option<Entity>) {
+    fn set_parent(&mut self,parent:Option<Entity>) -> &mut Self {
         let entity = self.id();
         self.commands().add(SetParent {entity,parent });
+        self
     }
 }
 
@@ -109,7 +110,7 @@ impl<'w> IEntityChildren for EntityMut<'w> {
         
     }
 
-    fn set_parent(&mut self,parent:Option<Entity>) {
+    fn set_parent(&mut self,parent:Option<Entity>) -> &mut Self {
         let cur_entity = self.id();
         self.world_scope(|w| {
             let old_parent = w.entity_mut(cur_entity).get::<Parent>().map(|p|p.0);
@@ -119,7 +120,12 @@ impl<'w> IEntityChildren for EntityMut<'w> {
                 }
             }
             if let Some(new_parent) = parent {
-                w.entity_mut(cur_entity).get_mut::<Parent>().map(|mut p| p.0 = new_parent);
+                if let Some(mut parent_comp) = w.entity_mut(cur_entity).get_mut::<Parent>() {
+                    parent_comp.0 = new_parent;
+                } else {
+                    w.entity_mut(cur_entity).insert(Parent(new_parent));
+                }
+
                 if let Some(mut parent_children) = w.get_mut::<Children>(new_parent) {
                   parent_children.0.push(cur_entity);
                 } else {
@@ -133,7 +139,8 @@ impl<'w> IEntityChildren for EntityMut<'w> {
                     event.send(HierarchyEvent::ParentChange { entity:cur_entity, old_parent, new_parent: parent });
                 }
             }
-        })
+        });
+        self
     }
 }
 

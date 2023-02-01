@@ -2,6 +2,7 @@ use bevy_ecs::prelude::Component;
 
 #[derive(Component)]
 pub struct Panel {
+    //一经创建不允许修改
     pub(crate) is_static:bool
 }
 

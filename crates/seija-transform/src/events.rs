@@ -1,5 +1,5 @@
 use bevy_ecs::prelude::Entity;
-#[derive(Debug)]
+#[derive(Debug,Clone)]
 pub enum HierarchyEvent {
     ParentChange {
         entity:Entity,
