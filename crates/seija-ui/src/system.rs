@@ -33,7 +33,7 @@ pub struct UIRenderData {
 #[derive(SystemParam)]
 pub struct SystemParams<'w,'s> {
    pub(crate) sprite_alloc:Res<'w,SpriteAllocator>,
-   pub(crate) update_sprites:Query<'w,'s,Entity,Or<(Changed<Panel>, Changed<Rect2D>, Changed<Transform>)>>,
+   pub(crate) update_sprites:Query<'w,'s,Entity,Or<(Changed<Sprite>,Changed<Rect2D>)>>,
    pub(crate) update_panels:Query<'w,'s,Entity,Or<(Changed<Panel>, Changed<Rect2D>, Changed<Transform>)>>,
    pub(crate) remove_sprites:RemovedComponents<'w,Sprite>,
    pub(crate) remove_panels:RemovedComponents<'w,Panel>,
@@ -52,7 +52,8 @@ pub struct SystemParams<'w,'s> {
 
 #[derive(Resource)]
 struct CachedQueryState {
-    query: SystemState<SystemParams<'static,'static>>
+    query: SystemState<SystemParams<'static,'static>>,
+    query2: SystemState<SystemParams<'static,'static>>
 }
 
 impl<'w,'s> SystemParams<'w,'s> {
@@ -129,30 +130,30 @@ pub(crate) fn on_ui_start(world:&mut World) {
     });
 
     let param_state = SystemState::<SystemParams>::from_world(world);
+    let param_state2 = SystemState::<SystemParams>::from_world(world);
     world.insert_resource(CachedQueryState {
-        query:param_state
+        query:param_state,
+        query2:param_state2
     });
 }
 
 pub(crate) fn ui_update_zorders(world:&mut World) {
     world.resource_scope(|world:&mut World,mut cached_query:Mut<CachedQueryState>| {
-        //let mut params = cached_query.query.get_mut(world);
-        //UpdateZOrders::default().run(&mut params);
-        //cached_query.query.apply(world);
+        let mut params = cached_query.query.get_mut(world);
+        UpdateZOrders::default().run(&mut params);
+        cached_query.query.apply(world);
     });
 }
 
 //处理Sprite增删改，处理Panel增删改，处理Entity层级变化
 pub(crate) fn ui_render_system(world:&mut World) {
     world.resource_scope(|world:&mut World,mut cached_query:Mut<CachedQueryState>| {
-        let mut params = cached_query.query.get_mut(world);
-        UpdateZOrders::default().run(&mut params);
-        
+        let mut params = cached_query.query2.get_mut(world);  
         let mut dirty_collect = DirtyCollect::default();
         dirty_collect.run(&mut params);
         let mut process = ProcessUIDirty::default();
         process.run(&dirty_collect, &mut params);
-        cached_query.query.apply(world);
+        cached_query.query2.apply(world);
     });
 }
 

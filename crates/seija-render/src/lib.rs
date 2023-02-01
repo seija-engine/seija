@@ -44,7 +44,7 @@ pub use query::SceneOctreeModule;
 
 #[derive(Debug, Hash, PartialEq, Eq, Clone,StageLabel )]
 pub enum RenderStage {
-    AfterRender,
+    PreRender,
     Render,
     PostRender,
 }
@@ -81,9 +81,9 @@ impl IModule for RenderModule {
         Self::init_buildin_assets(&mut app.world);
         app.add_resource(QuerySystem::default());
         let render_system = self.get_render_system(&mut app.world,self.0.clone());
-        app.schedule.add_stage_after(CoreStage::PostUpdate, RenderStage::AfterRender, SystemStage::parallel());
-        app.schedule.add_stage_before(RenderStage::AfterRender, RenderStage::Render, SystemStage::single(render_system));
-        app.schedule.add_stage_before(RenderStage::Render, RenderStage::PostRender, SystemStage::parallel());
+        app.schedule.add_stage_after(CoreStage::PostUpdate,  RenderStage::PreRender, SystemStage::parallel());
+        app.schedule.add_stage_after(RenderStage::PreRender, RenderStage::Render, SystemStage::single(render_system));
+        app.schedule.add_stage_after(RenderStage::Render, RenderStage::PostRender, SystemStage::parallel());
         query::init_system(app);
 
         app.add_system(CoreStage::PostUpdate, camera_frp_event_system);

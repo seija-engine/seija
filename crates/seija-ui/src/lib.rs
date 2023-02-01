@@ -25,10 +25,9 @@ impl IModule for UIModule {
         app.world.insert_resource(SpriteAllocator::new());
         app.add_system2(CoreStage::Startup,StartupStage::PostStartup, on_ui_start);
         app.add_system(CoreStage::PreUpdate,update_ui_canvas);
-        app.add_system(CoreStage::PostUpdate, ui_update_zorders.before(ui_render_system));
-        app.add_system(CoreStage::PostUpdate, ui_render_system.after(update_transform_system));
-       
         
+        app.add_system(CoreStage::PostUpdate, ui_update_zorders);
+        app.add_system(CoreStage::PostUpdate, ui_render_system.at_end());
     }
 }
 
