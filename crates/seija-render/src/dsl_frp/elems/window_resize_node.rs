@@ -31,6 +31,10 @@ impl WindowReSizeNode {
 }
 
 impl IUpdateNode for WindowReSizeNode {
+    fn prepare(&mut self,_world:&mut World,_ctx:&mut RenderContext,_:&mut FRPSystem) -> Result<()> {
+        Ok(())
+    }
+    
     fn update(&mut self,world:&mut World,_ctx:&mut RenderContext,frp_sys:&mut FRPSystem) ->Result<()> {
         //TODO 有不必要的重建需要优化
         if let Some((w,h)) = self.win_event.get_new_window_size(world) {

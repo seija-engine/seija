@@ -118,7 +118,7 @@ impl RenderPathContext {
         self.camera_dynamics = plugin.camera_dynamics.clone();
     }
 
-    pub fn update(&mut self,world:&mut World,ctx:&mut RenderContext, creator: &ElementCreator,vm:&mut EvalRT,frp_ctx:&mut FRPContextInner) {
+    pub fn prepare(&mut self,world:&mut World,ctx:&mut RenderContext, creator: &ElementCreator,vm:&mut EvalRT,frp_ctx:&mut FRPContextInner) {
         //create new path
         let mut added_cameras = world.query_filtered::<(Entity, &Camera), (Added<Camera>, With<Transform>)>();
         for (entity, camera) in added_cameras.iter(world) {
@@ -147,7 +147,15 @@ impl RenderPathContext {
                 path.wait_init = false;
             }
             if let Some(main_comp) = path.main_comp.as_mut() {
-                main_comp.update(world, ctx,&mut frp_ctx.system);
+                let _ = main_comp.prepare(world, ctx,&mut frp_ctx.system);
+            }
+        }
+    }
+
+    pub fn update(&mut self,world:&mut World,ctx:&mut RenderContext, creator: &ElementCreator,vm:&mut EvalRT,frp_ctx:&mut FRPContextInner) {
+        for path in self.path_list.iter_mut() {
+            if let Some(main_comp) = path.main_comp.as_mut() {
+                let _ = main_comp.update(world, ctx,&mut frp_ctx.system);
             }
         }
     }

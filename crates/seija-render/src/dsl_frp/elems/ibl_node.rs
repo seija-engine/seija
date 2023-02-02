@@ -40,7 +40,11 @@ impl IUpdateNode for IBLNode {
         Ok(())
     }
 
-    fn update(&mut self,world:&mut World,ctx:&mut RenderContext,_:&mut FRPSystem) -> Result<()> {
+    fn update(&mut self,_world:&mut World,_ctx:&mut RenderContext,_:&mut FRPSystem) -> Result<()> {
+        Ok(())
+    }
+
+    fn prepare(&mut self,world:&mut World,ctx:&mut RenderContext,_:&mut FRPSystem) -> Result<()> {
         let is_ibl_dirty = world.is_resource_changed::<IBLEnv>();
         if !is_ibl_dirty { return Ok(()); }
         if let Some(env) = world.get_resource::<IBLEnv>() {

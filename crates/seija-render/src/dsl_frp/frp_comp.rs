@@ -10,7 +10,8 @@ pub trait IElement {
             _frp_sys:&mut FRPSystem,_vm:&mut EvalRT,_elem_creator:&ElementCreator) -> Result<()> { Ok(()) }
     fn active(&mut self,world:&mut World,ctx:&mut RenderContext,_frp_sys:&mut FRPSystem) -> Result<()>;
     fn deactive(&mut self,world:&mut World,ctx:&mut RenderContext,_frp_sys:&mut FRPSystem) -> Result<()>;
-    fn update(&mut self,_world:&mut World,_ctx:&mut RenderContext,_frp_sys:&mut FRPSystem) -> Result<()> { Ok(()) }
+    fn update(&mut self,_world:&mut World,_ctx:&mut RenderContext,_frp_sys:&mut FRPSystem) -> Result<()>  { Ok(()) }
+    fn prepare(&mut self,_world:&mut World,_ctx:&mut RenderContext,_frp_sys:&mut FRPSystem) -> Result<()> { Ok(()) }
 }
 
 pub struct FRPComponent {
@@ -29,12 +30,6 @@ impl FRPComponent {
     pub fn add_element(&mut self,element:Box<dyn IElement>) {
         self.elems.push(element);
     }
-
-    pub fn update(&mut self,world:&mut World,ctx:&mut RenderContext,frp_sys:&mut FRPSystem) {
-        for elem in self.elems.iter_mut() {
-            elem.update(world, ctx, frp_sys);
-        }
-    }
 }
 
 impl IElement for FRPComponent {
@@ -48,8 +43,20 @@ impl IElement for FRPComponent {
     }
 
     fn update(&mut self,world:&mut World,ctx:&mut RenderContext,frp_sys:&mut FRPSystem) -> Result<()> {
-        self.update(world, ctx, frp_sys);
+        for elem in self.elems.iter_mut() {
+            if let Err(err) = elem.update(world, ctx, frp_sys) {
+                log::error!("frp comp update err:{:?}",err);
+            }
+        }
+        Ok(())
+    }
 
+    fn prepare(&mut self,world:&mut World,ctx:&mut RenderContext,frp_sys:&mut FRPSystem) -> Result<()> {
+        for elem in self.elems.iter_mut() {
+            if let Err(err) = elem.prepare(world, ctx, frp_sys) {
+                log::error!("frp comp prepare err:{:?}",err);
+            }
+        }
         Ok(())
     }
 

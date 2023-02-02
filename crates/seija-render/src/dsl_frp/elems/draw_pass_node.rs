@@ -198,6 +198,7 @@ impl DrawPassNode {
                                 let vert_buffer = ctx.resources.get_buffer_by_resid(&mesh_buffer_id).unwrap();
                                 let oset_index = pipeline.set_binds(self.camera_entity,Some(entity.clone()), &mut render_pass, &ctx.ubo_ctx);
                                 if oset_index.is_none()  {
+                                    log::error!("skip 0:{:?}",entity);
                                     continue;
                                 }
                                 let mut set_index = oset_index.unwrap();
@@ -207,6 +208,7 @@ impl DrawPassNode {
                                         render_pass.set_bind_group(set_index, bind_group, &[]);
                                         set_index += 1;
                                     } else {
+                                        log::error!("skip 1:{:?}",entity);
                                         continue;
                                     }
                                 }
@@ -215,6 +217,7 @@ impl DrawPassNode {
                                     if let Some(bind_group) = material.texture_props.bind_group.as_ref() {
                                         render_pass.set_bind_group(set_index, bind_group, &[]);
                                     } else {
+                                        log::error!("skip 2:{:?}",entity);
                                         continue;
                                     }
                                 }
@@ -225,7 +228,8 @@ impl DrawPassNode {
                                     render_pass.set_index_buffer(idx_buffer.slice(0..), mesh.index_format().unwrap());
                                     render_pass.set_pipeline(&pipeline.pipeline);
                                     render_pass.draw_indexed(mesh.indices_range().unwrap(),0, 0..1);
-                                    
+                                    let tick = world.get_resource::<Time>().unwrap().frame();
+                                    //log::error!("draw:{:?} {}",entity,tick);
                                         
                                 } else {
                                     render_pass.set_pipeline(&pipeline.pipeline);
@@ -250,6 +254,10 @@ impl DrawPassNode {
 impl IUpdateNode for DrawPassNode {
     fn active(&mut self,world:&mut World,ctx:&mut RenderContext,frp_sys:&mut FRPSystem) -> Result<()> {
         self.check_update_textures(frp_sys,ctx,world)?;
+        Ok(())
+    }
+
+    fn prepare(&mut self,_world:&mut World,_ctx:&mut RenderContext,_:&mut FRPSystem) -> Result<()> {
         Ok(())
     }
 

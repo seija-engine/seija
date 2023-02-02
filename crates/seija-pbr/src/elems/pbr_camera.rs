@@ -34,13 +34,17 @@ impl IUpdateNode for PBRCameraNode {
         Ok(())
     }
 
-    fn update(&mut self,world:&mut World,ctx:&mut RenderContext,_:&mut FRPSystem) -> Result<()> {
+    fn prepare(&mut self,world:&mut World,ctx:&mut RenderContext,_:&mut FRPSystem) -> Result<()> {
         let mut cameras = world.query_filtered::<(Entity,&PBRCameraInfo),Or<(Changed<PBRCameraInfo>,Added<PBRCameraInfo>)>>();
         for (e,ex_info) in cameras.iter(world) {
             ctx.ubo_ctx.set_buffer(&self.name_index, Some(e),|buffer| {
                 buffer.buffer.write_bytes(self.exposure_index, ex_info.exposure.exposure_self());
             })
         }
+        Ok(())
+    }
+
+    fn update(&mut self,_world:&mut World,_ctx:&mut RenderContext,_:&mut FRPSystem) -> Result<()> {
         Ok(())
     }
 

@@ -53,7 +53,11 @@ impl IUpdateNode for ShadowNode {
         Ok(())
     }
 
-    fn update(
+    fn update(&mut self,_world:&mut World,_ctx:&mut crate::RenderContext,_:&mut FRPSystem) -> Result<()> {
+        Ok(())
+    }
+
+    fn prepare(
         &mut self,
         world: &mut World,
         ctx: &mut crate::RenderContext,

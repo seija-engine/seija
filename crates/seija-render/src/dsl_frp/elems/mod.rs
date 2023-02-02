@@ -47,6 +47,7 @@ pub trait IUpdateNode {
     fn active(&mut self,_world:&mut World,_ctx:&mut RenderContext,_:&mut FRPSystem) -> Result<()> { Ok(()) }
     fn deactive(&mut self,_world:&mut World,_ctx:&mut RenderContext,_:&mut FRPSystem) -> Result<()> { Ok(()) }
     fn update(&mut self,_world:&mut World,_ctx:&mut RenderContext,_:&mut FRPSystem) -> Result<()> { Ok(()) }
+    fn prepare(&mut self,_world:&mut World,_ctx:&mut RenderContext,_:&mut FRPSystem) -> Result<()>;
 }
 
 pub struct ElementNode {
@@ -75,6 +76,10 @@ impl IElement for ElementNode {
 
     fn update(&mut self,world:&mut World,ctx:&mut RenderContext,frp_sys:&mut FRPSystem) -> Result<()> {
         self.node.update(world, ctx,frp_sys)
+    }
+
+    fn prepare(&mut self,world:&mut World,ctx:&mut RenderContext,frp_sys:&mut FRPSystem) -> Result<()> {
+        self.node.prepare(world, ctx, frp_sys)
     }
     
 }

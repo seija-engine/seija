@@ -25,19 +25,7 @@ impl TransfromNode {
         Ok(Box::new(TransfromNode { ubo_name:br_names.clone().into(),backend:None,name_index:None }))
     }
 
-    fn prepare(&mut self,world:&mut World,ctx:&mut RenderContext) -> Result<()> {
-        let mut added_transform = world.query_filtered::<Entity,(Added<Transform>,With<Handle<Mesh>>,With<Handle<Material>>)>();
-        if let Some(name_index) = self.name_index {
-            for v in added_transform.iter(&world) {
-                ctx.ubo_ctx.add_component(&name_index,v,&mut ctx.resources)
-            }
     
-            for rm_e in world.removed::<Transform>() {
-               ctx.ubo_ctx.remove_component(&name_index, rm_e);
-            }
-        }
-        Ok(())
-    }
 }
 
 impl IUpdateNode for TransfromNode {
@@ -54,8 +42,18 @@ impl IUpdateNode for TransfromNode {
         Ok(())
     }
 
-    fn update(&mut self,world:&mut World,ctx:&mut RenderContext,frp_sys:&mut FRPSystem) -> Result<()> {
-        self.prepare(world, ctx)?;
+    fn prepare(&mut self,world:&mut World,ctx:&mut RenderContext,_:&mut FRPSystem) -> Result<()> {
+        let mut added_transform = world.query_filtered::<Entity,(Added<Transform>,With<Handle<Mesh>>,With<Handle<Material>>)>();
+        if let Some(name_index) = self.name_index {
+            for v in added_transform.iter(&world) {
+                ctx.ubo_ctx.add_component(&name_index,v,&mut ctx.resources)
+            }
+    
+            for rm_e in world.removed::<Transform>() {
+               ctx.ubo_ctx.remove_component(&name_index, rm_e);
+            }
+        }
+
         let mut trans = world.query_filtered::<(Entity,&Transform),(Changed<Transform>,With<Handle<Mesh>>,With<Handle<Material>>)>();
         for (e,t) in trans.iter(world) { 
             if let Some(key) = self.name_index {
@@ -66,6 +64,11 @@ impl IUpdateNode for TransfromNode {
                 }
             }
         }
+        Ok(())
+    }
+
+    fn update(&mut self,world:&mut World,ctx:&mut RenderContext,_:&mut FRPSystem) -> Result<()> {
+        
         Ok(())
     }
 }

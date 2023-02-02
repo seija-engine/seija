@@ -296,6 +296,10 @@ impl IUpdateNode for PostStackNode {
         Ok(())
     }
 
+    fn prepare(&mut self,_world:&mut World,_ctx:&mut RenderContext,_:&mut FRPSystem) -> Result<()> {
+        Ok(())
+    }
+
     fn update(&mut self,world:&mut World,ctx:&mut RenderContext,frp_system:&mut FRPSystem) -> Result<()> {
         
         self.update_textures(frp_system, world, ctx)?;

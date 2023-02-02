@@ -38,8 +38,17 @@ impl IUpdateNode for CameraNode {
         Ok(())
     }
 
-    fn update(&mut self,world:&mut World,ctx:&mut RenderContext,_:&mut FRPSystem) -> Result<()> {
-        self.prepare(world, ctx)?;
+    fn prepare(&mut self,world:&mut World,ctx:&mut RenderContext,_:&mut FRPSystem) -> Result<()> {
+        if let Some(name_index) = self.name_index.as_ref() {
+            let mut added_cameras = world.query_filtered::<Entity,(Added<Camera>,With<Transform>)>(); 
+            for v in added_cameras.iter(&world) {
+                ctx.ubo_ctx.add_component(name_index, v, &mut ctx.resources);
+            }
+            for rm_e in world.removed::<Camera>() {
+                ctx.ubo_ctx.remove_component(name_index, rm_e);
+            }
+        }
+
         let mut cameras = world.query::<(Entity,&Transform,&Camera)>();
         for (e,t,camera) in cameras.iter(world) {
             if let Some(key) = self.name_index {
@@ -51,23 +60,17 @@ impl IUpdateNode for CameraNode {
         Ok(())
     }
 
+    fn update(&mut self,world:&mut World,ctx:&mut RenderContext,_:&mut FRPSystem) -> Result<()> {
+      
+        
+        Ok(())
+    }
+
    
 }
 
 impl CameraNode {
-    pub fn prepare(&mut self, world: &mut World,ctx:&mut RenderContext) -> Result<()> {
-        if let Some(name_index) = self.name_index.as_ref() {
-            let mut added_cameras = world.query_filtered::<Entity,(Added<Camera>,With<Transform>)>(); 
-            for v in added_cameras.iter(&world) {
-                ctx.ubo_ctx.add_component(name_index, v, &mut ctx.resources);
-            }
-
-            for rm_e in world.removed::<Camera>() {
-                ctx.ubo_ctx.remove_component(name_index, rm_e);
-            }
-        }
-        Ok(())
-    }
+    
 
     fn update_camera_buffer(&self,buffer:&mut TypedUniformBuffer,t:&Transform,camera:&Camera) {
         if let Some(backend) = self.backend.as_ref() {

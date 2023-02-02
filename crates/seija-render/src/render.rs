@@ -100,12 +100,15 @@ impl AppRender {
        
         resource::update_mesh_system(world,&mut self.mesh_event_reader,ctx);
         resource::update_texture_system(world, &mut self.texture_event_reader, ctx);
-        ctx.ubo_ctx.update(&mut ctx.resources,ctx.command_encoder.as_mut().unwrap());
-        ctx.material_system.update(world, &mut ctx.resources, ctx.command_encoder.as_mut().unwrap());
         
+        ctx.material_system.update(world, &mut ctx.resources, ctx.command_encoder.as_mut().unwrap());
         for pre_update in self.pre_render_updates.iter() {
             pre_update(world,ctx);
         }
+        self.frp_render.prepare(ctx, world);
+        ctx.ubo_ctx.update(&mut ctx.resources,ctx.command_encoder.as_mut().unwrap());
+
+        
         self.frp_render.update(ctx,world);
         
         let command_buffer = ctx.command_encoder.take().unwrap().finish();

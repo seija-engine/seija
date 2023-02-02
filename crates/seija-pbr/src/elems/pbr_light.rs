@@ -35,7 +35,11 @@ impl IUpdateNode for PBRLightNode {
         Ok(())
     }
 
-    fn update(&mut self,world:&mut World,ctx:&mut RenderContext,_:&mut FRPSystem) -> Result<()> {
+    fn update(&mut self,_world:&mut World,_ctx:&mut RenderContext,_:&mut FRPSystem) -> Result<()> {
+        Ok(())
+    }
+
+    fn prepare(&mut self,world:&mut World,ctx:&mut RenderContext,_:&mut FRPSystem) -> Result<()> {
         if let Some(array_collect) = self.array_collect.as_mut() {
             array_collect.update(world, ctx, set_pbr_light);
             if let Some(mut ambient) = world.get_resource_mut::<PBRGlobalAmbient>() {

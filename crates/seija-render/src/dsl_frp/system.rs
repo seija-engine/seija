@@ -93,12 +93,23 @@ impl FRPDSLSystem {
         }
     }
 
+    pub fn prepare(&mut self,ctx:&mut RenderContext,world:&mut World) {
+        world.resource_scope(|world:&mut World,frp_ctx:Mut<FRPContext>| {
+            let mut write_frp = frp_ctx.inner.write();
+            let mut_ctx_inner:&mut FRPContextInner = &mut write_frp;
+            if let Some(main_comp) = self.main_comp.as_mut() {
+                let _ = main_comp.prepare(world, ctx,&mut mut_ctx_inner.system);
+            }
+           self.path_context.prepare(world, ctx,&self.elem_creator,&mut self.vm,mut_ctx_inner);
+        });
+    }
+
     pub fn update(&mut self,ctx:&mut RenderContext,world:&mut World) {
         world.resource_scope(|world:&mut World,frp_ctx:Mut<FRPContext>| {
             let mut write_frp = frp_ctx.inner.write();
             let mut_ctx_inner:&mut FRPContextInner = &mut write_frp;
             if let Some(main_comp) = self.main_comp.as_mut() {
-                main_comp.update(world, ctx,&mut mut_ctx_inner.system);
+                let _ = main_comp.update(world, ctx,&mut mut_ctx_inner.system);
             }
             self.path_context.update(world, ctx,&self.elem_creator,&mut self.vm,mut_ctx_inner);
         });

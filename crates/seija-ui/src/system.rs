@@ -3,8 +3,8 @@ use std::hash::{Hash, Hasher};
 use std::sync::Arc;
 use fnv::FnvHasher;
 use seija_asset::{Assets, AssetServer};
-use seija_core::log;
-use bevy_ecs::system::{Res,SystemParam, SystemState, CommandQueue};
+//use seija_core::log;
+use bevy_ecs::system::{Res,SystemParam, SystemState};
 use bevy_ecs::prelude::*;
 use seija_core::math::Mat4;
 use seija_core::time::Time;
@@ -27,7 +27,7 @@ pub struct UIRenderData {
     pub(crate) baseui: Arc<MaterialDef>,
     pub(crate) entity2panel:HashMap<Entity,Entity>,
     pub(crate) render_panels:HashMap<Entity,RenderPanelInfo>,
-    pub(crate) next_frame_despawns:Vec<Entity>
+    pub(crate) despawn_list:Vec<Entity>
 }
 
 #[derive(SystemParam)]
@@ -126,7 +126,7 @@ pub(crate) fn on_ui_start(world:&mut World) {
         baseui:arc_mat_define,
         entity2panel:Default::default(),
         render_panels:Default::default(),
-        next_frame_despawns:vec![]
+        despawn_list:vec![]
     });
 
     let param_state = SystemState::<SystemParams>::from_world(world);
@@ -209,7 +209,7 @@ impl DirtyCollect {
             if params.sprites.contains(sprite_entity) {
                 self.dirty_sprites.insert(sprite_entity);
                 if let Some(entity) = params.get_render_parent_panel(sprite_entity) {
-                    log::error!("dirty_panels 0 {:?} frame:{}",sprite_entity,params.time.frame());
+                    
                     self.dirty_panels.insert(entity);
                 }
             }
@@ -218,7 +218,7 @@ impl DirtyCollect {
         for remove_entity in params.remove_sprites.iter() {
             if let Some(panel_entity) = params.render_data.entity2panel.remove(&remove_entity) {
                 if params.render_data.render_panels.contains_key(&panel_entity) {
-                    log::error!("dirty_panels 1");
+                    
                     self.dirty_panels.insert(panel_entity);
                 }
             }
@@ -233,7 +233,6 @@ impl DirtyCollect {
                 if panel.is_static {
                     //静态Panel,找到Render顶层标记Dirty
                    if let Some(render_panel) = params.get_render_parent_panel(entity) {
-                      log::error!("dirty_panels 2");
                       self.dirty_panels.insert(render_panel);
                    }
                 } else { 
@@ -250,7 +249,6 @@ impl DirtyCollect {
             } else {
                 //子静态Panel,找到Render顶层标记Dirty
                 if let Some(render_panel) = params.get_render_parent_panel(remove_panel) {
-                    log::error!("dirty_panels 3");
                     self.dirty_panels.insert(render_panel);
                 }
             }
@@ -318,16 +316,10 @@ struct ProcessUIDirty {
 
 impl ProcessUIDirty {
     pub fn run(&mut self,dirty_data:&DirtyCollect,params:&mut SystemParams) {
-        for delete_entity in params.render_data.next_frame_despawns.drain(..) {
-            log::error!("despawn_recursive:{:?} {}",&delete_entity,params.time.frame());
-            params.commands.entity(delete_entity).despawn_recursive();
-        } 
-
         for delete_panel in dirty_data.delete_panels.iter() {
             if let Some(panel_info) = params.render_data.render_panels.remove(delete_panel) {
                 for drawcall in panel_info.drawcalls {
-                    log::error!("push despawn 0:{:?}",drawcall.render_entity);
-                    params.render_data.next_frame_despawns.push(drawcall.render_entity);
+                    params.render_data.despawn_list.push(drawcall.render_entity);
                  }
             }
         }
@@ -341,6 +333,9 @@ impl ProcessUIDirty {
             }
         }
 
+        for delete_entity in params.render_data.despawn_list.drain(..) {
+            params.commands.entity(delete_entity).despawn_recursive();
+        }
         
     }
 
@@ -375,8 +370,7 @@ impl ProcessUIDirty {
             }
 
             for last_cache in last_cache_drawcalls {
-                log::error!("push despawn 1:{:?}",&last_cache.1.render_entity);
-                params.render_data.next_frame_despawns.push(last_cache.1.render_entity);
+                params.render_data.despawn_list.push(last_cache.1.render_entity);
             }
         }
 
@@ -400,7 +394,6 @@ impl ProcessUIDirty {
     }
 
     fn create_panel_render(&self,panel_entity:Entity,params:&mut SystemParams) -> RenderPanelInfo {
-        log::error!("first create?");
         let mut drawcalls:Vec<RenderDrawCall> = vec![];
         let drawcall_lst_entitys = ScanDrawCall::scan(panel_entity, params);
         for drawcall_entitys in drawcall_lst_entitys {
