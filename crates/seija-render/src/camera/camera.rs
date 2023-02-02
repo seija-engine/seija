@@ -24,7 +24,7 @@ pub struct Camera {
           order:0,
           target:None,
           layer:1,
-          cull_type:0,
+          cull_type:-1,
           is_hdr:false
        }
     }

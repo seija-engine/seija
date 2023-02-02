@@ -106,7 +106,8 @@ impl<T: Asset> Assets<T> {
     }
 
     pub fn asset_event_system( mut events: EventWriter<AssetEvent<T>>,mut assets: ResMut<Assets<T>>) {
-        events.send_batch(assets.events.drain())
+        events.send_batch(assets.events.drain());
+       
     }
 
     pub fn update_assets_system(server:Res<AssetServer>,mut assets:ResMut<Assets<T>>) {

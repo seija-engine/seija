@@ -26,8 +26,8 @@ pub fn init_core_app(render_file:&str,pre_renders:Vec<fn(world:&mut World,ctx:&m
     app.add_module(AssetModule(std::env::current_dir().unwrap().join("res").into()));
     app.add_module(InputModule);
     let mut win = WinitModule::default();
-    win.0.width = 1024f32;
-    win.0.height = 768f32;
+    win.0.width = 320f32;
+    win.0.height = 240f32;
     app.add_module(win);
     app.add_module(TransformModule);
     app.add_module(TemplateModule);

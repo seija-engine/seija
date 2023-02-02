@@ -26,8 +26,8 @@ impl IModule for UIModule {
         app.add_system2(CoreStage::Startup,StartupStage::PostStartup, on_ui_start);
         app.add_system(CoreStage::PreUpdate,update_ui_canvas);
         
-        app.add_system(CoreStage::PostUpdate, ui_update_zorders);
-        app.add_system(CoreStage::PostUpdate, ui_render_system.at_end());
+        app.add_system(CoreStage::PostUpdate, ui_update_zorders.after(update_transform_system));
+        app.add_system(CoreStage::PostUpdate, ui_render_system.after(ui_update_zorders));
     }
 }
 

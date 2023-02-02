@@ -96,10 +96,13 @@ impl AppRender {
         self.update_winodw_surface(world,&mut ctx.resources);
         ctx.resources.fetch_surface_texture();
 
-        ctx.ubo_ctx.update(&mut ctx.resources,ctx.command_encoder.as_mut().unwrap());
-        ctx.material_system.update(world, &mut ctx.resources, ctx.command_encoder.as_mut().unwrap());
+        
+       
         resource::update_mesh_system(world,&mut self.mesh_event_reader,ctx);
         resource::update_texture_system(world, &mut self.texture_event_reader, ctx);
+        ctx.ubo_ctx.update(&mut ctx.resources,ctx.command_encoder.as_mut().unwrap());
+        ctx.material_system.update(world, &mut ctx.resources, ctx.command_encoder.as_mut().unwrap());
+        
         for pre_update in self.pre_render_updates.iter() {
             pre_update(world,ctx);
         }

@@ -31,6 +31,6 @@ impl IModule for TransformModule {
         app.add_system2(CoreStage::Startup, StartupStage::PostStartup,update_transform_system);
         //app.add_system(CoreStage::PostUpdate,system::parent_update_system.label(TransformLabel::ParentUpdate));
     
-        app.add_system(CoreStage::PostUpdate,update_transform_system.at_start());
+        app.add_system(CoreStage::PostUpdate,update_transform_system);
     }
 }

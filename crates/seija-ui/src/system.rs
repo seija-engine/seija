@@ -97,12 +97,12 @@ impl<'w,'s> SystemParams<'w,'s> {
         }
     }
 
-    pub fn calc_trans(&self,child_entity:Entity,parent_entity:Entity) -> Mat4 {
+    pub fn calc_trans(&self,child_entity:Entity,parent_entity:Option<Entity>) -> Mat4 {
         let mut cur_entity = child_entity;
         let mut cur_mat = self.trans.get(child_entity).map(|t| t.local.matrix()).unwrap_or(Mat4::IDENTITY);
         while let Ok((_,parent,_)) = self.parents.get(cur_entity) {
             cur_entity = parent.0;
-            if cur_entity == parent_entity {
+            if Some(cur_entity) == parent_entity {
                 return cur_mat;
             }
             if let Ok(t) = self.trans.get(cur_entity) {
@@ -260,7 +260,6 @@ impl DirtyCollect {
         
         let mut hierarchy_events = params.events.iter().map(|v| v.clone()).collect::<Vec<_>>();
         for event in hierarchy_events.drain(..) {
-            log::error!("parent hcange?");
             match event {
                 HierarchyEvent::ParentChange { entity , old_parent, new_parent } => {
                     //对Old进行删除比对
@@ -388,7 +387,6 @@ impl ProcessUIDirty {
         }
         
         let new_drawcalls = new_create_lst.drain(..).map(|entitys| {
-            log::error!("create:{:?}-{:?} {}",&entitys,panel_entity,params.time.frame());
             RenderDrawCall::create(panel_entity,params,&entitys)
            
         }).collect::<Vec<_>>();

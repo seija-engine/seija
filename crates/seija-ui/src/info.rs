@@ -26,15 +26,14 @@ impl RenderDrawCall {
         let mut index_offset = 0u32;
         let mut hasher = FnvHasher::default();
         
-        let parent_mat4 = params.trans.get(panel_entity).map(|v| v.global().matrix()).unwrap_or(Mat4::IDENTITY);
-        
+        let parent_mat4 = params.calc_trans(panel_entity, None);
 
         for sprite_entity in entitys {
             sprite_entity.hash(&mut hasher);
             if let Ok((_,sprite,rect2d)) = params.sprites.get(*sprite_entity) {
                 if let Some(k) = sprite.sprite_index {
                     if let Some(info) = params.sprite_alloc.get_sprite_info(k) {
-                        let mat4 = params.calc_trans(*sprite_entity, panel_entity);
+                        let mat4 = params.calc_trans(*sprite_entity, Some(panel_entity));
                         let zorder_value = params.zorders.get(*sprite_entity).map(|z| z.value).unwrap_or_default();
                         let mesh2d = sprite.build(rect2d,info.uv.clone(),&mat4,&info.rect,zorder_value as f32 * 0.01f32);
 
@@ -53,6 +52,7 @@ impl RenderDrawCall {
         let h_material = params.assets.1.add(material);
         let transform = Transform::from_matrix(parent_mat4);
         let render_entity = params.commands.spawn((h_mesh,h_material,transform)).id();
+       
         RenderDrawCall {
             key,
             render_entity,
