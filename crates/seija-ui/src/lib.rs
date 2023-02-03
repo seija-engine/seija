@@ -7,6 +7,7 @@ pub mod components;
 pub mod mesh2d;
 mod info;
 mod system;
+mod layout;
 use components::ui_canvas::update_ui_canvas;
 use seija_transform::update_transform_system;
 pub use sprite_alloc::system::update_sprite_alloc_render;
