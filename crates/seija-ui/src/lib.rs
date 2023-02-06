@@ -1,3 +1,4 @@
+use layout::system::ui_layout_system;
 use seija_app::{IModule, App};
 use seija_core::{CoreStage, StartupStage}; 
 use seija_app::ecs::prelude::*;
@@ -7,7 +8,7 @@ pub mod components;
 pub mod mesh2d;
 mod info;
 mod system;
-mod layout;
+pub mod layout;
 use components::ui_canvas::update_ui_canvas;
 use seija_transform::update_transform_system;
 pub use sprite_alloc::system::update_sprite_alloc_render;
@@ -27,11 +28,11 @@ impl IModule for UIModule {
         app.add_system2(CoreStage::Startup,StartupStage::PostStartup, on_ui_start);
         app.add_system(CoreStage::PreUpdate,update_ui_canvas);
         
+        app.add_system(CoreStage::PostUpdate, ui_layout_system.before(ui_update_zorders));
         app.add_system(CoreStage::PostUpdate, ui_update_zorders.before(update_transform_system));
         app.add_system(CoreStage::PostUpdate, ui_render_system.after(ui_update_zorders).before(update_transform_system));
     }
 }
-
 
 
 
