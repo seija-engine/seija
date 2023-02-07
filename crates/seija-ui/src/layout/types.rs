@@ -39,16 +39,16 @@ impl Default for CommonView {
 impl CommonView {
     pub fn get_content_size<'w,'s>(&self,request_size:Vec2,rect2d:Option<&Rect2D>) -> Vec2 {
         let mut ret_size = self.get_size(rect2d);
-        if ret_size.x <= 0f32 && self.hor == LayoutAlignment::Stretch {
+        if ret_size.x < 0f32 && self.hor == LayoutAlignment::Stretch {
             ret_size.x = request_size.x - self.margin.horizontal();
         }
-        if ret_size.y <= 0f32 && self.ver == LayoutAlignment::Stretch {
+        if ret_size.y < 0f32 && self.ver == LayoutAlignment::Stretch {
             ret_size.y = request_size.y - self.margin.vertical();
         }
         ret_size
     }
 
-    pub fn get_size<'w,'s>(&self,rect2d:Option<&Rect2D>) -> Vec2 {
+    pub fn get_size(&self,rect2d:Option<&Rect2D>) -> Vec2 {
         if self.use_rect_size {
             rect2d.map(|rect| Vec2::new(rect.width,rect.height)).unwrap_or(Vec2::ZERO)
         } else {
@@ -59,7 +59,8 @@ impl CommonView {
 
 pub enum TypeElement {
     Stack(StackLayout),
-    ViewBox
+    ViewBox,
+    View
 }
 
 #[derive(Component)]
