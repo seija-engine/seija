@@ -305,7 +305,6 @@ impl DirtyCollect {
                 }
             }
         }
-
     }
 }
 
@@ -323,7 +322,6 @@ impl ProcessUIDirty {
                  }
             }
         }
-
         for dirty_panel_entity in dirty_data.dirty_panels.iter() {
             if params.render_data.render_panels.contains_key(dirty_panel_entity) {
                 self.diff_update_panel_render(*dirty_panel_entity,params,dirty_data);
@@ -332,7 +330,7 @@ impl ProcessUIDirty {
                 params.render_data.render_panels.insert(*dirty_panel_entity, new_panel_render);
             }
         }
-
+        
         for delete_entity in params.render_data.despawn_list.drain(..) {
             params.commands.entity(delete_entity).despawn_recursive();
         }
@@ -394,8 +392,10 @@ impl ProcessUIDirty {
     }
 
     fn create_panel_render(&self,panel_entity:Entity,params:&mut SystemParams) -> RenderPanelInfo {
+        seija_core::log::error!("run create_panel_render");
         let mut drawcalls:Vec<RenderDrawCall> = vec![];
         let drawcall_lst_entitys = ScanDrawCall::scan(panel_entity, params);
+        seija_core::log::error!("run create_panel_render:{:?}",&drawcall_lst_entitys);
         for drawcall_entitys in drawcall_lst_entitys {
             for sprite_entity in drawcall_entitys.iter() {
                 params.render_data.entity2panel.insert(*sprite_entity, panel_entity);
@@ -424,12 +424,12 @@ impl ScanDrawCall {
 
     fn visit_element(&mut self,entity:Entity,params:&SystemParams) {
         if let Ok(child_comp) = params.childrens.get(entity) {
-            for child in child_comp.1.iter() {
-                if params.sprites.contains(*child) {
-                    self.push(*child);
-                } else if let Ok(panel) = params.panels.get(*child) {
+            for child_entity in child_comp.1.iter() {
+                if params.sprites.contains(*child_entity) {
+                    self.push(*child_entity);
+                } else if let Ok(panel) = params.panels.get(*child_entity) {
                     if panel.1.is_static {
-                        self.visit_element(entity, params);
+                        self.visit_element(*child_entity, params);
                     } else {
                         self.emit();
                     }

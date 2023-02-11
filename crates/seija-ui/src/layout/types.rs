@@ -21,6 +21,7 @@ pub struct CommonView {
     pub hor: LayoutAlignment,
     pub ver: LayoutAlignment,
     pub use_rect_size: bool,
+    pub anchor_correct:bool
 }
 
 impl Default for CommonView {
@@ -32,22 +33,12 @@ impl Default for CommonView {
             hor: LayoutAlignment::Stretch,
             ver: LayoutAlignment::Stretch,
             use_rect_size: false,
+            anchor_correct:false
         }
     }
 }
 
 impl CommonView {
-    pub fn get_content_size<'w, 's>(&self, request_size: Vec2, rect2d: Option<&Rect2D>) -> Vec2 {
-        let mut ret_size = self.get_size(rect2d);
-        if ret_size.x < 0f32 || self.hor == LayoutAlignment::Stretch {
-            ret_size.x = request_size.x - self.margin.horizontal();
-        }
-        if ret_size.y < 0f32 || self.ver == LayoutAlignment::Stretch {
-            ret_size.y = request_size.y - self.margin.vertical();
-        }
-        ret_size
-    }
-
     pub fn get_size(&self, rect2d: Option<&Rect2D>) -> Vec2 {
         if self.use_rect_size {
             rect2d
@@ -58,9 +49,8 @@ impl CommonView {
         }
     }
 
-    pub fn get_size_info(&self, request_size: Vec2, rect2d: Option<&Rect2D>) -> (Vec2, Vec2) {
+    pub fn get_fixed_size(&self, request_size: Vec2, rect2d: Option<&Rect2D>) -> Vec2 {
         let mut fixed_size = self.get_size(rect2d);
-
         if fixed_size.x < 0f32 {
             if self.hor == LayoutAlignment::Stretch {
                 fixed_size.x = request_size.x - self.margin.horizontal();
@@ -71,26 +61,13 @@ impl CommonView {
                 fixed_size.y = request_size.y - self.margin.vertical();
             }
         }
-        let free_inner_size = Vec2::new(
-            if fixed_size.x < 0f32 {
-                request_size.x - self.margin.horizontal() - self.padding.horizontal()
-            } else {
-                fixed_size.x - self.padding.horizontal()
-            },
-            if fixed_size.y < 0f32 {
-                request_size.y - self.margin.vertical() - self.padding.vertical()
-            } else {
-                fixed_size.y - self.padding.horizontal()
-            },
-        );
-
-        (fixed_size, free_inner_size)
+        fixed_size
     }
 }
 
 pub enum TypeElement {
     Stack(StackLayout),
-    ViewBox,
+    
     View,
 }
 
@@ -98,16 +75,25 @@ pub enum TypeElement {
 pub struct LayoutElement {
     pub common: CommonView,
     pub typ_elem: TypeElement,
+    
+    
 }
 
 impl LayoutElement {
+    pub fn create_view() -> LayoutElement {
+        LayoutElement {
+            common:CommonView::default(),
+            typ_elem:TypeElement::View
+        }
+    }
+    
     pub fn create_stack(spacing: f32, orientation: Orientation) -> LayoutElement {
         LayoutElement {
             common: CommonView::default(),
             typ_elem: TypeElement::Stack(StackLayout {
                 spacing,
                 orientation,
-            }),
+            })
         }
     }
 

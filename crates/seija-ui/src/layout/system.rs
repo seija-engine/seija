@@ -1,9 +1,9 @@
 use std::collections::HashSet;
 use bevy_ecs::{system::{SystemParam, Query, RemovedComponents, Res}, prelude::{Entity, EventReader}, query::Changed};
-use seija_core::{math::Vec2, window::AppWindow};
-use seija_transform::{events::HierarchyEvent, hierarchy::{Parent, Children}};
+use seija_core::{math::{Vec2, Vec3}, window::AppWindow};
+use seija_transform::{events::HierarchyEvent, hierarchy::{Parent, Children}, Transform};
 use crate::components::rect2d::Rect2D;
-use super::{types::LayoutElement, measure};
+use super::{types::LayoutElement, measure, arrange::arrange_layout_element};
 
 #[derive(SystemParam)]
 pub struct LayoutParams<'w,'s> {
@@ -14,6 +14,7 @@ pub struct LayoutParams<'w,'s> {
     pub(crate) childrens:Query<'w,'s,&'static Children>,
     pub(crate) elems:Query<'w,'s,&'static LayoutElement>,
     pub(crate) rect2ds:Query<'w,'s,&'static mut Rect2D>,
+    pub(crate) trans:Query<'w,'s,&'static mut Transform>,
     pub(crate) window:Res<'w,AppWindow>
 }
 
@@ -22,11 +23,15 @@ pub fn ui_layout_system(params:LayoutParams) {
     let dirty_layouts = collect_dirty(&params);
     for elem_entity in dirty_layouts {
        //这里只会修改Element的属性，所以是安全的
-       if let Ok(mut element) = params.elems.get(elem_entity) {
+       if let Ok(element) = params.elems.get(elem_entity) {
           let x = size_request_x(elem_entity, &params);
           let y = size_request_y(elem_entity, &params);
           let request_size:Vec2 = Vec2::new(x, y);
-          measure::measure_layout_element(elem_entity,request_size,&mut element,&params);
+          measure::measure_layout_element(elem_entity,request_size,&element,&params);
+         
+          let origin = origin_request(elem_entity, &params);
+          arrange_layout_element(elem_entity, element, origin,&params);
+          
        }
     }
 }
@@ -101,3 +106,16 @@ fn size_request_y(entity:Entity,params:&LayoutParams) -> f32 {
     }
 }
 
+fn origin_request(entity:Entity,params:&LayoutParams) -> Vec2 {
+    if let Ok(parent) = params.parents.get(entity) {
+        if let Ok(rect) = params.rect2ds.get(parent.1.0) {
+            Vec2::new(rect.left(), rect.top())
+        } else {
+            Vec2::ZERO
+        }
+    } else {
+        let w = params.window.width() as f32;
+        let h = params.window.height() as f32;
+        Vec2::new(-w * 0.5f32,h * 0.5f32)
+    }
+}
