@@ -25,7 +25,11 @@ bitflags! {
 pub fn arrange_layout_element(entity:Entity,element:&LayoutElement,parent_origin:Vec2,parent_size:Vec2,axy:ArrangeXY,params:&LayoutParams) {
     let arrange_position = match &element.typ_elem {
         TypeElement::View => {  arrange_view_element(entity,element,parent_origin,parent_size,axy,params) }
-        TypeElement::Stack(stack) => { arrange_stack_element(entity, stack, element, parent_origin, parent_size,axy, params) }
+        TypeElement::Stack(stack) => { arrange_stack_element(entity, stack, element, parent_origin, parent_size,axy, params) },
+        TypeElement::Flex(flex) => {
+            //TODO 
+            Vec2::ZERO
+        },
     };
     if let Ok(mut transform) = unsafe { params.trans.get_unchecked(entity) } {
         transform.local.position.x = arrange_position.x;

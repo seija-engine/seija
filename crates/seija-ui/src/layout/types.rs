@@ -3,7 +3,7 @@ use seija_core::math::Vec2;
 
 use crate::{components::rect2d::Rect2D, types::Thickness};
 
-use super::comps::{Orientation, StackLayout};
+use super::comps::{Orientation, StackLayout, FlexLayout};
 
 #[derive(PartialEq, Eq, Clone, Copy, Debug)]
 pub enum LayoutAlignment {
@@ -67,7 +67,7 @@ impl CommonView {
 
 pub enum TypeElement {
     Stack(StackLayout),
-    
+    Flex(FlexLayout),
     View,
 }
 

@@ -1,13 +1,13 @@
 use bevy_ecs::prelude::Entity;
-use seija_core::{math::{Vec2, Vec3}, log::log};
-use super::{types::{LayoutElement, TypeElement}, system::LayoutParams, comps::{StackLayout, Orientation}};
+use seija_core::{math::{Vec2}};
+use super::{types::{LayoutElement, TypeElement}, system::LayoutParams, comps::{StackLayout, Orientation, FlexLayout, FlexDirection, FlexWrap}};
 
 pub fn measure_layout_element(entity:Entity,request_size:Vec2,element:&LayoutElement,params:&LayoutParams) -> Vec2 {
-    let measure_size;
-    match &element.typ_elem {
-        TypeElement::View => { measure_size = measure_view_layout(entity,request_size,element,params); }
-        TypeElement::Stack(stack) => { measure_size = measure_stack_layout(entity,stack,request_size,element,params); }
-    }
+    let measure_size = match &element.typ_elem {
+        TypeElement::View => {measure_view_layout(entity,request_size,element,params) }
+        TypeElement::Stack(stack) => { measure_stack_layout(entity,stack,request_size,element,params) },
+        TypeElement::Flex(flex) => { measure_flex_layout(entity,flex,request_size,element,params) }
+    };
    
     
     if let Ok(mut rect2d) = unsafe { params.rect2ds.get_unchecked(entity) } {
@@ -119,4 +119,67 @@ fn measure_stack_layout(entity:Entity,stack:&StackLayout,request_size:Vec2,eleme
     }
     
     ret_size
+}
+
+
+fn measure_flex_layout(entity:Entity,flex:&FlexLayout,request_size:Vec2,element:&LayoutElement,params:&LayoutParams) -> Vec2 {
+    let fixed_size = element.common.get_fixed_size(request_size, params.rect2ds.get(entity).ok());
+    let padding = &element.common.padding;
+    let mut inner_size = Vec2::new(fixed_size.x - padding.horizontal(), fixed_size.y - padding.vertical());
+    let childs = params.childrens.get(entity);
+    match flex.warp {
+        FlexWrap::NoWrap => {
+            if let Ok(childs) = childs {
+                let (dir_all_size,max_cross_size) = if flex.direction == FlexDirection::RowReverse || flex.direction == FlexDirection::ColumnReverse {
+                    measure_flex_children(childs.iter().rev(),flex,inner_size,params)
+                } else {
+                    measure_flex_children(childs.iter(),flex,inner_size,params)
+                };
+                let mut is_re_measure:bool = false;
+                match flex.direction {
+                        FlexDirection::Row | FlexDirection::RowReverse => {
+                            if dir_all_size > inner_size.x {
+                                is_re_measure = true;
+                            }
+                        },
+                        FlexDirection::Column | FlexDirection::ColumnReverse => {
+                            if dir_all_size > inner_size.y {
+                                is_re_measure = true;
+                            }
+                        }
+                }
+            }
+            
+        },
+        _ => {
+
+        }
+    }
+   
+    Vec2::ZERO
+}
+
+fn measure_flex_children<'a>(iter:impl Iterator<Item = &'a Entity>,flex:&FlexLayout,inner_size:Vec2,params:&LayoutParams) -> (f32,f32) {
+    let mut dir_all_size:f32 = 0f32;
+    let mut max_cross_size:f32 = 0f32;
+    for child_entity in iter {
+        if let Ok(child_element) = params.elems.get(*child_entity) {
+            let child_size = measure_layout_element(*child_entity, inner_size, child_element, params);
+            match flex.direction {
+                FlexDirection::Row | FlexDirection::RowReverse => {
+                    dir_all_size += child_size.x;
+                    if child_size.y > max_cross_size {
+                        max_cross_size = child_size.y;
+                    }
+                },
+                FlexDirection::Column | FlexDirection::ColumnReverse => {
+                    dir_all_size += child_size.y;
+                    if child_size.x > max_cross_size {
+                        max_cross_size = child_size.x;
+                    }
+                }
+            }
+        }
+    }
+    (dir_all_size,max_cross_size)
 }
