@@ -13,3 +13,4 @@ seija-winit = {path = "../seija-winit"}
 seija-transform = {path = "../seija-transform"}
 seija-input = {path = "../seija-input"}
 seija-asset = {path = "../seija-asset"}
+seija-render = {path = "../seija-render"}

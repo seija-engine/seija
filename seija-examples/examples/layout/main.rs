@@ -42,37 +42,23 @@ fn start(world: &mut World) {
     let mut sprite_alloc = world.get_resource_mut::<SpriteAllocator>().unwrap();
     let bg_index = load_sprite("ui/lm-db.png", &server, &mut sprite_alloc);
     let sprite_index = load_sprite("ui/Btn4On.png", &server, &mut sprite_alloc);
-    //Canvas
+    //CameraCanvas
     let mut ortho = Orthographic::default();
     ortho.far = 1000f32;
     ortho.near = -1000f32;
     let ui_camera = Camera::from_2d(ortho);
-    let mut canvas_trans = Transform::default();
-    
-    //canvas_trans.local.rotation = Quat::from_rotation_x(180f32.to_radians());
-    let canvas_id = world.spawn_empty().insert(Panel::default()).insert(canvas_trans).insert(ui_camera).insert(UICanvas::default()).id();
+    let canvas_id = world.spawn_empty().insert(Panel::default()).insert(Transform::default()).insert(ui_camera).insert(UICanvas::default()).id();
     //背景图
-    let mut canvas_trans = Transform::default();
-    //canvas_trans.local.position.z = -10f32;
-    let view = LayoutElement::create_view();
-    world.spawn((Sprite::sliced(bg_index, Thickness::new1(35f32), Vec4::ONE),view,Rect2D::default(),canvas_trans)).set_parent(Some(canvas_id));
+    let mut view = LayoutElement::create_view();
+    view.common.hor = LayoutAlignment::Stretch;
+    view.common.ver = LayoutAlignment::End;
+    view.common.size = Vec2::new(-1f32, 100f32);
+    world.spawn((Sprite::sliced(bg_index, Thickness::new1(35f32), Vec4::ONE),view,Rect2D::default(),Transform::default())).set_parent(Some(canvas_id));
     
-    let stack_id = create_stackpanel(world, Some(canvas_id));
-    create_sprite(world,sprite_index,Some(stack_id));
-    /*
-    let rect2d = Rect2D::default();
-    let t = Transform::default();
-    let stack_layout = LayoutElement::create_stack(10f32, Orientation::Vertical);
-    let stack_id = world.spawn((Sprite::sliced(bg_index, Thickness::new1(35f32), Vec4::ONE),rect2d,t,stack_layout)).set_parent(Some(panel_id)).id();
+
+    //let stack_id = create_stackpanel(world, Some(canvas_id));
+    //create_sprite(world,sprite_index,Some(stack_id));
     
-    let mut view_layout = LayoutElement::create_view();
-    view_layout.common.hor = LayoutAlignment::Center;
-    view_layout.common.ver = LayoutAlignment::Center;
-    view_layout.common.size = Vec2::new(200f32, 50f32);
-    let mut t = Transform::default();
-    t.local.position.y = 100f32;
-    world.spawn((Sprite::simple(sprite_index, Vec4::ONE),Rect2D::default(),t,view_layout)).set_parent(Some(panel_id));
-   */
       
     world.insert_resource(ui_data);
 }

@@ -1665,6 +1665,7 @@ dependencies = [
  "seija-asset",
  "seija-core",
  "seija-input",
+ "seija-render",
  "seija-transform",
  "seija-winit",
 ]

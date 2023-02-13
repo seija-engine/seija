@@ -30,7 +30,12 @@ pub fn ui_layout_system(params:LayoutParams) {
           measure::measure_layout_element(elem_entity,request_size,&element,&params);
          
           let origin = origin_request(elem_entity, &params);
-          arrange_layout_element(elem_entity, element, origin,&params);
+          let parent_size = if let Ok(size) = params.parents.get(elem_entity).and_then(|p| params.rect2ds.get(p.1.0)) {
+             Vec2::new(size.width, size.height)
+          } else {
+            Vec2::new(params.window.width() as f32, params.window.height() as f32)
+          };
+          arrange_layout_element(elem_entity, element, origin,parent_size,&params);
           
        }
     }
@@ -111,7 +116,7 @@ fn origin_request(entity:Entity,params:&LayoutParams) -> Vec2 {
         if let Ok(rect) = params.rect2ds.get(parent.1.0) {
             Vec2::new(rect.left(), rect.top())
         } else {
-            Vec2::ZERO
+            origin_request(parent.1.0, params)
         }
     } else {
         let w = params.window.width() as f32;

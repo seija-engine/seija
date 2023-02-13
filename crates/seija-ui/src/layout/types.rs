@@ -21,7 +21,7 @@ pub struct CommonView {
     pub hor: LayoutAlignment,
     pub ver: LayoutAlignment,
     pub use_rect_size: bool,
-    pub anchor_correct:bool
+    //pub anchor_correct:bool
 }
 
 impl Default for CommonView {
@@ -33,7 +33,7 @@ impl Default for CommonView {
             hor: LayoutAlignment::Stretch,
             ver: LayoutAlignment::Stretch,
             use_rect_size: false,
-            anchor_correct:false
+            //anchor_correct:false
         }
     }
 }
