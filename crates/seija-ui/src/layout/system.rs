@@ -3,7 +3,7 @@ use bevy_ecs::{system::{SystemParam, Query, RemovedComponents, Res}, prelude::{E
 use seija_core::{math::{Vec2, Vec3}, window::AppWindow};
 use seija_transform::{events::HierarchyEvent, hierarchy::{Parent, Children}, Transform};
 use crate::components::rect2d::Rect2D;
-use super::{types::LayoutElement, measure, arrange::arrange_layout_element};
+use super::{types::LayoutElement, measure, arrange::{arrange_layout_element, ArrangeXY}};
 
 #[derive(SystemParam)]
 pub struct LayoutParams<'w,'s> {
@@ -35,7 +35,7 @@ pub fn ui_layout_system(params:LayoutParams) {
           } else {
             Vec2::new(params.window.width() as f32, params.window.height() as f32)
           };
-          arrange_layout_element(elem_entity, element, origin,parent_size,&params);
+          arrange_layout_element(elem_entity, element, origin,parent_size,ArrangeXY::ALL,&params);
           
        }
     }
