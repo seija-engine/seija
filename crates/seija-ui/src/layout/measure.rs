@@ -127,34 +127,51 @@ fn measure_flex_layout(entity:Entity,flex:&FlexLayout,request_size:Vec2,element:
     let padding = &element.common.padding;
     let mut inner_size = Vec2::new(fixed_size.x - padding.horizontal(), fixed_size.y - padding.vertical());
     let childs = params.childrens.get(entity);
-    match flex.warp {
-        FlexWrap::NoWrap => {
-            if let Ok(childs) = childs {
-                let (dir_all_size,max_cross_size) = if flex.direction == FlexDirection::RowReverse || flex.direction == FlexDirection::ColumnReverse {
-                    measure_flex_children(childs.iter().rev(),flex,inner_size,params)
-                } else {
-                    measure_flex_children(childs.iter(),flex,inner_size,params)
-                };
-                let mut is_re_measure:bool = false;
-                match flex.direction {
-                        FlexDirection::Row | FlexDirection::RowReverse => {
-                            if dir_all_size > inner_size.x {
-                                is_re_measure = true;
-                            }
-                        },
-                        FlexDirection::Column | FlexDirection::ColumnReverse => {
-                            if dir_all_size > inner_size.y {
-                                is_re_measure = true;
-                            }
-                        }
-                }
-            }
-            
-        },
-        _ => {
+    /*
+    if(不换行) {
+       let 子元素占据主轴尺寸 = 取主轴方向所有Child尺寸();
+       let 交叉轴被撑开尺寸 =  取交叉轴方向最大Child尺寸();
+       let 交叉轴实际尺寸 =  if(固定交叉轴) { 固定交叉轴 } else { 交叉轴被撑开最大尺寸 }
+    
 
-        }
+       if(主轴固定尺寸) {
+            if(子元素占据主轴尺寸 > 主轴固定尺寸) {
+                //挤压重排
+                let 可挤压单位一尺寸 = 计算可挤压尺寸单位1();
+                for(子元素) {
+                    if(可挤压元素) {
+                        更新元素大小(可挤压尺寸,交叉轴实际尺寸);
+                    } else if(交叉轴被撑开了) {
+                        更新元素大小(当前尺寸,交叉轴实际尺寸);
+                    }
+                }
+            } elseif(子元素有grow属性) {
+                //放大子元素 重排
+                let 可放大单位一尺寸 = 计算可放大尺寸单位1();
+                ...逻辑同上
+            }
+       } else { //主轴自由尺寸
+            if(子元素占据主轴尺寸 > 申请尺寸) {
+                //挤压重排 同上
+            } else if(交叉轴被撑开了){
+               更新元素大小(当前尺寸,交叉轴实际尺寸);
+            }
+       }
+    } else { //换行
+        if(主轴固定尺寸) {
+           for(子元素) {
+              //计算换行
+              if(一个轴) {
+                  if(是否需要放大尺寸) {
+                    
+                  }
+              }
+           }  
+        } 
     }
+    
+    */
+    
    
     Vec2::ZERO
 }
