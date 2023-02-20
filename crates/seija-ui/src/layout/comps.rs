@@ -85,6 +85,6 @@ pub enum FlexAlignSelf {
 }
 
 pub struct FlexBasis {
-    length:f32,
-    is_relative:bool
+    pub length:f32,
+    pub is_relative:bool
 }

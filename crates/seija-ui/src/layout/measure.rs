@@ -123,10 +123,10 @@ fn measure_stack_layout(entity:Entity,stack:&StackLayout,request_size:Vec2,eleme
 
 
 fn measure_flex_layout(entity:Entity,flex:&FlexLayout,request_size:Vec2,element:&LayoutElement,params:&LayoutParams) -> Vec2 {
-    let fixed_size = element.common.get_fixed_size(request_size, params.rect2ds.get(entity).ok());
-    let padding = &element.common.padding;
-    let mut inner_size = Vec2::new(fixed_size.x - padding.horizontal(), fixed_size.y - padding.vertical());
-    let childs = params.childrens.get(entity);
+    match flex.warp {
+        FlexWrap::NoWrap => measure_flex_no_wrap_layout(entity,flex,request_size,element,params),
+        FlexWrap::Wrap => measure_flex_no_wrap_layout(entity,flex,request_size,element,params)
+    }
     /*
     if(不换行) {
        let 子元素占据主轴尺寸 = 取主轴方向所有Child尺寸();
@@ -159,44 +159,84 @@ fn measure_flex_layout(entity:Entity,flex:&FlexLayout,request_size:Vec2,element:
        }
     } else { //换行
         if(主轴固定尺寸) {
+           let 几个换行轴 = [];
            for(子元素) {
               //计算换行
               if(一个轴) {
-                  if(是否需要放大尺寸) {
+                  if(是否需要放大主轴尺寸) {
                     
                   }
+                  添加几个换行轴();
               }
-           }  
+           }
+           if(交叉轴对齐是填充 && 交叉元素对齐也是填充) {
+              更新元素大小(当前主轴尺寸,交叉轴均分尺寸);
+           }
         } 
     }
     
     */
     
-   
+}
+
+fn measure_flex_no_wrap_layout(entity:Entity,flex:&FlexLayout,request_size:Vec2,element:&LayoutElement,params:&LayoutParams) -> Vec2 {
+    let fixed_size = element.common.get_fixed_size(request_size, params.rect2ds.get(entity).ok());
+    //子元素占据主轴尺寸
+    let mut main_axis_all_size:f32 = 0f32;
+    //交叉轴被撑开尺寸
+    let mut cross_axis_max_size:f32 = 0f32;
+    for_each_child(entity, params, |child_entity,params| {
+        if let Ok(rect) = params.rect2ds.get(child_entity) {
+            match flex.direction {
+                FlexDirection::Column | FlexDirection::ColumnReverse => {
+                    main_axis_all_size += rect.height;
+                    cross_axis_max_size = cross_axis_max_size.max(rect.width);
+                },
+                FlexDirection::Row | FlexDirection::RowReverse => {
+                    main_axis_all_size += rect.width;
+                    cross_axis_max_size = cross_axis_max_size.max(rect.height);
+                }
+            }
+       }
+    });
+
+
+    /*if(不换行) {
+       let 子元素占据主轴尺寸 = 取主轴方向所有Child尺寸();
+       let 交叉轴被撑开尺寸 =  取交叉轴方向最大Child尺寸();
+       let 交叉轴实际尺寸 =  if(固定交叉轴) { 固定交叉轴 } else { 交叉轴被撑开最大尺寸 }
+ 
+       if(主轴固定尺寸) {
+            if(子元素占据主轴尺寸 > 主轴固定尺寸) {
+                //挤压重排
+                let 可挤压单位一尺寸 = 计算可挤压尺寸单位1();
+                for(子元素) {
+                    if(可挤压元素) {
+                        更新元素大小(可挤压尺寸,交叉轴实际尺寸);
+                    } else if(交叉轴被撑开了) {
+                        更新元素大小(当前尺寸,交叉轴实际尺寸);
+                    }
+                }
+            } elseif(子元素有grow属性) {
+                //放大子元素 重排
+                let 可放大单位一尺寸 = 计算可放大尺寸单位1();
+                ...逻辑同上
+            }
+       } else { //主轴自由尺寸
+            if(子元素占据主轴尺寸 > 申请尺寸) {
+                //挤压重排 同上
+            } else if(交叉轴被撑开了){
+               更新元素大小(当前尺寸,交叉轴实际尺寸);
+            }
+       }
+    }*/
     Vec2::ZERO
 }
 
-fn measure_flex_children<'a>(iter:impl Iterator<Item = &'a Entity>,flex:&FlexLayout,inner_size:Vec2,params:&LayoutParams) -> (f32,f32) {
-    let mut dir_all_size:f32 = 0f32;
-    let mut max_cross_size:f32 = 0f32;
-    for child_entity in iter {
-        if let Ok(child_element) = params.elems.get(*child_entity) {
-            let child_size = measure_layout_element(*child_entity, inner_size, child_element, params);
-            match flex.direction {
-                FlexDirection::Row | FlexDirection::RowReverse => {
-                    dir_all_size += child_size.x;
-                    if child_size.y > max_cross_size {
-                        max_cross_size = child_size.y;
-                    }
-                },
-                FlexDirection::Column | FlexDirection::ColumnReverse => {
-                    dir_all_size += child_size.y;
-                    if child_size.x > max_cross_size {
-                        max_cross_size = child_size.x;
-                    }
-                }
-            }
+fn for_each_child<F>(entity:Entity,params:&LayoutParams,mut f:F) where F:FnMut(Entity,&LayoutParams) {
+    if let Ok(childs) = params.childrens.get(entity) {
+        for child_entity in childs.iter() {
+            f(*child_entity,params);
         }
     }
-    (dir_all_size,max_cross_size)
 }
