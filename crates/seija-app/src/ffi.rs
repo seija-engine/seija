@@ -1,5 +1,3 @@
-use bevy_ecs::prelude::World;
-
 use crate::App;
 
 #[no_mangle]

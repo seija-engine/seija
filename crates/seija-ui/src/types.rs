@@ -1,4 +1,5 @@
 use bevy_ecs::prelude::{Component, Entity};
+use seija_core::math::Vec2;
 
 #[derive(Debug,Clone,Default)]
 pub struct Rect<T:Default> {
@@ -29,6 +30,10 @@ impl Thickness {
 
     pub fn vertical(&self) -> f32 {
         self.top + self.bottom
+    }
+
+    pub fn apply2size(&self,size:Vec2) -> Vec2 {
+        Vec2::new(size.x + self.horizontal(),size.y + self.vertical())
     }
 }
 

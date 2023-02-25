@@ -12,9 +12,62 @@ pub enum LayoutAlignment {
     End = 2,
     Stretch = 3,
 }
+#[derive(Default,Clone, Copy)]
+pub struct UISize {
+   pub width:SizeValue,
+   pub height:SizeValue
+}
+
+impl UISize {
+    pub fn has_auto(&self) -> bool {
+        self.width.is_auto() || self.height.is_auto()
+    }
+
+    pub fn get_number_size(&self,rect2d: Option<&Rect2D>) -> Vec2 {
+        let w = match self.width {
+            SizeValue::Auto => 0f32,
+            SizeValue::Pixel(v) => v,
+            SizeValue::PixelFromRect => rect2d.map(|v| v.width).unwrap_or(0f32)
+        };
+        let h = match self.height {
+            SizeValue::Auto => 0f32,
+            SizeValue::Pixel(v) => v,
+            SizeValue::PixelFromRect => rect2d.map(|v| v.height).unwrap_or(0f32)
+        };
+        Vec2::new(w, h)
+    }
+}
+
+#[derive(Clone, Copy)]
+pub enum SizeValue {
+    Auto,
+    Pixel(f32),
+    PixelFromRect
+}
+
+impl SizeValue {
+    pub fn is_auto(&self) -> bool {
+        match self {
+            Self::Auto => true,
+            _ => false
+        }
+    }
+
+    pub fn get_pixel(&self) -> f32 {
+        match self {
+            Self::Pixel(v) => *v,
+            _ => 0f32
+        }
+    }
+}
+
+impl Default for SizeValue {
+    fn default() -> Self { Self::Auto }
+}
 
 #[derive(Component)]
 pub struct CommonView {
+    pub ui_size:UISize,
     pub size: Vec2,
     pub margin: Thickness,
     pub padding: Thickness,
@@ -27,6 +80,7 @@ pub struct CommonView {
 impl Default for CommonView {
     fn default() -> Self {
         CommonView {
+            ui_size:UISize::default(),
             size: Vec2::new(-1f32, -1f32),
             margin: Thickness::default(),
             padding: Thickness::default(),
@@ -63,6 +117,8 @@ impl CommonView {
         }
         fixed_size
     }
+
+    
 }
 
 pub enum TypeElement {

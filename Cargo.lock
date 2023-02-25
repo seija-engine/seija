@@ -2886,6 +2886,7 @@ dependencies = [
  "bitflags",
  "fixedbitset 0.4.2",
  "fnv",
+ "lazy_static",
  "seija-app",
  "seija-asset",
  "seija-core",

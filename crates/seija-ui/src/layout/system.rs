@@ -3,7 +3,7 @@ use bevy_ecs::{system::{SystemParam, Query, RemovedComponents, Res}, prelude::{E
 use seija_core::{math::{Vec2, Vec3}, window::AppWindow};
 use seija_transform::{events::HierarchyEvent, hierarchy::{Parent, Children}, Transform};
 use crate::components::rect2d::Rect2D;
-use super::{types::LayoutElement, measure, arrange::{arrange_layout_element, ArrangeXY}};
+use super::{types::LayoutElement, measure, arrange::{arrange_layout_element, ArrangeXY}, comps::FlexItem};
 
 #[derive(SystemParam)]
 pub struct LayoutParams<'w,'s> {
@@ -15,6 +15,7 @@ pub struct LayoutParams<'w,'s> {
     pub(crate) elems:Query<'w,'s,&'static LayoutElement>,
     pub(crate) rect2ds:Query<'w,'s,&'static mut Rect2D>,
     pub(crate) trans:Query<'w,'s,&'static mut Transform>,
+    pub(crate) flexitems:Query<'w,'s,&'static FlexItem>,
     pub(crate) window:Res<'w,AppWindow>
 }
 

@@ -20,11 +20,20 @@ pub struct FlexLayout {
     pub align_content:FlexAlignContent   
 }
 
+impl FlexLayout {
+    pub fn is_hor(&self) -> bool {
+        match self.direction {
+            FlexDirection::Column | FlexDirection::ColumnReverse => false,
+            _ => true
+        }
+    } 
+}
+
 #[derive(Component)]
 pub struct FlexItem {
     pub order:i32,
     pub grow:u32,
-    pub shrink:u32,
+    pub shrink:f32,
     pub basis:FlexBasis,
     pub align_self:FlexAlignSelf
 }

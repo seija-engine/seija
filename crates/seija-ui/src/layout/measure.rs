@@ -17,6 +17,15 @@ pub fn measure_layout_element(entity:Entity,request_size:Vec2,element:&LayoutEle
     measure_size
 }
 
+fn measure_empty_element(entity:Entity,request_size:Vec2,params:LayoutParams) -> Vec2 {
+    if let Ok(childs) = params.childrens.get(entity) {
+        for child_entity in childs.iter() {
+           
+        }
+    }
+    Vec2::ZERO
+}
+
 //没有强制能撑开，有强制撑不开, request_size就是强制Size
 fn measure_view_layout(entity:Entity,request_size:Vec2,element:&LayoutElement,params:&LayoutParams) -> Vec2 {
     let fixed_size = element.common.get_fixed_size(request_size, params.rect2ds.get(entity).ok());
@@ -181,28 +190,63 @@ fn measure_flex_layout(entity:Entity,flex:&FlexLayout,request_size:Vec2,element:
 
 fn measure_flex_no_wrap_layout(entity:Entity,flex:&FlexLayout,request_size:Vec2,element:&LayoutElement,params:&LayoutParams) -> Vec2 {
     let fixed_size = element.common.get_fixed_size(request_size, params.rect2ds.get(entity).ok());
+    let (main_axis_fixed_size,cross_axis_fixed_size) = match flex.direction {
+        FlexDirection::Column | FlexDirection::ColumnReverse => { (fixed_size.y,fixed_size.x) },
+        FlexDirection::Row | FlexDirection::RowReverse => { (fixed_size.x,fixed_size.y) }
+    };
     //子元素占据主轴尺寸
-    let mut main_axis_all_size:f32 = 0f32;
+    let mut main_axis_all_child_size:f32 = 0f32;
     //交叉轴被撑开尺寸
     let mut cross_axis_max_size:f32 = 0f32;
     for_each_child(entity, params, |child_entity,params| {
         if let Ok(rect) = params.rect2ds.get(child_entity) {
             match flex.direction {
                 FlexDirection::Column | FlexDirection::ColumnReverse => {
-                    main_axis_all_size += rect.height;
+                    main_axis_all_child_size += rect.height;
                     cross_axis_max_size = cross_axis_max_size.max(rect.width);
                 },
                 FlexDirection::Row | FlexDirection::RowReverse => {
-                    main_axis_all_size += rect.width;
+                    main_axis_all_child_size += rect.width;
                     cross_axis_max_size = cross_axis_max_size.max(rect.height);
                 }
             }
        }
     });
+    
+    let cross_real_size = if cross_axis_fixed_size > 0f32 { cross_axis_fixed_size } else { cross_axis_max_size  };
+
+    //主轴固定尺寸
+    if main_axis_fixed_size > 0f32 {
+        //子元素占据主轴尺寸 > 主轴固定尺寸
+        if main_axis_all_child_size > main_axis_fixed_size {
+            //挤压重排
+            let shrink1_size = calc_shrink1_size(entity,flex.direction,main_axis_fixed_size,params);
+            for_each_child(entity, params, |child_entity,params| {
+                if let Ok(flex_item) = params.flexitems.get(child_entity) {
+                    //可挤压元素
+                    if flex_item.shrink > 0f32 {
+                       let main_axis_size = shrink1_size * flex_item.shrink;
+                       let child_size = match flex.direction {
+                           FlexDirection::Column | FlexDirection::ColumnReverse => {
+                              Vec2::new(cross_real_size, main_axis_size)
+                           },
+                           FlexDirection::Row | FlexDirection::RowReverse => {
+                              Vec2::new(main_axis_size,cross_real_size)
+                           }
+                       };
+                      
+                    } else {
+
+                    }
+
+                }
+            })
+        }
+    }
 
 
-    /*if(不换行) {
-       let 子元素占据主轴尺寸 = 取主轴方向所有Child尺寸();
+    /*
+    let 子元素占据主轴尺寸 = 取主轴方向所有Child尺寸();
        let 交叉轴被撑开尺寸 =  取交叉轴方向最大Child尺寸();
        let 交叉轴实际尺寸 =  if(固定交叉轴) { 固定交叉轴 } else { 交叉轴被撑开最大尺寸 }
  
@@ -229,8 +273,38 @@ fn measure_flex_no_wrap_layout(entity:Entity,flex:&FlexLayout,request_size:Vec2,
                更新元素大小(当前尺寸,交叉轴实际尺寸);
             }
        }
-    }*/
+    
+    */
     Vec2::ZERO
+}
+
+//计算挤压的单位一尺寸
+fn calc_shrink1_size(entity:Entity,dir:FlexDirection,max_axis_size:f32,params:&LayoutParams) -> f32 {
+    let mut all_free_size:f32 = max_axis_size;
+    let mut all_shrink = 0f32;
+    for_each_child(entity,params,|child_entity:Entity,params: &LayoutParams| {
+        if let Ok(flex_item) = params.flexitems.get(child_entity) {
+            if flex_item.shrink <= 0f32 {
+                if let Ok(rect2d) = params.rect2ds.get(child_entity) {
+                    match dir {
+                        FlexDirection::Column | FlexDirection::ColumnReverse => {
+                            all_free_size -= rect2d.height;
+                        },
+                        FlexDirection::Row | FlexDirection::RowReverse => {
+                            all_free_size -= rect2d.width;
+                        }
+                    }
+                }
+            } else {
+                all_shrink += flex_item.shrink;
+            }
+        } else {
+            //没有默认为1    
+            all_shrink += 1f32;
+        }
+    }); 
+
+    if all_shrink > 0f32 { all_free_size / all_shrink } else { 0f32 }
 }
 
 fn for_each_child<F>(entity:Entity,params:&LayoutParams,mut f:F) where F:FnMut(Entity,&LayoutParams) {
