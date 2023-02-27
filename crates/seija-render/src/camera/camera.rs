@@ -7,13 +7,14 @@ use crate::resource::Texture;
 
 #[derive(Component)]
 pub struct Camera {
-    pub projection:Projection,
     pub order:i32,
-    pub path:SmolStr,
-    pub target:Option<Handle<Texture>>,
     pub layer:u32,
     pub cull_type:i32,
-    pub is_hdr:bool
+    pub is_hdr:bool,
+
+    pub projection:Projection,
+    pub path:SmolStr,
+    pub target:Option<Handle<Texture>>,
  }
  
  impl Default for Camera {
@@ -46,7 +47,7 @@ pub struct Camera {
   
  }
 
- #[derive(Debug)]
+ #[derive(Debug,Clone)]
 pub enum Projection {
     Ortho(Orthographic),
     Perspective(Perspective)
@@ -60,7 +61,7 @@ impl Projection {
         }
     }
 }
-#[derive(Debug)]
+#[derive(Debug,Clone)]
 pub struct Orthographic {
     pub left: f32,
     pub right: f32,
@@ -105,13 +106,13 @@ impl Orthographic {
     } 
 }
 
-#[derive(Debug,PartialEq, Eq)]
+#[derive(Debug,PartialEq, Eq,Clone,Copy)]
 pub enum FovDirection {
     Hor,
     Ver
 }
 
-#[derive(Debug)]
+#[derive(Debug,Clone)]
 pub struct Perspective {
     pub fov: f32,
     pub aspect_ratio: f32,

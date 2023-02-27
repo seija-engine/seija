@@ -1,18 +1,20 @@
 use bevy_ecs::prelude::Entity;
 use seija_core::math::Vec2;
 use crate::layout::{types::LayoutElement, system::LayoutParams};
-use super::{types::{TypeElement, LayoutAlignment, UISize, SizeValue}, comps::{StackLayout, FlexLayout, Orientation, FlexWrap}};
+use super::{types::{TypeElement, LayoutAlignment, UISize, SizeValue}, comps::{StackLayout, FlexLayout, Orientation, FlexWrap, FlexDirection}};
 use lazy_static::lazy_static;
 
 lazy_static! { static ref VIEW_ID:LayoutElement = LayoutElement::create_view(); }
 
 pub fn measure_layout_element(entity:Entity,request_size:Vec2,element:&LayoutElement,params:&mut LayoutParams) -> Vec2 {
-   match element.typ_elem {
+   match &element.typ_elem {
        TypeElement::View => measure_view_element(entity,request_size,element,params),
+       TypeElement::Stack(stack) => Vec2::ZERO,
        _ => Vec2::ZERO
   };
    Vec2::ZERO
 }
+
 
 fn fill_desired_ui_size(entity:Entity,psize:UISize,elem:&LayoutElement,params:&LayoutParams) -> UISize {
    let desired_size = elem.common.ui_size.get_number_size(params.rect2ds.get(entity).ok());
@@ -30,11 +32,11 @@ fn fill_desired_ui_size(entity:Entity,psize:UISize,elem:&LayoutElement,params:&L
    UISize { width, height }
 }
 
+
 fn uisize2size(cur_size:UISize,size:Vec2) -> Vec2 {
    Vec2::new(if cur_size.width.is_auto()  { size.x } else { cur_size.width.get_pixel() }, 
              if cur_size.height.is_auto() { size.y } else { cur_size.height.get_pixel() })
 }
-
 fn calc_desired_size(entity:Entity,psize:UISize,params:&LayoutParams) -> Vec2 {
    let element = params.elems.get(entity).ok().unwrap_or(&VIEW_ID);
    let cur_size = fill_desired_ui_size(entity,psize,&element,params);
@@ -104,30 +106,90 @@ fn calc_desired_stack_size(entity:Entity,stack:&StackLayout,cur_size:UISize,elem
 fn calc_desired_flex_size(entity:Entity,flex:&FlexLayout,cur_size:UISize,elem:&LayoutElement,params:&LayoutParams) -> Vec2 {
    match flex.warp {
       FlexWrap::NoWrap => calc_desired_flex_nowrap_size(entity,flex,cur_size,elem,params),
-      FlexWrap::Wrap => Vec2::ZERO
+      FlexWrap::Wrap => calc_desired_flex_wrap_size(entity,flex,cur_size,elem,params), 
    }
 }
 
 fn calc_desired_flex_nowrap_size(entity:Entity,flex:&FlexLayout,cur_size:UISize,elem:&LayoutElement,params:&LayoutParams) -> Vec2 {
-   let mut ret_size:Vec2 = Vec2::ZERO;
+   let mut ret_size:Vec2 = uisize2size(cur_size, Vec2::ZERO);
+
    if let Ok(childs_comp) = params.childrens.get(entity) {
       for child_entity in childs_comp.iter() {
          let child_size = calc_desired_size(*child_entity, cur_size, params);
-         if flex.is_hor() {
-            
-         } else {
-
+         match flex.direction {
+            FlexDirection::Row | FlexDirection::RowReverse => {
+               if cur_size.width.is_auto() {
+                  ret_size.x += child_size.x;
+               }
+               if cur_size.height.is_auto() {
+                  if child_size.y > ret_size.y {
+                     ret_size.y = child_size.y;
+                  }
+               }
+            },
+            FlexDirection::Column | FlexDirection::ColumnReverse => {
+               if cur_size.height.is_auto() {
+                  ret_size.y += child_size.y;
+               }
+               if cur_size.width.is_auto() {
+                  if child_size.x > ret_size.x {
+                     ret_size.x = child_size.x;
+                  }
+               }
+            }
          }
       }
    }
-   Vec2::ZERO
+   ret_size
+}
+
+fn calc_desired_flex_wrap_size(entity:Entity,flex:&FlexLayout,cur_size:UISize,elem:&LayoutElement,params:&LayoutParams) -> Vec2 {
+   //warp的情况下，主轴不能是auto
+   let mut ret_size:Vec2 = uisize2size(cur_size, Vec2::ZERO);
+   let mut line_max_size = 0f32;
+   let mut added_main_size = 0f32;
+   if let Ok(childs_comp) = params.childrens.get(entity) {
+      for child_entity in childs_comp.iter() {
+         let child_size = calc_desired_size(*child_entity, cur_size, params);
+         match flex.direction {
+            FlexDirection::Row | FlexDirection::RowReverse => {
+               if child_size.y > line_max_size {
+                  line_max_size = child_size.y;
+               }
+               if (added_main_size + child_size.x) > ret_size.x {
+                  added_main_size = 0f32;
+                  ret_size.y += line_max_size;
+               } else {
+                  added_main_size += child_size.x;
+               }
+            },
+            FlexDirection::Column | FlexDirection::ColumnReverse => {
+               if child_size.x > line_max_size {
+                  line_max_size = child_size.x;
+               }
+               if (added_main_size + child_size.y) > ret_size.y {
+                  added_main_size = 0f32;
+                  ret_size.x += line_max_size;
+               } else {
+                  added_main_size += child_size.x;
+               }
+            }
+         }
+      }
+   }
+   ret_size
 }
 
 fn measure_view_element(entity:Entity,request_size:Vec2,element:&LayoutElement,params:&mut LayoutParams) -> Vec2 {
    if element.common.ui_size.has_auto() {
       if element.common.hor == LayoutAlignment::Stretch {
-
+         
       }
    }
+   Vec2::ZERO
+}
+
+fn measure_stack_element(entity:Entity,stack:&StackLayout,request_size:Vec2,element:&LayoutElement,params:&mut LayoutParams) -> Vec2 {
+   
    Vec2::ZERO
 }
