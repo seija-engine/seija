@@ -136,55 +136,7 @@ fn measure_flex_layout(entity:Entity,flex:&FlexLayout,request_size:Vec2,element:
         FlexWrap::NoWrap => measure_flex_no_wrap_layout(entity,flex,request_size,element,params),
         FlexWrap::Wrap => measure_flex_no_wrap_layout(entity,flex,request_size,element,params)
     }
-    /*
-    if(不换行) {
-       let 子元素占据主轴尺寸 = 取主轴方向所有Child尺寸();
-       let 交叉轴被撑开尺寸 =  取交叉轴方向最大Child尺寸();
-       let 交叉轴实际尺寸 =  if(固定交叉轴) { 固定交叉轴 } else { 交叉轴被撑开最大尺寸 }
-    
-
-       if(主轴固定尺寸) {
-            if(子元素占据主轴尺寸 > 主轴固定尺寸) {
-                //挤压重排
-                let 可挤压单位一尺寸 = 计算可挤压尺寸单位1();
-                for(子元素) {
-                    if(可挤压元素) {
-                        更新元素大小(可挤压尺寸,交叉轴实际尺寸);
-                    } else if(交叉轴被撑开了) {
-                        更新元素大小(当前尺寸,交叉轴实际尺寸);
-                    }
-                }
-            } elseif(子元素有grow属性) {
-                //放大子元素 重排
-                let 可放大单位一尺寸 = 计算可放大尺寸单位1();
-                ...逻辑同上
-            }
-       } else { //主轴自由尺寸
-            if(子元素占据主轴尺寸 > 申请尺寸) {
-                //挤压重排 同上
-            } else if(交叉轴被撑开了){
-               更新元素大小(当前尺寸,交叉轴实际尺寸);
-            }
-       }
-    } else { //换行
-        if(主轴固定尺寸) {
-           let 几个换行轴 = [];
-           for(子元素) {
-              //计算换行
-              if(一个轴) {
-                  if(是否需要放大主轴尺寸) {
-                    
-                  }
-                  添加几个换行轴();
-              }
-           }
-           if(交叉轴对齐是填充 && 交叉元素对齐也是填充) {
-              更新元素大小(当前主轴尺寸,交叉轴均分尺寸);
-           }
-        } 
-    }
-    
-    */
+   
     
 }
 

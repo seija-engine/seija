@@ -32,7 +32,7 @@ impl FlexLayout {
 #[derive(Component)]
 pub struct FlexItem {
     pub order:i32,
-    pub grow:u32,
+    pub grow:f32,
     pub shrink:f32,
     pub basis:FlexBasis,
     pub align_self:FlexAlignSelf

@@ -19,6 +19,11 @@ pub struct UISize {
 }
 
 impl UISize {
+
+    pub fn from_number(vec2:Vec2) -> UISize {
+        UISize { width: SizeValue::Pixel(vec2.x), height: SizeValue::Pixel(vec2.y) }
+    }
+
     pub fn has_auto(&self) -> bool {
         self.width.is_auto() || self.height.is_auto()
     }
