@@ -16,8 +16,10 @@ pub struct FlexLayout {
     pub direction:FlexDirection,
     pub warp:FlexWrap,
     pub justify:FlexJustify,
+    //交叉轴每行的对齐方式
     pub align_items:FlexAlignItems,
-    pub align_content:FlexAlignContent   
+    //交叉轴多行整体的对齐方式
+    pub align_content:FlexAlignContent
 }
 
 impl FlexLayout {

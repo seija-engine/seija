@@ -1,7 +1,7 @@
 use bevy_ecs::prelude::Entity;
 use seija_core::math::Vec2;
 use crate::layout::{types::LayoutElement, system::LayoutParams};
-use super::{types::{TypeElement, LayoutAlignment, UISize, SizeValue}, comps::{StackLayout, FlexLayout, Orientation, FlexWrap, FlexDirection}};
+use super::{types::{TypeElement, LayoutAlignment, UISize, SizeValue}, comps::{StackLayout, FlexLayout, Orientation, FlexWrap, FlexDirection, FlexAlignItems, FlexAlignContent}};
 use lazy_static::lazy_static;
 
 
@@ -218,13 +218,14 @@ fn measure_stack_element(entity:Entity,stack:&StackLayout,parent_size:Vec2,eleme
    }
    self_size
 }
+
+
 fn measure_flex_element(entity:Entity,flex:&FlexLayout,parent_size:Vec2,element:&LayoutElement,params:&LayoutParams) -> Vec2 {
    match flex.warp {
       FlexWrap::NoWrap => measure_flex_nowrap_element(entity, flex,parent_size, element, params),
       FlexWrap::Wrap => measure_flex_wrap_element(entity, flex, parent_size, element, params),
    }
 }
-
 
 fn calc_axis_sizes(direction: FlexDirection, size: Vec2) -> (f32, f32) {
    match direction {
@@ -233,41 +234,105 @@ fn calc_axis_sizes(direction: FlexDirection, size: Vec2) -> (f32, f32) {
    }
 }
 
-
+fn axis2vec2(direction: FlexDirection,main:f32,cross:f32) -> Vec2 {
+   match direction {
+      FlexDirection::Row | FlexDirection::RowReverse => Vec2::new(main, cross),
+      FlexDirection::Column | FlexDirection::ColumnReverse => Vec2::new(cross, main)
+  }
+}
 
 fn measure_flex_nowrap_element(entity:Entity,flex:&FlexLayout,parent_size:Vec2,element:&LayoutElement,params:&LayoutParams) -> Vec2 {
    let self_size:Vec2 = measure_self_size(entity, parent_size, element, params);
    let content_size = element.common.padding.apply2size(self_size);
+   let main_axis_number = match flex.direction {
+      FlexDirection::Column | FlexDirection::ColumnReverse => { self_size.y },
+      FlexDirection::Row | FlexDirection::RowReverse => { self_size.x }
+   };
 
-   let mut all_child_size:Vec<Vec2> = vec![];
-   //计算flex的压缩和放大比例:总的放大比例和总的压缩比例
-   let mut flex_grow_total = 0f32;
-   let mut flex_shrink_total = 0f32;
-
-   let mut main_axis_size_total   = 0f32;
+   let mut child_size_lst:Vec<Vec2> = vec![];
+   let mut all_shrink_total = 0f32;
+   let mut all_grow_total = 0f32;
+   let mut all_main_child_size = 0f32;
+   let mut all_remain_shrink = main_axis_number;
+   let mut all_remain_grow = main_axis_number;
+   let mut has_grow = false;
    for child_entity in params.childrens.get(entity).map(|v| v.iter()).unwrap_or_else(|_| [].iter()) {
       let child_size = calc_desired_size(*child_entity, UISize::from_number(content_size), params);
-      all_child_size.push(child_size);
+      child_size_lst.push(child_size);
 
-      let (flex_item_shrink, flex_item_grow) = params.flexitems.get(*child_entity).ok()
+      let (flex_item_shrink, flex_item_grow) = params.flexitems.get(*child_entity)
+                                                     .ok()
                                                      .and_then(|flex_item| Some((flex_item.shrink, flex_item.grow)))
                                                      .unwrap_or((1.0, 0.0));
-      let (main_axis_size , _) = calc_axis_sizes(flex.direction, child_size);
-      main_axis_size_total   += main_axis_size;
-      flex_grow_total        += flex_item_grow;
-      flex_shrink_total      += flex_item_shrink;
-      
+      if flex_item_grow > 0f32 { has_grow = true; }
+      let (child_main_size , _) = calc_axis_sizes(flex.direction, child_size);
+      if flex_item_shrink > 0f32 {
+         all_shrink_total += child_main_size / flex_item_shrink;
+      } else {
+         all_remain_shrink -= child_main_size;
+      }
+      if flex_item_grow > 0f32 {
+         all_grow_total += child_main_size * flex_item_grow;
+      } else {
+         all_remain_grow -= child_main_size;
+      }
+      all_main_child_size += child_main_size;
    }
 
-
-  
+   if all_main_child_size > main_axis_number {
+      shrink_no_warp(entity, child_size_lst, flex, all_shrink_total, all_remain_shrink, params)
+   } else if has_grow {
+      grow_no_warp(entity, child_size_lst, flex, all_grow_total, all_remain_grow, params);
+   } else {
+      for (index,child_entity) in params.childrens.get(entity).map(|v| v.iter()).unwrap_or_else(|_| [].iter()).enumerate() {
+         let child_size = child_size_lst[index];
+         let (child_main_size , child_cross_size) = calc_axis_sizes(flex.direction, child_size);
+         measure_flex_item_element(*child_entity,axis2vec2(flex.direction, child_main_size, child_cross_size),params);
+      }
+   }
    self_size
-   
+}
+
+fn shrink_no_warp(entity:Entity,child_size_lst:Vec<Vec2>,flex:&FlexLayout,all_shrink_total:f32,all_remain_shrink:f32,params:&LayoutParams) {
+   //挤压重排
+   for (index,child_entity) in params.childrens.get(entity).map(|v| v.iter()).unwrap_or_else(|_| [].iter()).enumerate() {
+      let flex_item_shrink = params.flexitems.get(*child_entity).map(|v| v.shrink).unwrap_or(1f32);
+      let child_size = child_size_lst[index];
+      let (child_main_size , child_cross_size) = calc_axis_sizes(flex.direction, child_size);
+      //可挤压元素
+      if flex_item_shrink > 0f32 {
+         let shrink_rate = all_shrink_total /  (child_main_size / flex_item_shrink);
+         let new_main_size = all_remain_shrink * shrink_rate;
+         measure_flex_item_element(*child_entity,axis2vec2(flex.direction, new_main_size, child_cross_size),params);
+      } else {
+         measure_flex_item_element(*child_entity,axis2vec2(flex.direction, child_main_size, child_cross_size),params);
+      }
+   }
+}
+
+fn grow_no_warp(entity:Entity,child_size_lst:Vec<Vec2>,flex:&FlexLayout,all_grow_total:f32,all_remain_grow:f32,params:&LayoutParams) {
+   //放大重排
+   for (index,child_entity) in params.childrens.get(entity).map(|v| v.iter()).unwrap_or_else(|_| [].iter()).enumerate() {
+      let flex_item_grow = params.flexitems.get(*child_entity).map(|v| v.grow).unwrap_or(0f32);
+      let child_size = child_size_lst[index];
+      let (child_main_size , child_cross_size) = calc_axis_sizes(flex.direction, child_size);
+      let grow_rate = all_grow_total /  (child_main_size / flex_item_grow);
+      let new_main_size = all_remain_grow * grow_rate;
+      if flex_item_grow > 0f32 {
+        measure_flex_item_element(*child_entity,axis2vec2(flex.direction, new_main_size, child_cross_size),params);
+      } else {
+        measure_flex_item_element(*child_entity,axis2vec2(flex.direction, child_main_size, child_cross_size),params);
+      } 
+    }
 }
 
 fn measure_flex_wrap_element(entity:Entity,flex:&FlexLayout,parent_size:Vec2,element:&LayoutElement,params:&LayoutParams) -> Vec2 {
-
-   Vec2::ZERO
+   let self_size:Vec2 = measure_self_size(entity, parent_size, element, params);
+   let content_size = element.common.padding.apply2size(self_size);
+   if flex.align_content == FlexAlignContent::Stretch && flex.align_items == FlexAlignItems::Stretch {
+      
+   }
+   self_size
 }
 
 pub fn measure_flex_item_element(entity:Entity,cur_size:Vec2,params:&LayoutParams) {
