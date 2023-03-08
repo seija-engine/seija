@@ -1,6 +1,6 @@
 use std::collections::HashSet;
 use bevy_ecs::{system::{SystemParam, Query, RemovedComponents, Res}, prelude::{Entity, EventReader}, query::Changed};
-use seija_core::{math::{Vec2, Vec3}, window::AppWindow};
+use seija_core::{math::{Vec2}, window::AppWindow};
 use seija_transform::{events::HierarchyEvent, hierarchy::{Parent, Children}, Transform};
 use crate::components::rect2d::Rect2D;
 use super::{types::LayoutElement, measure, arrange::{arrange_layout_element, ArrangeXY}, comps::FlexItem};
@@ -28,7 +28,7 @@ pub fn ui_layout_system(params:LayoutParams) {
           let x = size_request_x(elem_entity, &params);
           let y = size_request_y(elem_entity, &params);
           let request_size:Vec2 = Vec2::new(x, y);
-          measure::measure_layout_element(elem_entity,request_size,&element,&params);
+          measure::measure_layout_element(elem_entity,request_size,&params);
          
           let origin = origin_request(elem_entity, &params);
           let parent_size = if let Ok(size) = params.parents.get(elem_entity).and_then(|p| params.rect2ds.get(p.1.0)) {

@@ -1,4 +1,6 @@
-use bevy_ecs::prelude::Component;
+use bevy_ecs::{prelude::{Component, Entity}, system::Query};
+use seija_core::math::Vec2;
+use seija_transform::hierarchy::Children;
 
 
 #[derive(Clone, Copy,Hash,PartialEq, Eq)]
@@ -11,6 +13,8 @@ pub struct StackLayout {
     pub spacing:f32,
     pub orientation:Orientation
 }
+
+
 
 pub struct FlexLayout {
     pub direction:FlexDirection,
@@ -28,7 +32,15 @@ impl FlexLayout {
             FlexDirection::Column | FlexDirection::ColumnReverse => false,
             _ => true
         }
-    } 
+    }
+
+    pub fn get_axis_size(&self, size:Vec2) -> Vec2 {
+        if self.is_hor() {
+            Vec2::new(size.x, size.y)
+        } else {
+            Vec2::new(size.y, size.x)
+        }
+    }
 }
 
 #[derive(Component)]
