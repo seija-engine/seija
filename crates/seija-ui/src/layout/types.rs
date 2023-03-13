@@ -73,7 +73,6 @@ impl Default for SizeValue {
 #[derive(Component)]
 pub struct CommonView {
     pub ui_size:UISize,
-    pub size: Vec2,
     pub margin: Thickness,
     pub padding: Thickness,
     pub hor: LayoutAlignment,
@@ -86,7 +85,6 @@ impl Default for CommonView {
     fn default() -> Self {
         CommonView {
             ui_size:UISize::default(),
-            size: Vec2::new(-1f32, -1f32),
             margin: Thickness::default(),
             padding: Thickness::default(),
             hor: LayoutAlignment::Stretch,
@@ -98,31 +96,6 @@ impl Default for CommonView {
 }
 
 impl CommonView {
-    pub fn get_size(&self, rect2d: Option<&Rect2D>) -> Vec2 {
-        if self.use_rect_size {
-            rect2d
-                .map(|rect| Vec2::new(rect.width, rect.height))
-                .unwrap_or(Vec2::ZERO)
-        } else {
-            self.size
-        }
-    }
-
-    pub fn get_fixed_size(&self, request_size: Vec2, rect2d: Option<&Rect2D>) -> Vec2 {
-        let mut fixed_size = self.get_size(rect2d);
-        if fixed_size.x < 0f32 {
-            if self.hor == LayoutAlignment::Stretch {
-                fixed_size.x = request_size.x - self.margin.horizontal();
-            }
-        }
-        if fixed_size.y < 0f32 {
-            if self.ver == LayoutAlignment::Stretch {
-                fixed_size.y = request_size.y - self.margin.vertical();
-            }
-        }
-        fixed_size
-    }
-
     
 }
 

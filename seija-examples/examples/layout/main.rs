@@ -13,13 +13,14 @@ use seija_transform::{IEntityChildren,Transform};
 use seija_ui::{
     components::{panel::Panel, rect2d::Rect2D, sprite::Sprite, ui_canvas::UICanvas},
     types::Thickness,
-    update_sprite_alloc_render, SpriteAllocator, layout::{types::{LayoutElement, LayoutAlignment}, comps::Orientation},
+    update_sprite_alloc_render, SpriteAllocator, layout::{types::{LayoutElement, LayoutAlignment, SizeValue}, comps::Orientation},
 };
 
 #[derive(Default, Resource)]
 pub struct UIData {
    
 }
+
 
 fn main() {
     let mut app = init_core_app("FRPRender.clj", vec![update_sprite_alloc_render]);
@@ -52,10 +53,10 @@ fn start(world: &mut World) {
     let mut view = LayoutElement::create_view();
     view.common.hor = LayoutAlignment::Stretch;
     view.common.ver = LayoutAlignment::End;
-    view.common.size = Vec2::new(-1f32, 200f32);
+    view.common.ui_size.height = SizeValue::Pixel(200f32);
     world.spawn((Sprite::sliced(bg_index, Thickness::new1(35f32), Vec4::ONE),view,Rect2D::default(),Transform::default())).set_parent(Some(canvas_id));
     
-
+   
     let stack_id = create_stackpanel(world, Some(canvas_id));
     create_sprite(world,sprite_index,Some(stack_id),LayoutAlignment::Start);
     create_sprite(world,sprite_index,Some(stack_id),LayoutAlignment::Center);
@@ -71,7 +72,7 @@ fn create_stackpanel(world: &mut World,parent:Option<Entity>) -> Entity {
     let rect2d = Rect2D::default();
     let t = Transform::default();
     let mut stack_layout = LayoutElement::create_stack(10f32, Orientation::Horizontal);
-    stack_layout.common.size = Vec2::new(-1f32, 200f32);
+    stack_layout.common.ui_size.height = SizeValue::Pixel(200f32);
     stack_layout.common.padding.left = 50f32;
     stack_layout.common.padding.top = 10f32;
     stack_layout.common.padding.bottom = 10f32;
@@ -84,10 +85,11 @@ fn create_sprite(world:&mut World,sprite_index:u32,parent:Option<Entity>,ver:Lay
     let mut view_layout = LayoutElement::create_view();
     view_layout.common.hor = LayoutAlignment::Center;
     view_layout.common.ver = ver;
-    view_layout.common.size.x = 100f32;
+    view_layout.common.ui_size.width = SizeValue::Pixel(100f32);
     if ver != LayoutAlignment::Stretch {
-        view_layout.common.size.y = 50f32;
-        
+        view_layout.common.ui_size.height = SizeValue::Pixel(50f32);
+    } else {
+        view_layout.common.ui_size.height = SizeValue::Auto;
     }
     let t = Transform::default();
     world.spawn((Sprite::sliced(sprite_index,Thickness::new1(20f32), Vec4::ONE),Rect2D::default(),t,view_layout)).set_parent(parent).id()

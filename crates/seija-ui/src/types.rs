@@ -33,7 +33,7 @@ impl Thickness {
     }
 
     pub fn apply2size(&self,size:Vec2) -> Vec2 {
-        Vec2::new(size.x + self.horizontal(),size.y + self.vertical())
+        Vec2::new(size.x - self.horizontal(),size.y - self.vertical())
     }
 }
 

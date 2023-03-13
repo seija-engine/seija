@@ -75,8 +75,8 @@ fn get_top_elem_dirty(entity:Entity,params:&LayoutParams) -> Entity {
 
 fn size_request_x(entity:Entity,params:&LayoutParams) -> f32 {
     if let Ok(elem) = params.elems.get(entity) {
-        if elem.common.size.x >= 0f32 {
-            return elem.common.size.x - elem.common.padding.horizontal();
+        if !elem.common.ui_size.width.is_auto() {
+            return elem.common.ui_size.width.get_pixel() - elem.common.padding.horizontal();
         }
         if let Ok(parent) = params.parents.get(entity) {
            return size_request_x(parent.1.0, params);
@@ -95,8 +95,8 @@ fn size_request_x(entity:Entity,params:&LayoutParams) -> f32 {
 
 fn size_request_y(entity:Entity,params:&LayoutParams) -> f32 {
     if let Ok(elem) = params.elems.get(entity) {
-        if elem.common.size.y >= 0f32 {
-            return elem.common.size.y - elem.common.padding.vertical();
+        if !elem.common.ui_size.height.is_auto() {
+            return elem.common.ui_size.height.get_pixel() - elem.common.padding.vertical();
         }
         if let Ok(parent) = params.parents.get(entity) {
            return size_request_y(parent.1.0, params);
