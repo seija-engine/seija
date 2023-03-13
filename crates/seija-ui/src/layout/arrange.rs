@@ -1,10 +1,12 @@
+use std::ops::Range;
+
 use bevy_ecs::prelude::Entity;
 use bitflags::bitflags;
 use seija_core::math::Vec2;
 use seija_transform::hierarchy::Children;
 
 use super::{
-    comps::{FlexDirection, FlexJustify, FlexLayout, FlexWrap, Orientation, StackLayout, FlexAlignItems},
+    comps::{FlexDirection, FlexJustify, FlexLayout, FlexWrap, Orientation, StackLayout, FlexAlignItems, FlexAlignContent},
     system::LayoutParams,
     types::{LayoutAlignment, LayoutElement, TypeElement},
     RECT2D_ID, VIEW_ID,
@@ -158,13 +160,8 @@ fn arrange_flex_element(
     params: &LayoutParams,
 ) -> Vec2 {
     match flex.warp {
-        FlexWrap::Wrap => {
-            Vec2::ZERO
-            //arrange_flex_element_wrap(entity, flex, element, parent_origin, parent_size, params)
-        }
-        FlexWrap::NoWrap => {
-            arrange_flex_element_nowrap(entity, flex, element, parent_origin, parent_size, params)
-        }
+        FlexWrap::Wrap => {  arrange_flex_element_wrap(entity, flex, element, parent_origin, parent_size, params) }
+        FlexWrap::NoWrap => { arrange_flex_element_nowrap(entity, flex, element, parent_origin, parent_size, params) }
     }
 }
 
@@ -273,6 +270,223 @@ fn arrange_flex_element_nowrap(entity: Entity,flex: &FlexLayout,element: &Layout
     }
 
     this_pos
+}
+
+
+//计算换行情况下的排列
+fn arrange_flex_element_wrap(entity:Entity,flex:&FlexLayout,elem:&LayoutElement,parent_origin:Vec2,parent_size:Vec2,params:&LayoutParams) -> Vec2 {
+    let this_pos = arrange_view_element(entity,elem,parent_origin,parent_size,ArrangeXY::ALL,params);
+    let this_size = params.rect2ds.get(entity).unwrap_or(&RECT2D_ID);
+    let inner_size = elem.common.padding.apply2size(Vec2::new(this_size.width, this_size.height));
+    let this_axis_size = flex.get_axis_size(inner_size);
+    let lt_pos = Vec2::new(-this_size.width * 0.5f32 + elem.common.padding.left,this_size.height * 0.5f32 - elem.common.padding.top);
+    let (axis_pos,cross_pos) = match flex.direction {
+        FlexDirection::Row | FlexDirection::RowReverse => (lt_pos.x,lt_pos.y),
+        FlexDirection::Column | FlexDirection::ColumnReverse => (lt_pos.y,lt_pos.x) ,
+    };
+    let flex_iter = FlexIter::new(params.childrens.get(entity).ok(),flex.direction);
+    let mut child_pos_lst:Vec<Vec2> = vec![];
+    let mut chid_size_lst:Vec<Vec2> = vec![];
+    let mut line_total = 0f32;
+    let mut last_line_start = 0;
+    let mut line_idx_range:Vec<Range<usize>> = vec![];
+    for (index,child_entity) in flex_iter.enumerate() {
+        let child_size = params.rect2ds.get(child_entity).unwrap_or(&RECT2D_ID);
+        let axis_size = flex.get_axis_size(Vec2::new(child_size.width, child_size.height));
+        chid_size_lst.push(axis_size);
+        if line_total > this_axis_size.x {
+            calc_align_jusitfy(flex.justify,this_axis_size.x, axis_pos,&mut chid_size_lst[last_line_start..index],flex.direction,&mut child_pos_lst);
+            line_total = 0f32;
+            line_idx_range.push(last_line_start..index);
+            last_line_start = index;
+        } else {
+            line_total += axis_size.x;
+        }
+    }
+
+    calc_align_content(flex, this_axis_size.y, line_idx_range, cross_pos,&mut chid_size_lst,&mut child_pos_lst);
+    let flex_iter = FlexIter::new(params.childrens.get(entity).ok(),flex.direction);
+    for (index,child_entity) in flex_iter.enumerate() {
+        let cur_pos = child_pos_lst[index];
+        arrange_layout_element(child_entity, params.elems.get(child_entity).unwrap_or(&VIEW_ID), cur_pos, parent_size, ArrangeXY::NONE, params)
+    }
+    this_pos
+}
+
+fn calc_align_jusitfy(justify:FlexJustify,axis_size:f32,start:f32,size_lst:&mut [Vec2],dir:FlexDirection,pos_lst:&mut Vec<Vec2>) {
+    match justify {
+        FlexJustify::Start => {
+            let mut cur_axis = start;
+            match dir {
+                FlexDirection::Row | FlexDirection::RowReverse => {
+                    cur_axis += size_lst[0].x * 0.5f32;
+                    for size in size_lst {
+                        pos_lst.push(Vec2::new(cur_axis,0f32));
+                        cur_axis += size.x;
+                    }
+                }
+                FlexDirection::Column | FlexDirection::ColumnReverse => {
+                    cur_axis -= size_lst[0].y * 0.5f32;
+                    for size in size_lst {
+                        pos_lst.push(Vec2::new(0f32,cur_axis));
+                        cur_axis -= size.y;
+                    }
+                }
+            }
+        },
+        FlexJustify::Center => {
+            let total_size = size_lst.iter().fold(0f32,|acc,size| acc + size.x);
+            let mut cur_axis = start + (axis_size - total_size) * 0.5f32;
+            match dir {
+                FlexDirection::Row | FlexDirection::RowReverse => {
+                    cur_axis += size_lst[0].x * 0.5f32;
+                    for size in size_lst {
+                        pos_lst.push(Vec2::new(cur_axis,0f32));
+                        cur_axis += size.x;
+                    }
+                }
+                FlexDirection::Column | FlexDirection::ColumnReverse => {
+                    cur_axis -= size_lst[0].y * 0.5f32;
+                    for size in size_lst {
+                        pos_lst.push(Vec2::new(0f32,cur_axis));
+                        cur_axis -= size.y;
+                    }
+                }
+            }
+        }
+        FlexJustify::End => {
+            let total_size = size_lst.iter().fold(0f32,|acc,size| acc + size.x);
+            let mut cur_axis = start + (axis_size - total_size);
+            match dir {
+                FlexDirection::Row | FlexDirection::RowReverse => {
+                    cur_axis += size_lst[0].x * 0.5f32;
+                    for size in size_lst {
+                        pos_lst.push(Vec2::new(cur_axis,0f32));
+                        cur_axis += size.x;
+                    }
+                }
+                FlexDirection::Column | FlexDirection::ColumnReverse => {
+                    cur_axis -= size_lst[0].y * 0.5f32;
+                    for size in size_lst {
+                        pos_lst.push(Vec2::new(0f32,cur_axis));
+                        cur_axis -= size.y;
+                    }
+                }
+            }
+        }
+        FlexJustify::SpaceBetween => {
+            let total_size = size_lst.iter().fold(0f32,|acc,size| acc + size.x);
+            let mut cur_axis = start;
+            let space = (axis_size - total_size) / (size_lst.len() as f32 - 1f32);
+            match dir {
+                FlexDirection::Row | FlexDirection::RowReverse => {
+                    cur_axis += size_lst[0].x * 0.5f32;
+                    for size in size_lst {
+                        pos_lst.push(Vec2::new(cur_axis,0f32));
+                        cur_axis += size.x + space;
+                    }
+                }
+                FlexDirection::Column | FlexDirection::ColumnReverse => {
+                    cur_axis -= size_lst[0].y * 0.5f32;
+                    for size in size_lst {
+                        pos_lst.push(Vec2::new(0f32,cur_axis));
+                        cur_axis -= size.y + space;
+                    }
+                }
+            }
+        }
+        FlexJustify::SpaceAround => {
+            let total_size = size_lst.iter().fold(0f32,|acc,size| acc + size.x);
+            let mut cur_axis = start;
+            let space = (axis_size - total_size) / (size_lst.len() as f32);
+            match dir {
+                FlexDirection::Row | FlexDirection::RowReverse => {
+                    cur_axis += size_lst[0].x * 0.5f32 + space * 0.5f32;
+                    for size in size_lst {
+                        pos_lst.push(Vec2::new(cur_axis,0f32));
+                        cur_axis += size.x + space;
+                    }
+                }
+                FlexDirection::Column | FlexDirection::ColumnReverse => {
+                    cur_axis -= size_lst[0].y * 0.5f32 - space * 0.5f32;
+                    for size in size_lst {
+                        pos_lst.push(Vec2::new(0f32,cur_axis));
+                        cur_axis -= size.y + space;
+                    }
+                }
+            }
+        }
+    }
+}
+
+fn calc_align_content(flex:&FlexLayout,cross_size:f32,line_ranges:Vec<Range<usize>>,start:f32,size_lst:&mut Vec<Vec2>,pos_lst:&mut Vec<Vec2>) {
+    let calc_child_size = || {
+        let mut all_child_size = 0f32;
+        for idxs in line_ranges.iter() {
+            let is_hor = flex.is_hor();
+            all_child_size += size_lst[idxs.clone()].iter().fold(0f32,|acc,size| if is_hor { acc.max(size.y) } else { acc.max(size.x) });
+        }
+        all_child_size
+    };
+    let fst_max_size = size_lst[line_ranges[0].clone()].iter().fold(Vec2::ZERO, |acc,size| Vec2::new(acc.x.max(acc.x), acc.y.max(size.y) ) ); 
+    let mut start_pos = start;
+    let mut space = 0f32;
+    match flex.align_content {
+        FlexAlignContent::Start | FlexAlignContent::Stretch => {
+            start_pos +=  if flex.is_hor() {fst_max_size.y * 0.5f32 } else { fst_max_size.x * 0.5f32 };
+        },
+        FlexAlignContent::Center => {
+            let all_child_size = calc_child_size();
+            if flex.is_hor() {
+                start_pos -=fst_max_size.y * 0.5f32;
+                start_pos -= cross_size - all_child_size * 0.5f32;
+            } else { 
+                start_pos += fst_max_size.x * 0.5f32;
+                start_pos += cross_size - all_child_size * 0.5f32;
+            };
+            
+        },
+        FlexAlignContent::End => {
+            let all_child_size = calc_child_size();
+            if flex.is_hor() {
+                start_pos -= (cross_size - all_child_size) + fst_max_size.y * 0.5f32;
+            } else {
+                start_pos += (cross_size - all_child_size) + fst_max_size.x * 0.5f32;
+            }
+        },
+        FlexAlignContent::SpaceBetween => {
+            let all_child_size = calc_child_size();
+            space = (cross_size - all_child_size) / (line_ranges.len() - 1) as f32;
+            if flex.is_hor() {
+                start_pos -= fst_max_size.y * 0.5f32;
+            } else { 
+                start_pos += fst_max_size.x * 0.5f32;
+            };
+        },
+        FlexAlignContent::SpaceAround => {
+            let all_child_size = calc_child_size();
+            space = (cross_size - all_child_size) / line_ranges.len() as f32;
+            if flex.is_hor() {
+                start_pos -= fst_max_size.y * 0.5f32 + space * 0.5f32;
+            } else { 
+                start_pos += fst_max_size.x * 0.5f32 + space * 0.5f32;
+            };
+        }
+    }
+
+    let mut cur_cross = start_pos;
+    for idxs in line_ranges {
+        let max_size = size_lst[idxs.clone()].iter().fold(Vec2::ZERO, |acc,size| Vec2::new(acc.x.max(acc.x), acc.y.max(size.y) ) ); 
+        for idx in idxs {
+            if flex.is_hor() {
+                pos_lst[idx].y = cur_cross;
+                cur_cross -= max_size.y + space;
+            } else {
+                pos_lst[idx].x = cur_cross;
+                cur_cross += max_size.y + space;
+            }
+        }
+    }
 }
 
 
