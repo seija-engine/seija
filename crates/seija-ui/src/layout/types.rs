@@ -131,6 +131,13 @@ impl LayoutElement {
         }
     }
 
+    pub fn create_flex(flex:FlexLayout) -> LayoutElement {
+        LayoutElement {
+            common: CommonView::default(),
+            typ_elem: TypeElement::Flex(flex)
+        }
+    }
+
     pub fn is_invalid_measure(&self, child: &LayoutElement) -> bool {
         //TODO 判断布局是否失效
         true

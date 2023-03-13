@@ -13,8 +13,8 @@ pub fn measure_layout_element(entity:Entity,parent_size:Vec2,params:&LayoutParam
    };
 
   if let Ok(mut rect2d) = unsafe { params.rect2ds.get_unchecked(entity) } {
-    rect2d.width  = size.x;
-    rect2d.height = size.y;
+    rect2d.width  = size.x - element.common.margin.horizontal();
+    rect2d.height = size.y - element.common.margin.vertical();
   }
 }
 
@@ -46,7 +46,7 @@ fn calc_desired_size(entity:Entity,psize:UISize,params:&LayoutParams) -> Vec2 {
    let element = params.elems.get(entity).ok().unwrap_or(&VIEW_ID);
    let cur_size = fill_desired_ui_size(entity,psize,&element,params);
    if !cur_size.has_auto() {
-      return element.common.margin.apply2size(cur_size.get_number_size(params.rect2ds.get(entity).ok()));
+      return element.common.margin.add2size(cur_size.get_number_size(params.rect2ds.get(entity).ok()));
    };
    match &element.typ_elem {
       TypeElement::View => calc_desired_view_size(entity,cur_size,&element,params),
@@ -73,7 +73,7 @@ fn calc_desired_max_child_size(entity:Entity,cur_size:UISize,params:&LayoutParam
 
 fn calc_desired_view_size(entity:Entity,cur_size:UISize,elem:&LayoutElement,params:&LayoutParams) -> Vec2 {
    let max_child_size = calc_desired_max_child_size(entity,cur_size,params);
-   elem.common.margin.apply2size(uisize2size(cur_size, max_child_size))
+   elem.common.margin.add2size(uisize2size(cur_size, max_child_size))
 }
 
 fn calc_desired_stack_size(entity:Entity,stack:&StackLayout,cur_size:UISize,elem:&LayoutElement,params:&LayoutParams) -> Vec2 {
@@ -102,7 +102,7 @@ fn calc_desired_stack_size(entity:Entity,stack:&StackLayout,cur_size:UISize,elem
             }
          }
       }
-      elem.common.margin.apply2size(ret_size)
+      elem.common.margin.add2size(ret_size)
    } else {
       calc_desired_view_size(entity,cur_size,elem,params)
    }
@@ -188,18 +188,18 @@ fn calc_desired_flex_wrap_size(entity:Entity,flex:&FlexLayout,cur_size:UISize,el
 fn measure_self_size(entity:Entity,parent_size:Vec2,element:&LayoutElement,params:&LayoutParams) -> Vec2 {
    let number_size:Vec2;
    if !element.common.ui_size.has_auto() {
-      number_size = element.common.ui_size.get_number_size(params.rect2ds.get(entity).ok())
+      number_size = element.common.margin.add2size(element.common.ui_size.get_number_size(params.rect2ds.get(entity).ok()))
    } else {
       number_size = calc_desired_size(entity, UISize::from_number(parent_size), params);
    }
-   element.common.margin.apply2size(number_size)
+   number_size
 }
 
 fn measure_view_element(entity:Entity,parent_size:Vec2,force_size:Option<Vec2>,element:&LayoutElement,params:&LayoutParams) -> Vec2 {
    let self_size:Vec2 = force_size.unwrap_or_else(|| measure_self_size(entity, parent_size, element, params));
    if let Ok(childs_comp) = params.childrens.get(entity) {
       for child_entity in childs_comp.iter() {
-         measure_layout_element(*child_entity, element.common.padding.apply2size(self_size),params);
+         measure_layout_element(*child_entity, element.common.padding.sub2size(self_size),params);
       }
    }
    self_size
@@ -209,7 +209,7 @@ fn measure_stack_element(entity:Entity,stack:&StackLayout,parent_size:Vec2,force
    let self_size:Vec2 = force_size.unwrap_or_else(|| measure_self_size(entity, parent_size, element, params));
    if let Ok(childs_comp) = params.childrens.get(entity) {
       for child_entity in childs_comp.iter() {
-         measure_layout_element(*child_entity, element.common.padding.apply2size(self_size),params);
+         measure_layout_element(*child_entity, element.common.padding.sub2size(self_size),params);
       }
    }
    self_size
@@ -239,7 +239,7 @@ fn axis2vec2(direction: FlexDirection,main:f32,cross:f32) -> Vec2 {
 
 fn measure_flex_nowrap_element(entity:Entity,flex:&FlexLayout,parent_size:Vec2,force_size:Option<Vec2>,element:&LayoutElement,params:&LayoutParams) -> Vec2 {
    let self_size:Vec2 = force_size.unwrap_or_else(|| measure_self_size(entity, parent_size, element, params));
-   let content_size = element.common.padding.apply2size(self_size);
+   let content_size = element.common.padding.sub2size(self_size);
    let main_axis_number = match flex.direction {
       FlexDirection::Column | FlexDirection::ColumnReverse => { self_size.y },
       FlexDirection::Row | FlexDirection::RowReverse => { self_size.x }
@@ -324,7 +324,7 @@ fn grow_no_warp(entity:Entity,child_size_lst:Vec<Vec2>,flex:&FlexLayout,all_grow
 
 fn measure_flex_wrap_element(entity:Entity,flex:&FlexLayout,parent_size:Vec2,force_size:Option<Vec2>,element:&LayoutElement,params:&LayoutParams) -> Vec2 {
    let self_size:Vec2 = force_size.unwrap_or_else(|| measure_self_size(entity, parent_size, element, params));
-   let content_size = element.common.padding.apply2size(self_size);
+   let content_size = element.common.padding.sub2size(self_size);
    let (main_axis_number, cross_axis_number) = calc_axis_sizes(flex.direction, content_size);
    if flex.align_content != FlexAlignContent::Stretch && flex.align_items != FlexAlignItems::Stretch {
       return self_size;

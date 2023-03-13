@@ -43,6 +43,18 @@ impl FlexLayout {
     }
 }
 
+impl Default for FlexLayout {
+    fn default() -> Self {
+        FlexLayout {
+            direction: FlexDirection::Row,
+            warp: FlexWrap::NoWrap,
+            justify: FlexJustify::Start,
+            align_items: FlexAlignItems::Stretch,
+            align_content: FlexAlignContent::Stretch
+        }
+    }
+}
+
 #[derive(Component)]
 pub struct FlexItem {
     pub order:i32,
@@ -50,6 +62,18 @@ pub struct FlexItem {
     pub shrink:f32,
     pub basis:FlexBasis,
     pub align_self:FlexAlignSelf
+}
+
+impl Default for FlexItem {
+    fn default() -> Self {
+        FlexItem {
+            order: 0,
+            grow: 0f32,
+            shrink: 1f32,
+            basis: FlexBasis { length: 0f32, is_relative: false },
+            align_self: FlexAlignSelf::Auto
+        }
+    }
 }
 
 

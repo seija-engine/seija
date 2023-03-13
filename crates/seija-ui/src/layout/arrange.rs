@@ -63,14 +63,13 @@ pub fn arrange_view_element(
         if (axy & ArrangeXY::X).bits > 0 {
             match element.common.hor {
                 LayoutAlignment::Start => {
-                    ret_pos.x += rect2d.width * 0.5f32 + element.common.margin.left;
+                    ret_pos.x +=  element.common.margin.left;
                 }
                 LayoutAlignment::Center | LayoutAlignment::Stretch => {
                     ret_pos.x += parent_size.x * 0.5f32;
                 }
                 LayoutAlignment::End => {
-                    ret_pos.x +=
-                        parent_size.x + -rect2d.width * 0.5f32 - element.common.margin.right;
+                    ret_pos.x += parent_size.x + -rect2d.width * 0.5f32 - element.common.margin.right;
                 }
             }
         }
@@ -78,14 +77,13 @@ pub fn arrange_view_element(
         if (axy & ArrangeXY::Y).bits > 0 {
             match element.common.ver {
                 LayoutAlignment::Start => {
-                    ret_pos.y += -rect2d.height * 0.5f32 - element.common.margin.top;
+                    ret_pos.y +=  - element.common.margin.top;
                 }
                 LayoutAlignment::Center | LayoutAlignment::Stretch => {
                     ret_pos.y += -parent_size.y * 0.5f32;
                 }
                 LayoutAlignment::End => {
-                    ret_pos.y +=
-                        -parent_size.y + rect2d.height * 0.5f32 + element.common.margin.bottom;
+                    ret_pos.y += -parent_size.y + rect2d.height * 0.5f32 + element.common.margin.bottom;
                 }
             }
         }
@@ -202,7 +200,7 @@ impl<'a> Iterator for FlexIter<'a> {
                     self.index -= 1;
                 }
             } else {
-                if self.index < children.children().len() - 1 {
+                if self.index < children.children().len() {
                     self.index += 1;
                 }
             }
@@ -218,7 +216,7 @@ impl<'a> Iterator for FlexIter<'a> {
 fn arrange_flex_element_nowrap(entity: Entity,flex: &FlexLayout,element: &LayoutElement,parent_origin: Vec2,parent_size: Vec2,params: &LayoutParams) -> Vec2 {
     let this_pos = arrange_view_element(entity,element,parent_origin,parent_size,ArrangeXY::ALL,params);
     let this_size = params.rect2ds.get(entity).unwrap_or(&RECT2D_ID);
-    let inner_size = element.common.padding.apply2size(Vec2::new(this_size.width, this_size.height));
+    let inner_size = element.common.padding.sub2size(Vec2::new(this_size.width, this_size.height));
     let this_axis_size = flex.get_axis_size(inner_size);
     let lt_pos = Vec2::new(
         -this_size.width * 0.5f32 + element.common.padding.left,
@@ -277,7 +275,7 @@ fn arrange_flex_element_nowrap(entity: Entity,flex: &FlexLayout,element: &Layout
 fn arrange_flex_element_wrap(entity:Entity,flex:&FlexLayout,elem:&LayoutElement,parent_origin:Vec2,parent_size:Vec2,params:&LayoutParams) -> Vec2 {
     let this_pos = arrange_view_element(entity,elem,parent_origin,parent_size,ArrangeXY::ALL,params);
     let this_size = params.rect2ds.get(entity).unwrap_or(&RECT2D_ID);
-    let inner_size = elem.common.padding.apply2size(Vec2::new(this_size.width, this_size.height));
+    let inner_size = elem.common.padding.sub2size(Vec2::new(this_size.width, this_size.height));
     let this_axis_size = flex.get_axis_size(inner_size);
     let lt_pos = Vec2::new(-this_size.width * 0.5f32 + elem.common.padding.left,this_size.height * 0.5f32 - elem.common.padding.top);
     let (axis_pos,cross_pos) = match flex.direction {
@@ -506,7 +504,7 @@ fn arrange_by_start_pos(start_pos:Vec2,flex: &FlexLayout,entity: Entity,inner_si
         let child_elem = params.elems.get(child_entity).unwrap_or(&VIEW_ID);
         match flex.direction {
             FlexDirection::Row | FlexDirection::RowReverse => {
-                cur_pos.y = align_flex_cross(flex.align_items, start_pos.y, this_axis_size.x, child_rect.height, 1f32);
+                cur_pos.y = align_flex_cross(flex.align_items, start_pos.y, this_axis_size.x, child_rect.height, -1f32);
                 arrange_layout_element(child_entity,child_elem,
                     Vec2::new(cur_pos.x + child_rect.width * 0.5f32, cur_pos.y),
                     inner_size,
@@ -516,7 +514,7 @@ fn arrange_by_start_pos(start_pos:Vec2,flex: &FlexLayout,entity: Entity,inner_si
                 cur_pos.x += child_rect.width;
             }
             FlexDirection::Column | FlexDirection::ColumnReverse => {
-                cur_pos.y = align_flex_cross(flex.align_items, start_pos.x, this_axis_size.x, child_rect.width, -1f32);
+                cur_pos.y = align_flex_cross(flex.align_items, start_pos.x, this_axis_size.x, child_rect.width, 1f32);
                 arrange_layout_element(child_entity,child_elem,
                     Vec2::new(cur_pos.x, cur_pos.y - child_rect.height * 0.5f32),
                     inner_size,
