@@ -23,13 +23,13 @@ fn fill_desired_ui_size(entity:Entity,psize:UISize,elem:&LayoutElement,params:&L
    
    let desired_size = elem.common.ui_size.get_number_size(params.rect2ds.get(entity).ok());
    let width = if !elem.common.ui_size.width.is_auto() {
-     SizeValue::Pixel(desired_size.x) 
+     SizeValue::Pixel(desired_size.x + elem.common.margin.horizontal()) 
    } else if elem.common.hor == LayoutAlignment::Stretch {
          psize.width
    } else { SizeValue::Auto };
 
    let height = if !elem.common.ui_size.height.is_auto() {
-      SizeValue::Pixel(desired_size.y) 
+      SizeValue::Pixel(desired_size.y + elem.common.margin.vertical()) 
    }  else if elem.common.ver == LayoutAlignment::Stretch {
       psize.height
    } else { SizeValue::Auto };
@@ -46,7 +46,7 @@ fn calc_desired_size(entity:Entity,psize:UISize,params:&LayoutParams) -> Vec2 {
    let element = params.elems.get(entity).ok().unwrap_or(&VIEW_ID);
    let cur_size = fill_desired_ui_size(entity,psize,&element,params);
    if !cur_size.has_auto() {
-      return element.common.margin.add2size(cur_size.get_number_size(params.rect2ds.get(entity).ok()));
+      return cur_size.get_number_size(params.rect2ds.get(entity).ok());
    };
    match &element.typ_elem {
       TypeElement::View => calc_desired_view_size(entity,cur_size,&element,params),

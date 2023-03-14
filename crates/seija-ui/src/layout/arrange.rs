@@ -13,10 +13,12 @@ use super::{
 };
 /*
 位置为元素锚点的(0.5,0.5)
-parent_origin是父元素的坐标系下当前元素的左上
+parent_origin是父元素的坐标系下的左上角位置
 
 parent_size是减去元素padding之后的size
 parent_origin也是应用过padding之后的位置
+
+rect2d里的size是元素的显示size，不包含margin
 */
 
 bitflags! {
@@ -50,6 +52,7 @@ pub fn arrange_layout_element(entity: Entity,element: &LayoutElement,parent_orig
     }
 }
 
+
 pub fn arrange_view_element(
     entity: Entity,
     element: &LayoutElement,
@@ -63,10 +66,11 @@ pub fn arrange_view_element(
         if (axy & ArrangeXY::X).bits > 0 {
             match element.common.hor {
                 LayoutAlignment::Start => {
-                    ret_pos.x +=  element.common.margin.left;
+                    ret_pos.x +=  element.common.margin.left + rect2d.width * 0.5f32;
                 }
                 LayoutAlignment::Center | LayoutAlignment::Stretch => {
-                    ret_pos.x += parent_size.x * 0.5f32;
+                    let offset = rect2d.width * 0.5f32 + element.common.margin.left;
+                    ret_pos.x += offset;
                 }
                 LayoutAlignment::End => {
                     ret_pos.x += parent_size.x + -rect2d.width * 0.5f32 - element.common.margin.right;
@@ -77,7 +81,7 @@ pub fn arrange_view_element(
         if (axy & ArrangeXY::Y).bits > 0 {
             match element.common.ver {
                 LayoutAlignment::Start => {
-                    ret_pos.y +=  - element.common.margin.top;
+                    ret_pos.y = ret_pos.y - element.common.margin.top - rect2d.height * 0.5f32;
                 }
                 LayoutAlignment::Center | LayoutAlignment::Stretch => {
                     ret_pos.y += -parent_size.y * 0.5f32;
@@ -218,6 +222,8 @@ fn arrange_flex_element_nowrap(entity: Entity,flex: &FlexLayout,element: &Layout
     let this_size = params.rect2ds.get(entity).unwrap_or(&RECT2D_ID);
     let inner_size = element.common.padding.sub2size(Vec2::new(this_size.width, this_size.height));
     let this_axis_size = flex.get_axis_size(inner_size);
+    let child_count = params.childrens.get(entity).map(|v| v.children().len()).unwrap_or(0);
+    if child_count == 0 { return this_pos; }
     let lt_pos = Vec2::new(
         -this_size.width * 0.5f32 + element.common.padding.left,
         this_size.height * 0.5f32 - element.common.padding.top,
@@ -230,13 +236,14 @@ fn arrange_flex_element_nowrap(entity: Entity,flex: &FlexLayout,element: &Layout
     }
 
     //没有空余空间，直接根据size进行排列
-    if main_axis_size >= this_axis_size.x || flex.justify == FlexJustify::Start {
-        arrange_by_start_pos(lt_pos,flex,entity,inner_size,this_axis_size,params);
+    if main_axis_size >= this_axis_size.x  {
+        arrange_by_start_pos(lt_pos,flex,entity,inner_size,0f32,params);
         return this_pos;
     }
 
     //有空余空间，根据justify进行排列
     match flex.justify {
+        FlexJustify::Start => { arrange_by_start_pos(lt_pos,flex,entity,inner_size,0f32,params); },
         FlexJustify::Center => {
             let start_pos:Vec2 = match flex.direction {
                 FlexDirection::Row | FlexDirection::RowReverse => {
@@ -246,7 +253,7 @@ fn arrange_flex_element_nowrap(entity: Entity,flex: &FlexLayout,element: &Layout
                     Vec2::new(lt_pos.x,lt_pos.y - (this_axis_size.x - main_axis_size) * 0.5f32)
                 }
             };
-            arrange_by_start_pos(start_pos,flex,entity,inner_size,this_axis_size,params);
+            arrange_by_start_pos(start_pos,flex,entity,inner_size,0f32,params);
         }
         FlexJustify::End => {
             let start_pos = match flex.direction {
@@ -257,14 +264,32 @@ fn arrange_flex_element_nowrap(entity: Entity,flex: &FlexLayout,element: &Layout
                     Vec2::new(lt_pos.x,lt_pos.y - (this_axis_size.x - main_axis_size))
                 }
             };
-            arrange_by_start_pos(start_pos,flex,entity,inner_size,this_axis_size,params);
+            arrange_by_start_pos(start_pos,flex,entity,inner_size,0f32,params);
         }
 
         //分散对齐,两边贴靠
-        FlexJustify::SpaceBetween => { arrange_flex_spacebetween(entity,lt_pos,flex,this_axis_size,inner_size,params) }
+        FlexJustify::SpaceBetween => {
+            let spacing;
+            if flex.is_hor() {
+                spacing = (inner_size.x - main_axis_size) / (child_count - 1) as f32;
+            } else {
+                spacing = (inner_size.y - main_axis_size) / (child_count - 1) as f32;
+            }
+            arrange_by_start_pos(lt_pos,flex,entity,inner_size,spacing,params);
+        }
         //分散对齐，两边是中间的一半
-        FlexJustify::SpaceAround => { arrange_flex_spacearound(entity,lt_pos,flex,this_axis_size,inner_size,params) }
-        _ => {}
+        FlexJustify::SpaceAround => { 
+            let spacing;
+            let start_pos;
+            if flex.is_hor() {
+                spacing = (inner_size.x - main_axis_size) / child_count as f32;
+                start_pos = Vec2::new(lt_pos.x + spacing * 0.5f32, lt_pos.y);
+            } else {
+                spacing = (inner_size.y - main_axis_size) / child_count as f32;
+                start_pos = Vec2::new(lt_pos.x, lt_pos.y - spacing * 0.5f32);
+            }
+            arrange_by_start_pos(start_pos,flex,entity,inner_size,spacing,params);
+        }
     }
 
     this_pos
@@ -496,7 +521,7 @@ fn align_flex_cross(align_item: FlexAlignItems,axis_start:f32,axis_size:f32,self
     }
 }
 
-fn arrange_by_start_pos(start_pos:Vec2,flex: &FlexLayout,entity: Entity,inner_size:Vec2,this_axis_size:Vec2,params: &LayoutParams) {
+fn arrange_by_start_pos(start_pos:Vec2,flex: &FlexLayout,entity: Entity,inner_size:Vec2,spacing:f32,params: &LayoutParams) {
     let flex_iter = FlexIter::new(params.childrens.get(entity).ok(), flex.direction);
     let mut cur_pos: Vec2 = start_pos;
     for child_entity in flex_iter {
@@ -504,108 +529,26 @@ fn arrange_by_start_pos(start_pos:Vec2,flex: &FlexLayout,entity: Entity,inner_si
         let child_elem = params.elems.get(child_entity).unwrap_or(&VIEW_ID);
         match flex.direction {
             FlexDirection::Row | FlexDirection::RowReverse => {
-                cur_pos.y = align_flex_cross(flex.align_items, start_pos.y, this_axis_size.x, child_rect.height, -1f32);
+                cur_pos.y = align_flex_cross(flex.align_items, start_pos.y, inner_size.y, child_rect.height, -1f32);
                 arrange_layout_element(child_entity,child_elem,
                     Vec2::new(cur_pos.x + child_rect.width * 0.5f32, cur_pos.y),
                     inner_size,
                     ArrangeXY::NONE,
                     params,
                 );
-                cur_pos.x += child_rect.width;
+                cur_pos.x += child_rect.width + spacing;
             }
             FlexDirection::Column | FlexDirection::ColumnReverse => {
-                cur_pos.y = align_flex_cross(flex.align_items, start_pos.x, this_axis_size.x, child_rect.width, 1f32);
+                cur_pos.y = align_flex_cross(flex.align_items, start_pos.x, inner_size.x, child_rect.width, 1f32);
                 arrange_layout_element(child_entity,child_elem,
                     Vec2::new(cur_pos.x, cur_pos.y - child_rect.height * 0.5f32),
                     inner_size,
                     ArrangeXY::NONE,
                     params,
                 );
-                cur_pos.y -= child_rect.height;
+                cur_pos.y -= child_rect.height + spacing;
             }
         }
     }
 }
 
-fn arrange_flex_spacebetween(entity: Entity,lt_pos:Vec2,flex:&FlexLayout,this_axis_size:Vec2,this_size:Vec2,params: &LayoutParams) {
-    let flex_iter = FlexIter::new(params.childrens.get(entity).ok(), flex.direction);
-    let child_count = flex_iter.child_count();
-    let mut main_size_sum:f32 = 0f32;
-    let spacing = this_axis_size.x / (child_count - 1) as f32;
-    for (index,child_entity) in flex_iter.enumerate() {
-        let child_elem = params.elems.get(child_entity).unwrap_or(&VIEW_ID);
-        let child_rect = params.rect2ds.get(child_entity).unwrap_or(&RECT2D_ID);
-        let mut pos;
-        if index == 0 {
-            if flex.is_hor() { 
-                pos = Vec2::new(lt_pos.x + child_rect.width * 0.5f32,lt_pos.y); 
-                main_size_sum += child_rect.width;
-            } else {  
-                pos = Vec2::new(lt_pos.x,lt_pos.y - child_rect.height * 0.5f32);
-                main_size_sum += child_rect.height;
-            }
-        } else if child_count == index + 1 {
-            if flex.is_hor() { 
-                pos = Vec2::new(lt_pos.x + this_axis_size.x - child_rect.width * 0.5f32,lt_pos.y); 
-                
-            } else {  
-                pos = Vec2::new(lt_pos.x,lt_pos.y - this_axis_size.x + child_rect.height * 0.5f32);
-            }
-        } else {
-            if flex.is_hor() { 
-                pos = Vec2::new(lt_pos.x + main_size_sum + spacing * index as f32,lt_pos.y); 
-                main_size_sum += child_rect.width;
-            } else {  
-                pos = Vec2::new(lt_pos.x,lt_pos.y - main_size_sum - spacing * index as f32);
-                main_size_sum += child_rect.height;
-            }
-        }
-        if flex.is_hor() {
-            pos.y = align_flex_cross(flex.align_items, lt_pos.y, this_axis_size.x, child_rect.height, 1f32);
-        } else {
-            pos.x = align_flex_cross(flex.align_items, lt_pos.x, this_axis_size.x, child_rect.width, -1f32);
-        }
-        arrange_layout_element(child_entity,child_elem,pos,this_size,ArrangeXY::NONE,params);
-    }
-}
-
-fn arrange_flex_spacearound(entity: Entity,lt_pos:Vec2,flex:&FlexLayout,this_axis_size:Vec2,this_size:Vec2,params: &LayoutParams) {
-    let flex_iter = FlexIter::new(params.childrens.get(entity).ok(), flex.direction);
-    let child_count = flex_iter.child_count();
-    let mut main_size_sum:f32 = 0f32;
-    let spacing = this_axis_size.x / child_count as f32;
-    for (index,child_entity) in flex_iter.enumerate() {
-        let child_elem = params.elems.get(child_entity).unwrap_or(&VIEW_ID);
-        let child_rect = params.rect2ds.get(child_entity).unwrap_or(&RECT2D_ID);
-        let mut pos;
-        if index == 0 {
-            if flex.is_hor() { 
-                pos = Vec2::new(lt_pos.x + child_rect.width * 0.5f32 + spacing * 0.5f32,lt_pos.y); 
-                main_size_sum += child_rect.width + spacing * 0.5f32;
-            } else {  
-                pos = Vec2::new(lt_pos.x,lt_pos.y - child_rect.height * 0.5f32 - spacing * 0.5f32);
-                main_size_sum += child_rect.height + spacing * 0.5f32;
-            }
-        } else if child_count == index + 1 {
-            if flex.is_hor() { 
-                pos = Vec2::new(lt_pos.x + this_axis_size.x - child_rect.width * 0.5f32 - spacing * 0.5f32,lt_pos.y); 
-            } else {  
-                pos = Vec2::new(lt_pos.x,lt_pos.y - this_axis_size.x + child_rect.height * 0.5f32 + spacing * 0.5f32);
-            }
-        } else {
-            if flex.is_hor() { 
-                pos = Vec2::new(lt_pos.x + main_size_sum + spacing * index as f32,lt_pos.y); 
-                main_size_sum += child_rect.width;
-            } else {  
-                pos = Vec2::new(lt_pos.x,lt_pos.y - main_size_sum - spacing * index as f32);
-                main_size_sum += child_rect.height;
-            }
-        }
-        if flex.is_hor() {
-            pos.y = align_flex_cross(flex.align_items, lt_pos.y, this_axis_size.x, child_rect.height, 1f32);
-        } else {
-            pos.x = align_flex_cross(flex.align_items, lt_pos.x, this_axis_size.x, child_rect.width, -1f32);
-        }
-        arrange_layout_element(child_entity,child_elem,pos,this_size,ArrangeXY::NONE,params);
-    }
-}

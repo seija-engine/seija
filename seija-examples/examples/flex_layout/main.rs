@@ -3,7 +3,7 @@ use glam::{Vec4, Vec2};
 use seija_asset::{AssetServer};
 use seija_core::{ CoreStage, StartupStage};
 use seija_examples::{init_core_app};
-
+use seija_ui::layout::comps::{FlexAlignItems, FlexJustify};
 use seija_render::{
     resource::{load_image_info}, camera::camera::{Orthographic, Camera},
 };
@@ -45,21 +45,33 @@ fn start(world: &mut World) {
         view.common.ver = LayoutAlignment::Start;
         view.common.margin.top = idx as f32 * 100f32;
         view.common.ui_size.height = SizeValue::Pixel(100f32);
-        //world.spawn((Sprite::sliced(bg_index, Thickness::new1(35f32), Vec4::ONE),view,Rect2D::default(),Transform::default())).set_parent(Some(canvas_id));
+        world.spawn((Sprite::sliced(bg_index, Thickness::new1(35f32), Vec4::ONE),view,Rect2D::default(),Transform::default())).set_parent(Some(canvas_id));
+     }
+     let justify = vec![FlexJustify::Start,FlexJustify::End,FlexJustify::Center,FlexJustify::SpaceBetween,FlexJustify::SpaceAround];
+     for idx in 0..5 {
+        let mut flex = LayoutElement::create_flex(FlexLayout {
+            align_items: FlexAlignItems::Center,
+            justify: justify[idx],
+            ..Default::default()
+         });
+         flex.common.ver = LayoutAlignment::Start;
+         flex.common.hor = LayoutAlignment::Stretch;
+         flex.common.margin.top = idx as f32 * 100f32;
+         flex.common.margin.left = 10f32;
+         flex.common.margin.right = 10f32;
+         flex.common.ui_size.height = SizeValue::Pixel(100f32);
+        
+         let flex_id = world.spawn((flex,Rect2D::default(),Panel::default(),Transform::default())).set_parent(Some(canvas_id)).id();
+         for _ in 0..3 {
+            let item = FlexItem::default();
+            let t = Transform::default();
+            let mut view = LayoutElement::create_view();
+            view.common.ui_size = UISize::from_number(Vec2::new(100f32, 60f32));
+            world.spawn((Sprite::sliced(sprite_index,Thickness::new1(20f32), Vec4::ONE),Rect2D::default(),t,view,item)).set_parent(Some(flex_id));
+         }
      }
      
-     let mut flex = LayoutElement::create_flex(FlexLayout {
-        ..Default::default()
-     });
-     flex.common.ver = LayoutAlignment::Start;
-     flex.common.hor = LayoutAlignment::Stretch;
-     flex.common.ui_size.height = SizeValue::Pixel(100f32);
-     let flex_id = world.spawn((flex,Rect2D::default(),Panel::default(),Transform::default())).set_parent(Some(canvas_id)).id();
-
-     let item = FlexItem::default();
-     let t = Transform::default();
-     let mut view = LayoutElement::create_view();
-     view.common.ui_size = UISize::from_number(Vec2::new(100f32, 60f32));
-     world.spawn((Sprite::sliced(sprite_index,Thickness::new1(20f32), Vec4::ONE),Rect2D::default(),t,view,item)).set_parent(Some(flex_id));
+     
+     
     
 }
