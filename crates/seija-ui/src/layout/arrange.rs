@@ -308,6 +308,7 @@ fn arrange_flex_element_wrap(entity:Entity,flex:&FlexLayout,elem:&LayoutElement,
         FlexDirection::Column | FlexDirection::ColumnReverse => (lt_pos.y,lt_pos.x) ,
     };
     let flex_iter = FlexIter::new(params.childrens.get(entity).ok(),flex.direction);
+    let child_count = flex_iter.child_count();
     let mut child_pos_lst:Vec<Vec2> = vec![];
     let mut chid_size_lst:Vec<Vec2> = vec![];
     let mut line_total = 0f32;
@@ -317,14 +318,19 @@ fn arrange_flex_element_wrap(entity:Entity,flex:&FlexLayout,elem:&LayoutElement,
         let child_size = params.rect2ds.get(child_entity).unwrap_or(&RECT2D_ID);
         let axis_size = flex.get_axis_size(Vec2::new(child_size.width, child_size.height));
         chid_size_lst.push(axis_size);
-        if line_total > this_axis_size.x {
+        if line_total + axis_size.x > this_axis_size.x {
             calc_align_jusitfy(flex.justify,this_axis_size.x, axis_pos,&mut chid_size_lst[last_line_start..index],flex.direction,&mut child_pos_lst);
-            line_total = 0f32;
+            line_total = axis_size.x;
             line_idx_range.push(last_line_start..index);
             last_line_start = index;
         } else {
             line_total += axis_size.x;
         }
+    }
+    if last_line_start < child_count {
+        seija_core::log::error!("{} .. {}",last_line_start,child_count);
+        calc_align_jusitfy(flex.justify,this_axis_size.x, axis_pos,&mut chid_size_lst[last_line_start..child_count],flex.direction,&mut child_pos_lst);
+        line_idx_range.push(last_line_start..child_count);
     }
 
     calc_align_content(flex, this_axis_size.y, line_idx_range, cross_pos,&mut chid_size_lst,&mut child_pos_lst);
@@ -456,16 +462,16 @@ fn calc_align_content(flex:&FlexLayout,cross_size:f32,line_ranges:Vec<Range<usiz
     let mut space = 0f32;
     match flex.align_content {
         FlexAlignContent::Start | FlexAlignContent::Stretch => {
-            start_pos +=  if flex.is_hor() {fst_max_size.y * 0.5f32 } else { fst_max_size.x * 0.5f32 };
+            start_pos +=  if flex.is_hor() {-fst_max_size.y * 0.5f32 } else { fst_max_size.x * 0.5f32 };
         },
         FlexAlignContent::Center => {
             let all_child_size = calc_child_size();
             if flex.is_hor() {
-                start_pos -=fst_max_size.y * 0.5f32;
-                start_pos -= cross_size - all_child_size * 0.5f32;
+                start_pos -= fst_max_size.y * 0.5f32;
+                start_pos = start_pos - (cross_size - all_child_size) * 0.5f32;
             } else { 
                 start_pos += fst_max_size.x * 0.5f32;
-                start_pos += cross_size - all_child_size * 0.5f32;
+                start_pos += (cross_size - all_child_size) * 0.5f32;
             };
             
         },
@@ -503,11 +509,14 @@ fn calc_align_content(flex:&FlexLayout,cross_size:f32,line_ranges:Vec<Range<usiz
         for idx in idxs {
             if flex.is_hor() {
                 pos_lst[idx].y = cur_cross;
-                cur_cross -= max_size.y + space;
             } else {
                 pos_lst[idx].x = cur_cross;
-                cur_cross += max_size.y + space;
             }
+        }
+        if flex.is_hor() {
+            cur_cross -= max_size.y + space;
+        } else {
+            cur_cross += max_size.y + space;
         }
     }
 }
@@ -551,4 +560,3 @@ fn arrange_by_start_pos(start_pos:Vec2,flex: &FlexLayout,entity: Entity,inner_si
         }
     }
 }
-

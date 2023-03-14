@@ -327,6 +327,10 @@ fn measure_flex_wrap_element(entity:Entity,flex:&FlexLayout,parent_size:Vec2,for
    let content_size = element.common.padding.sub2size(self_size);
    let (main_axis_number, cross_axis_number) = calc_axis_sizes(flex.direction, content_size);
    if flex.align_content != FlexAlignContent::Stretch && flex.align_items != FlexAlignItems::Stretch {
+      for child_entity in params.childrens.get(entity).map(|v| v.iter()).unwrap_or_else(|_| [].iter()) {
+         let child_size = calc_desired_size(*child_entity, UISize::from_number(content_size), params);
+         measure_flex_item_element(*child_entity,child_size, params);
+      }
       return self_size;
    }
    let mut line_count = 1;
