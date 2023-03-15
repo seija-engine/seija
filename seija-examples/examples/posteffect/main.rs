@@ -14,7 +14,7 @@ struct GameData {
 }
 
 pub fn main() {
-    let mut app = init_core_app("FRPRender.clj",vec![]);
+    let mut app = init_core_app("FRPRender.clj",vec![],None);
     app.add_module(Skeleton3dModule);
     app.add_system2(CoreStage::Startup, StartupStage::Startup, on_start);
     app.run();

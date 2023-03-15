@@ -27,7 +27,7 @@ pub struct UIData {
 }
 
 fn main() {
-    let mut app = init_core_app("FRPRender.clj", vec![update_sprite_alloc_render]);
+    let mut app = init_core_app("FRPRender.clj", vec![update_sprite_alloc_render],None);
     app.add_system2(CoreStage::Startup, StartupStage::PreStartup, start);
     app.add_system(CoreStage::Update, on_update);
 

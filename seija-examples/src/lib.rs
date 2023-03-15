@@ -19,15 +19,15 @@ use seija_ui::UIModule;
 use seija_winit::WinitModule;
 
 
-pub fn init_core_app(render_file:&str,pre_renders:Vec<fn(world:&mut World,ctx:&mut RenderContext)>) -> App {
+pub fn init_core_app(render_file:&str,pre_renders:Vec<fn(world:&mut World,ctx:&mut RenderContext)>,win_size:Option<Vec2>) -> App {
     env_logger::Builder::new().filter_level(log::LevelFilter::Info).try_init().unwrap();
     let mut app = App::new();
     app.add_module(CoreModule);
     app.add_module(AssetModule(std::env::current_dir().unwrap().join("res").into()));
     app.add_module(InputModule);
-    let mut win = WinitModule::default();
-    win.0.width = 640f32;
-    win.0.height = 500f32;
+    let mut win  = WinitModule::default();
+    win.0.width  = win_size.map(|v| v.x).unwrap_or(640f32);
+    win.0.height = win_size.map(|v| v.y).unwrap_or(500f32);
     app.add_module(win);
     app.add_module(TransformModule);
     app.add_module(TemplateModule);

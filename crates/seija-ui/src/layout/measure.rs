@@ -353,8 +353,8 @@ fn measure_flex_wrap_element(entity:Entity,flex:&FlexLayout,parent_size:Vec2,for
       let item = params.elems.get(*child_entity).ok().unwrap_or(&VIEW_ID);
       match flex.direction {
          FlexDirection::Row | FlexDirection::RowReverse => {
-            if item.common.ui_size.width.is_auto() {
-               all_child_sizes[index].x = cross_stretch_size;
+            if item.common.ui_size.height.is_auto() {
+               all_child_sizes[index].y = cross_stretch_size;
             } 
          }
          FlexDirection::Column | FlexDirection::ColumnReverse => {
@@ -380,3 +380,4 @@ pub fn measure_flex_item_element(entity:Entity,cur_size:Vec2,params:&LayoutParam
       TypeElement::Flex(flex) => measure_flex_element(entity, flex,cur_size, Some(cur_size), element, params),
    };
 }
+

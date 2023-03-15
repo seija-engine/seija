@@ -1,4 +1,4 @@
-use bevy_ecs::prelude::*;
+use bevy_ecs::{prelude::*, world};
 use glam::{Vec4, Vec2};
 use seija_asset::{AssetServer};
 use seija_core::{ CoreStage, StartupStage};
@@ -20,7 +20,7 @@ fn load_sprite(path:&str,server:&AssetServer,sprite_alloc:&mut SpriteAllocator) 
 }
 
 fn main() {
-    let mut app = init_core_app("FRPRender.clj", vec![update_sprite_alloc_render]);
+    let mut app = init_core_app("FRPRender.clj", vec![update_sprite_alloc_render],Some(Vec2::new(1400f32, 900f32)));
     app.add_system2(CoreStage::Startup, StartupStage::PreStartup, start);
     app.run();
 }
@@ -39,62 +39,78 @@ fn start(world: &mut World) {
      let ui_camera = Camera::from_2d(ortho);
      let canvas_id = world.spawn_empty().insert(Panel::default()).insert(Transform::default()).insert(ui_camera).insert(UICanvas::default()).id();
      
-     //test_flex_no_wrap(world, canvas_id, bg_index, sprite_index);
-     test_flex_wrap(world, canvas_id, bg_index, sprite_index);
-}
-
-fn test_flex_wrap(world: &mut World, canvas_id: Entity, bg_index: u32, sprite_index: u32) {
-    let view = LayoutElement::create_view();
-    world.spawn((Sprite::sliced(bg_index, Thickness::new1(35f32), Vec4::ONE),view,Rect2D::default(),Transform::default())).set_parent(Some(canvas_id));
-
-    let mut flex = LayoutElement::create_flex(FlexLayout {
-       
-        align_content:FlexAlignContent::Stretch,
-        warp:FlexWrap::Wrap,
-        ..Default::default()
-     });
-     flex.common.padding = Thickness::new1(20f32);
-     let flex_id = world.spawn((flex,Rect2D::default(),Panel::default(),Transform::default())).set_parent(Some(canvas_id)).id();
-     for _ in 0..16 {
-        let item = FlexItem::default();
-        let t = Transform::default();
-        let mut view = LayoutElement::create_view();
-        view.common.ui_size = UISize::from_number(Vec2::new(100f32, 60f32));
-        world.spawn((Sprite::sliced(sprite_index,Thickness::new1(20f32), Vec4::ONE),Rect2D::default(),t,view,item)).set_parent(Some(flex_id));
-     }
-
-}
-
-fn test_flex_no_wrap(world: &mut World, canvas_id: Entity, bg_index: u32, sprite_index: u32) {
-    for idx in 0..5 {
-        let mut view = LayoutElement::create_view();
-        view.common.hor = LayoutAlignment::Stretch;
-        view.common.ver = LayoutAlignment::Start;
-        view.common.margin.top = idx as f32 * 100f32;
-        view.common.ui_size.height = SizeValue::Pixel(100f32);
-        world.spawn((Sprite::sliced(bg_index, Thickness::new1(35f32), Vec4::ONE),view,Rect2D::default(),Transform::default())).set_parent(Some(canvas_id));
-     }
-     let justify = vec![FlexJustify::Start,FlexJustify::End,FlexJustify::Center,FlexJustify::SpaceBetween,FlexJustify::SpaceAround];
-     for idx in 0..5 {
+     let no_wrap_size = Vec2::new(466f32, 100f32);
+     let nowrap_infos = vec![(Vec2::ZERO,FlexJustify::Start),
+                             (Vec2::new(466f32, 0f32),FlexJustify::Center),
+                             (Vec2::new(932f32, 0f32),FlexJustify::End),
+                             (Vec2::new(0f32, 100f32),FlexJustify::SpaceBetween),
+                             (Vec2::new(466f32, 100f32),FlexJustify::SpaceAround)];
+     
+     for info in nowrap_infos {
+        create_background(world, info.0, no_wrap_size, canvas_id, bg_index);
         let mut flex = LayoutElement::create_flex(FlexLayout {
-            align_items: FlexAlignItems::Center,
-            justify: justify[idx],
+            justify:info.1,
+            warp:FlexWrap::NoWrap,
             ..Default::default()
          });
          flex.common.ver = LayoutAlignment::Start;
-         flex.common.hor = LayoutAlignment::Stretch;
-         flex.common.margin.top = idx as f32 * 100f32;
-         flex.common.margin.left = 10f32;
-         flex.common.margin.right = 10f32;
-         flex.common.ui_size.height = SizeValue::Pixel(100f32);
-        
+         flex.common.hor = LayoutAlignment::Start;
+         flex.common.margin.top = info.0.y;
+         flex.common.margin.left = info.0.x;
+         flex.common.padding = Thickness::new1(10f32);
+         flex.common.ui_size = UISize::from_number(no_wrap_size);
          let flex_id = world.spawn((flex,Rect2D::default(),Panel::default(),Transform::default())).set_parent(Some(canvas_id)).id();
          for _ in 0..3 {
             let item = FlexItem::default();
             let t = Transform::default();
             let mut view = LayoutElement::create_view();
+            
             view.common.ui_size = UISize::from_number(Vec2::new(100f32, 60f32));
+            
             world.spawn((Sprite::sliced(sprite_index,Thickness::new1(20f32), Vec4::ONE),Rect2D::default(),t,view,item)).set_parent(Some(flex_id));
          }
      }
+     let wrap_infos = vec![FlexAlignContent::Start,FlexAlignContent::Center,FlexAlignContent::End,
+                          FlexAlignContent::Stretch,FlexAlignContent::SpaceBetween,FlexAlignContent::SpaceAround];
+     let wrap_size = Vec2::new(233f32, 700f32);
+     for idx in 0..6 {
+        let cur_x = idx as f32 * 233f32;
+        let cur_y = 200f32;
+        create_background(world, Vec2::new(cur_x, cur_y), wrap_size, canvas_id, bg_index);
+        let mut flex = LayoutElement::create_flex(FlexLayout {
+            align_items:FlexAlignItems::Start,
+            align_content:wrap_infos[idx],
+            warp:FlexWrap::Wrap,
+            ..Default::default()
+        });
+        flex.common.hor = LayoutAlignment::Start;
+        flex.common.ver = LayoutAlignment::Start;
+        flex.common.ui_size = UISize::from_number(wrap_size);
+        flex.common.margin.top = cur_y;
+        flex.common.margin.left = cur_x;
+        flex.common.padding.left = 15f32;
+        flex.common.padding.top = 15f32;
+        flex.common.padding.bottom = 15f32;
+        let flex_id = world.spawn((flex,Rect2D::default(),Panel::default(),Transform::default())).set_parent(Some(canvas_id)).id();
+        for _ in 0..6 {
+            let item = FlexItem::default();
+            let t = Transform::default();
+            let mut view = LayoutElement::create_view();
+
+            view.common.ui_size = UISize::from_number(Vec2::new(100f32, 60f32));
+            world.spawn((Sprite::sliced(sprite_index,Thickness::new1(20f32), Vec4::ONE),Rect2D::default(),t,view,item)).set_parent(Some(flex_id));
+        }
+     }
 }
+
+fn create_background(world:&mut World,pos:Vec2,size:Vec2,canvas_id: Entity, bg_index: u32) {
+    let mut view = LayoutElement::create_view();
+    view.common.margin.top = pos.y;
+    view.common.margin.left = pos.x;
+    view.common.hor = LayoutAlignment::Start;
+    view.common.ver = LayoutAlignment::Start;
+    view.common.ui_size = UISize::from_number(size);
+    world.spawn((Sprite::sliced(bg_index, Thickness::new1(35f32), Vec4::ONE),view,Rect2D::default(),Transform::default())).set_parent(Some(canvas_id));
+}
+
+

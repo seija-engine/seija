@@ -10,7 +10,7 @@ use bevy_ecs::prelude::*;
 use seija_transform::Transform;
 //暂时废弃
 pub fn main() {
-    let mut app = init_core_app("fxaa_render.clj",vec![]);
+    let mut app = init_core_app("fxaa_render.clj",vec![],None);
     app.add_system2(CoreStage::Startup, StartupStage::PreStartup, start);
     app.add_system(CoreStage::Update, update_camera_trans_system);
     app.run();

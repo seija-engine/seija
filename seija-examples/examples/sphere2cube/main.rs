@@ -9,7 +9,7 @@ use seija_template::Template;
 use seija_transform::Transform;
 
 fn main() {
-    let mut app = init_core_app("FRPRender.clj",vec![]);
+    let mut app = init_core_app("FRPRender.clj",vec![],None);
     app.add_system2(CoreStage::Startup, StartupStage::Startup, on_start);
     app.add_system(CoreStage::Update, update_camera_trans_system);
     

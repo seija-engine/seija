@@ -9,7 +9,7 @@ use seija_render::{resource::{Mesh}, material::Material, SceneOctreeModule};
 use bevy_ecs::prelude::*;
 use seija_transform::Transform;
 pub fn main() {
-    let mut app = init_core_app("FRPRender.clj",vec![]);
+    let mut app = init_core_app("FRPRender.clj",vec![],None);
     app.add_module(SceneOctreeModule);
     app.add_system2(CoreStage::Startup, StartupStage::PreStartup, start);
     app.add_system(CoreStage::Update, update_camera_trans_system);
