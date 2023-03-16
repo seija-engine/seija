@@ -77,12 +77,16 @@ fn start(world: &mut World) {
         let cur_x = idx as f32 * 233f32;
         let cur_y = 200f32;
         create_background(world, Vec2::new(cur_x, cur_y), wrap_size, canvas_id, bg_index);
+        let align_items = if wrap_infos[idx] == FlexAlignContent::Stretch {
+           FlexAlignItems::Stretch
+        } else { FlexAlignItems::Start };
         let mut flex = LayoutElement::create_flex(FlexLayout {
-            align_items:FlexAlignItems::Start,
+            align_items,
             align_content:wrap_infos[idx],
             warp:FlexWrap::Wrap,
             ..Default::default()
         });
+        
         flex.common.hor = LayoutAlignment::Start;
         flex.common.ver = LayoutAlignment::Start;
         flex.common.ui_size = UISize::from_number(wrap_size);
@@ -96,8 +100,11 @@ fn start(world: &mut World) {
             let item = FlexItem::default();
             let t = Transform::default();
             let mut view = LayoutElement::create_view();
-
+            
             view.common.ui_size = UISize::from_number(Vec2::new(100f32, 60f32));
+            if wrap_infos[idx] == FlexAlignContent::Stretch {
+                view.common.ui_size.height = SizeValue::Auto;
+            }
             world.spawn((Sprite::sliced(sprite_index,Thickness::new1(20f32), Vec4::ONE),Rect2D::default(),t,view,item)).set_parent(Some(flex_id));
         }
      }

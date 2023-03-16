@@ -3,6 +3,7 @@ use seija_core::math::Vec2;
 use crate::layout::{types::LayoutElement, system::LayoutParams};
 use super::{types::{TypeElement, LayoutAlignment, UISize, SizeValue}, comps::{StackLayout, FlexLayout, Orientation, FlexWrap, FlexDirection, FlexAlignItems, FlexAlignContent}, VIEW_ID};
 
+//parent_size是给子元素的实际可用空间，去除了margin和padding
 
 pub fn measure_layout_element(entity:Entity,parent_size:Vec2,params:&LayoutParams) {
    let element = params.elems.get(entity).ok().unwrap_or(&VIEW_ID);
@@ -205,11 +206,11 @@ fn measure_view_element(entity:Entity,parent_size:Vec2,force_size:Option<Vec2>,e
    self_size
 }
 
-fn measure_stack_element(entity:Entity,stack:&StackLayout,parent_size:Vec2,force_size:Option<Vec2>,element:&LayoutElement,params:&LayoutParams) -> Vec2 {
+fn measure_stack_element(entity:Entity,_:&StackLayout,parent_size:Vec2,force_size:Option<Vec2>,element:&LayoutElement,params:&LayoutParams) -> Vec2 {
    let self_size:Vec2 = force_size.unwrap_or_else(|| measure_self_size(entity, parent_size, element, params));
    if let Ok(childs_comp) = params.childrens.get(entity) {
       for child_entity in childs_comp.iter() {
-         measure_layout_element(*child_entity, element.common.padding.sub2size(self_size),params);
+         measure_layout_element(*child_entity,element.common.margin.sub2size(element.common.padding.sub2size(self_size)),params);
       }
    }
    self_size
@@ -239,7 +240,7 @@ fn axis2vec2(direction: FlexDirection,main:f32,cross:f32) -> Vec2 {
 
 fn measure_flex_nowrap_element(entity:Entity,flex:&FlexLayout,parent_size:Vec2,force_size:Option<Vec2>,element:&LayoutElement,params:&LayoutParams) -> Vec2 {
    let self_size:Vec2 = force_size.unwrap_or_else(|| measure_self_size(entity, parent_size, element, params));
-   let content_size = element.common.padding.sub2size(self_size);
+   let content_size = element.common.margin.sub2size(element.common.padding.sub2size(self_size));
    let main_axis_number = match flex.direction {
       FlexDirection::Column | FlexDirection::ColumnReverse => { self_size.y },
       FlexDirection::Row | FlexDirection::RowReverse => { self_size.x }
@@ -324,7 +325,7 @@ fn grow_no_warp(entity:Entity,child_size_lst:Vec<Vec2>,flex:&FlexLayout,all_grow
 
 fn measure_flex_wrap_element(entity:Entity,flex:&FlexLayout,parent_size:Vec2,force_size:Option<Vec2>,element:&LayoutElement,params:&LayoutParams) -> Vec2 {
    let self_size:Vec2 = force_size.unwrap_or_else(|| measure_self_size(entity, parent_size, element, params));
-   let content_size = element.common.padding.sub2size(self_size);
+   let content_size = element.common.margin.sub2size(element.common.padding.sub2size(self_size));
    let (main_axis_number, cross_axis_number) = calc_axis_sizes(flex.direction, content_size);
    if flex.align_content != FlexAlignContent::Stretch && flex.align_items != FlexAlignItems::Stretch {
       for child_entity in params.childrens.get(entity).map(|v| v.iter()).unwrap_or_else(|_| [].iter()) {
