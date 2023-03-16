@@ -8,6 +8,7 @@ pub mod components;
 pub mod mesh2d;
 mod info;
 mod system;
+pub mod event;
 pub mod layout;
 use components::ui_canvas::update_ui_canvas;
 use seija_transform::update_transform_system;
@@ -31,6 +32,7 @@ impl IModule for UIModule {
         app.add_system(CoreStage::PostUpdate, ui_layout_system.before(ui_update_zorders));
         app.add_system(CoreStage::PostUpdate, ui_update_zorders.before(update_transform_system));
         app.add_system(CoreStage::PostUpdate, ui_render_system.after(ui_update_zorders).before(update_transform_system));
+        app.add_system(CoreStage::PostUpdate, event::ui_event_system.after(ui_render_system));
     }
 }
 

@@ -65,6 +65,7 @@ fn winit_runner(event_loop:EventLoop<()>,mut app:App) {
                     }
                     WindowEvent::CursorMoved { position,.. } => {
                         if let Some(mut input) = app.world.get_resource_mut::<Input>() {
+                            input.is_mouse_move = true;
                             input.mouse_position.x = position.x as f32;
                             input.mouse_position.y = position.y as f32;
                         }

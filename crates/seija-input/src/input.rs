@@ -6,6 +6,7 @@ use crate::{keycode::KeyCode, event::MouseButton};
 
 #[derive(Default,Resource)]
 pub struct Input {
+    pub is_mouse_move:bool,
     pub mouse_position:Vec2,
     pub(crate) frame_mouse_wheel:Option<Vec2>,
 
@@ -33,6 +34,7 @@ impl Input {
     pub fn get_mouse_down(&self,mouse:MouseButton) -> bool {
         self.frame_mousedown.contains(&mouse)
     }
+    
 
     pub fn get_mouse_up(&self,mouse:MouseButton) -> bool {
         self.frame_mouseup.contains(&mouse)
@@ -51,5 +53,6 @@ impl Input {
         self.frame_mouseup.clear();
 
         self.frame_mouse_wheel = None;
+        self.is_mouse_move = false;
     }
 }
