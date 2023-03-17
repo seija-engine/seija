@@ -28,7 +28,7 @@ impl Rect2D {
     }
 
 
-    pub fn test(&self,t:&TransformMatrix,pos:Vec3) -> bool {
+    pub fn test(&self,t:&TransformMatrix,pos:Vec2) -> bool {
         if self.width <= 0f32 || self.height <= 0f32 {
             return false;
         }
