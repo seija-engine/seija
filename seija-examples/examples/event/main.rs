@@ -49,6 +49,7 @@ fn start(world: &mut World) {
     let mut t = Transform::default();
     t.local.position = Vec3::new(100f32, 0f32, 0f32);
     let mut event_node = EventNode::default();
+    event_node.use_capture = true;
     world.spawn((event_node,Sprite::sliced(btn4_index, Thickness::new1(35f32), Vec4::ONE),rect2d,t)).set_parent(Some(panel_id));
     
    

@@ -31,6 +31,14 @@ impl Input {
         self.key_pressing.contains(&code)
     }
 
+    pub fn has_mouse_down(&self) -> bool {
+        self.frame_mousedown.len() > 0
+    }
+
+    pub fn has_mouse_up(&self) -> bool {
+        self.frame_mouseup.len() > 0
+    }
+
     pub fn get_mouse_down(&self,mouse:MouseButton) -> bool {
         self.frame_mousedown.contains(&mouse)
     }
