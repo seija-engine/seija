@@ -16,7 +16,8 @@ impl IModule for InputModule {
         app.add_event::<event::MouseInput>();
         app.add_event::<event::MouseWheelInput>();
         
-        app.add_system(CoreStage::PreUpdate, input_system)
+        app.add_system(CoreStage::PreUpdate, input_system);
+        app.add_system(CoreStage::Last, clear_input);
     }
 
     fn start(&self,_world:&mut World) {
@@ -27,7 +28,6 @@ impl IModule for InputModule {
 fn input_system(mut input:ResMut<Input>,mut key_inputs:EventReader<KeyboardInput>,
                                         mut mouse_inputs:EventReader<MouseInput>,
                                         mut mouse_wheel_inputs:EventReader<MouseWheelInput>) {
-    input.clear();
     for key in key_inputs.iter() {
         match key.state {
             InputState::Pressed => {
@@ -57,4 +57,8 @@ fn input_system(mut input:ResMut<Input>,mut key_inputs:EventReader<KeyboardInput
     for mouse_wheel in mouse_wheel_inputs.iter() {
         input.frame_mouse_wheel = Some(mouse_wheel.delta);
     }
+}
+
+fn clear_input(mut input:ResMut<Input>) {
+    input.clear();
 }

@@ -1,6 +1,7 @@
+use event::UIEvent;
 use layout::system::ui_layout_system;
 use seija_app::{IModule, App};
-use seija_core::{CoreStage, StartupStage}; 
+use seija_core::{CoreStage, StartupStage, AddCore}; 
 use seija_app::ecs::prelude::*;
 pub mod types;
 mod sprite_alloc;
@@ -26,6 +27,7 @@ pub struct UIModule;
 impl IModule for UIModule {
     fn init(&mut self,app:&mut App) {
         app.world.insert_resource(SpriteAllocator::new());
+        app.add_event::<UIEvent>();
         app.add_system2(CoreStage::Startup,StartupStage::PostStartup, on_ui_start);
         app.add_system(CoreStage::PreUpdate,update_ui_canvas);
         
