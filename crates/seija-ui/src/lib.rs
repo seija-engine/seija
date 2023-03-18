@@ -4,6 +4,7 @@ use seija_app::{IModule, App};
 use seija_core::{CoreStage, StartupStage, AddCore}; 
 use seija_app::ecs::prelude::*;
 pub mod types;
+mod text;
 mod sprite_alloc;
 pub mod components;
 pub mod mesh2d;
