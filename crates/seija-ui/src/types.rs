@@ -1,5 +1,6 @@
 use bevy_ecs::prelude::{Component, Entity};
 use seija_core::math::Vec2;
+use num_enum::{TryFromPrimitive, IntoPrimitive};
 
 #[derive(Debug,Clone,Default)]
 pub struct Rect<T:Default> {
@@ -46,3 +47,18 @@ pub struct UIZOrder {
     pub last:i32,
     pub value:i32,
 }
+
+#[derive(Copy,Clone,Eq, Debug,PartialEq,TryFromPrimitive,IntoPrimitive)]
+#[repr(u8)]
+pub enum AnchorAlign {
+    TopLeft,
+    Top,
+    TopRight,
+    Left,
+    Center,
+    Right,
+    BottomLeft,
+    Bottom,
+    BottomRight
+}
+

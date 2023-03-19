@@ -2975,12 +2975,14 @@ dependencies = [
  "fnv",
  "glyph_brush",
  "lazy_static",
+ "num_enum",
  "seija-app",
  "seija-asset",
  "seija-core",
  "seija-input",
  "seija-render",
  "seija-transform",
+ "smol",
 ]
 
 [[package]]
