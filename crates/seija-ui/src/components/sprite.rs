@@ -3,7 +3,7 @@ use seija_core::{ math::{Vec4, Mat4}};
 
 use crate::{mesh2d::Mesh2D, types::{Rect, Thickness}, sprite_alloc::alloc::SpriteIndex};
 
-use super::{IBuildMesh2D, rect2d::Rect2D, image_info::{ImageGenericInfo, ImageType}};
+use super::{ rect2d::Rect2D, image_info::{ImageGenericInfo, ImageType}};
 
 
 #[derive(Component)]

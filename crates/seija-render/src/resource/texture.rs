@@ -81,7 +81,7 @@ impl Texture {
         }
         let textures = world.get_resource::<Assets<Texture>>().get()?;
         if let Some(texture) = textures.get(&handle.id) {
-            let mut desc = texture.desc();
+            let desc = texture.desc();
             let texture_id = ctx.resources.create_texture(&desc.desc,&desc.view_desc);
             ctx.resources.set_render_resource(&handle.id, RenderResourceId::TextureView(texture_id), 0);
 

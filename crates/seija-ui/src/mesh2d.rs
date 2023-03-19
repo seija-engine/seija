@@ -1,7 +1,7 @@
 use seija_core::math::{Vec3, Vec4, Vec2};
 use seija_render::{resource::{Mesh, MeshAttributeType, Indices}, wgpu::PrimitiveTopology};
 
-#[derive(Debug)]
+#[derive(Debug,Clone,Default)]
 pub struct Mesh2D {
     pub color:Vec4,
     pub points:Vec<Vertex2D>,
