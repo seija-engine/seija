@@ -2,6 +2,7 @@ use std::collections::HashMap;
 
 use bevy_ecs::{system::{Query,SystemParam, Local, Res,ResMut}, prelude::Entity, query::{Or, Changed}};
 use seija_asset::{Handle, Assets, HandleId};
+use seija_core::math::Vec2;
 use seija_render::resource::{Texture, ImageInfo, TextureDescInfo, TextureType};
 use crate::{components::rect2d::Rect2D, mesh2d::{Vertex2D}};
 use super::{Text, Font};
@@ -81,19 +82,23 @@ fn glyph_to_mesh(vert:GlyphVertex) -> Vec<Vertex2D> {
     let verts = vec![
       Vertex2D {
         pos:[left,top,0f32].into(),
-        uv:[uv.min.x,uv.min.y].into()
+        uv:[uv.min.x,uv.min.y].into(),
+        uv1:Vec2::ZERO
       },
       Vertex2D {
         pos:[right,top,0f32].into(),
-        uv:[uv.max.x,uv.min.y].into()
+        uv:[uv.max.x,uv.min.y].into(),
+        uv1:Vec2::ZERO
       },
       Vertex2D {
         pos:[left,bottom,0f32].into(),
-        uv:[uv.min.x,uv.max.y].into()
+        uv:[uv.min.x,uv.max.y].into(),
+        uv1:Vec2::ZERO
       },
       Vertex2D {
         pos:[right,bottom,0f32].into(),
-        uv:[uv.max.x,uv.max.y].into()
+        uv:[uv.max.x,uv.max.y].into(),
+        uv1:Vec2::ZERO
       }];
     verts
 }

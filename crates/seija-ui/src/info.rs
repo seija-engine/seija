@@ -32,10 +32,11 @@ impl RenderDrawCall {
             sprite_entity.hash(&mut hasher);
             if let Ok((_,sprite,rect2d)) = params.sprites.get(*sprite_entity) {
                 if let Some(sprite_index) = sprite.sprite_index {
-                    if let Some(info) = params.sprite_alloc.get_sprite_info(sprite_index) {
+                    if let Some((info,index)) = params.sprite_alloc.get_sprite_info(sprite_index) {
                         let mat4 = params.calc_trans(*sprite_entity, Some(panel_entity));
                         let zorder_value = params.zorders.get(*sprite_entity).map(|z| z.value).unwrap_or_default();
-                        let mesh2d = sprite.build(rect2d,info.uv.clone(),&mat4,&info.rect,zorder_value as f32 * 0.01f32);
+                        let mesh2d = sprite.build(rect2d,info.uv.clone(),index.atlas_index,&mat4,&info.rect,zorder_value as f32 * 0.01f32);
+
 
                         points.extend(mesh2d.points.iter());
                         indexs.extend(mesh2d.indexs.iter().map(|v| v + index_offset));

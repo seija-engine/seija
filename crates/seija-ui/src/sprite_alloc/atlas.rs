@@ -8,6 +8,7 @@ pub struct SpriteInfo {
 }
 
 pub struct DynamicAtlas {
+    pub is_text_atlas:bool,
     pub cache_buffer:Option<BufferId>,
     pub texture:Option<TextureId>,
     pub width:u32,
@@ -17,9 +18,10 @@ pub struct DynamicAtlas {
 }
 
 impl DynamicAtlas {
-    pub fn new(width:u32,height:u32) -> Self {
+    pub fn new(width:u32,height:u32,is_text:bool) -> Self {
         let free_node = Rect { x:0 , y:0 ,width, height };
         DynamicAtlas {
+            is_text_atlas: is_text,
             cache_buffer:None,
             texture:None, 
             width, 

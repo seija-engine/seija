@@ -5,7 +5,7 @@ use seija_core::{IDGenU32, anyhow::anyhow};
 use super::atlas::{DynamicAtlas, SpriteInfo};
 use seija_core::anyhow::Result;
 
-#[derive(Debug)]
+#[derive(Debug,Clone, Copy)]
 pub struct IndexInfo {
     pub atlas_index:usize,
     pub sprite_index:usize
@@ -24,7 +24,7 @@ impl SpriteAllocator {
         SpriteAllocator { 
             id_map:FnvHashMap::default(),
             id_gen:IDGenU32::new(), 
-            atlas_list: vec![DynamicAtlas::new(2048, 2048)] 
+            atlas_list: vec![DynamicAtlas::new(2048, 2048,true)] 
         }
     }
 }
@@ -39,6 +39,9 @@ impl SpriteAllocator {
         let new_index = self.id_gen.next();
         for idx in 0.. self.atlas_list.len() {
             let dyn_atlas = &mut self.atlas_list[idx];
+            if dyn_atlas.is_text_atlas {
+                continue;
+            }
             if let Some(index) = dyn_atlas.insert(image_info.width,image_info.height) {
                 dyn_atlas.used_sprites[index].image = Some(image_info);
                 let sprite_index = IndexInfo { atlas_index:idx,sprite_index:index };
@@ -47,7 +50,7 @@ impl SpriteAllocator {
             }
         }
 
-        let mut new_atlas = DynamicAtlas::new(2048, 2048);
+        let mut new_atlas = DynamicAtlas::new(2048, 2048,false);
         if let Some(index) = new_atlas.insert(image_info.width, image_info.height) {
             new_atlas.used_sprites[index].image = Some(image_info);
             self.atlas_list.push(new_atlas);
@@ -58,10 +61,10 @@ impl SpriteAllocator {
         Err(anyhow!("image size > 2048"))
     }
 
-    pub fn get_sprite_info(&self,key:u32) -> Option<&SpriteInfo> {
+    pub fn get_sprite_info(&self,key:u32) -> Option<(&SpriteInfo,IndexInfo)> {
         if let Some(index) = self.id_map.get(&key) {
             let sprite_info = &self.atlas_list[index.atlas_index].used_sprites[index.sprite_index];
-            return Some(sprite_info);
+            return Some((sprite_info,*index));
         }
         None
     }
