@@ -1,7 +1,5 @@
 use std::num::NonZeroU32;
-
-use bevy_ecs::world::World;
-use seija_render::{RenderContext, pipeline::render_bindings::{BindGroupLayoutBuilder, BindGroupBuilder}};
+use seija_render::{RenderContext};
 use seija_core::{log,anyhow::Result, OptionExt};
 use crate::SpriteAllocator;
 use seija_render::wgpu;
@@ -10,15 +8,16 @@ use super::atlas::DynamicAtlas;
 
 
 
-pub fn update_sprite_alloc_render(world:&mut World,ctx:&mut RenderContext) {
-    let mut sprite_allocator = world.get_resource_mut::<SpriteAllocator>().unwrap();
-    check_init_dyn_atlas(&mut sprite_allocator.atlas_list, ctx);
+pub fn update_sprite_alloc_render(ctx:&mut RenderContext,sprite_allocator:&mut SpriteAllocator) -> bool {
+    let has_dirty = check_init_dyn_atlas(&mut sprite_allocator.atlas_list, ctx);
+    
     for dyn_atlas in sprite_allocator.atlas_list.iter_mut() {
         if let Err(err) = process_sprite_atlas(dyn_atlas, ctx) {
             log::error!("{:?}",err);
         }
     }
-    
+
+    has_dirty
 }
 
 fn process_sprite_atlas(dyn_atlas:&mut DynamicAtlas,ctx:&mut RenderContext) -> Result<()> {
@@ -61,7 +60,7 @@ fn process_sprite_atlas(dyn_atlas:&mut DynamicAtlas,ctx:&mut RenderContext) -> R
     Ok(())
 }
 
-fn check_init_dyn_atlas(atlas_list:&mut Vec<DynamicAtlas>,ctx:&mut RenderContext) {
+fn check_init_dyn_atlas(atlas_list:&mut Vec<DynamicAtlas>,ctx:&mut RenderContext) -> bool {
     let mut has_atlas_dirty = false;
     for dyn_atlas in atlas_list.iter_mut() {
         //create texture
@@ -98,36 +97,7 @@ fn check_init_dyn_atlas(atlas_list:&mut Vec<DynamicAtlas>,ctx:&mut RenderContext
             dyn_atlas.cache_buffer = Some(buffer_id);
         }
     }
-
-    if has_atlas_dirty {
-       if let Err(err) = set_atlas_layout_and_bindgroup(&atlas_list,ctx) {
-         log::error!("set_atlas_layout_and_bindgroup:{:?}",err);
-       }
-    }
-}
-
-fn set_atlas_layout_and_bindgroup(atlas_list:&Vec<DynamicAtlas>,ctx:&mut RenderContext) -> Result<()> {
-    let mut layout_builder = BindGroupLayoutBuilder::new();
-    layout_builder.add_texture_array(atlas_list.len() as u32, 
-                                     wgpu::ShaderStages::FRAGMENT, 
-                                     wgpu::TextureSampleType::Float { filterable: true });
-    layout_builder.add_sampler(true);
-    let atlas_layout = layout_builder.build(&ctx.device);
-
-    let mut bind_builder = BindGroupBuilder::new();
-    let sample_id = ctx.resources.create_sampler(&wgpu::SamplerDescriptor::default());
-    let mut atlas_textures = vec![];
-    for atlas in atlas_list.iter() {
-        if let Some(texture_id) = atlas.texture.as_ref() {
-            atlas_textures.push(texture_id.clone());
-        }
-    }
-    
-    bind_builder.add_texture_array(atlas_textures, sample_id);
-    let bind_group = bind_builder.build(&atlas_layout, &ctx.device,&ctx.resources);
+    has_atlas_dirty
    
-    ctx.ubo_ctx.set_layout("UIAtlas", atlas_layout)?;
-    let index = ctx.ubo_ctx.get_index("UIAtlas").get()?;
-    ctx.ubo_ctx.set_bind_group(&index, None, bind_group);
-    Ok(())
 }
+

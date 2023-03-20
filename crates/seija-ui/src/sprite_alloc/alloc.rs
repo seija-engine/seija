@@ -24,7 +24,7 @@ impl SpriteAllocator {
         SpriteAllocator { 
             id_map:FnvHashMap::default(),
             id_gen:IDGenU32::new(), 
-            atlas_list: vec![] 
+            atlas_list: vec![DynamicAtlas::new(2048, 2048)] 
         }
     }
 }

@@ -9,7 +9,10 @@ use seija_render::{
 };
 use seija_ui::layout::comps::FlexAlignContent;
 use seija_transform::{Transform, IEntityChildren};
-use seija_ui::{  update_sprite_alloc_render, SpriteAllocator, components::{panel::Panel, ui_canvas::UICanvas, sprite::Sprite, rect2d::Rect2D}, layout::{types::{LayoutElement, LayoutAlignment, SizeValue, UISize}, comps::{FlexLayout, FlexItem}}, types::Thickness };
+use seija_ui::{update_ui_render, SpriteAllocator, 
+               components::{panel::Panel, ui_canvas::UICanvas, 
+               sprite::Sprite, rect2d::Rect2D}, 
+               layout::{types::{LayoutElement, LayoutAlignment, SizeValue, UISize}, comps::{FlexLayout, FlexItem}}, types::Thickness };
 
 
 fn load_sprite(path:&str,server:&AssetServer,sprite_alloc:&mut SpriteAllocator) -> u32 {
@@ -20,7 +23,7 @@ fn load_sprite(path:&str,server:&AssetServer,sprite_alloc:&mut SpriteAllocator) 
 }
 
 fn main() {
-    let mut app = init_core_app("FRPRender.clj", vec![update_sprite_alloc_render],Some(Vec2::new(1400f32, 900f32)));
+    let mut app = init_core_app("FRPRender.clj", vec![update_ui_render],Some(Vec2::new(1400f32, 900f32)));
     app.add_system2(CoreStage::Startup, StartupStage::PreStartup, start);
     app.run();
 }

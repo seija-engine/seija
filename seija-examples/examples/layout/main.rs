@@ -13,7 +13,7 @@ use seija_transform::{IEntityChildren,Transform};
 use seija_ui::{
     components::{panel::Panel, rect2d::Rect2D, sprite::Sprite, ui_canvas::UICanvas},
     types::Thickness,
-    update_sprite_alloc_render, SpriteAllocator, layout::{types::{LayoutElement, LayoutAlignment, SizeValue}, comps::Orientation},
+    update_ui_render, SpriteAllocator, layout::{types::{LayoutElement, LayoutAlignment, SizeValue}, comps::Orientation},
 };
 
 #[derive(Default, Resource)]
@@ -23,7 +23,7 @@ pub struct UIData {
 
 
 fn main() {
-    let mut app = init_core_app("FRPRender.clj", vec![update_sprite_alloc_render],None);
+    let mut app = init_core_app("FRPRender.clj", vec![update_ui_render],None);
     app.add_system2(CoreStage::Startup, StartupStage::PreStartup, start);
     app.add_system(CoreStage::Update, on_update);
 

@@ -14,7 +14,7 @@ use seija_transform::{hierarchy::Parent, BuildChildren, IEntityChildren, PushChi
 use seija_ui::{
     components::{panel::Panel, rect2d::Rect2D, sprite::Sprite, ui_canvas::UICanvas},
     types::Thickness,
-    update_sprite_alloc_render, SpriteAllocator, event::{UIEventSystem, EventNode, UIEvent, UIEventType},
+    update_ui_render, SpriteAllocator, event::{UIEventSystem, EventNode, UIEvent, UIEventType},
 };
 
 #[derive( Resource)]
@@ -31,7 +31,7 @@ pub struct UIData {
 }
 
 fn main() {
-    let mut app = init_core_app("FRPRender.clj", vec![update_sprite_alloc_render],None);
+    let mut app = init_core_app("FRPRender.clj", vec![update_ui_render],None);
     app.add_system2(CoreStage::Startup, StartupStage::PreStartup, start);
     app.add_system(CoreStage::Update, on_update);
 

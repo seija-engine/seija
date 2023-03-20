@@ -12,10 +12,11 @@ pub mod mesh2d;
 mod info;
 mod system;
 pub mod event;
+mod render;
 pub mod layout;
 use components::ui_canvas::update_ui_canvas;
+pub use render::update_ui_render;
 use seija_transform::update_transform_system;
-pub use sprite_alloc::system::update_sprite_alloc_render;
 pub use sprite_alloc::alloc::SpriteAllocator;
 
 use system::{ui_render_system, on_ui_start, ui_update_zorders};
@@ -52,6 +53,5 @@ impl IModule for UIModule {
        
     }
 }
-
 
 

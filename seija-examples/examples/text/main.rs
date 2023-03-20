@@ -5,10 +5,10 @@ use seija_core::{CoreStage, StartupStage};
 use seija_examples::init_core_app;
 use seija_render::{camera::camera::{Orthographic, Camera}, resource::load_image_info};
 use seija_transform::{Transform, IEntityChildren};
-use seija_ui::{update_sprite_alloc_render, text::{Font, Text}, event::UIEventSystem, components::{ui_canvas::UICanvas, rect2d::Rect2D, sprite::Sprite, panel::Panel}, SpriteAllocator, types::Thickness};
+use seija_ui::{update_ui_render, text::{Font, Text}, event::UIEventSystem, components::{ui_canvas::UICanvas, rect2d::Rect2D, sprite::Sprite, panel::Panel}, SpriteAllocator, types::Thickness};
 
 fn main() {
-    let mut app = init_core_app("FRPRender.clj", vec![update_sprite_alloc_render],None);
+    let mut app = init_core_app("FRPRender.clj", vec![update_ui_render],None);
     app.add_system2(CoreStage::Startup, StartupStage::PreStartup, start);
 
     app.run();
