@@ -237,7 +237,11 @@ fn write_ubo_uniform<W:Write>(info:&UniformInfo, writer:&mut W,index:usize) {
         if texture_prop.is_cubemap {
             writer.write_str(&format!("layout(set = {}, binding = {}) uniform textureCube {}_{};\r\n",index,binding_index,&low_name,&texture_prop.name)).unwrap();
         } else {
-            writer.write_str(&format!("layout(set = {}, binding = {}) uniform {} {}_{};\r\n",index,binding_index,&texture_prop.str_type,&low_name,&texture_prop.name)).unwrap();
+            if texture_prop.str_type.as_str() == "texture2DArray"  {
+                writer.write_str("//skip texture array\r\n").unwrap();
+            } else {
+                writer.write_str(&format!("layout(set = {}, binding = {}) uniform {} {}_{};\r\n",index,binding_index,&texture_prop.str_type,&low_name,&texture_prop.name)).unwrap();
+            }
         }
         binding_index += 1;
         writer.write_str(&format!("layout(set = {}, binding = {}) uniform sampler {}_{}S;\r\n",index,binding_index,&low_name,&texture_prop.name)).unwrap();

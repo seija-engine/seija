@@ -52,7 +52,7 @@ impl BindGroupLayoutBuilder {
         let entry = wgpu::BindGroupLayoutEntry {
             binding:self.layout_entrys.len() as u32,
             visibility,
-            ty:wgpu::BindingType::Texture { sample_type, view_dimension: wgpu::TextureViewDimension::D2Array, multisampled: false },
+            ty:wgpu::BindingType::Texture { sample_type, view_dimension: wgpu::TextureViewDimension::D2, multisampled: false },
             count:Some(NonZeroU32::new(count).unwrap())
         };
        

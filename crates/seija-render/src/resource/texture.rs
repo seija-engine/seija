@@ -113,6 +113,7 @@ impl Default for TextureDescInfo {
                 sample_count:1,
                 dimension:wgpu::TextureDimension::D2,
                 format:wgpu::TextureFormat::Rgba32Float,
+                view_formats:&[],
                 //TODO ?
                 usage:wgpu::TextureUsages::TEXTURE_BINDING | wgpu::TextureUsages::RENDER_ATTACHMENT | wgpu::TextureUsages::COPY_DST
             }, 

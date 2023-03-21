@@ -76,10 +76,11 @@ fn check_init_dyn_atlas(atlas_list:&mut Vec<DynamicAtlas>,ctx:&mut RenderContext
                 sample_count: 1, 
                 dimension: wgpu::TextureDimension::D2, 
                 format: wgpu::TextureFormat::Rgba8Unorm, 
-                usage: wgpu::TextureUsages::COPY_DST | wgpu::TextureUsages::TEXTURE_BINDING
+                usage: wgpu::TextureUsages::COPY_DST | wgpu::TextureUsages::TEXTURE_BINDING,
+                view_formats:&[]
             };
             let mut view_desc = wgpu::TextureViewDescriptor::default();
-            view_desc.dimension = Some(wgpu::TextureViewDimension::D2Array);
+            view_desc.dimension = Some(wgpu::TextureViewDimension::D2);
             let atlas_texture = ctx.resources.create_texture(&texture_desc, &view_desc);
             dyn_atlas.texture = Some(atlas_texture);
             has_atlas_dirty = true;

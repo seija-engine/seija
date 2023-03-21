@@ -358,6 +358,7 @@ impl RenderResources {
                 width:w,
                 height:h,
                 present_mode: if vsync {wgpu::PresentMode::Fifo} else {wgpu::PresentMode::Immediate},
+                view_formats:vec![wgpu::TextureFormat::Bgra8UnormSrgb],
                 alpha_mode:wgpu::CompositeAlphaMode::Auto
             };
             surface.configure(&self.device, &config);

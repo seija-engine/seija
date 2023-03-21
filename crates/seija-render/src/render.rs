@@ -65,7 +65,7 @@ impl AppRender {
     }
 
     async fn create_wgpu(config:Config) -> (Arc<Device>,Instance,Queue) {
-        let instance = wgpu::Instance::new(config.backed);
+        let instance = wgpu::Instance::new(wgpu::InstanceDescriptor { backends: config.backed, ..Default::default() } );
         let adapter = instance
             .request_adapter(&wgpu::RequestAdapterOptions {
                 power_preference: config.power_pref,
@@ -129,7 +129,7 @@ impl AppRender {
         };
         if is_create_window {
             let app_window = world.get_resource::<AppWindow>().unwrap();   
-            let surface = unsafe { self.instance.create_surface(app_window) };
+            let surface = unsafe { self.instance.create_surface(app_window) }.unwrap();
             
             render_res.set_main_surface(surface);
             render_res.config_surface(app_window.width(), app_window.height(), app_window.vsync());

@@ -38,7 +38,7 @@ fn set_atlas_layout_and_bindgroup(sprite_alloc:&SpriteAllocator,ctx:&mut RenderC
             atlas_textures.push(texture_id.clone());
         }
     }
-    atlas_textures[0] = atlas_textures[1];
+    //atlas_textures[0] = atlas_textures[1];
     
     bind_builder.add_texture_array(atlas_textures, sample_id);
     let bind_group = bind_builder.build(&atlas_layout, &ctx.device,&ctx.resources);
