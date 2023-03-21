@@ -1,10 +1,11 @@
 use bevy_ecs::prelude::Component;
 use seija_core::{ math::{Vec4, Mat4}};
 
-use crate::{mesh2d::Mesh2D, types::{Rect, Thickness}, sprite_alloc::alloc::SpriteIndex};
+use crate::{mesh2d::Mesh2D, types::{Rect, Thickness}};
 
 use super::{ rect2d::Rect2D, image_info::{ImageGenericInfo, ImageType}};
 
+type SpriteIndex = usize;
 
 #[derive(Component)]
 pub struct Sprite {

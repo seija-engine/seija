@@ -5,7 +5,7 @@ use seija_core::{CoreStage, StartupStage};
 use seija_examples::init_core_app;
 use seija_render::{camera::camera::{Orthographic, Camera}, resource::load_image_info};
 use seija_transform::{Transform, IEntityChildren};
-use seija_ui::{update_ui_render, text::{Font, Text}, event::UIEventSystem, components::{ui_canvas::UICanvas, rect2d::Rect2D, sprite::Sprite, panel::Panel}, SpriteAllocator, types::Thickness};
+use seija_ui::{update_ui_render, text::{Font, Text}, event::UIEventSystem, components::{ui_canvas::UICanvas, rect2d::Rect2D, sprite::Sprite, panel::Panel}, types::Thickness};
 
 fn main() {
     let mut app = init_core_app("FRPRender.clj", vec![update_ui_render],None);
@@ -15,6 +15,7 @@ fn main() {
 }
 
 fn start(world: &mut World) {
+    /*
     let server = world.get_resource::<AssetServer>().unwrap().clone();
     let mut sprite_alloc = world.get_resource_mut::<SpriteAllocator>().unwrap();
     let btn4_index = sprite_alloc.alloc(load_image_info(server.full_path("ui/Btn4On.png").unwrap()).unwrap()).unwrap();
@@ -42,7 +43,7 @@ fn start(world: &mut World) {
     let t = Transform::default();
     let mut text = Text::new(h_font);
     text.text = "天生万物".to_string();
-    world.spawn((text,rect2d,t)).set_parent(Some(panel_id));
+    world.spawn((text,rect2d,t)).set_parent(Some(panel_id));*/
 }
 
 

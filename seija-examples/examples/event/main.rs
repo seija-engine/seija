@@ -14,9 +14,10 @@ use seija_transform::{hierarchy::Parent, BuildChildren, IEntityChildren, PushChi
 use seija_ui::{
     components::{panel::Panel, rect2d::Rect2D, sprite::Sprite, ui_canvas::UICanvas},
     types::Thickness,
-    update_ui_render, SpriteAllocator, event::{UIEventSystem, EventNode, UIEvent, UIEventType},
+    update_ui_render, event::{UIEventSystem, EventNode, UIEvent, UIEventType},
 };
 
+//TODO FixUIRender
 #[derive( Resource)]
 pub struct UIData {
     btn_entity:Entity,
@@ -33,15 +34,14 @@ pub struct UIData {
 fn main() {
     let mut app = init_core_app("FRPRender.clj", vec![update_ui_render],None);
     app.add_system2(CoreStage::Startup, StartupStage::PreStartup, start);
-    app.add_system(CoreStage::Update, on_update);
+    //app.add_system(CoreStage::Update, on_update);
 
     app.run();
 }
 
 fn start(world: &mut World) {
-   
+    /*
     let server: AssetServer = world.get_resource::<AssetServer>().unwrap().clone();
-    let mut sprite_alloc = world.get_resource_mut::<SpriteAllocator>().unwrap();
     
     let bg_index = sprite_alloc.alloc(load_image_info(server.full_path("ui/lm-db.png").unwrap()).unwrap()).unwrap();
     let btn4down_index = sprite_alloc.alloc(load_image_info(server.full_path("ui/Btn4Down.png").unwrap()).unwrap()).unwrap();
@@ -93,11 +93,11 @@ fn start(world: &mut World) {
         winbtn_0,
         winbtn_1,
         winbtn_2
-    });
+    });*/
 }
 
 
-
+/*
 fn on_update(mut render:EventReader<UIEvent>,mut commands:Commands,
              input: Res<Input>,time: Res<Time>,ui_data: ResMut<UIData>,
              mut sprites: Query<&mut Sprite>) {
@@ -140,3 +140,4 @@ fn on_update(mut render:EventReader<UIEvent>,mut commands:Commands,
         }
     }
 }
+*/

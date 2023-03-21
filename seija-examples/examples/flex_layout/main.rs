@@ -9,18 +9,19 @@ use seija_render::{
 };
 use seija_ui::layout::comps::FlexAlignContent;
 use seija_transform::{Transform, IEntityChildren};
-use seija_ui::{update_ui_render, SpriteAllocator, 
+use seija_ui::{update_ui_render, 
                components::{panel::Panel, ui_canvas::UICanvas, 
                sprite::Sprite, rect2d::Rect2D}, 
                layout::{types::{LayoutElement, LayoutAlignment, SizeValue, UISize}, comps::{FlexLayout, FlexItem}}, types::Thickness };
 
+/*
 
 fn load_sprite(path:&str,server:&AssetServer,sprite_alloc:&mut SpriteAllocator) -> u32 {
     let full_path = server.full_path(path).unwrap();
     let image_info = load_image_info(full_path).unwrap();
     let index = sprite_alloc.alloc(image_info).unwrap();
     index
-}
+}*/
 
 fn main() {
     let mut app = init_core_app("FRPRender.clj", vec![update_ui_render],Some(Vec2::new(1400f32, 900f32)));
@@ -31,6 +32,7 @@ fn main() {
 
 
 fn start(world: &mut World) {
+    /*
     let server: AssetServer = world.get_resource::<AssetServer>().unwrap().clone();
     let mut sprite_alloc = world.get_resource_mut::<SpriteAllocator>().unwrap();
     let bg_index = load_sprite("ui/lm-db.png", &server, &mut sprite_alloc);
@@ -110,10 +112,11 @@ fn start(world: &mut World) {
             }
             world.spawn((Sprite::sliced(sprite_index,Thickness::new1(20f32), Vec4::ONE),Rect2D::default(),t,view,item)).set_parent(Some(flex_id));
         }
-     }
+     }*/
 }
 
 fn create_background(world:&mut World,pos:Vec2,size:Vec2,canvas_id: Entity, bg_index: u32) {
+    /*
     let mut view = LayoutElement::create_view();
     view.common.margin.top = pos.y;
     view.common.margin.left = pos.x;
@@ -121,6 +124,7 @@ fn create_background(world:&mut World,pos:Vec2,size:Vec2,canvas_id: Entity, bg_i
     view.common.ver = LayoutAlignment::Start;
     view.common.ui_size = UISize::from_number(size);
     world.spawn((Sprite::sliced(bg_index, Thickness::new1(35f32), Vec4::ONE),view,Rect2D::default(),Transform::default())).set_parent(Some(canvas_id));
+    */
 }
 
 

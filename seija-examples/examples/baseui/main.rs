@@ -9,12 +9,13 @@ use seija_render::{
     material::Material,
     resource::{load_image_info, Mesh},
 };
+//TODO Fix UIRender
 use seija_template::Template;
 use seija_transform::{hierarchy::Parent, BuildChildren, IEntityChildren, PushChildren, Transform};
 use seija_ui::{
     components::{panel::Panel, rect2d::Rect2D, sprite::Sprite, ui_canvas::UICanvas},
     types::Thickness,
-     SpriteAllocator, update_ui_render,
+     update_ui_render,
 };
 use smallvec::SmallVec;
 
@@ -35,20 +36,21 @@ fn main() {
 }
 
 fn start(world: &mut World) {
+    /*
     let mut ui_data = UIData::default();
     let server: AssetServer = world.get_resource::<AssetServer>().unwrap().clone();
-    let mut sprite_alloc = world.get_resource_mut::<SpriteAllocator>().unwrap();
+    //let mut sprite_alloc = world.get_resource_mut::<SpriteAllocator>().unwrap();
     let btn_path = server.full_path("ui/dl.png").unwrap();
     let btn2_path = server.full_path("ui/Btn_V04.png").unwrap();
     let bg_path = server.full_path("ui/lm-db.png").unwrap();
     let image_info = load_image_info(btn_path).unwrap();
     let image_info2 = load_image_info(btn2_path).unwrap();
     let image_info3 = load_image_info(bg_path).unwrap();
-    let index = sprite_alloc.alloc(image_info).unwrap();
-    let index2 = sprite_alloc.alloc(image_info2).unwrap();
-    let index3 = sprite_alloc.alloc(image_info3).unwrap();
-    let btn3_index = sprite_alloc.alloc(load_image_info(server.full_path("ui/Btn3On.png").unwrap()).unwrap()).unwrap();
-    let btn4_index = sprite_alloc.alloc(load_image_info(server.full_path("ui/Btn4On.png").unwrap()).unwrap()).unwrap();
+    let index = 0usize;//sprite_alloc.alloc(image_info).unwrap();
+    let index2 = 0usize;//sprite_alloc.alloc(image_info2).unwrap();
+    let index3 = 0usize;//sprite_alloc.alloc(image_info3).unwrap();
+    let btn3_index = 0usize;//sprite_alloc.alloc(load_image_info(server.full_path("ui/Btn3On.png").unwrap()).unwrap()).unwrap();
+    let btn4_index = 0usize;//sprite_alloc.alloc(load_image_info(server.full_path("ui/Btn4On.png").unwrap()).unwrap()).unwrap();
 
     let ui_camera = Camera::from_2d(Orthographic::default());
     let canvas_id = world.spawn_empty().insert(Transform::default()).insert(ui_camera).insert(UICanvas::default()).id();
@@ -77,9 +79,10 @@ fn start(world: &mut World) {
    
     ui_data.sprite_index = index2;
     ui_data.parent = Some(panel_id);
-    world.insert_resource(ui_data);
+    world.insert_resource(ui_data);*/
 }
 
+/*
 fn create_panel2(world: &mut World,btn3_index: u32,btn4_index: u32,parent: Option<Entity>) -> Entity {
     let btn3_size = Rect2D::new(100f32, 45f32);
     let mut panel_t = Transform::default();
@@ -117,8 +120,9 @@ fn create_panel2(world: &mut World,btn3_index: u32,btn4_index: u32,parent: Optio
     }
     panel_id
 }
-
+*/
 fn on_update(mut commands: Commands,input: Res<Input>,time: Res<Time>,ui_data: ResMut<UIData>,mut sprites: Query<&mut Sprite>) {
+    /*
     let panel0 = ui_data.parent.unwrap();
     let tick = time.frame();
     use seija_input::keycode::KeyCode;
@@ -128,7 +132,7 @@ fn on_update(mut commands: Commands,input: Res<Input>,time: Res<Time>,ui_data: R
         let t = Transform::default();
         log::error!("sprite add:{}",tick);
         commands.spawn((Sprite::simple(ui_data.sprite_index, Vec4::ONE),rect2d,t)).set_parent(Some(panel0));
-    }
+    }*/
     /*
     if input.get_key_down(KeyCode::U) {
          if let Some(id) = ui_data.btn {

@@ -4,7 +4,7 @@ use seija_asset::{AssetServer};
 use seija_core::{time::Time, CoreStage, StartupStage};
 use seija_examples::{init_core_app};
 use seija_input::Input;
-
+//TODO Fix UIRender
 use seija_render::{
     camera::camera::{Camera, Orthographic},
     resource::{load_image_info},
@@ -13,7 +13,7 @@ use seija_transform::{IEntityChildren,Transform};
 use seija_ui::{
     components::{panel::Panel, rect2d::Rect2D, sprite::Sprite, ui_canvas::UICanvas},
     types::Thickness,
-    update_ui_render, SpriteAllocator, layout::{types::{LayoutElement, LayoutAlignment, SizeValue}, comps::Orientation},
+    update_ui_render, layout::{types::{LayoutElement, LayoutAlignment, SizeValue}, comps::Orientation},
 };
 
 #[derive(Default, Resource)]
@@ -30,19 +30,18 @@ fn main() {
     app.run();
 }
 
-fn load_sprite(path:&str,server:&AssetServer,sprite_alloc:&mut SpriteAllocator) -> u32 {
+fn load_sprite(path:&str,server:&AssetServer) -> usize {
     let full_path = server.full_path(path).unwrap();
     let image_info = load_image_info(full_path).unwrap();
-    let index = sprite_alloc.alloc(image_info).unwrap();
+    let index = 0usize;//sprite_alloc.alloc(image_info).unwrap();
     index
 }
 
 fn start(world: &mut World) {
     let ui_data = UIData::default();
     let server: AssetServer = world.get_resource::<AssetServer>().unwrap().clone();
-    let mut sprite_alloc = world.get_resource_mut::<SpriteAllocator>().unwrap();
-    let bg_index = load_sprite("ui/lm-db.png", &server, &mut sprite_alloc);
-    let sprite_index = load_sprite("ui/Btn4On.png", &server, &mut sprite_alloc);
+    let bg_index = load_sprite("ui/lm-db.png", &server);
+    let sprite_index = load_sprite("ui/Btn4On.png", &server) as u32;
     //CameraCanvas
     let mut ortho = Orthographic::default();
     ortho.far = 1000f32;
@@ -92,7 +91,7 @@ fn create_sprite(world:&mut World,sprite_index:u32,parent:Option<Entity>,ver:Lay
         view_layout.common.ui_size.height = SizeValue::Auto;
     }
     let t = Transform::default();
-    world.spawn((Sprite::sliced(sprite_index,Thickness::new1(20f32), Vec4::ONE),Rect2D::default(),t,view_layout)).set_parent(parent).id()
+    world.spawn((Sprite::sliced(todo!(),Thickness::new1(20f32), Vec4::ONE),Rect2D::default(),t,view_layout)).set_parent(parent).id()
 }
 
 fn on_update(mut commands: Commands,input: Res<Input>,time: Res<Time>,ui_data: ResMut<UIData>,mut sprites: Query<&mut Sprite>) {

@@ -1,25 +1,17 @@
 use bevy_ecs::{world::World};
 use seija_render::{RenderContext, pipeline::render_bindings::{BindGroupLayoutBuilder, BindGroupBuilder}};
-use crate::{sprite_alloc::system::update_sprite_alloc_render, SpriteAllocator};
 use seija_render::wgpu;
 use seija_core::{anyhow, OptionExt};
 use seija_core::log;
 
 
 pub fn update_ui_render(world:&mut World,ctx:&mut RenderContext) {
-    let mut sprite_alloc = world.get_resource_mut::<SpriteAllocator>().unwrap();
-    let has_atlas_dirty = update_sprite_alloc_render(ctx,&mut sprite_alloc);
-
-    if has_atlas_dirty {
-        if let Err(err) = set_atlas_layout_and_bindgroup(&sprite_alloc,ctx) {
-           log::error!("set_atlas_layout_and_bindgroup:{:?}",err);
-        }
-    }
+    
 }
 
 
 
-
+/*
 fn set_atlas_layout_and_bindgroup(sprite_alloc:&SpriteAllocator,ctx:&mut RenderContext) -> anyhow::Result<()> {
     let atlas_list = &sprite_alloc.atlas_list;
     
@@ -47,4 +39,4 @@ fn set_atlas_layout_and_bindgroup(sprite_alloc:&SpriteAllocator,ctx:&mut RenderC
     let index = ctx.ubo_ctx.get_index("UIAtlas").get()?;
     ctx.ubo_ctx.set_bind_group(&index, None, bind_group);
     Ok(())
-}
+}*/
