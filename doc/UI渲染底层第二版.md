@@ -48,22 +48,23 @@ UI渲染载体的目的就是对UI元素进行分组，不然直接对UI元素�
 
 假设一种UI场景，一个多个图片叠加的背景上有两个按钮。按钮有一个背景图和文本。  
 第一个按钮点击的时候按钮的背景会切换。 第二个按钮点击的时候文本会切换并且文字会变色。  
-Panel
-  BG0
-  BG1
-  Btn0 [Canvas]
-   BtnBG
-   Text
-  Btn1 [Canvas]
-   BtnBG
-   Text
-  StaticBtn0
-    BtnBG
-    Text
-  StaticBtn1
-    BtnBG
-    Text
-
+```
+Panel  
+  BG0  
+  BG1  
+  Btn0 [Canvas]  
+   BtnBG  
+   Text  
+  Btn1 [Canvas]  
+   BtnBG  
+   Text  
+  StaticBtn0  
+    BtnBG  
+    Text  
+  StaticBtn1  
+    BtnBG  
+    Text  
+```
  按照树的顺序排序为:[BG0,BG1,StaticBtn0/BtnBG,StaticBtn0/Text,StaticBtn1/BtnBG,StaticBtn1/Text]
 理想情况是有以下drawcall:
 1. [BG0,BG1,StaticBtn0/BtnBG,StaticBtn1/BtnBG]
