@@ -27,7 +27,6 @@ impl IModule for UIModule {
         app.add_event::<UIEvent>();
         app.add_asset::<Font>();
         app.add_asset_loader::<Font,FontLoader>();
-        
          /*
         ui_layout_system
         ui_update_zorders

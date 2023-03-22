@@ -370,15 +370,18 @@ impl RenderResources {
         self.main_surface_texture_view = None;
     }
 
-    pub fn fetch_surface_texture(&mut self) {
+    pub fn fetch_surface_texture(&mut self) -> bool {
         if let Some(surface) = self.main_surface.as_ref() {
             if self.main_surface_texture.is_none() {
-                let surface_texture = surface.get_current_texture().unwrap();
-                let texture_view = surface_texture.texture.create_view(&Default::default());
-                self.main_surface_texture = Some(surface_texture);
-                self.main_surface_texture_view = Some(texture_view);
+                if let Ok(surface_texture) = surface.get_current_texture() {
+                    let texture_view = surface_texture.texture.create_view(&Default::default());
+                    self.main_surface_texture = Some(surface_texture);
+                    self.main_surface_texture_view = Some(texture_view);
+                    return true;
+                }
             }
         }
+        false
     }
 
     pub fn submit_surface_texture(&mut self) {

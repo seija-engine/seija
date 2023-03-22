@@ -1,4 +1,4 @@
-use bevy_ecs::prelude::{Component, Entity};
+use bevy_ecs::prelude::{Component};
 use seija_core::math::Vec2;
 use num_enum::{TryFromPrimitive, IntoPrimitive};
 

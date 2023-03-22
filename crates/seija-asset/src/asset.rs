@@ -8,7 +8,9 @@ use uuid::Uuid;
 
 use crate::errors::AssetError;
 use crate::{AssetServer, HandleUntyped, Assets};
-pub trait Asset : TypeUuid + AssetDynamic { }
+pub trait Asset : TypeUuid + AssetDynamic { 
+    
+}
 
 pub trait AssetDynamic: TypeUuidDynamic + Send + Sync + Downcast + 'static {}
 impl_downcast!(AssetDynamic);

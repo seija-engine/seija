@@ -18,6 +18,7 @@ use seija_ui::{
      update_ui_render,
 };
 use smallvec::SmallVec;
+use spritesheet::SpriteSheet;
 
 #[derive(Default, Resource)]
 pub struct UIData {
@@ -36,6 +37,16 @@ fn main() {
 }
 
 fn start(world: &mut World) {
+    let ui_camera = Camera::from_2d(Orthographic::default());
+    world.spawn_empty().insert(Transform::default()).insert(ui_camera).insert(UICanvas::default());
+    
+    let server = world.get_resource::<AssetServer>().unwrap().clone();
+    let h_sheet = server.load_sync::<SpriteSheet>(world, "ui/ui.json", None).unwrap();
+    let sheets = world.get_resource::<Assets<SpriteSheet>>().unwrap();
+    let ui_sheet = sheets.get(&h_sheet.id);
+    dbg!(ui_sheet);
+
+    world.insert_resource(UIData::default());
     /*
     let mut ui_data = UIData::default();
     let server: AssetServer = world.get_resource::<AssetServer>().unwrap().clone();

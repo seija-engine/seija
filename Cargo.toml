@@ -17,6 +17,7 @@ members = [
     "crates/seija-ui",
     #"crates/tools/material-compiler",
     "crates/tools/mc-cli",
+    "crates/spritesheet",
     "crates/tools/ffi-parser",
     "crates/tools/gltf2template",
     "seija-examples",

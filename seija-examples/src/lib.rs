@@ -17,6 +17,7 @@ use seija_template::TemplateModule;
 use seija_transform::{Transform, TransformModule};
 use seija_ui::UIModule;
 use seija_winit::WinitModule;
+use spritesheet::SpriteSheetModule;
 
 
 pub fn init_core_app(render_file:&str,pre_renders:Vec<fn(world:&mut World,ctx:&mut RenderContext)>,win_size:Option<Vec2>) -> App {
@@ -25,6 +26,7 @@ pub fn init_core_app(render_file:&str,pre_renders:Vec<fn(world:&mut World,ctx:&m
     app.add_module(CoreModule);
     app.add_module(AssetModule(std::env::current_dir().unwrap().join("res").into()));
     app.add_module(InputModule);
+    app.add_module(SpriteSheetModule);
     let mut win  = WinitModule::default();
     win.0.width  = win_size.map(|v| v.x).unwrap_or(640f32);
     win.0.height = win_size.map(|v| v.y).unwrap_or(480f32);

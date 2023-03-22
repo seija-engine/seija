@@ -2830,6 +2830,7 @@ dependencies = [
  "seija-ui",
  "seija-winit",
  "smallvec",
+ "spritesheet",
 ]
 
 [[package]]
@@ -2999,6 +3000,7 @@ dependencies = [
  "seija-render",
  "seija-transform",
  "smol",
+ "spritesheet",
 ]
 
 [[package]]
@@ -3186,6 +3188,19 @@ checksum = "246bfa38fe3db3f1dfc8ca5a2cdeb7348c78be2112740cc0ec8ef18b6d94f830"
 dependencies = [
  "bitflags",
  "num-traits",
+]
+
+[[package]]
+name = "spritesheet"
+version = "0.1.0"
+dependencies = [
+ "relative-path",
+ "seija-app",
+ "seija-asset",
+ "seija-core",
+ "seija-render",
+ "serde",
+ "serde_json",
 ]
 
 [[package]]
