@@ -1,4 +1,4 @@
-use bevy_ecs::{schedule::{SystemLabel, IntoSystemDescriptor}, system::AsSystemLabel};
+use bevy_ecs::{schedule::{SystemLabel}};
 use events::HierarchyEvent;
 use seija_app::IModule;
 use seija_app::App;

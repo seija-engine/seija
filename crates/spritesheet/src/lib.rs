@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 use loader::SpriteSheetLoader;
 use seija_app::IModule;
+use seija_core::Rect;
 use seija_core::type_uuid::{TypeUuid};
 use seija_asset::{Handle, AddAsset};
 use seija_render::resource::Texture;
@@ -27,6 +28,16 @@ pub struct SpriteSheet {
     pub name_dict:HashMap<SmolStr,usize>
 }
 
+impl SpriteSheet {
+    pub fn get_index(&self,name:&str) -> Option<usize> {
+        self.name_dict.get(name).map(|v| *v)
+    }
+
+    pub fn get_info(&self,index:usize) -> Option<&SpriteInfo> {
+        self.sprites.get(index)
+    }
+}
+
 #[derive(Deserialize,Debug)]
 pub struct MetaData {
     pub width:u32,
@@ -38,12 +49,4 @@ pub struct MetaData {
 pub struct SpriteInfo {
     pub rect:Rect<u32>,
     pub uv:Rect<f32>
-}
-
-#[derive(Debug,Clone,Default)]
-pub struct Rect<T:Default> {
-    pub x:T,
-    pub y:T,
-    pub width:T,
-    pub height:T
 }

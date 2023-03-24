@@ -2,14 +2,6 @@ use bevy_ecs::prelude::{Component};
 use seija_core::math::Vec2;
 use num_enum::{TryFromPrimitive, IntoPrimitive};
 
-#[derive(Debug,Clone,Default)]
-pub struct Rect<T:Default> {
-    pub x:T,
-    pub y:T,
-    pub width:T,
-    pub height:T
-}
-
 
 #[derive(PartialEq,Clone,Default)]
 pub struct Thickness {

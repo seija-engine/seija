@@ -1,9 +1,17 @@
-use bevy_ecs::{world::World};
-use seija_render::{RenderContext, pipeline::render_bindings::{BindGroupLayoutBuilder, BindGroupBuilder}};
+use bevy_ecs::{world::World, prelude::Component};
+use seija_asset::Handle;
+use seija_render::{RenderContext, pipeline::render_bindings::{BindGroupLayoutBuilder, BindGroupBuilder}, resource::Texture};
 use seija_render::wgpu;
 use seija_core::{anyhow, OptionExt};
 use seija_core::log;
 
+use crate::mesh2d::Mesh2D;
+
+#[derive(Component,Debug)]
+pub struct UIRender2D {
+   pub texture:Handle<Texture>,
+   pub mesh2d:Mesh2D,
+}
 
 pub fn update_ui_render(world:&mut World,ctx:&mut RenderContext) {
     

@@ -10,7 +10,7 @@ use seija_render::{
 use seija_ui::layout::comps::FlexAlignContent;
 use seija_transform::{Transform, IEntityChildren};
 use seija_ui::{update_ui_render, 
-               components::{panel::Panel, ui_canvas::UICanvas, 
+               components::{canvas::Canvas, ui_canvas::UICanvas, 
                sprite::Sprite, rect2d::Rect2D}, 
                layout::{types::{LayoutElement, LayoutAlignment, SizeValue, UISize}, comps::{FlexLayout, FlexItem}}, types::Thickness };
 

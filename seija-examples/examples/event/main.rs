@@ -12,7 +12,7 @@ use seija_render::{
 use seija_template::Template;
 use seija_transform::{hierarchy::Parent, BuildChildren, IEntityChildren, PushChildren, Transform};
 use seija_ui::{
-    components::{panel::Panel, rect2d::Rect2D, sprite::Sprite, ui_canvas::UICanvas},
+    components::{canvas::Canvas, rect2d::Rect2D, sprite::Sprite, ui_canvas::UICanvas},
     types::Thickness,
     update_ui_render, event::{UIEventSystem, EventNode, UIEvent, UIEventType},
 };

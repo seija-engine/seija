@@ -83,22 +83,18 @@ fn glyph_to_mesh(vert:GlyphVertex) -> Vec<Vertex2D> {
       Vertex2D {
         pos:[left,top,0f32].into(),
         uv:[uv.min.x,uv.min.y].into(),
-        uv1:Vec2::ZERO
       },
       Vertex2D {
         pos:[right,top,0f32].into(),
         uv:[uv.max.x,uv.min.y].into(),
-        uv1:Vec2::ZERO
       },
       Vertex2D {
         pos:[left,bottom,0f32].into(),
         uv:[uv.min.x,uv.max.y].into(),
-        uv1:Vec2::ZERO
       },
       Vertex2D {
         pos:[right,bottom,0f32].into(),
         uv:[uv.max.x,uv.max.y].into(),
-        uv1:Vec2::ZERO
       }];
     verts
 }

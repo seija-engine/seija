@@ -1,7 +1,8 @@
 use event::UIEvent;
+use layout::system::ui_layout_system;
 use seija_app::{IModule, App};
 use seija_asset::AddAsset;
-use seija_core::{CoreStage, AddCore}; 
+use seija_core::{CoreStage, AddCore, StartupStage}; 
 use seija_app::ecs::prelude::*;
 pub mod types;
 pub mod text;
@@ -9,10 +10,13 @@ pub mod components;
 pub mod mesh2d;
 pub mod event;
 mod render;
+mod system;
 pub mod layout;
 use components::ui_canvas::update_ui_canvas;
 pub use render::update_ui_render;
 
+use seija_transform::update_transform_system;
+use system::{on_ui_start, update_render_mesh_system, update_canvas_render};
 use text::{FontLoader, Font};
 #[derive(Clone, Copy,Hash,Debug,PartialEq, Eq,StageLabel)]
 pub enum UIStageLabel {
@@ -35,8 +39,11 @@ impl IModule for UIModule {
         ui_event_system
         update_transform_system
         */
-         //app.add_system2(CoreStage::Startup,StartupStage::PostStartup, on_ui_start);
+         app.add_system2(CoreStage::Startup,StartupStage::PostStartup, on_ui_start);
          app.add_system(CoreStage::PreUpdate,update_ui_canvas);
+         app.add_system(CoreStage::PostUpdate,ui_layout_system.before(update_render_mesh_system));
+         app.add_system(CoreStage::PostUpdate, update_render_mesh_system.before(update_canvas_render));
+         app.add_system(CoreStage::PostUpdate, update_canvas_render.before(update_transform_system));
         //app.add_system(CoreStage::PostUpdate, update_ui_text.before(ui_render_system).after(ui_update_zorders));
         //app.add_system(CoreStage::PostUpdate, ui_layout_system.before(ui_update_zorders));
         //app.add_system(CoreStage::PostUpdate, ui_update_zorders.before(update_transform_system));

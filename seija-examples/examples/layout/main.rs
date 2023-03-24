@@ -11,7 +11,7 @@ use seija_render::{
 };
 use seija_transform::{IEntityChildren,Transform};
 use seija_ui::{
-    components::{panel::Panel, rect2d::Rect2D, sprite::Sprite, ui_canvas::UICanvas},
+    components::{canvas::Canvas, rect2d::Rect2D, sprite::Sprite, ui_canvas::UICanvas},
     types::Thickness,
     update_ui_render, layout::{types::{LayoutElement, LayoutAlignment, SizeValue}, comps::Orientation},
 };
@@ -38,6 +38,7 @@ fn load_sprite(path:&str,server:&AssetServer) -> usize {
 }
 
 fn start(world: &mut World) {
+    /*
     let ui_data = UIData::default();
     let server: AssetServer = world.get_resource::<AssetServer>().unwrap().clone();
     let bg_index = load_sprite("ui/lm-db.png", &server);
@@ -63,7 +64,7 @@ fn start(world: &mut World) {
     create_sprite(world,sprite_index,Some(stack_id),LayoutAlignment::Stretch);
     create_sprite(world,sprite_index,Some(stack_id),LayoutAlignment::Center);
 
-    world.insert_resource(ui_data);
+    world.insert_resource(ui_data);*/
 }
 
 
@@ -77,9 +78,9 @@ fn create_stackpanel(world: &mut World,parent:Option<Entity>) -> Entity {
     stack_layout.common.padding.bottom = 10f32;
     stack_layout.common.hor = LayoutAlignment::Stretch;
     stack_layout.common.ver = LayoutAlignment::End;
-    world.spawn((rect2d,t,stack_layout,Panel::default())).set_parent(parent).id()
+    world.spawn((rect2d,t,stack_layout,Canvas::default())).set_parent(parent).id()
 }
-
+/*
 fn create_sprite(world:&mut World,sprite_index:u32,parent:Option<Entity>,ver:LayoutAlignment) -> Entity {
     let mut view_layout = LayoutElement::create_view();
     view_layout.common.hor = LayoutAlignment::Center;
@@ -93,7 +94,7 @@ fn create_sprite(world:&mut World,sprite_index:u32,parent:Option<Entity>,ver:Lay
     let t = Transform::default();
     world.spawn((Sprite::sliced(todo!(),Thickness::new1(20f32), Vec4::ONE),Rect2D::default(),t,view_layout)).set_parent(parent).id()
 }
-
+*/
 fn on_update(mut commands: Commands,input: Res<Input>,time: Res<Time>,ui_data: ResMut<UIData>,mut sprites: Query<&mut Sprite>) {
     
    

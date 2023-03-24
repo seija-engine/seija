@@ -1,10 +1,10 @@
-use std::collections::{HashMap, HashSet};
+use std::collections::{HashSet};
 
 use bevy_ecs::prelude::{Changed, Entity, Query,Without, Commands, ParamSet};
-use smallvec::SmallVec;
+
 use crate::{hierarchy::{Children, Parent, PreviousParent}, Transform, TransformMatrix, transform::TRANSFORM_MAT_ID};
 
-
+/*
 
 pub(crate) fn parent_update_system(
                                    mut commands: Commands,
@@ -37,7 +37,7 @@ pub(crate) fn parent_update_system(
     }
    
 }
-
+*/
 
 pub fn update_transform_system(
     parent_query: Query<(Entity,Option<&Parent>)>,
