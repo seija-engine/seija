@@ -51,4 +51,3 @@
         return lightChannels | (castShadows ? 0x10000 : 0);
     }
 };
-;

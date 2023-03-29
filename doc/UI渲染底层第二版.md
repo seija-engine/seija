@@ -93,5 +93,7 @@ FGUI默认不是全部打开这个功能的,有些组件是默认打开的,有�
 2. 后续有xaml类似的描述文件后，可能会加入编译期的预扫描，减少运行时消耗。  
 3. 使用Canvas作为渲染载体,Canvas可以嵌套,中间的Canvas会打断合批。
 4. 同Canvas按照深度顺序遍历成列表。
+5. 按照材质不同分割为多个DrawCall,DrawCall按照顺序Entity做一个Hash Key缓存起来。  
+6. 下次有变化的时候，Hash Key不同再进行DrawCall 重建。
 
 

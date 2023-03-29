@@ -1,7 +1,7 @@
 use event::UIEvent;
 use layout::system::ui_layout_system;
 use seija_app::{IModule, App};
-use seija_asset::AddAsset;
+use seija_asset::{AddAsset, AssetStage};
 use seija_core::{CoreStage, AddCore, StartupStage}; 
 use seija_app::ecs::prelude::*;
 pub mod types;
@@ -15,12 +15,15 @@ pub mod layout;
 use components::ui_canvas::update_ui_canvas;
 pub use render::update_ui_render;
 
+use seija_render::RenderStage;
 use seija_transform::update_transform_system;
 use system::{on_ui_start, update_render_mesh_system, update_canvas_render};
 use text::{FontLoader, Font};
 #[derive(Clone, Copy,Hash,Debug,PartialEq, Eq,StageLabel)]
-pub enum UIStageLabel {
-    AfterStartup
+pub enum UIStage {
+    PreUI,
+    UI,
+    PostUI
 }
 
 pub struct UIModule;
@@ -31,6 +34,17 @@ impl IModule for UIModule {
         app.add_event::<UIEvent>();
         app.add_asset::<Font>();
         app.add_asset_loader::<Font,FontLoader>();
+        app.add_system2(CoreStage::Startup,StartupStage::PostStartup, on_ui_start);
+        app.add_system(CoreStage::PreUpdate,update_ui_canvas);
+
+
+        app.schedule.add_stage_before(AssetStage::AssetEvents, UIStage::PostUI, SystemStage::single_threaded());
+        app.schedule.add_stage_before(UIStage::PostUI, UIStage::UI, SystemStage::single_threaded());
+        app.schedule.add_stage_before(UIStage::UI, UIStage::PreUI, SystemStage::single_threaded());
+
+        app.add_system(UIStage::PreUI,ui_layout_system.before(update_render_mesh_system));
+        app.add_system(UIStage::PreUI, update_render_mesh_system);
+        app.add_system(UIStage::UI, update_canvas_render);
          /*
         ui_layout_system
         ui_update_zorders
@@ -39,17 +53,13 @@ impl IModule for UIModule {
         ui_event_system
         update_transform_system
         */
-         app.add_system2(CoreStage::Startup,StartupStage::PostStartup, on_ui_start);
-         app.add_system(CoreStage::PreUpdate,update_ui_canvas);
-         app.add_system(CoreStage::PostUpdate,ui_layout_system.before(update_render_mesh_system));
-         app.add_system(CoreStage::PostUpdate, update_render_mesh_system.before(update_canvas_render));
-         app.add_system(CoreStage::PostUpdate, update_canvas_render.before(update_transform_system));
+        
         //app.add_system(CoreStage::PostUpdate, update_ui_text.before(ui_render_system).after(ui_update_zorders));
         //app.add_system(CoreStage::PostUpdate, ui_layout_system.before(ui_update_zorders));
         //app.add_system(CoreStage::PostUpdate, ui_update_zorders.before(update_transform_system));
         //app.add_system(CoreStage::PostUpdate, ui_render_system.after(ui_update_zorders).before(update_transform_system));
         //app.add_system(CoreStage::PostUpdate, event::ui_event_system.after(ui_render_system));
-
+        
     }
 }
 

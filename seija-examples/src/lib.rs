@@ -33,7 +33,6 @@ pub fn init_core_app(render_file:&str,pre_renders:Vec<fn(world:&mut World,ctx:&m
     app.add_module(win);
     app.add_module(TransformModule);
     app.add_module(TemplateModule);
-    app.add_module(UIModule);
    
     add_render_templates(&mut app);
     app.add_module(GLTFModule);
@@ -46,7 +45,7 @@ pub fn init_core_app(render_file:&str,pre_renders:Vec<fn(world:&mut World,ctx:&m
         pre_render_updates:pre_renders
     };
     app.add_module(RenderModule(Arc::new(render_config)));
-
+    app.add_module(UIModule);
     app.start();
     app
 }
