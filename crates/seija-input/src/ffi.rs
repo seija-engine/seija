@@ -1,5 +1,5 @@
 use seija_app::{App, ecs::world::World};
-use crate::{InputModule, Input, keycode::KeyCode, event::MouseButton};
+use crate::{InputModule, Input, keycode::KeyCode};
 
 #[no_mangle]
 pub unsafe extern "C" fn input_add_module(app_ptr:*mut App) {

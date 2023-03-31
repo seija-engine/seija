@@ -60,5 +60,7 @@ fn start(world: &mut World) {
 
 
 fn on_update(mut commands: Commands,input: Res<Input>,time: Res<Time>,ui_data: ResMut<UIData>,mut sprites: Query<&mut Sprite>) {
-
+   if input.get_key_down(seija_input::keycode::KeyCode::A) {
+    
+   }
 }
