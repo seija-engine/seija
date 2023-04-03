@@ -7,6 +7,8 @@
     ]
     :pass [
         { 
+            ;:z-test "always"
+            ;:z-write false
             :shader { 
                 :name "core.ui" 
                 

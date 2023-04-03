@@ -2,11 +2,13 @@ use std::{hash::{Hash, Hasher}, collections::hash_map::DefaultHasher};
 
 use bevy_ecs::{prelude::{Component, Entity}, system::{Query, Commands}};
 use seija_asset::{HandleId, Assets, AssetServer};
-use seija_core::math::Mat4;
+use seija_core::math::{Mat4, Vec4, Vec4Swizzles};
 use seija_render::{resource::{Mesh, MeshAttributeType, Indices}, wgpu::PrimitiveTopology, material::Material};
-use seija_transform::{hierarchy::Children, Transform};
-
+use seija_transform::{hierarchy::{Children, Parent}, Transform};
 use crate::{render::UIRender2D, system::UIRenderRoot};
+
+const Z_SCALE: f32 = 0.0001;
+
 #[derive(Component,Default)]
 pub struct Canvas {
     draw_calls:Vec<UIDrawCall>,
@@ -18,12 +20,15 @@ impl Canvas {
                            children:&Query<&Children>,
                            uirenders:&Query<&UIRender2D>,
                            canvases:&mut Query<&mut Canvas>,
+                           zorders:&Query<&ZOrder>,
+                           trans:&Query<&Transform>,
+                           parents:&Query<&Parent>,
                            meshes:&mut Assets<Mesh>,
                            materials:&mut Assets<Material>,
                            commands:&mut Commands,
                            ui_roots:&UIRenderRoot,
-                           asset_server:&AssetServer,
-                           parent_mat4:&Mat4) {
+                           asset_server:&AssetServer) {
+        
         let entity_group = ScanDrawCall::scan_entity_group(entity, children, uirenders, canvases);
         if let Ok(canvas) = canvases.get_mut(entity) {
             for (index,draw_entitys) in entity_group.iter().enumerate() {
@@ -36,12 +41,22 @@ impl Canvas {
                     }
                 }
                 commands.entity(entity).despawn();
-                UIDrawCall::form_entity(draw_entitys,uirenders,meshes,materials,ui_roots,commands,asset_server,parent_mat4);
+                UIDrawCall::form_entity(
+                    entity,
+                    draw_entitys,
+                    uirenders,
+                    meshes,
+                    materials,
+                    ui_roots,
+                    commands,
+                    asset_server,
+                    zorders,trans,parents);
             }   
         }
 
     }
 }
+
 
 
 struct UIDrawCall {
@@ -50,14 +65,17 @@ struct UIDrawCall {
 }
 
 impl UIDrawCall {
-    pub fn form_entity(entitys:&Vec<Entity>,
+    pub fn form_entity(canvas_entity:Entity,
+                       entitys:&Vec<Entity>,
                        render2ds:&Query<&UIRender2D>,
                        meshes:&mut Assets<Mesh>,
                        materials:&mut Assets<Material>,
                        ui_roots:&UIRenderRoot,
                        commands:&mut Commands,
                        asset_server:&AssetServer,
-                       parent_mat4:&Mat4) {
+                       zorders:&Query<&ZOrder>,
+                       trans:&Query<&Transform>,
+                       parents:&Query<&Parent>) {
         let mut positons:Vec<[f32;3]> = vec![];
         let mut uvs:Vec<[f32;2]> = vec![];
         let mut indexs:Vec<u32> = vec![];
@@ -65,9 +83,16 @@ impl UIDrawCall {
         let mut texture = None;
         for entity in entitys.iter() {
             if let Ok(render2d) = render2ds.get(*entity) {
+                let mat4 = calc_trans(trans, parents, *entity,Some(canvas_entity));
+                let mut z_value:f32 = 0f32;
+                if let Ok(zorder) = zorders.get(*entity) {
+                    z_value = zorder.value as f32 * Z_SCALE;
+                }
                 texture = Some(render2d.texture.clone());
                 for vert in render2d.mesh2d.points.iter() {
-                    positons.push(vert.pos.into());
+                    let mut pos4 = Vec4::new(vert.pos.x, vert.pos.y, z_value, 1f32);
+                    pos4 = mat4 * pos4;
+                    positons.push(pos4.xyz().into());
                     uvs.push(vert.uv.into());
                 }
                 indexs.extend(render2d.mesh2d.indexs.iter().map(|v| v + index_offset));
@@ -85,7 +110,7 @@ impl UIDrawCall {
         let mut new_material = Material::from_def(ui_roots.baseui.clone(), asset_server).unwrap();
         new_material.texture_props.set("mainTexture", texture.unwrap().clone());
         let h_material = materials.add(new_material);
-        let t = Transform::from_matrix(parent_mat4.clone());
+        let t = Transform::from_matrix(calc_trans(trans, parents, canvas_entity, None));
         commands.spawn((h_mesh,h_material,t));
         
     }
@@ -181,4 +206,19 @@ impl ScanDrawCall {
             }
         }
     }
+}
+
+fn calc_trans(trans:&Query<&Transform>,parents:&Query<&Parent>,child_entity:Entity,parent_entity:Option<Entity>) -> Mat4 {
+    let mut cur_entity = child_entity;
+    let mut cur_mat = trans.get(child_entity).map(|t| t.local.matrix()).unwrap_or(Mat4::IDENTITY);
+    while let Ok(parent) = parents.get(cur_entity) {
+        cur_entity = parent.0;
+        if Some(cur_entity) == parent_entity {
+            return cur_mat;
+        }
+        if let Ok(t) = trans.get(cur_entity) {
+            cur_mat = cur_mat * t.local.matrix();
+        }        
+    }
+    cur_mat
 }

@@ -9,13 +9,12 @@ use seija_render::{
     material::Material,
     resource::{load_image_info, Mesh},
 };
-//TODO Fix UIRender
 use seija_template::Template;
 use seija_transform::{hierarchy::Parent, BuildChildren, IEntityChildren, PushChildren, Transform};
 use seija_ui::{
     components::{canvas::Canvas, rect2d::Rect2D, sprite::Sprite, ui_canvas::UICanvas},
     types::Thickness,
-     update_ui_render,
+     update_ui_render, text::{Font, Text},
 };
 use smallvec::SmallVec;
 use spritesheet::SpriteSheet;
@@ -41,18 +40,34 @@ fn start(world: &mut World) {
     let canvas_id = world.spawn_empty().insert(Transform::default()).insert(ui_camera).insert(UICanvas::default()).id();
     
     let server = world.get_resource::<AssetServer>().unwrap().clone();
+    let h_font = server.load_sync::<Font>(world, "ui/WenQuanYiMicroHei.ttf", None).unwrap();
     let h_sheet = server.load_sync::<SpriteSheet>(world, "ui/ui.json", None).unwrap();
     let sheets = world.get_resource::<Assets<SpriteSheet>>().unwrap();
     let ui_sheet = sheets.get(&h_sheet.id).unwrap();
     let btn3on_index = ui_sheet.get_index("Btn3On").unwrap();
+    let bg_index = ui_sheet.get_index("lm-db").unwrap();
+    
+
     let rect2d = Rect2D::new(1024f32, 768f32);
     let mut t = Transform::default();
     t.local.position = Vec3::new(0f32, 0f32, -1f32);
     let panel_id = world.spawn((Canvas::default(),t,rect2d)).set_parent(Some(canvas_id)).id();
-    
-    let mut t = Transform::default();
-    let rect2d = Rect2D::new(100f32, 50f32);
-    let btn_id = world.spawn((Sprite::sliced(btn3on_index,Some(h_sheet), Thickness::new1(35f32), Vec4::ONE),rect2d,t)).set_parent(Some(panel_id)).id();
+    {
+        let t = Transform::default();
+        let rect2d = Rect2D::new(1024f32, 768f32);
+        world.spawn((Sprite::sliced(bg_index,Some(h_sheet.clone()), Thickness::new1(35f32), Vec4::ONE),rect2d,t)).set_parent(Some(panel_id));
+    }
+    {
+        let t = Transform::default();
+        let rect2d = Rect2D::new(100f32, 50f32);
+        let btn_id = world.spawn((Sprite::sliced(btn3on_index,Some(h_sheet), Thickness::new1(35f32), Vec4::ONE),rect2d,t)).set_parent(Some(panel_id)).id();
+    }
+    {
+        let t = Transform::default();
+        let rect2d = Rect2D::new(100f32, 50f32);
+        let text = Text::new(h_font,"Hello World".to_string());
+        world.spawn((text,rect2d,t)).set_parent(Some(panel_id));
+    }
 
     world.insert_resource(UIData::default());
     

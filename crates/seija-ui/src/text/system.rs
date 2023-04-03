@@ -47,7 +47,7 @@ pub fn update_ui_text(mut text_env:Local<TextSystemEnv>,mut textures:ResMut<Asse
              }
              let text = glyph_brush::Text::new(&text.text).with_scale(PxScale::from(30.0));
             
-             let section = Section::default().add_text(text);//.with_bounds((rect.width,rect.height));
+             let section = Section::default().add_text(text);
              text_env.glyph_brush.queue(section);
           }
 
