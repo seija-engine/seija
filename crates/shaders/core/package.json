@@ -16,10 +16,9 @@
         "name": "ui",
         "vertex": {
           "POSITION": "require",
-          "UV0":"require",
-          "UV1":"require"
+          "UV0":"require"
         },
-        "backend": [ "Camera3D", "Transform","UIAtlas" ],
+        "backend": [ "Camera3D", "Transform"],
        
         "vs": "ui.ui_vs_main",
         "fs": "ui.ui_fs_main"

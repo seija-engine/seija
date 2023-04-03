@@ -1,12 +1,10 @@
 struct VSInput {
   vec2 uv;
-  uint index;
 };
 
 VSInput ui_vs_main() {
   VSInput o;
   o.uv = vert_uv0;
-  o.index = uint(vert_uv1.x);
   mat4 trans = getTransform();
   vec3 pos = vec3(trans * vec4(vert_position, 1.0));
   mat4 pv = getCameraProjView();
@@ -15,13 +13,9 @@ VSInput ui_vs_main() {
 }
 
 vec4 ui_fs_main(VSInput inv) {
-    vec4 outColor = material.color;
-    float uv_x = inv.uv.x;
-    float uv_y = inv.uv.y;
-
-    vec4 color = vec4(1);
-    if(color.a < 0.0001) {
+    vec4 textureColor = texture(sampler2D(tex_mainTexture,tex_mainTextureSampler),inv.uv);
+    if(textureColor.a < 0.0001) {
       discard;
     }
-    return color;
+    return textureColor;
 }

@@ -1,11 +1,12 @@
 use std::{hash::{Hash, Hasher}, collections::hash_map::DefaultHasher};
 
 use bevy_ecs::{prelude::{Component, Entity}, system::{Query, Commands}};
-use seija_asset::{HandleId, Assets};
-use seija_render::{resource::{Mesh, MeshAttributeType, Indices}, wgpu::PrimitiveTopology};
-use seija_transform::{hierarchy::Children};
+use seija_asset::{HandleId, Assets, AssetServer};
+use seija_core::math::Mat4;
+use seija_render::{resource::{Mesh, MeshAttributeType, Indices}, wgpu::PrimitiveTopology, material::Material};
+use seija_transform::{hierarchy::Children, Transform};
 
-use crate::render::UIRender2D;
+use crate::{render::UIRender2D, system::UIRenderRoot};
 #[derive(Component,Default)]
 pub struct Canvas {
     draw_calls:Vec<UIDrawCall>,
@@ -18,7 +19,11 @@ impl Canvas {
                            uirenders:&Query<&UIRender2D>,
                            canvases:&mut Query<&mut Canvas>,
                            meshes:&mut Assets<Mesh>,
-                           commands:&mut Commands) {
+                           materials:&mut Assets<Material>,
+                           commands:&mut Commands,
+                           ui_roots:&UIRenderRoot,
+                           asset_server:&AssetServer,
+                           parent_mat4:&Mat4) {
         let entity_group = ScanDrawCall::scan_entity_group(entity, children, uirenders, canvases);
         if let Ok(canvas) = canvases.get_mut(entity) {
             for (index,draw_entitys) in entity_group.iter().enumerate() {
@@ -31,10 +36,9 @@ impl Canvas {
                     }
                 }
                 commands.entity(entity).despawn();
-                UIDrawCall::form_entity(draw_entitys, uirenders,meshes);
+                UIDrawCall::form_entity(draw_entitys,uirenders,meshes,materials,ui_roots,commands,asset_server,parent_mat4);
             }   
         }
-        
 
     }
 }
@@ -46,14 +50,22 @@ struct UIDrawCall {
 }
 
 impl UIDrawCall {
-    pub fn form_entity(entitys:&Vec<Entity>,render2ds:&Query<&UIRender2D>,meshes:&mut Assets<Mesh>) {
+    pub fn form_entity(entitys:&Vec<Entity>,
+                       render2ds:&Query<&UIRender2D>,
+                       meshes:&mut Assets<Mesh>,
+                       materials:&mut Assets<Material>,
+                       ui_roots:&UIRenderRoot,
+                       commands:&mut Commands,
+                       asset_server:&AssetServer,
+                       parent_mat4:&Mat4) {
         let mut positons:Vec<[f32;3]> = vec![];
         let mut uvs:Vec<[f32;2]> = vec![];
         let mut indexs:Vec<u32> = vec![];
         let mut index_offset = 0;
-
+        let mut texture = None;
         for entity in entitys.iter() {
             if let Ok(render2d) = render2ds.get(*entity) {
+                texture = Some(render2d.texture.clone());
                 for vert in render2d.mesh2d.points.iter() {
                     positons.push(vert.pos.into());
                     uvs.push(vert.uv.into());
@@ -68,8 +80,14 @@ impl UIDrawCall {
         mesh.set(MeshAttributeType::POSITION, positons);
         mesh.set(MeshAttributeType::UV0, uvs);
         mesh.set_indices(Some(Indices::U32(indexs)));
+        mesh.build();
         let h_mesh = meshes.add(mesh);
-
+        let mut new_material = Material::from_def(ui_roots.baseui.clone(), asset_server).unwrap();
+        new_material.texture_props.set("mainTexture", texture.unwrap().clone());
+        let h_material = materials.add(new_material);
+        let t = Transform::from_matrix(parent_mat4.clone());
+        commands.spawn((h_mesh,h_material,t));
+        
     }
 }
 

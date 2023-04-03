@@ -1,17 +1,17 @@
 use std::{sync::Arc, collections::HashSet};
 use fixedbitset::FixedBitSet;
-use seija_core::{log, time::Time};
+use seija_core::{log, time::Time, math::Mat4};
 use bevy_ecs::{world::World, system::{Resource, SystemParam, Query, Commands, Res, ResMut}, prelude::Entity, query::{Or, Changed, QueryState}};
 use seija_asset::{AssetServer, Assets};
-use seija_render::{material::{MaterialDefineAsset, MaterialDef}, resource::{Texture, Mesh}};
-use seija_transform::hierarchy::{Parent, Children};
+use seija_render::{material::{MaterialDefineAsset, MaterialDef, Material}, resource::{Texture, Mesh}};
+use seija_transform::{hierarchy::{Parent, Children}, Transform};
 use spritesheet::SpriteSheet;
 
 use crate::{components::{sprite::Sprite, rect2d::Rect2D, canvas::{Canvas, ZOrder}}, render::UIRender2D};
 
 #[derive(Resource)]
 pub struct UIRenderRoot {
-    baseui:Arc<MaterialDef>,
+    pub(crate) baseui:Arc<MaterialDef>,
 }
 
 pub(crate) fn on_ui_start(world:&mut World) {
@@ -79,13 +79,16 @@ pub fn update_render_mesh_system(mut params:RenderMeshParams) {
 pub struct CanvasRenderParams<'w,'s> {
     pub(crate) update_render2ds:Query<'w,'s,Entity,Changed<UIRender2D>>,
     pub(crate) render2d:Query<'w,'s,&'static UIRender2D>,
-    pub(crate) spritesheets:Res<'w,Assets<SpriteSheet>>,
     pub(crate) canvases:Query<'w,'s,&'static mut Canvas>,
     pub(crate) parents:Query<'w,'s,&'static Parent>,
     pub(crate) zorders:Query<'w,'s,&'static ZOrder>,
+    pub(crate) transforms:Query<'w,'s,&'static Transform>,
     pub(crate) children:Query<'w,'s,&'static Children>,
     pub(crate) meshes:ResMut<'w,Assets<Mesh>>,
+    pub(crate) materials:ResMut<'w,Assets<Material>>,
+    pub(crate) asset_server:Res<'w,AssetServer>,
     pub(crate) commands:Commands<'w,'s>,
+    pub(crate) ui_roots:Res<'w,UIRenderRoot>,
     pub(crate) time:Res<'w,Time>,
 }
 
@@ -98,12 +101,18 @@ pub fn update_canvas_render(mut params:CanvasRenderParams) {
     }
 
     for entity in changed_canvas {
+        let canvas_mat4 = calc_trans(&params.transforms, &params.parents, entity, None);
+
         Canvas::update_drawcall(entity,
              &params.children,
              &mut params.render2d,
              &mut params.canvases,
              &mut params.meshes,
-             &mut params.commands);
+             &mut params.materials,
+             &mut params.commands,
+             &params.ui_roots,
+             &params.asset_server,
+             &canvas_mat4);
     }    
 }
 
@@ -136,4 +145,19 @@ fn find_canvas(entity:Entity,parents:&Query<&Parent>,canvases:&Query<&mut Canvas
         }   
     }
     None
+}
+
+fn calc_trans(trans:&Query<&Transform>,parents:&Query<&Parent>,child_entity:Entity,parent_entity:Option<Entity>) -> Mat4 {
+    let mut cur_entity = child_entity;
+    let mut cur_mat = trans.get(child_entity).map(|t| t.local.matrix()).unwrap_or(Mat4::IDENTITY);
+    while let Ok(parent) = parents.get(cur_entity) {
+        cur_entity = parent.0;
+        if Some(cur_entity) == parent_entity {
+            return cur_mat;
+        }
+        if let Ok(t) = trans.get(cur_entity) {
+            cur_mat = cur_mat * t.local.matrix();
+        }        
+    }
+    cur_mat
 }
