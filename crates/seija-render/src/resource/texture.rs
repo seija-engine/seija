@@ -75,6 +75,13 @@ impl Texture {
         Ok(Texture {texture,desc })
     }
 
+    pub fn cast_image_data(&mut self) -> Option<&mut Vec<u8>> {
+        match &mut self.texture {
+            TextureType::Image(image) => Some(&mut image.data),
+            _ => None
+        }
+    }
+
     pub fn to_gpu(handle:&Handle<Texture>,world:&mut World,ctx:&mut RenderContext) -> Result<()> {
         if ctx.resources.get_render_resource(&handle.id, 0).is_some() {
             return Ok(());

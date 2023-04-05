@@ -1,32 +1,61 @@
-use std::{sync::Arc, collections::{HashSet, HashMap}};
+use std::{sync::Arc, collections::{HashSet, HashMap}, num::NonZeroU8};
 use seija_core::{log, time::Time};
 use bevy_ecs::{world::World, system::{Resource, SystemParam, Query, Commands, Res, ResMut}, prelude::Entity, query::{Or, Changed}};
 use seija_asset::{AssetServer, Assets, Handle};
-use seija_render::{material::{MaterialDefineAsset, MaterialDef, Material}, resource::{ Mesh}};
+use seija_render::{material::{MaterialDefineAsset, MaterialDef, Material},
+                   resource::{ Mesh, Texture, ImageInfo, TextureDescInfo, TextureType}, wgpu::{AddressMode, FilterMode}};
 use seija_transform::{hierarchy::{Parent, Children}, Transform};
 use spritesheet::SpriteSheet;
-use glyph_brush::{GlyphBrush, GlyphBrushBuilder, FontId, ab_glyph::PxScale, Section, BrushAction};
-use crate::{components::{sprite::Sprite, rect2d::Rect2D, canvas::{Canvas, ZOrder}}, render::UIRender2D, mesh2d::Vertex2D, text::{Text, Font}};
+use glyph_brush::{GlyphBrush, GlyphBrushBuilder,VerticalAlign,HorizontalAlign,FontId,
+    ab_glyph::PxScale, Section, BrushAction,Rectangle, Layout};
+use crate::{components::{sprite::Sprite, rect2d::Rect2D, canvas::{Canvas, ZOrder}}, 
+            render::UIRender2D, mesh2d::Vertex2D, text::{Text, Font}};
 use glyph_brush::GlyphVertex;
+use seija_render::wgpu::{TextureFormat};
 #[derive(Resource)]
 pub struct UIRenderRoot {
     pub(crate) baseui:Arc<MaterialDef>,
+    pub(crate) basetext:Arc<MaterialDef>,
     pub(crate) text_brush:GlyphBrush<Vec<Vertex2D>>,
+    pub(crate) font_texture:Handle<Texture>,
     font_caches:HashMap<Handle<Font>,FontId>,
 }
 
 pub(crate) fn on_ui_start(world:&mut World) {
     let server = world.get_resource::<AssetServer>().unwrap().clone();
     let mut h_baseui = server.load_sync::<MaterialDefineAsset>(world, "materials/ui.mat.clj", None).unwrap();
+    let mut h_basetext = server.load_sync::<MaterialDefineAsset>(world, "materials/text.mat.clj", None).unwrap();
     let mats = world.get_resource::<Assets<MaterialDefineAsset>>().unwrap();
     let arc_mat_define = mats.get(&h_baseui.id).unwrap().define.clone();
+    let arc_text_mat_define = mats.get(&h_basetext.id).unwrap().define.clone();
     //常驻
     h_baseui.forget();
+    h_basetext.forget();
+
+    let font_texture = create_font_texture(world);
     world.insert_resource(UIRenderRoot {
         baseui:arc_mat_define,
-        text_brush:GlyphBrushBuilder::using_fonts(vec![]).cache_redraws(false).initial_cache_size((1024, 1024)).build(),
-        font_caches:HashMap::default()
+        basetext:arc_text_mat_define,
+        text_brush:GlyphBrushBuilder::using_fonts(vec![])
+                    .cache_redraws(false)
+                    .initial_cache_size((1024, 1024)).build(),
+        font_caches:HashMap::default(),
+        font_texture
     });
+}
+
+fn create_font_texture(world:&mut World) -> Handle<Texture> {
+    
+    let image_info = ImageInfo {width:1024,height:1024,format:TextureFormat::R8Unorm,data:vec![0u8;1024 * 1024] };
+    let mut texture_desc = TextureDescInfo::default();
+    texture_desc.desc.label = "font_texture".into();
+    //texture_desc.sampler_desc.min_filter = FilterMode::Linear;
+    //texture_desc.sampler_desc.mag_filter = FilterMode::Linear;
+    //texture_desc.sampler_desc.anisotropy_clamp = Some(NonZeroU8::new(16).unwrap());
+    let font_texture = Texture::create_image(image_info, texture_desc);
+    let mut textures = world.get_resource_mut::<Assets<Texture>>().unwrap();
+    let h_texture = textures.add(font_texture);
+    h_texture
 }
 
 #[derive(SystemParam)]
@@ -38,13 +67,14 @@ pub struct RenderMeshParams<'w,'s> {
     pub(crate) sprites:Query<'w,'s,(&'static Sprite,&'static Rect2D)>,
     pub(crate) texts:Query<'w,'s,(&'static Text,&'static Rect2D)>,
     pub(crate) spritesheets:Res<'w,Assets<SpriteSheet>>,
+    pub(crate) textures:ResMut<'w,Assets<Texture>>,
     pub(crate) ui_roots:ResMut<'w,UIRenderRoot>,
     pub(crate) commands:Commands<'w,'s>,
-    pub(crate) time:Res<'w,Time>,
     pub(crate) canvases:Query<'w,'s,&'static Canvas>,
     pub(crate) parents:Query<'w,'s,&'static Parent>,
     pub(crate) zorders:Query<'w,'s,&'static mut ZOrder>,
     pub(crate) children:Query<'w,'s,&'static Children>,
+    pub(crate) time:Res<'w,Time>,
 }
 
 pub fn update_render_mesh_system(mut params:RenderMeshParams) {
@@ -54,13 +84,13 @@ pub fn update_render_mesh_system(mut params:RenderMeshParams) {
     for entity in params.update_sprites.iter() {
         if let Ok((sprite,rect)) = params.sprites.get(entity) {
             if let Some(atlas) = sprite.atlas.as_ref().map(|h| params.spritesheets.get(&h.id).unwrap()) {
-               if let Some(render_2d) = sprite.build_render(rect,atlas) {
+               if let Some(render2d) = sprite.build_render(rect,atlas,params.ui_roots.baseui.clone()) {
                     if let Ok(mut render) = params.render2d.get_mut(entity) {
-                        render.mesh2d = render_2d.mesh2d;
-                        render.texture = render_2d.texture;
+                        render.mesh2d = render2d.mesh2d;
+                        render.texture = render2d.texture;
                     } else {
-                        params.commands.entity(entity).insert(render_2d);
-                    } 
+                        params.commands.entity(entity).insert(render2d);
+                    }
                }
             }
 
@@ -82,16 +112,31 @@ pub fn update_render_mesh_system(mut params:RenderMeshParams) {
                    });
                 }
                 let text = glyph_brush::Text::new(&text.text).with_scale(PxScale::from(text.font_size as f32));
-                let section = Section::default().add_text(text);
+                let section = Section::default().with_layout(Layout::default()
+                                                .v_align(VerticalAlign::Center)
+                                                .h_align(HorizontalAlign::Center))
+                                                .add_text(text);
                 params.ui_roots.text_brush.queue(section);
             }
-
+            let font_texture = params.textures.get_mut(&params.ui_roots.font_texture.id).unwrap();
+           
             let action = params.ui_roots.text_brush.process_queued(|r,bytes| {
-                seija_core::log::error!("bytes:{:?} rect:{:?}",bytes.len(),r);
+                write_font_texture(font_texture,r,bytes);
             },glyph_to_mesh);
             match action {
                 Ok(BrushAction::Draw(verts)) => {
                    let mesh2d = Text::build_mesh(verts);
+                   if let Ok(mut render) = params.render2d.get_mut(entity) {
+                      render.texture = params.ui_roots.font_texture.clone();
+                      render.mesh2d = mesh2d;
+                    } else {
+                        let render2d = UIRender2D {
+                            mat:params.ui_roots.basetext.clone(),
+                            texture:params.ui_roots.font_texture.clone(),
+                            mesh2d 
+                        };
+                        params.commands.entity(entity).insert(render2d);
+                    }
                 }
                 Ok(BrushAction::ReDraw) => {}
                 Err(err) => {
@@ -109,6 +154,20 @@ pub fn update_render_mesh_system(mut params:RenderMeshParams) {
         }
     }
 }
+
+fn write_font_texture(texture:&mut Texture,rect:Rectangle<u32>,bytes:&[u8]) {
+    if let TextureType::Image(image) = &mut texture.texture {
+       let min_x = rect.min[0] as usize;
+       let min_y = rect.min[1] as usize;
+       seija_core::log::error!("write_font_texture:{:?} min_x:{},min_y:{}",rect,min_x,min_y);
+       
+       for (index,row) in bytes.chunks_exact(rect.width() as usize).enumerate() {
+          let mut offset = (index + min_y) * 1024;
+          offset = offset + min_x;
+          image.data[offset..(offset + rect.width() as usize)].copy_from_slice(row);
+       }
+    }
+  }
 
 
 fn glyph_to_mesh(vert:GlyphVertex) -> Vec<Vertex2D> {

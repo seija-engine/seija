@@ -1,14 +1,14 @@
+use std::sync::Arc;
+
 use bevy_ecs::{world::World, prelude::Component};
 use seija_asset::Handle;
-use seija_render::{RenderContext, pipeline::render_bindings::{BindGroupLayoutBuilder, BindGroupBuilder}, resource::Texture};
-use seija_render::wgpu;
-use seija_core::{anyhow, OptionExt};
-use seija_core::log;
+use seija_render::{RenderContext, resource::Texture, material::MaterialDef};
 
 use crate::mesh2d::Mesh2D;
 
 #[derive(Component,Debug)]
 pub struct UIRender2D {
+   pub mat:Arc<MaterialDef>,
    pub texture:Handle<Texture>,
    pub mesh2d:Mesh2D,
 }

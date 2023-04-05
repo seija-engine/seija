@@ -85,7 +85,9 @@ impl Default for Orthographic {
 }
 
 impl Orthographic {
-  
+    pub fn new(size:f32) -> Orthographic {
+        Orthographic { left: -size, right: size, bottom: -size, top: size, near: 0.001, far: 100f32 }
+    }
     pub fn proj_matrix(&self) -> Mat4  {
         /*
             //左手坐标系

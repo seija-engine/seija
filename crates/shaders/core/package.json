@@ -24,6 +24,17 @@
         "fs": "ui.ui_fs_main"
       },
       {
+        "name": "text",
+        "vertex": {
+          "POSITION": "require",
+          "UV0":"require"
+        },
+        "backend": [ "Camera3D", "Transform"],
+       
+        "vs": "ui.ui_vs_main",
+        "fs": "ui.text_fs_main"
+      },
+      {
         "name": "shadowDepth",
         "vertex": {
           "POSITION": "require"

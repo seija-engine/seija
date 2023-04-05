@@ -36,11 +36,11 @@ fn main() {
 }
 
 fn start(world: &mut World) {
-    let ui_camera = Camera::from_2d(Orthographic::default());
+    let ui_camera = Camera::from_2d(Orthographic::new(512f32));
     let canvas_id = world.spawn_empty().insert(Transform::default()).insert(ui_camera).insert(UICanvas::default()).id();
     
     let server = world.get_resource::<AssetServer>().unwrap().clone();
-    let h_font = server.load_sync::<Font>(world, "ui/WenQuanYiMicroHei.ttf", None).unwrap();
+    let h_font = server.load_sync::<Font>(world, "ui/FiraMono-Medium.ttf", None).unwrap();
     let h_sheet = server.load_sync::<SpriteSheet>(world, "ui/ui.json", None).unwrap();
     let sheets = world.get_resource::<Assets<SpriteSheet>>().unwrap();
     let ui_sheet = sheets.get(&h_sheet.id).unwrap();
@@ -53,19 +53,28 @@ fn start(world: &mut World) {
     t.local.position = Vec3::new(0f32, 0f32, -1f32);
     let panel_id = world.spawn((Canvas::default(),t,rect2d)).set_parent(Some(canvas_id)).id();
     {
-        let t = Transform::default();
-        let rect2d = Rect2D::new(1024f32, 768f32);
-        world.spawn((Sprite::sliced(bg_index,Some(h_sheet.clone()), Thickness::new1(35f32), Vec4::ONE),rect2d,t)).set_parent(Some(panel_id));
+        //let t = Transform::default();
+        //let rect2d = Rect2D::new(1024f32, 768f32);
+        //world.spawn((Sprite::sliced(bg_index,Some(h_sheet.clone()), Thickness::new1(35f32), Vec4::ONE),rect2d,t)).set_parent(Some(panel_id));
+    }
+    {
+        //let t = Transform::default();
+        //let rect2d = Rect2D::new(100f32, 50f32);
+        //let btn_id = world.spawn((Sprite::sliced(btn3on_index,Some(h_sheet), Thickness::new1(35f32), Vec4::ONE),rect2d,t)).set_parent(Some(panel_id)).id();
     }
     {
         let t = Transform::default();
         let rect2d = Rect2D::new(100f32, 50f32);
-        let btn_id = world.spawn((Sprite::sliced(btn3on_index,Some(h_sheet), Thickness::new1(35f32), Vec4::ONE),rect2d,t)).set_parent(Some(panel_id)).id();
+        let mut text = Text::new(h_font.clone(),"Seija正".to_string());
+        text.font_size = 32;
+        world.spawn((text,rect2d,t)).set_parent(Some(panel_id));
     }
     {
-        let t = Transform::default();
+        let mut t = Transform::default();
+        t.local.position = Vec3::new(100f32, 0f32, 0f32);
         let rect2d = Rect2D::new(100f32, 50f32);
-        let text = Text::new(h_font,"Hello World".to_string());
+        let mut text = Text::new(h_font,"Seija".to_string());
+        text.font_size = 16;
         world.spawn((text,rect2d,t)).set_parent(Some(panel_id));
     }
 

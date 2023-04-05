@@ -1,6 +1,6 @@
 use bevy_ecs::prelude::*;
 use seija_asset::Handle;
-use seija_core::math::{Vec4, Mat4};
+use seija_core::math::{Vec4};
 use crate::{types::AnchorAlign, mesh2d::{Vertex2D, Mesh2D}};
 use super::Font;
 use num_enum::{TryFromPrimitive,IntoPrimitive};
@@ -35,7 +35,6 @@ impl Text {
 
 
     pub fn build_mesh(verts:Vec<Vec<Vertex2D>>) -> Mesh2D {
-        seija_core::log::error!("build text mesh:{:?}",verts);
         let mut points:Vec<Vertex2D> = vec![];
         let mut indexs:Vec<u32> = vec![];
         let mut index_offset:usize = 0;

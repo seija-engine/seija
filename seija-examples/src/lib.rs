@@ -28,8 +28,13 @@ pub fn init_core_app(render_file:&str,pre_renders:Vec<fn(world:&mut World,ctx:&m
     app.add_module(InputModule);
     app.add_module(SpriteSheetModule);
     let mut win  = WinitModule::default();
-    win.0.width  = win_size.map(|v| v.x).unwrap_or(640f32);
-    win.0.height = win_size.map(|v| v.y).unwrap_or(480f32);
+    if cfg!(target_os = "windows") {
+        win.0.width  = win_size.map(|v| v.x).unwrap_or(640f32);
+        win.0.height = win_size.map(|v| v.y).unwrap_or(480f32);
+    } else {
+        win.0.width  = win_size.map(|v| v.x).unwrap_or(1024f32);
+        win.0.height = win_size.map(|v| v.y).unwrap_or(768f32);
+    }
     app.add_module(win);
     app.add_module(TransformModule);
     app.add_module(TemplateModule);

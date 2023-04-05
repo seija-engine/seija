@@ -82,7 +82,7 @@
             {
                 :name "shadowMap"
                 :type "texture2D"
-                :filterable true
+                :filterable false
             }
         ]
         :backends ["ShadowRecv"]

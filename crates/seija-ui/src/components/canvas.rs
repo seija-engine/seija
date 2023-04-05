@@ -1,9 +1,9 @@
-use std::{hash::{Hash, Hasher}, collections::hash_map::DefaultHasher};
+use std::{hash::{Hash, Hasher}, collections::hash_map::DefaultHasher, sync::Arc};
 
 use bevy_ecs::{prelude::{Component, Entity}, system::{Query, Commands}};
 use seija_asset::{HandleId, Assets, AssetServer};
 use seija_core::math::{Mat4, Vec4, Vec4Swizzles};
-use seija_render::{resource::{Mesh, MeshAttributeType, Indices}, wgpu::PrimitiveTopology, material::Material};
+use seija_render::{resource::{Mesh, MeshAttributeType, Indices}, wgpu::PrimitiveTopology, material::{Material, MaterialDef}};
 use seija_transform::{hierarchy::{Children, Parent}, Transform};
 use crate::{render::UIRender2D, system::UIRenderRoot};
 
@@ -81,6 +81,7 @@ impl UIDrawCall {
         let mut indexs:Vec<u32> = vec![];
         let mut index_offset = 0;
         let mut texture = None;
+        let mut material_def:Option<Arc<MaterialDef>> = None;
         for entity in entitys.iter() {
             if let Ok(render2d) = render2ds.get(*entity) {
                 let mat4 = calc_trans(trans, parents, *entity,Some(canvas_entity));
@@ -89,6 +90,7 @@ impl UIDrawCall {
                     z_value = zorder.value as f32 * Z_SCALE;
                 }
                 texture = Some(render2d.texture.clone());
+                material_def = Some(render2d.mat.clone());
                 for vert in render2d.mesh2d.points.iter() {
                     let mut pos4 = Vec4::new(vert.pos.x, vert.pos.y, z_value, 1f32);
                     pos4 = mat4 * pos4;
@@ -107,7 +109,7 @@ impl UIDrawCall {
         mesh.set_indices(Some(Indices::U32(indexs)));
         mesh.build();
         let h_mesh = meshes.add(mesh);
-        let mut new_material = Material::from_def(ui_roots.baseui.clone(), asset_server).unwrap();
+        let mut new_material = Material::from_def(material_def.unwrap().clone(), asset_server).unwrap();
         new_material.texture_props.set("mainTexture", texture.unwrap().clone());
         let h_material = materials.add(new_material);
         let t = Transform::from_matrix(calc_trans(trans, parents, canvas_entity, None));

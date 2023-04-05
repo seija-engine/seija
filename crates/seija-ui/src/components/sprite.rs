@@ -1,6 +1,9 @@
+use std::sync::Arc;
+
 use bevy_ecs::prelude::Component;
 use seija_asset::Handle;
 use seija_core::{ math::{Vec4, Mat4}};
+use seija_render::material::MaterialDef;
 use spritesheet::SpriteSheet;
 use seija_core::Rect;
 use crate::{mesh2d::Mesh2D, types::{Thickness}, render::UIRender2D};
@@ -39,10 +42,11 @@ impl Sprite {
         mesh2d
     }
 
-    pub fn build_render(&self,rect2d:&Rect2D,atlas:&SpriteSheet) -> Option<UIRender2D> {
+    pub fn build_render(&self,rect2d:&Rect2D,atlas:&SpriteSheet,mat_def:Arc<MaterialDef>) -> Option<UIRender2D> {
         let info = atlas.get_info(self.sprite_index)?;
         let mesh2d = self.build(rect2d, &info.uv, &Mat4::IDENTITY,&info.rect, 0f32);
         Some(UIRender2D {
+            mat:mat_def,
             mesh2d,
             texture:atlas.texture.clone(),
         })  
