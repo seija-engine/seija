@@ -7,7 +7,7 @@ use seija_render::{resource::{Mesh, MeshAttributeType, Indices}, wgpu::Primitive
 use seija_transform::{hierarchy::{Children, Parent}, Transform};
 use crate::{render::UIRender2D, system::UIRenderRoot};
 
-const Z_SCALE: f32 = 0.0001;
+const Z_SCALE: f32 = 0.001;
 
 #[derive(Component,Default)]
 pub struct Canvas {
@@ -39,8 +39,8 @@ impl Canvas {
                     if cur_drawcall.hash_key == hash_key {
                         continue;
                     }
+                    commands.entity(cur_drawcall.entity).despawn();
                 }
-                commands.entity(entity).despawn();
                 UIDrawCall::form_entity(
                     entity,
                     draw_entitys,

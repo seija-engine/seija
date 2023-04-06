@@ -1,6 +1,6 @@
 use std::{sync::Arc, collections::{HashSet, HashMap}, num::NonZeroU8};
 use seija_core::{log, time::Time};
-use bevy_ecs::{world::World, system::{Resource, SystemParam, Query, Commands, Res, ResMut}, prelude::Entity, query::{Or, Changed}};
+use bevy_ecs::{world::World, system::{Resource, SystemParam, Query, Commands, Res, ResMut}, prelude::{Entity, EventWriter}, query::{Or, Changed}};
 use seija_asset::{AssetServer, Assets, Handle};
 use seija_render::{material::{MaterialDefineAsset, MaterialDef, Material},
                    resource::{ Mesh, Texture, ImageInfo, TextureDescInfo, TextureType}, wgpu::{AddressMode, FilterMode}};
@@ -9,7 +9,7 @@ use spritesheet::SpriteSheet;
 use glyph_brush::{GlyphBrush, GlyphBrushBuilder,VerticalAlign,HorizontalAlign,FontId,
     ab_glyph::PxScale, Section, BrushAction,Rectangle, Layout};
 use crate::{components::{sprite::Sprite, rect2d::Rect2D, canvas::{Canvas, ZOrder}}, 
-            render::UIRender2D, mesh2d::Vertex2D, text::{Text, Font}};
+            render::{UIRender2D, WriteFontAtlas}, mesh2d::Vertex2D, text::{Text, Font}};
 use glyph_brush::GlyphVertex;
 use seija_render::wgpu::{TextureFormat};
 #[derive(Resource)]
@@ -74,6 +74,7 @@ pub struct RenderMeshParams<'w,'s> {
     pub(crate) parents:Query<'w,'s,&'static Parent>,
     pub(crate) zorders:Query<'w,'s,&'static mut ZOrder>,
     pub(crate) children:Query<'w,'s,&'static Children>,
+    pub(crate) write_font_atlas:EventWriter<'w,'s,WriteFontAtlas>,
     pub(crate) time:Res<'w,Time>,
 }
 
@@ -122,6 +123,7 @@ pub fn update_render_mesh_system(mut params:RenderMeshParams) {
            
             let action = params.ui_roots.text_brush.process_queued(|r,bytes| {
                 write_font_texture(font_texture,r,bytes);
+                params.write_font_atlas.send(WriteFontAtlas { rect:r });
             },glyph_to_mesh);
             match action {
                 Ok(BrushAction::Draw(verts)) => {

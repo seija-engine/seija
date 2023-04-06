@@ -14,14 +14,15 @@ VSInput ui_vs_main() {
 
 vec4 ui_fs_main(VSInput inv) {
     vec4 textureColor = texture(sampler2D(tex_mainTexture,tex_mainTextureSampler),inv.uv);
-    
+    if(textureColor.a < 0.001) {
+        discard;
+    }
     return textureColor;
 }
 
 vec4 text_fs_main(VSInput inv) {
     vec4 textureColor = texture(sampler2D(tex_mainTexture,tex_mainTextureSampler),inv.uv);
-    if(textureColor.r < 0.0001) {
-      discard;
-    }
-    return vec4(textureColor.r,textureColor.r,textureColor.r,textureColor.r);
+    float c = 0;
+    
+    return vec4(c,c,c,textureColor.r);
 }

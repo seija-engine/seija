@@ -1,5 +1,6 @@
-use event::UIEvent;
+use event::{UIEvent, ui_event_system};
 use layout::system::ui_layout_system;
+use render::WriteFontAtlas;
 use seija_app::{IModule, App};
 use seija_asset::{AddAsset, AssetStage};
 use seija_core::{CoreStage, AddCore, StartupStage}; 
@@ -32,6 +33,7 @@ impl IModule for UIModule {
     fn init(&mut self,app:&mut App) {
         //app.world.insert_resource(SpriteAllocator::new());
         app.add_event::<UIEvent>();
+        app.add_event::<WriteFontAtlas>();
         app.add_asset::<Font>();
         app.add_asset_loader::<Font,FontLoader>();
         app.add_system2(CoreStage::Startup,StartupStage::PostStartup, on_ui_start);
@@ -45,6 +47,7 @@ impl IModule for UIModule {
         app.add_system(UIStage::PreUI,ui_layout_system.before(update_render_mesh_system));
         app.add_system(UIStage::PreUI, update_render_mesh_system);
         app.add_system(UIStage::UI, update_canvas_render);
+        app.add_system(UIStage::PostUI, ui_event_system);
          /*
         ui_layout_system
         ui_update_zorders

@@ -75,9 +75,9 @@ impl Texture {
         Ok(Texture {texture,desc })
     }
 
-    pub fn cast_image_data(&mut self) -> Option<&mut Vec<u8>> {
-        match &mut self.texture {
-            TextureType::Image(image) => Some(&mut image.data),
+    pub fn cast_image_data(&self) -> Option<&Vec<u8>> {
+        match &self.texture {
+            TextureType::Image(image) => Some(&image.data),
             _ => None
         }
     }

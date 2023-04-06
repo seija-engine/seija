@@ -14,17 +14,14 @@ use seija_transform::{hierarchy::Parent, BuildChildren, IEntityChildren, PushChi
 use seija_ui::{
     components::{canvas::Canvas, rect2d::Rect2D, sprite::Sprite, ui_canvas::UICanvas},
     types::Thickness,
-     update_ui_render, text::{Font, Text},
+     update_ui_render, text::{Font, Text}, event::{EventNode, UIEventType, UIEvent, UIEventSystem},
 };
-use smallvec::SmallVec;
 use spritesheet::SpriteSheet;
 
-#[derive(Default, Resource)]
+#[derive( Resource)]
 pub struct UIData {
-    btn: Option<Entity>,
-    sprite_index: u32,
-    parent: Option<Entity>,
-    panel2: Option<Entity>,
+    text:Entity,
+    number:i32
 }
 
 fn main() {
@@ -36,55 +33,63 @@ fn main() {
 }
 
 fn start(world: &mut World) {
-    let ui_camera = Camera::from_2d(Orthographic::new(512f32));
-    let canvas_id = world.spawn_empty().insert(Transform::default()).insert(ui_camera).insert(UICanvas::default()).id();
+    let ui_camera = Camera::from_2d(Orthographic::default());
+    let event_system = UIEventSystem::default();
+    let canvas_id = world.spawn_empty().insert(Transform::default())
+                         .insert(ui_camera)
+                         .insert(event_system).insert(UICanvas::default()).id();
     
     let server = world.get_resource::<AssetServer>().unwrap().clone();
-    let h_font = server.load_sync::<Font>(world, "ui/FiraMono-Medium.ttf", None).unwrap();
+    let h_font = server.load_sync::<Font>(world, "ui/VonwaonBitmap-16px.ttf", None).unwrap();
     let h_sheet = server.load_sync::<SpriteSheet>(world, "ui/ui.json", None).unwrap();
     let sheets = world.get_resource::<Assets<SpriteSheet>>().unwrap();
     let ui_sheet = sheets.get(&h_sheet.id).unwrap();
     let btn3on_index = ui_sheet.get_index("Btn3On").unwrap();
     let bg_index = ui_sheet.get_index("lm-db").unwrap();
+    let add_index = ui_sheet.get_index("AddOn").unwrap();
     
-
+    
     let rect2d = Rect2D::new(1024f32, 768f32);
     let mut t = Transform::default();
     t.local.position = Vec3::new(0f32, 0f32, -1f32);
-    let panel_id = world.spawn((Canvas::default(),t,rect2d)).set_parent(Some(canvas_id)).id();
+    let panel_id = world.spawn((rect2d,t,Canvas::default())).set_parent(Some(canvas_id)).id();
     {
-        //let t = Transform::default();
-        //let rect2d = Rect2D::new(1024f32, 768f32);
-        //world.spawn((Sprite::sliced(bg_index,Some(h_sheet.clone()), Thickness::new1(35f32), Vec4::ONE),rect2d,t)).set_parent(Some(panel_id));
-    }
-    {
-        //let t = Transform::default();
-        //let rect2d = Rect2D::new(100f32, 50f32);
-        //let btn_id = world.spawn((Sprite::sliced(btn3on_index,Some(h_sheet), Thickness::new1(35f32), Vec4::ONE),rect2d,t)).set_parent(Some(panel_id)).id();
-    }
-    {
-        let t = Transform::default();
-        let rect2d = Rect2D::new(100f32, 50f32);
-        let mut text = Text::new(h_font.clone(),"Seija正".to_string());
-        text.font_size = 32;
-        world.spawn((text,rect2d,t)).set_parent(Some(panel_id));
+       let t = Transform::default();
+       let rect2d = Rect2D::new(1024f32, 768f32);
+       let e_bg = world.spawn((Sprite::sliced(bg_index,Some(h_sheet.clone()), Thickness::new1(35f32), Vec4::ONE),rect2d,t)).set_parent(Some(panel_id)).id();
+       seija_core::log::error!("bg:{:?}",e_bg);
     }
     {
         let mut t = Transform::default();
-        t.local.position = Vec3::new(100f32, 0f32, 0f32);
-        let rect2d = Rect2D::new(100f32, 50f32);
-        let mut text = Text::new(h_font,"Seija".to_string());
-        text.font_size = 16;
-        world.spawn((text,rect2d,t)).set_parent(Some(panel_id));
+        let rect2d = Rect2D::new(32f32, 32f32);
+        t.local.position.x = -50f32;
+        let mut event = EventNode::default();
+        event.event_type = UIEventType::CLICK;
+        let e_btn = world.spawn((Sprite::simple(add_index,Some(h_sheet), Vec4::ONE),rect2d,t,event)).set_parent(Some(panel_id)).id();
+        seija_core::log::error!("btn:{:?}",e_btn);
     }
+    
+    let text_id = {
+        let mut t = Transform::default();
+        let rect2d = Rect2D::new(100f32, 50f32);
+        let mut text = Text::new(h_font.clone(),"+0".to_string());
+        text.font_size = 32;
+        let e_text = world.spawn((text,rect2d,t)).set_parent(Some(panel_id)).id();
+        seija_core::log::error!("text:{:?}",e_text);
+        e_text
+    };
+   
 
-    world.insert_resource(UIData::default());
+    world.insert_resource(UIData {text:text_id,number:0 });
     
 }
 
 
-fn on_update(mut commands: Commands,input: Res<Input>,time: Res<Time>,ui_data: ResMut<UIData>,mut sprites: Query<&mut Sprite>) {
-   if input.get_key_down(seija_input::keycode::KeyCode::A) {
-    
-   }
+fn on_update(mut commands: Commands,mut texts:Query<&mut Text>,time: Res<Time>,mut ui_data: ResMut<UIData>,mut render:EventReader<UIEvent>) {
+    for event in render.iter() {
+        seija_core::log::error!("click!");
+        ui_data.number += 1;
+        let mut number_text = texts.get_mut(ui_data.text).unwrap();
+        number_text.text = format!("+{}",ui_data.number);
+    }
 }

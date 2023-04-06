@@ -110,6 +110,9 @@ fn capture_event_node(event_entity:Entity,
                       event_nodes:&mut Query<(Entity,&mut EventNode)>,
                       sender:&mut EventWriter<UIEvent>) -> Option<Entity> {
     let mut last_hit_entity = None;
+    if let Err(err) =  params.infos.get(event_entity) {
+        seija_core::log::error!("capture_event_node error:{:?}",err);
+    }
     if let Ok((_,Some(rect2d),t)) = params.infos.get(event_entity) {
         if !rect2d.test(t.global(), mouse_pos) {
             return None;
@@ -156,6 +159,8 @@ fn capture_event_node(event_entity:Entity,
                 }
             }
         }
+    } else {
+        
     }
     last_hit_entity
 }

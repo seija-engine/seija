@@ -1,10 +1,9 @@
 use std::sync::Arc;
-
-use bevy_ecs::{world::World, prelude::Component};
-use seija_asset::Handle;
+use glyph_brush::Rectangle;
+use bevy_ecs::{world::World, prelude::{Component, Events}};
+use seija_asset::{Handle, Assets};
 use seija_render::{RenderContext, resource::Texture, material::MaterialDef};
-
-use crate::mesh2d::Mesh2D;
+use crate::{mesh2d::Mesh2D, system::UIRenderRoot};
 
 #[derive(Component,Debug)]
 pub struct UIRender2D {
@@ -13,8 +12,23 @@ pub struct UIRender2D {
    pub mesh2d:Mesh2D,
 }
 
+pub struct WriteFontAtlas {
+    pub(crate) rect:Rectangle<u32>
+}
+
 pub fn update_ui_render(world:&mut World,ctx:&mut RenderContext) {
-    
+     let mut write_atlas = world.get_resource_mut::<Events<WriteFontAtlas>>().unwrap();
+     let write_events = write_atlas.drain().collect::<Vec<_>>();
+     let textures = world.get_resource::<Assets<Texture>>().unwrap();
+     let render_root = world.get_resource::<UIRenderRoot>().unwrap();
+     let font_texture = textures.get(&render_root.font_texture.id).unwrap();
+     let cache_bytes = font_texture.cast_image_data().unwrap();
+
+     let command = ctx.command_encoder.as_mut().unwrap();
+     
+     for event in write_events {
+        
+     }
 }
 
 
