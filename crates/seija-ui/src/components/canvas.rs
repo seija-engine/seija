@@ -7,7 +7,7 @@ use seija_render::{resource::{Mesh, MeshAttributeType, Indices}, wgpu::Primitive
 use seija_transform::{hierarchy::{Children, Parent}, Transform};
 use crate::{render::UIRender2D, system::UIRenderRoot};
 
-const Z_SCALE: f32 = 0.001;
+const Z_SCALE: f32 = 0.01;
 
 #[derive(Component,Default)]
 pub struct Canvas {
@@ -26,22 +26,16 @@ impl Canvas {
                            meshes:&mut Assets<Mesh>,
                            materials:&mut Assets<Material>,
                            commands:&mut Commands,
-                           ui_roots:&UIRenderRoot,
+                           ui_roots:&mut UIRenderRoot,
                            asset_server:&AssetServer) {
         
         let entity_group = ScanDrawCall::scan_entity_group(entity, children, uirenders, canvases);
-        if let Ok(canvas) = canvases.get_mut(entity) {
+        if let Ok(mut canvas) = canvases.get_mut(entity) {
             for (index,draw_entitys) in entity_group.iter().enumerate() {
                 let mut hasher = DefaultHasher::default();
                 draw_entitys.hash(&mut hasher);
                 let hash_key = hasher.finish();
-                if let Some(cur_drawcall) = canvas.draw_calls.get(index) {
-                    if cur_drawcall.hash_key == hash_key {
-                        continue;
-                    }
-                    commands.entity(cur_drawcall.entity).despawn();
-                }
-                UIDrawCall::form_entity(
+                let new_drawcall = UIDrawCall::form_entity(
                     entity,
                     draw_entitys,
                     uirenders,
@@ -51,6 +45,15 @@ impl Canvas {
                     commands,
                     asset_server,
                     zorders,trans,parents);
+                
+               
+                if index < canvas.draw_calls.len()  {
+                    let despawn_entity = canvas.draw_calls[index].entity;
+                    ui_roots.despawn_next_frame.push(despawn_entity);
+                    canvas.draw_calls[index] = new_drawcall;
+                } else {
+                    canvas.draw_calls.push(new_drawcall);
+                }
             }   
         }
 
@@ -75,7 +78,7 @@ impl UIDrawCall {
                        asset_server:&AssetServer,
                        zorders:&Query<&ZOrder>,
                        trans:&Query<&Transform>,
-                       parents:&Query<&Parent>) {
+                       parents:&Query<&Parent>) -> UIDrawCall {
         let mut positons:Vec<[f32;3]> = vec![];
         let mut uvs:Vec<[f32;2]> = vec![];
         let mut indexs:Vec<u32> = vec![];
@@ -113,8 +116,15 @@ impl UIDrawCall {
         new_material.texture_props.set("mainTexture", texture.unwrap().clone());
         let h_material = materials.add(new_material);
         let t = Transform::from_matrix(calc_trans(trans, parents, canvas_entity, None));
-        commands.spawn((h_mesh,h_material,t));
-        
+        seija_core::log::error!("{:?}",&t.local.position);
+        let drawcall_entity = commands.spawn((h_mesh,h_material,t)).id();
+        let mut hasher = DefaultHasher::default();
+        entitys.hash(&mut hasher);
+        let hash_key = hasher.finish();
+        UIDrawCall {
+            entity:drawcall_entity,
+            hash_key
+        }
     }
 }
 

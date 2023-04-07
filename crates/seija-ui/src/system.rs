@@ -1,9 +1,10 @@
-use std::{sync::Arc, collections::{HashSet, HashMap}, num::NonZeroU8};
+use std::{sync::Arc, collections::{HashSet, HashMap}};
 use seija_core::{log, time::Time};
-use bevy_ecs::{world::World, system::{Resource, SystemParam, Query, Commands, Res, ResMut}, prelude::{Entity, EventWriter}, query::{Or, Changed}};
+use bevy_ecs::{world::World, system::{Resource, 
+    SystemParam, Query, Commands, Res, ResMut}, prelude::{Entity, EventWriter}, query::{Or, Changed}};
 use seija_asset::{AssetServer, Assets, Handle};
 use seija_render::{material::{MaterialDefineAsset, MaterialDef, Material},
-                   resource::{ Mesh, Texture, ImageInfo, TextureDescInfo, TextureType}, wgpu::{AddressMode, FilterMode}};
+                   resource::{ Mesh, Texture, ImageInfo, TextureDescInfo, TextureType, BufferId}};
 use seija_transform::{hierarchy::{Parent, Children}, Transform};
 use spritesheet::SpriteSheet;
 use glyph_brush::{GlyphBrush, GlyphBrushBuilder,VerticalAlign,HorizontalAlign,FontId,
@@ -19,6 +20,9 @@ pub struct UIRenderRoot {
     pub(crate) text_brush:GlyphBrush<Vec<Vertex2D>>,
     pub(crate) font_texture:Handle<Texture>,
     font_caches:HashMap<Handle<Font>,FontId>,
+    pub(crate) font_buffer:Option<BufferId>,
+
+    pub(crate) despawn_next_frame:Vec<Entity>,
 }
 
 pub(crate) fn on_ui_start(world:&mut World) {
@@ -40,7 +44,9 @@ pub(crate) fn on_ui_start(world:&mut World) {
                     .cache_redraws(false)
                     .initial_cache_size((1024, 1024)).build(),
         font_caches:HashMap::default(),
-        font_texture
+        font_texture,
+        font_buffer:None,
+        despawn_next_frame:vec![]
     });
 }
 
@@ -211,11 +217,16 @@ pub struct CanvasRenderParams<'w,'s> {
     pub(crate) materials:ResMut<'w,Assets<Material>>,
     pub(crate) asset_server:Res<'w,AssetServer>,
     pub(crate) commands:Commands<'w,'s>,
-    pub(crate) ui_roots:Res<'w,UIRenderRoot>,
+    pub(crate) ui_roots:ResMut<'w,UIRenderRoot>,
     pub(crate) time:Res<'w,Time>,
 }
 
 pub fn update_canvas_render(mut params:CanvasRenderParams) {
+    for del_entity in params.ui_roots.despawn_next_frame.drain(..) {
+        params.commands.entity(del_entity).despawn();
+    }
+
+
     let mut changed_canvas:HashSet<Entity> = HashSet::default();
     for entity in params.update_render2ds.iter() {
         if let Some(canvas_entity) = find_canvas(entity, &params.parents, &params.canvases) {
@@ -224,7 +235,6 @@ pub fn update_canvas_render(mut params:CanvasRenderParams) {
     }
 
     for entity in changed_canvas {
-
         Canvas::update_drawcall(entity,
              &params.children,
              &mut params.render2d,
@@ -235,7 +245,7 @@ pub fn update_canvas_render(mut params:CanvasRenderParams) {
              &mut params.meshes,
              &mut params.materials,
              &mut params.commands,
-             &params.ui_roots,
+             &mut params.ui_roots,
              &params.asset_server);
     }    
 }

@@ -346,7 +346,7 @@ impl RenderResources {
             },size);                          
     }
 
-    fn get_aligned_texture_size(size: usize) -> usize {
+    pub fn get_aligned_texture_size(size: usize) -> usize {
         (size + COPY_BYTES_PER_ROW_ALIGNMENT - 1) & !(COPY_BYTES_PER_ROW_ALIGNMENT - 1)
     }
    

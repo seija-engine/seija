@@ -40,7 +40,7 @@ fn start(world: &mut World) {
                          .insert(event_system).insert(UICanvas::default()).id();
     
     let server = world.get_resource::<AssetServer>().unwrap().clone();
-    let h_font = server.load_sync::<Font>(world, "ui/VonwaonBitmap-16px.ttf", None).unwrap();
+    let h_font = server.load_sync::<Font>(world, "ui/FiraMono-Medium.ttf", None).unwrap();
     let h_sheet = server.load_sync::<SpriteSheet>(world, "ui/ui.json", None).unwrap();
     let sheets = world.get_resource::<Assets<SpriteSheet>>().unwrap();
     let ui_sheet = sheets.get(&h_sheet.id).unwrap();
@@ -71,9 +71,10 @@ fn start(world: &mut World) {
     
     let text_id = {
         let mut t = Transform::default();
+        t.local.position.x = 30f32;
         let rect2d = Rect2D::new(100f32, 50f32);
-        let mut text = Text::new(h_font.clone(),"+0".to_string());
-        text.font_size = 32;
+        let mut text = Text::new(h_font.clone(),"0".to_string());
+        text.font_size = 24;
         let e_text = world.spawn((text,rect2d,t)).set_parent(Some(panel_id)).id();
         seija_core::log::error!("text:{:?}",e_text);
         e_text
