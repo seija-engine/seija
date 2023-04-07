@@ -41,7 +41,6 @@ impl Canvas {
                     uirenders,
                     meshes,
                     materials,
-                    ui_roots,
                     commands,
                     asset_server,
                     zorders,trans,parents);
@@ -73,25 +72,23 @@ impl UIDrawCall {
                        render2ds:&Query<&UIRender2D>,
                        meshes:&mut Assets<Mesh>,
                        materials:&mut Assets<Material>,
-                       ui_roots:&UIRenderRoot,
                        commands:&mut Commands,
                        asset_server:&AssetServer,
                        zorders:&Query<&ZOrder>,
                        trans:&Query<&Transform>,
                        parents:&Query<&Parent>) -> UIDrawCall {
+        let fst_zorder = zorders.get(entitys[0]).map(|v| v.value).unwrap_or_default();
         let mut positons:Vec<[f32;3]> = vec![];
         let mut uvs:Vec<[f32;2]> = vec![];
         let mut indexs:Vec<u32> = vec![];
         let mut index_offset = 0;
         let mut texture = None;
         let mut material_def:Option<Arc<MaterialDef>> = None;
-        for entity in entitys.iter() {
+        for (index,entity) in entitys.iter().enumerate() {
             if let Ok(render2d) = render2ds.get(*entity) {
                 let mat4 = calc_trans(trans, parents, *entity,Some(canvas_entity));
-                let mut z_value:f32 = 0f32;
-                if let Ok(zorder) = zorders.get(*entity) {
-                    z_value = zorder.value as f32 * Z_SCALE;
-                }
+                let z_value:f32 = index as f32 * Z_SCALE;
+                //seija_core::log::error!("entity:{:?} z_value:{:?}",entity,z_value);
                 texture = Some(render2d.texture.clone());
                 material_def = Some(render2d.mat.clone());
                 for vert in render2d.mesh2d.points.iter() {
@@ -115,8 +112,9 @@ impl UIDrawCall {
         let mut new_material = Material::from_def(material_def.unwrap().clone(), asset_server).unwrap();
         new_material.texture_props.set("mainTexture", texture.unwrap().clone());
         let h_material = materials.add(new_material);
-        let t = Transform::from_matrix(calc_trans(trans, parents, canvas_entity, None));
-        seija_core::log::error!("{:?}",&t.local.position);
+        let mut t = Transform::from_matrix(calc_trans(trans, parents, canvas_entity, None));
+        t.local.position.z += fst_zorder as f32 * Z_SCALE;
+        //seija_core::log::error!("entitys:{:?} {:?}",entitys,&t.local.position);
         let drawcall_entity = commands.spawn((h_mesh,h_material,t)).id();
         let mut hasher = DefaultHasher::default();
         entitys.hash(&mut hasher);

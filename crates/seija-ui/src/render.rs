@@ -18,6 +18,7 @@ pub struct WriteFontAtlas {
 }
 
 pub fn update_ui_render(world:&mut World,ctx:&mut RenderContext) {
+    //TODO 尝试优化为根据Rect写内存
     let font_buffer_id = check_init_font_buffer(world, ctx);
     let mut write_atlas = world.get_resource_mut::<Events<WriteFontAtlas>>().unwrap();
     let write_events = write_atlas.drain().collect::<Vec<_>>();
@@ -31,6 +32,9 @@ pub fn update_ui_render(world:&mut World,ctx:&mut RenderContext) {
 
     ctx.resources.map_buffer(&font_buffer_id, wgpu::MapMode::Write);
     ctx.resources.write_mapped_buffer(&font_buffer_id, 0..cache_bytes.len() as u64, &mut |bytes,_| {
+        //for rect in write_events.iter() {
+        //    seija_core::log::error!("write rect:{:?}",rect.rect);
+        //}
         bytes[0..cache_bytes.len()].copy_from_slice(cache_bytes);
     });
     ctx.resources.unmap_buffer(&font_buffer_id);

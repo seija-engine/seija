@@ -51,7 +51,7 @@ fn start(world: &mut World) {
     
     let rect2d = Rect2D::new(1024f32, 768f32);
     let mut t = Transform::default();
-    t.local.position = Vec3::new(0f32, 0f32, -1f32);
+    t.local.position = Vec3::new(0f32, 0f32, -2f32);
     let panel_id = world.spawn((rect2d,t,Canvas::default())).set_parent(Some(canvas_id)).id();
     {
        let t = Transform::default();

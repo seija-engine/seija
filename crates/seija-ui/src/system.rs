@@ -177,7 +177,6 @@ fn write_font_texture(texture:&mut Texture,rect:Rectangle<u32>,bytes:&[u8]) {
     }
   }
 
-
 fn glyph_to_mesh(vert:GlyphVertex) -> Vec<Vertex2D> {
     let left = vert.pixel_coords.min.x as f32;
     let right = vert.pixel_coords.max.x as f32;
