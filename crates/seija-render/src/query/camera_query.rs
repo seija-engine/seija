@@ -5,7 +5,7 @@ use seija_core::info::EInfo;
 use seija_geometry::{bound::Relation, Frustum};
 use seija_transform::Transform;
 
-use crate::{camera::camera::Camera, material::Material, resource::Mesh};
+use crate::{camera::camera::{Camera, SortType}, material::Material, resource::Mesh};
 
 use super::{
     scene_octree_mgr::SceneOctreeMgr, system::IdOrName, view_list::ViewEntity, QuerySystem,
@@ -49,6 +49,17 @@ pub(crate) fn camera_query_update(
     }
 }
 
+fn cacl_dis_order(sort_type:SortType,camera_position: Vec3, position: Vec3) -> f32 {
+    match sort_type {
+        SortType::Distance => {
+            (camera_position - position).length_squared()
+        }
+        SortType::Z => {
+            -position.z
+        }
+    }
+}
+
 fn update_camera_normal_query(
     view_query: &ViewQuery,
     query: &Query<(
@@ -76,7 +87,7 @@ fn update_camera_normal_query(
                 }
             }
             let position = t.global().position;
-            let dis_order = (camera_position - position).length_squared();
+            let dis_order = cacl_dis_order(camera.sort_type,camera_position,position);
             let mat = materials.get(&hmat.id)?;
             write_list.add_entity(
                 mat.order,
@@ -94,7 +105,7 @@ fn update_camera_normal_query(
         if let Some(fru) = Frustum::from_matrix4(&proj_view) {
             for (entity, t, hmat, hmesh, info) in query.iter() {
                 let position = t.global().position;
-                let dis_order = (camera_position - position).length_squared();
+                let dis_order = cacl_dis_order(camera.sort_type,camera_position,position);
                 let mat = materials.get(&hmat.id)?;
 
                 if let Some(info) = info {
@@ -209,7 +220,7 @@ fn update_camera_octree_query_(
                     }
                 }
                 let position = t.global().position;
-                let dis_order = (camera_position - position).length_squared();
+                let dis_order = cacl_dis_order(camera.sort_type,camera_position,position);
                 let mat = materials.get(&hmat.id)?;
 
                 if let Some(aabb) = meshs.get(&hmesh.id).and_then(|v| v.aabb.as_ref()) {

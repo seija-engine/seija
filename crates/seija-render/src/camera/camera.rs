@@ -4,12 +4,18 @@ use seija_asset::Handle;
 use smol_str::SmolStr;
 use crate::resource::Texture;
 
+#[derive(Clone,Copy)]
+pub enum SortType {
+    Distance,
+    Z
+}
 
 #[derive(Component)]
 pub struct Camera {
     pub order:i32,
     pub layer:u32,
     pub cull_type:i32,
+    pub sort_type:SortType,
     pub is_hdr:bool,
 
     pub projection:Projection,
@@ -26,7 +32,8 @@ pub struct Camera {
           target:None,
           layer:1,
           cull_type:-1,
-          is_hdr:false
+          is_hdr:false,
+          sort_type:SortType::Distance
        }
     }
 }

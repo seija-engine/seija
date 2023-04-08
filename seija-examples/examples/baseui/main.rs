@@ -5,7 +5,7 @@ use seija_core::{time::Time, CoreStage, StartupStage};
 use seija_examples::{init_core_app, load_material};
 use seija_input::Input;
 use seija_render::{
-    camera::camera::{Camera, Orthographic},
+    camera::camera::{Camera, Orthographic, SortType},
     material::Material,
     resource::{load_image_info, Mesh},
 };
@@ -33,7 +33,8 @@ fn main() {
 }
 
 fn start(world: &mut World) {
-    let ui_camera = Camera::from_2d(Orthographic::default());
+    let mut ui_camera = Camera::from_2d(Orthographic::default());
+    ui_camera.sort_type = SortType::Z;
     let event_system = UIEventSystem::default();
     let canvas_id = world.spawn_empty().insert(Transform::default())
                          .insert(ui_camera)
@@ -75,7 +76,8 @@ fn start(world: &mut World) {
         let rect2d = Rect2D::new(100f32, 50f32);
         let mut text = Text::new(h_font.clone(),"0".to_string());
         text.font_size = 24;
-        let e_text = world.spawn((text,rect2d,t)).set_parent(Some(panel_id)).id();
+        let canvas = Canvas::default();
+        let e_text = world.spawn((text,rect2d,t,canvas)).set_parent(Some(panel_id)).id();
         seija_core::log::error!("text:{:?}",e_text);
         e_text
     };

@@ -7,7 +7,7 @@ use seija_render::{resource::{Mesh, MeshAttributeType, Indices}, wgpu::Primitive
 use seija_transform::{hierarchy::{Children, Parent}, Transform};
 use crate::{render::UIRender2D, system::UIRenderRoot};
 
-const Z_SCALE: f32 = 0.01;
+const Z_SCALE: f32 = 0.00001;
 
 #[derive(Component,Default)]
 pub struct Canvas {
@@ -16,7 +16,7 @@ pub struct Canvas {
 
 
 impl Canvas {
-    pub fn update_drawcall(entity:Entity,
+    pub fn update_drawcall(canvas_entity:Entity,
                            children:&Query<&Children>,
                            uirenders:&Query<&UIRender2D>,
                            canvases:&mut Query<&mut Canvas>,
@@ -29,14 +29,14 @@ impl Canvas {
                            ui_roots:&mut UIRenderRoot,
                            asset_server:&AssetServer) {
         
-        let entity_group = ScanDrawCall::scan_entity_group(entity, children, uirenders, canvases);
-        if let Ok(mut canvas) = canvases.get_mut(entity) {
+        let entity_group = ScanDrawCall::scan_entity_group(canvas_entity, children, uirenders, canvases);
+        if let Ok(mut canvas) = canvases.get_mut(canvas_entity) {
             for (index,draw_entitys) in entity_group.iter().enumerate() {
-                let mut hasher = DefaultHasher::default();
-                draw_entitys.hash(&mut hasher);
-                let hash_key = hasher.finish();
+                //let mut hasher = DefaultHasher::default();
+                //draw_entitys.hash(&mut hasher);
+                //let hash_key = hasher.finish();
                 let new_drawcall = UIDrawCall::form_entity(
-                    entity,
+                    canvas_entity,
                     draw_entitys,
                     uirenders,
                     meshes,
@@ -65,6 +65,14 @@ struct UIDrawCall {
     entity:Entity,
     hash_key:u64
 }
+/*
+Canvas       Z:0
+  R1         Z:1
+  R2         Z:2
+  R3[Canvas] Z:3
+
+[R1,R2].position = Canvas
+*/
 
 impl UIDrawCall {
     pub fn form_entity(canvas_entity:Entity,
@@ -112,9 +120,11 @@ impl UIDrawCall {
         let mut new_material = Material::from_def(material_def.unwrap().clone(), asset_server).unwrap();
         new_material.texture_props.set("mainTexture", texture.unwrap().clone());
         let h_material = materials.add(new_material);
-        let mut t = Transform::from_matrix(calc_trans(trans, parents, canvas_entity, None));
+
+        let canvas_t = trans.get(canvas_entity).unwrap();
+        let mut t = Transform::from_matrix(canvas_t.global().matrix());
         t.local.position.z += fst_zorder as f32 * Z_SCALE;
-        //seija_core::log::error!("entitys:{:?} {:?}",entitys,&t.local.position);
+        
         let drawcall_entity = commands.spawn((h_mesh,h_material,t)).id();
         let mut hasher = DefaultHasher::default();
         entitys.hash(&mut hasher);
@@ -221,6 +231,9 @@ impl ScanDrawCall {
 fn calc_trans(trans:&Query<&Transform>,parents:&Query<&Parent>,child_entity:Entity,parent_entity:Option<Entity>) -> Mat4 {
     let mut cur_entity = child_entity;
     let mut cur_mat = trans.get(child_entity).map(|t| t.local.matrix()).unwrap_or(Mat4::IDENTITY);
+    if Some(cur_entity) == parent_entity {
+        return Mat4::IDENTITY;
+    }
     while let Ok(parent) = parents.get(cur_entity) {
         cur_entity = parent.0;
         if Some(cur_entity) == parent_entity {
