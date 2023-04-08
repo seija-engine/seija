@@ -21,7 +21,10 @@ use spritesheet::SpriteSheet;
 #[derive( Resource)]
 pub struct UIData {
     text:Entity,
-    number:i32
+    number:i32,
+    panel_id:Entity,
+    h_font:Handle<Font>,
+    add_entitys:Vec<Entity>
 }
 
 fn main() {
@@ -41,7 +44,7 @@ fn start(world: &mut World) {
                          .insert(event_system).insert(UICanvas::default()).id();
     
     let server = world.get_resource::<AssetServer>().unwrap().clone();
-    let h_font = server.load_sync::<Font>(world, "ui/FiraMono-Medium.ttf", None).unwrap();
+    let h_font = server.load_sync::<Font>(world, "ui/WenQuanYiMicroHei.ttf", None).unwrap();
     let h_sheet = server.load_sync::<SpriteSheet>(world, "ui/ui.json", None).unwrap();
     let sheets = world.get_resource::<Assets<SpriteSheet>>().unwrap();
     let ui_sheet = sheets.get(&h_sheet.id).unwrap();
@@ -83,16 +86,29 @@ fn start(world: &mut World) {
     };
    
 
-    world.insert_resource(UIData {text:text_id,number:0 });
+    world.insert_resource(UIData {text:text_id,number:0,panel_id,h_font: h_font.clone(),add_entitys:vec![] });
     
 }
 
 
 fn on_update(mut commands: Commands,mut texts:Query<&mut Text>,time: Res<Time>,mut ui_data: ResMut<UIData>,mut render:EventReader<UIEvent>) {
     for event in render.iter() {
-        seija_core::log::error!("click!");
         ui_data.number += 1;
         let mut number_text = texts.get_mut(ui_data.text).unwrap();
         number_text.text = format!("+{}",ui_data.number);
+        if ui_data.number <= 5 {
+            let mut t = Transform::default();
+            t.local.position.x = 30f32;
+            t.local.position.y = ui_data.number as f32 * 25f32;
+            let rect2d = Rect2D::new(100f32, 50f32);
+            let mut text = Text::new(ui_data.h_font.clone(),format!("新-{:?}",ui_data.number));
+            text.font_size = 24;
+            let text_id = commands.spawn((text,rect2d,t)).set_parent(Some(ui_data.panel_id)).id();
+            ui_data.add_entitys.push(text_id);
+        } else {
+           if let Some(pop_entity) = ui_data.add_entitys.pop() {
+                commands.entity(pop_entity).despawn_recursive();
+           }
+        }
     }
 }

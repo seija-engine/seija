@@ -1,7 +1,7 @@
 use std::{sync::Arc, collections::{HashSet, HashMap}};
 use seija_core::{log, time::Time};
 use bevy_ecs::{world::World, system::{Resource, 
-    SystemParam, Query, Commands, Res, ResMut}, prelude::{Entity, EventWriter}, query::{Or, Changed}};
+    SystemParam, Query, Commands, Res, ResMut, RemovedComponents}, prelude::{Entity, EventWriter}, query::{Or, Changed}};
 use seija_asset::{AssetServer, Assets, Handle};
 use seija_render::{material::{MaterialDefineAsset, MaterialDef, Material},
                    resource::{ Mesh, Texture, ImageInfo, TextureDescInfo, TextureType, BufferId}};
@@ -104,12 +104,12 @@ pub fn update_render_mesh_system(mut params:RenderMeshParams) {
             if let Some(top_canvas_entity) = find_top_canvas(entity, &params.parents, &params.canvases) {
                 top_changed_canvas.insert(top_canvas_entity);
             }
-            log::error!("update mesh init:{:?}",params.time.frame());
+            //log::error!("update mesh init:{:?}",params.time.frame());
         }
     }
     //更新Text的Mesh
     for entity in params.update_texts.iter() {
-        if let Ok((text,rect)) = params.texts.get(entity) {
+        if let Ok((text,_)) = params.texts.get(entity) {
             if let Some(h_font) = text.font.as_ref() {
                 //更新字体缓存
                 if !params.ui_roots.font_caches.contains_key(h_font) {
@@ -151,6 +151,10 @@ pub fn update_render_mesh_system(mut params:RenderMeshParams) {
                     seija_core::log::error!("text brush error:{:?}",err);
                 }
             }
+
+            if let Some(top_canvas_entity) = find_top_canvas(entity, &params.parents, &params.canvases) {
+                top_changed_canvas.insert(top_canvas_entity);
+            }
         }
     }
 
@@ -167,7 +171,7 @@ fn write_font_texture(texture:&mut Texture,rect:Rectangle<u32>,bytes:&[u8]) {
     if let TextureType::Image(image) = &mut texture.texture {
        let min_x = rect.min[0] as usize;
        let min_y = rect.min[1] as usize;
-       seija_core::log::error!("write_font_texture:{:?} min_x:{},min_y:{}",rect,min_x,min_y);
+       //seija_core::log::error!("write_font_texture:{:?} min_x:{},min_y:{}",rect,min_x,min_y);
        
        for (index,row) in bytes.chunks_exact(rect.width() as usize).enumerate() {
           let mut offset = (index + min_y) * 1024;
@@ -206,6 +210,7 @@ fn glyph_to_mesh(vert:GlyphVertex) -> Vec<Vertex2D> {
 #[derive(SystemParam)]
 pub struct CanvasRenderParams<'w,'s> {
     pub(crate) update_render2ds:Query<'w,'s,Entity,Changed<UIRender2D>>,
+    pub(crate) remove_render2ds:RemovedComponents<'w,UIRender2D>,
     pub(crate) render2d:Query<'w,'s,&'static UIRender2D>,
     pub(crate) canvases:Query<'w,'s,&'static mut Canvas>,
     pub(crate) parents:Query<'w,'s,&'static Parent>,
@@ -225,6 +230,9 @@ pub fn update_canvas_render(mut params:CanvasRenderParams) {
         params.commands.entity(del_entity).despawn();
     }
 
+    for rm_entity in params.remove_render2ds.iter() {
+        seija_core::log::error!("remove:{:?}",rm_entity);
+    }
 
     let mut changed_canvas:HashSet<Entity> = HashSet::default();
     for entity in params.update_render2ds.iter() {
