@@ -66,7 +66,8 @@ pub enum ZTest {
     Equal,
     GEqual,
     Greater,
-    Always
+    Always,
+    Never
 }
 
 impl Into<CompareFunction> for &ZTest {
@@ -77,7 +78,8 @@ impl Into<CompareFunction> for &ZTest {
             ZTest::Equal => CompareFunction::Equal,
             ZTest::GEqual => CompareFunction::GreaterEqual,
             ZTest::Greater => CompareFunction::Greater,
-            ZTest::Always => CompareFunction::Always
+            ZTest::Always => CompareFunction::Always,
+            ZTest::Never => CompareFunction::Never,
         }
     }
 }
@@ -92,6 +94,7 @@ impl TryFrom<&str> for ZTest {
             ">=" => Ok(ZTest::GEqual),
             ">" => Ok(ZTest::Greater),
             "always" => Ok(ZTest::Always),
+            "never" => Ok(ZTest::Never),
             _ => Err(value.to_string())
         }
     }

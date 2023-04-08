@@ -70,11 +70,14 @@ Canvas       Z:0
   R1         Z:1
   R2         Z:2
   R3[Canvas] Z:3
-  R4         Z:4
-  R5         Z:5
-  R6         Z:6
+   R30       Z:4
+   R31       Z:5
+  R4         Z:6
+  R5         Z:7
+  R6         Z:8
 
-[R1,R2].position = Canvas
+[R1,R2]
+[R4,R5,R6] 
 */
 
 impl UIDrawCall {
