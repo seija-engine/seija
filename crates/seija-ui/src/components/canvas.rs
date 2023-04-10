@@ -11,7 +11,7 @@ const Z_SCALE: f32 = 0.00001;
 
 #[derive(Component,Default)]
 pub struct Canvas {
-    draw_calls:Vec<UIDrawCall>,
+    pub(crate) draw_calls:Vec<UIDrawCall>,
 }
 
 
@@ -30,11 +30,15 @@ impl Canvas {
                            asset_server:&AssetServer) {
         
         let entity_group = ScanDrawCall::scan_entity_group(canvas_entity, children, uirenders, canvases);
+        entity_group.iter().flatten().for_each(|entity| {
+            ui_roots.entity2canvas.insert(*entity, canvas_entity);
+        });
         if let Ok(mut canvas) = canvases.get_mut(canvas_entity) {
-            for (index,draw_entitys) in entity_group.iter().enumerate() {
-                //let mut hasher = DefaultHasher::default();
-                //draw_entitys.hash(&mut hasher);
-                //let hash_key = hasher.finish();
+            //TODO 这里尝试重用drawcall
+            for old_drawcall in canvas.draw_calls.drain(..) {
+                ui_roots.despawn_next_frame.push(old_drawcall.entity);
+            }
+            for draw_entitys in entity_group.iter() {
                 let new_drawcall = UIDrawCall::form_entity(
                     canvas_entity,
                     draw_entitys,
@@ -44,25 +48,24 @@ impl Canvas {
                     commands,
                     asset_server,
                     zorders,trans,parents);
-                
-               
-                if index < canvas.draw_calls.len()  {
-                    let despawn_entity = canvas.draw_calls[index].entity;
-                    ui_roots.despawn_next_frame.push(despawn_entity);
-                    canvas.draw_calls[index] = new_drawcall;
-                } else {
-                    canvas.draw_calls.push(new_drawcall);
-                }
+                canvas.draw_calls.push(new_drawcall);
             }   
         }
 
+    }
+
+
+    pub fn update_drawcall_position(&self,canvas_entity:Entity,trans:&Query<&mut Transform>) {
+        for draw_entity in self.draw_calls.iter() {
+           seija_core::log::error!("upppppppppppdate:{:?}",draw_entity.entity);
+        }
     }
 }
 
 
 
-struct UIDrawCall {
-    entity:Entity,
+pub(crate) struct UIDrawCall {
+   pub(crate) entity:Entity,
     hash_key:u64
 }
 /*

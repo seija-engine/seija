@@ -1,17 +1,15 @@
 use std::{sync::Arc, collections::{HashSet, HashMap}};
-use seija_core::{log, time::Time};
 use bevy_ecs::{world::World, system::{Resource, 
-    SystemParam, Query, Commands, Res, ResMut, RemovedComponents}, prelude::{Entity, EventWriter}, query::{Or, Changed}};
+    SystemParam, Query, Commands, Res, ResMut, RemovedComponents, ParamSet}, prelude::{Entity, EventWriter, EventReader}, query::{Or, Changed, Without}};
 use seija_asset::{AssetServer, Assets, Handle};
 use seija_render::{material::{MaterialDefineAsset, MaterialDef, Material},
-                   resource::{ Mesh, Texture, ImageInfo, TextureDescInfo, TextureType, BufferId}};
-use seija_transform::{hierarchy::{Parent, Children}, Transform};
+                   resource::{ Mesh, Texture, ImageInfo, TextureDescInfo, BufferId}};
+use seija_transform::{hierarchy::{Parent, Children}, Transform, events::HierarchyEvent};
 use spritesheet::SpriteSheet;
 use glyph_brush::{GlyphBrush, GlyphBrushBuilder,VerticalAlign,HorizontalAlign,FontId,
-    ab_glyph::PxScale, Section, BrushAction,Rectangle, Layout};
+    ab_glyph::PxScale, Section, BrushAction, Layout};
 use crate::{components::{sprite::Sprite, rect2d::Rect2D, canvas::{Canvas, ZOrder}}, 
-            render::{UIRender2D, WriteFontAtlas}, mesh2d::Vertex2D, text::{Text, Font}};
-use glyph_brush::GlyphVertex;
+            render::{UIRender2D, WriteFontAtlas}, mesh2d::Vertex2D, text::{Text, Font, glyph_to_mesh, write_font_texture}};
 use seija_render::wgpu::{TextureFormat};
 #[derive(Resource)]
 pub struct UIRenderRoot {
@@ -22,6 +20,7 @@ pub struct UIRenderRoot {
     font_caches:HashMap<Handle<Font>,FontId>,
     pub(crate) font_buffer:Option<BufferId>,
 
+    pub(crate) entity2canvas:HashMap<Entity,Entity>,
     pub(crate) despawn_next_frame:Vec<Entity>,
 }
 
@@ -46,18 +45,15 @@ pub(crate) fn on_ui_start(world:&mut World) {
         font_caches:HashMap::default(),
         font_texture,
         font_buffer:None,
-        despawn_next_frame:vec![]
+        despawn_next_frame:vec![],
+        entity2canvas:HashMap::default(),
     });
 }
 
 fn create_font_texture(world:&mut World) -> Handle<Texture> {
-    
     let image_info = ImageInfo {width:1024,height:1024,format:TextureFormat::R8Unorm,data:vec![0u8;1024 * 1024] };
     let mut texture_desc = TextureDescInfo::default();
     texture_desc.desc.label = "font_texture".into();
-    //texture_desc.sampler_desc.min_filter = FilterMode::Linear;
-    //texture_desc.sampler_desc.mag_filter = FilterMode::Linear;
-    //texture_desc.sampler_desc.anisotropy_clamp = Some(NonZeroU8::new(16).unwrap());
     let font_texture = Texture::create_image(image_info, texture_desc);
     let mut textures = world.get_resource_mut::<Assets<Texture>>().unwrap();
     let h_texture = textures.add(font_texture);
@@ -80,8 +76,7 @@ pub struct RenderMeshParams<'w,'s> {
     pub(crate) parents:Query<'w,'s,&'static Parent>,
     pub(crate) zorders:Query<'w,'s,&'static mut ZOrder>,
     pub(crate) children:Query<'w,'s,&'static Children>,
-    pub(crate) write_font_atlas:EventWriter<'w,'s,WriteFontAtlas>,
-    pub(crate) time:Res<'w,Time>,
+    pub(crate) write_font_atlas:EventWriter<'w,'s,WriteFontAtlas>
 }
 
 pub fn update_render_mesh_system(mut params:RenderMeshParams) {
@@ -104,9 +99,9 @@ pub fn update_render_mesh_system(mut params:RenderMeshParams) {
             if let Some(top_canvas_entity) = find_top_canvas(entity, &params.parents, &params.canvases) {
                 top_changed_canvas.insert(top_canvas_entity);
             }
-            //log::error!("update mesh init:{:?}",params.time.frame());
         }
     }
+    
     //更新Text的Mesh
     for entity in params.update_texts.iter() {
         if let Ok((text,_)) = params.texts.get(entity) {
@@ -158,6 +153,8 @@ pub fn update_render_mesh_system(mut params:RenderMeshParams) {
         }
     }
 
+    
+
     //刷新ZOrder
     if !top_changed_canvas.is_empty() {
         for top_entity in top_changed_canvas {
@@ -167,50 +164,16 @@ pub fn update_render_mesh_system(mut params:RenderMeshParams) {
     }
 }
 
-fn write_font_texture(texture:&mut Texture,rect:Rectangle<u32>,bytes:&[u8]) {
-    if let TextureType::Image(image) = &mut texture.texture {
-       let min_x = rect.min[0] as usize;
-       let min_y = rect.min[1] as usize;
-       //seija_core::log::error!("write_font_texture:{:?} min_x:{},min_y:{}",rect,min_x,min_y);
-       
-       for (index,row) in bytes.chunks_exact(rect.width() as usize).enumerate() {
-          let mut offset = (index + min_y) * 1024;
-          offset = offset + min_x;
-          image.data[offset..(offset + rect.width() as usize)].copy_from_slice(row);
-       }
-    }
-  }
 
-fn glyph_to_mesh(vert:GlyphVertex) -> Vec<Vertex2D> {
-    let left = vert.pixel_coords.min.x as f32;
-    let right = vert.pixel_coords.max.x as f32;
-    let top = -vert.pixel_coords.min.y as f32;
-    let bottom = -vert.pixel_coords.max.y as f32;
-    let uv = vert.tex_coords;
-    let verts = vec![
-      Vertex2D {
-        pos:[left,top,0f32].into(),
-        uv:[uv.min.x,uv.min.y].into(),
-      },
-      Vertex2D {
-        pos:[right,top,0f32].into(),
-        uv:[uv.max.x,uv.min.y].into(),
-      },
-      Vertex2D {
-        pos:[left,bottom,0f32].into(),
-        uv:[uv.min.x,uv.max.y].into(),
-      },
-      Vertex2D {
-        pos:[right,bottom,0f32].into(),
-        uv:[uv.max.x,uv.max.y].into(),
-      }];
-    verts
-}
+
+
 
 #[derive(SystemParam)]
 pub struct CanvasRenderParams<'w,'s> {
     pub(crate) update_render2ds:Query<'w,'s,Entity,Changed<UIRender2D>>,
     pub(crate) remove_render2ds:RemovedComponents<'w,UIRender2D>,
+    pub(crate) update_trans:Query<'w,'s,Entity,Changed<Transform>>,
+    pub(crate) tree_events:EventReader<'w,'s,HierarchyEvent>,
     pub(crate) render2d:Query<'w,'s,&'static UIRender2D>,
     pub(crate) canvases:Query<'w,'s,&'static mut Canvas>,
     pub(crate) parents:Query<'w,'s,&'static Parent>,
@@ -221,25 +184,58 @@ pub struct CanvasRenderParams<'w,'s> {
     pub(crate) materials:ResMut<'w,Assets<Material>>,
     pub(crate) asset_server:Res<'w,AssetServer>,
     pub(crate) commands:Commands<'w,'s>,
-    pub(crate) ui_roots:ResMut<'w,UIRenderRoot>,
-    pub(crate) time:Res<'w,Time>,
+    pub(crate) ui_roots:ResMut<'w,UIRenderRoot>
 }
 
 pub fn update_canvas_render(mut params:CanvasRenderParams) {
     for del_entity in params.ui_roots.despawn_next_frame.drain(..) {
         params.commands.entity(del_entity).despawn();
     }
-
+    
+    let mut changed_canvas:HashSet<Entity> = HashSet::default();
+    //处理Tansform层级变化
+    for event in params.tree_events.iter() {
+        match event {
+            HierarchyEvent::ParentChange { entity,.. } => { 
+                visit_children(*entity, &params.children, &mut |ve: Entity| {
+                    if let Some(canvas_entity) = params.ui_roots.entity2canvas.remove(&ve) {
+                        changed_canvas.insert(canvas_entity);
+                    }
+                    if let Some(canvas_entity) = find_canvas(ve, &params.parents, &params.canvases) {
+                        changed_canvas.insert(canvas_entity);
+                    }
+                });
+                
+            }
+        }
+    }
+    
+    
+    //处理删除
     for rm_entity in params.remove_render2ds.iter() {
-        seija_core::log::error!("remove:{:?}",rm_entity);
+        if let Some(canvas_entity) = params.ui_roots.entity2canvas.remove(&rm_entity) {
+            changed_canvas.insert(canvas_entity);
+        }
+    }
+    //处理Transform变化
+    for entity in params.update_trans.iter() {
+        if !params.canvases.contains(entity) {
+            if let Some(canvas_entity) = find_canvas(entity, &params.parents, &params.canvases) {
+                changed_canvas.insert(canvas_entity);
+            }
+        } 
     }
 
-    let mut changed_canvas:HashSet<Entity> = HashSet::default();
+    
+    
+    //处理渲染元素更新
     for entity in params.update_render2ds.iter() {
         if let Some(canvas_entity) = find_canvas(entity, &params.parents, &params.canvases) {
             changed_canvas.insert(canvas_entity);
         }
     }
+
+   
 
     for entity in changed_canvas {
         Canvas::update_drawcall(entity,
@@ -255,6 +251,30 @@ pub fn update_canvas_render(mut params:CanvasRenderParams) {
              &mut params.ui_roots,
              &params.asset_server);
     }    
+}
+
+
+pub fn update_canvas_trans(world:&mut World) {
+   let mut update_canvas:Vec<Entity> = Vec::new();
+   let mut update_trans = world.query_filtered::<(Entity,&Canvas),Changed<Transform>>();
+   for (entity,_) in update_trans.iter(world) {
+        update_canvas.push(entity);
+   }
+
+   let mut canvaes = world.query::<&Canvas>();
+   let mut trans = world.query::<&mut Transform>();
+   for entity in update_canvas.iter() {
+     if let Ok(canvas) = canvaes.get(world, *entity) {
+        if let Ok(canvas_t) = trans.get(world, *entity) {
+            for draw_call in canvas.draw_calls.iter() {
+                if let Ok(mut drawcall_t) = unsafe { trans.get_unchecked(world, draw_call.entity) } {
+                    drawcall_t.local.position.x = canvas_t.global().position.x;
+                    drawcall_t.local.position.y = canvas_t.global().position.y;
+                }
+            }
+        }
+     }
+   }
 }
 
 fn find_top_canvas(entity:Entity,parents:&Query<&Parent>,canvases:&Query<&Canvas>) -> Option<Entity> {
@@ -288,3 +308,11 @@ fn find_canvas(entity:Entity,parents:&Query<&Parent>,canvases:&Query<&mut Canvas
     None
 }
 
+fn visit_children<F>(entity:Entity,children:&Query<&Children>,visit:&mut F) where F:FnMut(Entity) {
+    visit(entity);
+    if let Ok(childs) = children.get(entity) {
+        for child in childs.iter() {
+            visit_children(*child,children,visit);
+        }
+    }
+}

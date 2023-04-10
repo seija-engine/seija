@@ -1,5 +1,5 @@
 use bevy_ecs::{prelude::*, system::Command, world};
-use glam::{Vec3, Vec4};
+use glam::{Vec3, Vec4, Quat};
 use seija_asset::{AssetServer, Assets, Handle};
 use seija_core::{time::Time, CoreStage, StartupStage};
 use seija_examples::{init_core_app, load_material};
@@ -71,11 +71,13 @@ fn start(world: &mut World) {
         event.event_type = UIEventType::CLICK;
         let e_btn = world.spawn((Sprite::simple(add_index,Some(h_sheet), Vec4::ONE),rect2d,t,event)).set_parent(Some(panel_id)).id();
         seija_core::log::error!("btn:{:?}",e_btn);
+        
+     
     }
     
     let text_id = {
         let mut t = Transform::default();
-        t.local.position.x = 30f32;
+        t.local.position.x = 60f32;
         let rect2d = Rect2D::new(100f32, 50f32);
         let mut text = Text::new(h_font.clone(),"0".to_string());
         text.font_size = 24;
@@ -91,11 +93,20 @@ fn start(world: &mut World) {
 }
 
 
-fn on_update(mut commands: Commands,mut texts:Query<&mut Text>,time: Res<Time>,mut ui_data: ResMut<UIData>,mut render:EventReader<UIEvent>) {
+fn on_update(mut commands: Commands,
+             mut trans:Query<&mut Transform>,
+             mut texts:Query<&mut Text>,
+             time: Res<Time>,
+             mut ui_data: ResMut<UIData>,
+             mut render:EventReader<UIEvent>) {
     for event in render.iter() {
         ui_data.number += 1;
-        let mut number_text = texts.get_mut(ui_data.text).unwrap();
-        number_text.text = format!("+{}",ui_data.number);
+        //let mut number_text = texts.get_mut(ui_data.text).unwrap();
+        //if let Ok(mut text_trans) = trans.get_mut(ui_data.text) {
+        //    text_trans.local.position.x = 30f32 + ui_data.number as f32 * 25f32;
+        //}
+       
+        //number_text.text = format!("+{}",ui_data.number);
         if ui_data.number <= 5 {
             let mut t = Transform::default();
             t.local.position.x = 30f32;
@@ -105,10 +116,15 @@ fn on_update(mut commands: Commands,mut texts:Query<&mut Text>,time: Res<Time>,m
             text.font_size = 24;
             let text_id = commands.spawn((text,rect2d,t)).set_parent(Some(ui_data.panel_id)).id();
             ui_data.add_entitys.push(text_id);
-        } else {
-           if let Some(pop_entity) = ui_data.add_entitys.pop() {
+        } else if ui_data.number == 6 {
+            if let Some(pop_entity) = ui_data.add_entitys.pop() {
                 commands.entity(pop_entity).despawn_recursive();
-           }
+                seija_core::log::error!("despawn {:?}",&ui_data.add_entitys);
+            }
+        } else {
+            if let Some(pop_entity) = ui_data.add_entitys.pop() {
+                commands.entity(pop_entity).set_parent(Some(ui_data.text));
+            }
         }
     }
 }

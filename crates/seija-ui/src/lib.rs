@@ -18,7 +18,7 @@ pub use render::update_ui_render;
 
 use seija_render::RenderStage;
 use seija_transform::update_transform_system;
-use system::{on_ui_start, update_render_mesh_system, update_canvas_render};
+use system::{on_ui_start, update_render_mesh_system, update_canvas_render, update_canvas_trans};
 use text::{FontLoader, Font};
 #[derive(Clone, Copy,Hash,Debug,PartialEq, Eq,StageLabel)]
 pub enum UIStage {
@@ -47,7 +47,10 @@ impl IModule for UIModule {
         app.add_system(UIStage::PreUI,ui_layout_system.before(update_render_mesh_system));
         app.add_system(UIStage::PreUI, update_render_mesh_system);
         app.add_system(UIStage::UI, update_canvas_render);
+        app.add_system(UIStage::UI, update_canvas_trans);
         app.add_system(UIStage::PostUI, ui_event_system);
+
+        
          /*
         ui_layout_system
         ui_update_zorders
