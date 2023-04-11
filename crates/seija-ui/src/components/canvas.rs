@@ -30,6 +30,7 @@ impl Canvas {
                            asset_server:&AssetServer) {
         
         let entity_group = ScanDrawCall::scan_entity_group(canvas_entity, children, uirenders, canvases);
+        seija_core::log::error!("scan group:{:?}",&entity_group);
         entity_group.iter().flatten().for_each(|entity| {
             ui_roots.entity2canvas.insert(*entity, canvas_entity);
         });
@@ -180,13 +181,14 @@ impl ZOrder {
 
 struct ScanDrawCall {
     cur_texture:Option<HandleId>,
+    cur_canvas:Option<Entity>,
     entity_group:Vec<Vec<Entity>>,
     cache:Vec<Entity>,
 }
 
 impl ScanDrawCall {
     pub fn scan_entity_group(entity:Entity,children:&Query<&Children>,uirenders:&Query<&UIRender2D>,canvases:&Query<&mut Canvas>) -> Vec<Vec<Entity>> {
-        let mut scan_drawcall = ScanDrawCall { entity_group:vec![],cache:vec![], cur_texture:None };
+        let mut scan_drawcall = ScanDrawCall { entity_group:vec![],cache:vec![], cur_texture:None,cur_canvas:None };
         if let Ok(render2d) = uirenders.get(entity) {
             scan_drawcall.cur_texture = Some(render2d.texture.id);
             scan_drawcall.cache.push(entity);
@@ -211,7 +213,15 @@ impl ScanDrawCall {
             self.cache.clear();
         }
     }
-
+    /*
+    Root [Canvas] 0v0
+      V0          1v0
+    Stack[Canvas] 2v0
+      V1          3V0
+      V2          4V0
+      V3          5V0
+      
+    */
     fn _scan_entity_group(&mut self,entity:Entity,children:&Query<&Children>,uirenders:&Query<&UIRender2D>,canvases:&Query<&mut Canvas>) {
         if canvases.contains(entity) {
             self.emit();

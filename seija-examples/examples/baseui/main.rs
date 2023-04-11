@@ -101,12 +101,12 @@ fn on_update(mut commands: Commands,
              mut render:EventReader<UIEvent>) {
     for event in render.iter() {
         ui_data.number += 1;
-        //let mut number_text = texts.get_mut(ui_data.text).unwrap();
-        //if let Ok(mut text_trans) = trans.get_mut(ui_data.text) {
-        //    text_trans.local.position.x = 30f32 + ui_data.number as f32 * 25f32;
-        //}
+        let mut number_text = texts.get_mut(ui_data.text).unwrap();
+        if let Ok(mut text_trans) = trans.get_mut(ui_data.text) {
+            text_trans.local.position.x = 30f32 + ui_data.number as f32 * 15f32;
+        }
        
-        //number_text.text = format!("+{}",ui_data.number);
+        number_text.text = format!("+{}",ui_data.number);
         if ui_data.number <= 5 {
             let mut t = Transform::default();
             t.local.position.x = 30f32;

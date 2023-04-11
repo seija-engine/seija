@@ -1,13 +1,12 @@
 use bevy_ecs::prelude::*;
-use glam::{Vec3, Vec4, Vec2, Quat};
-use seija_asset::{AssetServer};
+use glam::{Vec4};
+use seija_asset::{AssetServer, Assets, Handle};
 use seija_core::{time::Time, CoreStage, StartupStage};
 use seija_examples::{init_core_app};
 use seija_input::Input;
-//TODO Fix UIRender
 use seija_render::{
-    camera::camera::{Camera, Orthographic},
-    resource::{load_image_info},
+    camera::camera::{Camera, Orthographic, SortType},
+   
 };
 use seija_transform::{IEntityChildren,Transform};
 use seija_ui::{
@@ -15,12 +14,12 @@ use seija_ui::{
     types::Thickness,
     update_ui_render, layout::{types::{LayoutElement, LayoutAlignment, SizeValue}, comps::Orientation},
 };
+use spritesheet::SpriteSheet;
 
 #[derive(Default, Resource)]
 pub struct UIData {
    
 }
-
 
 fn main() {
     let mut app = init_core_app("FRPRender.clj", vec![update_ui_render],None);
@@ -30,43 +29,60 @@ fn main() {
     app.run();
 }
 
-fn load_sprite(path:&str,server:&AssetServer) -> usize {
-    let full_path = server.full_path(path).unwrap();
-    let image_info = load_image_info(full_path).unwrap();
-    let index = 0usize;//sprite_alloc.alloc(image_info).unwrap();
-    index
-}
+
 
 fn start(world: &mut World) {
-    /*
     let ui_data = UIData::default();
     let server: AssetServer = world.get_resource::<AssetServer>().unwrap().clone();
-    let bg_index = load_sprite("ui/lm-db.png", &server);
-    let sprite_index = load_sprite("ui/Btn4On.png", &server) as u32;
+    let h_sheet = server.load_sync::<SpriteSheet>(world, "ui/ui.json", None).unwrap();
+    let sheets = world.get_resource::<Assets<SpriteSheet>>().unwrap();
+    let ui_sheet = sheets.get(&h_sheet.id).unwrap();
+
+    let bg_index = ui_sheet.get_index("lm-db").unwrap();
+    let sprite_index = ui_sheet.get_index("Btn4On").unwrap();
+
     //CameraCanvas
     let mut ortho = Orthographic::default();
     ortho.far = 1000f32;
     ortho.near = -1000f32;
-    let ui_camera = Camera::from_2d(ortho);
-    let canvas_id = world.spawn_empty().insert(Panel::default()).insert(Transform::default()).insert(ui_camera).insert(UICanvas::default()).id();
+    let mut ui_camera = Camera::from_2d(ortho);
+    ui_camera.sort_type = SortType::Z;
+    let canvas_id = world.spawn_empty().insert(Canvas::default()).insert(Transform::default()).insert(ui_camera).insert(UICanvas::default()).id();
+    seija_core::log::error!("canvas_id:{:?}",canvas_id);
     //背景图
     let mut view = LayoutElement::create_view();
     view.common.hor = LayoutAlignment::Stretch;
     view.common.ver = LayoutAlignment::End;
     view.common.ui_size.height = SizeValue::Pixel(200f32);
-    world.spawn((Sprite::sliced(bg_index, Thickness::new1(35f32), Vec4::ONE),view,Rect2D::default(),Transform::default())).set_parent(Some(canvas_id));
-    
-   
+    let bg_id = world.spawn((Sprite::sliced(bg_index,Some(h_sheet.clone()), 
+                            Thickness::new1(35f32), Vec4::ONE),view,
+                            Rect2D::default(),Transform::default())).set_parent(Some(canvas_id)).id();
+    seija_core::log::error!("bg_id:{:?}",bg_id);
+    //StackPanel 
     let stack_id = create_stackpanel(world, Some(canvas_id));
-    create_sprite(world,sprite_index,Some(stack_id),LayoutAlignment::Start);
-    create_sprite(world,sprite_index,Some(stack_id),LayoutAlignment::Center);
-    create_sprite(world,sprite_index,Some(stack_id),LayoutAlignment::End);
-    create_sprite(world,sprite_index,Some(stack_id),LayoutAlignment::Stretch);
-    create_sprite(world,sprite_index,Some(stack_id),LayoutAlignment::Center);
+    seija_core::log::error!("stack_id:{:?}",stack_id);
+    create_sprite(world,sprite_index,Some(stack_id),h_sheet.clone(),LayoutAlignment::Start);
+    create_sprite(world,sprite_index,Some(stack_id),h_sheet.clone(),LayoutAlignment::Center);
+    create_sprite(world,sprite_index,Some(stack_id),h_sheet.clone(),LayoutAlignment::End);
+    create_sprite(world,sprite_index,Some(stack_id),h_sheet.clone(),LayoutAlignment::Stretch);
+    create_sprite(world,sprite_index,Some(stack_id),h_sheet.clone(),LayoutAlignment::Center);
 
-    world.insert_resource(ui_data);*/
+    world.insert_resource(ui_data);  
 }
 
+fn create_sprite(world:&mut World,sprite_index:usize,parent:Option<Entity>,sheet:Handle<SpriteSheet>,ver:LayoutAlignment) -> Entity {
+    let mut view_layout = LayoutElement::create_view();
+    view_layout.common.hor = LayoutAlignment::Center;
+    view_layout.common.ver = ver;
+    view_layout.common.ui_size.width = SizeValue::Pixel(100f32);
+    if ver != LayoutAlignment::Stretch {
+        view_layout.common.ui_size.height = SizeValue::Pixel(50f32);
+    } else {
+        view_layout.common.ui_size.height = SizeValue::Auto;
+    }
+    let t = Transform::default();
+    world.spawn((Sprite::sliced(sprite_index,Some(sheet),Thickness::new1(20f32), Vec4::ONE),Rect2D::default(),t,view_layout)).set_parent(parent).id()
+}
 
 fn create_stackpanel(world: &mut World,parent:Option<Entity>) -> Entity {
     let rect2d = Rect2D::default();
@@ -80,21 +96,9 @@ fn create_stackpanel(world: &mut World,parent:Option<Entity>) -> Entity {
     stack_layout.common.ver = LayoutAlignment::End;
     world.spawn((rect2d,t,stack_layout,Canvas::default())).set_parent(parent).id()
 }
-/*
-fn create_sprite(world:&mut World,sprite_index:u32,parent:Option<Entity>,ver:LayoutAlignment) -> Entity {
-    let mut view_layout = LayoutElement::create_view();
-    view_layout.common.hor = LayoutAlignment::Center;
-    view_layout.common.ver = ver;
-    view_layout.common.ui_size.width = SizeValue::Pixel(100f32);
-    if ver != LayoutAlignment::Stretch {
-        view_layout.common.ui_size.height = SizeValue::Pixel(50f32);
-    } else {
-        view_layout.common.ui_size.height = SizeValue::Auto;
-    }
-    let t = Transform::default();
-    world.spawn((Sprite::sliced(todo!(),Thickness::new1(20f32), Vec4::ONE),Rect2D::default(),t,view_layout)).set_parent(parent).id()
-}
-*/
+
+
+
 fn on_update(mut commands: Commands,input: Res<Input>,time: Res<Time>,ui_data: ResMut<UIData>,mut sprites: Query<&mut Sprite>) {
     
    
