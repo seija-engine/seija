@@ -94,7 +94,7 @@ fn on_update(mut render:EventReader<UIEvent>, _:Commands,
                 let mut sprite = sprites.get_mut(ui_data.btn_entity).unwrap();
                 sprite.sprite_index = ui_data.normal_sprite;
             } else if event.event_type == UIEventType::CLICK {
-                seija_core::log::error!("click!");
+                log::error!("click!");
             }
         }
         if event.entity == ui_data.btn2_entity {

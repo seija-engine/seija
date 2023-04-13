@@ -15,7 +15,6 @@ pub use type_uuid::{TypeUuid,TypeUuidDynamic};
 pub use uuid;
 pub use bevy_ecs;
 pub use glam as math;
-pub use log;
 pub use smol;
 pub use anyhow;
 pub use smol_str;

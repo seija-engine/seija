@@ -84,7 +84,7 @@ pub fn write_font_texture(texture:&mut Texture,rect:glyph_brush::Rectangle<u32>,
     if let TextureType::Image(image) = &mut texture.texture {
        let min_x = rect.min[0] as usize;
        let min_y = rect.min[1] as usize;
-       //seija_core::log::error!("write_font_texture:{:?} min_x:{},min_y:{}",rect,min_x,min_y);
+       //log::error!("write_font_texture:{:?} min_x:{},min_y:{}",rect,min_x,min_y);
        
        for (index,row) in bytes.chunks_exact(rect.width() as usize).enumerate() {
           let mut offset = (index + min_y) * 1024;

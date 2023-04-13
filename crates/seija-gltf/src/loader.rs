@@ -10,8 +10,7 @@ use crate::{asset::{ GltfCamera, GltfMaterial, GltfMesh, GltfNode, GltfPrimitive
 use seija_asset::{Handle,async_trait::async_trait,  AssetServer, AssetLoaderParams, AssetDynamic, AssetRequest, IAssetLoader, Assets, HandleUntyped, add_to_asset_type};
 use seija_render::resource::{Texture, TextureDescInfo};
 use seija_render::{camera::camera::{Orthographic, Perspective, Projection}, 
-                   resource::{Indices, Mesh, MeshAttributeType, VertexAttributeValues}, 
-                   wgpu, wgpu::{PrimitiveTopology}};
+                   resource::{Indices, Mesh, MeshAttributeType, VertexAttributeValues}};
 use seija_skeleton3d::{
     Skeleton, AnimationSet, Skin, offine::{
         raw_skeleton::{RawSkeleton, RawJoint}, 
@@ -463,13 +462,13 @@ fn load_node(node:&gltf::Node,nodes:&mut Vec<GltfNode>,p_t:&TransformMatrix,mesh
 }
 
 
-fn get_primitive_topology(mode: gltf::mesh::Mode) -> Result<PrimitiveTopology> {
+fn get_primitive_topology(mode: gltf::mesh::Mode) -> Result<wgpu::PrimitiveTopology> {
     match mode {
-        gltf::mesh::Mode::Points => Ok(PrimitiveTopology::PointList),
-        gltf::mesh::Mode::Lines => Ok(PrimitiveTopology::LineList),
-        gltf::mesh::Mode::LineStrip => Ok(PrimitiveTopology::LineStrip),
-        gltf::mesh::Mode::Triangles => Ok(PrimitiveTopology::TriangleList),
-        gltf::mesh::Mode::TriangleStrip => Ok(PrimitiveTopology::TriangleStrip),
+        gltf::mesh::Mode::Points => Ok(wgpu::PrimitiveTopology::PointList),
+        gltf::mesh::Mode::Lines => Ok(wgpu::PrimitiveTopology::LineList),
+        gltf::mesh::Mode::LineStrip => Ok(wgpu::PrimitiveTopology::LineStrip),
+        gltf::mesh::Mode::Triangles => Ok(wgpu::PrimitiveTopology::TriangleList),
+        gltf::mesh::Mode::TriangleStrip => Ok(wgpu::PrimitiveTopology::TriangleStrip),
         mode => Err(anyhow!("UnsupportedPrimitive:{:?}",mode)),
     }
 }

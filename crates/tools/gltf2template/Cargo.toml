@@ -6,7 +6,7 @@ edition = "2021"
 [dependencies]
 gltf = "1.0.0"
 clap = {version = "4.0.29",features = ["derive"]} 
-log = "0.4.14"
+log = {workspace = true }
 env_logger = "0.9.3"
 anyhow = "1.0.66"
 base64 = { version = "0.12.3" }

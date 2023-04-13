@@ -14,7 +14,7 @@ use bevy_ecs::prelude::*;
 use seija_asset::{AssetServer, Assets, AssetStage};
 use seija_core::{CoreStage};
 extern crate serde_derive;
-pub use wgpu;
+
 mod frp_context;
 mod graph_setting;
 pub mod dsl_frp;
@@ -61,6 +61,7 @@ pub struct RenderConfig {
 
 impl RenderConfig {
     pub fn set_config_path<P:AsRef<Path>>(&mut self,path:P) {
+        
         self.config_path = path.as_ref().into();
     }
 }
@@ -70,7 +71,9 @@ pub struct RenderModule(pub Arc<RenderConfig>);
 
 impl IModule for RenderModule {
     fn init(&mut self,app:&mut App) {
+        println!("start render module init");
         resource::init_resource(app);
+        println!("start render module init2");
         material::init_material(app);
         dsl_frp::init_dsl_frp(app);
         light::init_light(app);
@@ -89,6 +92,7 @@ impl IModule for RenderModule {
 
         app.add_system(CoreStage::PostUpdate, camera_frp_event_system);
         app.init_resource::<SceneEnv>();
+        println!("end render module init");
     }
 }
 

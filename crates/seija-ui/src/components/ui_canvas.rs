@@ -1,8 +1,7 @@
-use bevy_ecs::{prelude::{Component, Entity}, world::World, query::{Changed, Added}};
+use bevy_ecs::{prelude::{Component, Entity}, world::World, query::{Changed}};
 use seija_core::{window::AppWindow, math::Vec3};
 use seija_render::camera::camera::{Camera, Projection};
 use seija_transform::Transform;
-use seija_core::log;
 pub enum UIScaleMode {
     WithScreenSize,
     ConstantPhysicalSize

@@ -3,10 +3,10 @@ use std::{hash::{Hash, Hasher}, collections::hash_map::DefaultHasher, sync::Arc}
 use bevy_ecs::{prelude::{Component, Entity}, system::{Query, Commands}};
 use seija_asset::{HandleId, Assets, AssetServer};
 use seija_core::math::{Mat4, Vec4, Vec4Swizzles};
-use seija_render::{resource::{Mesh, MeshAttributeType, Indices}, wgpu::PrimitiveTopology, material::{Material, MaterialDef}};
+use seija_render::{resource::{Mesh, MeshAttributeType, Indices}, material::{Material, MaterialDef}};
 use seija_transform::{hierarchy::{Children, Parent}, Transform};
 use crate::{render::UIRender2D, system::UIRenderRoot};
-
+use  wgpu::PrimitiveTopology;
 const Z_SCALE: f32 = 0.00001;
 
 #[derive(Component,Default)]
@@ -30,7 +30,7 @@ impl Canvas {
                            asset_server:&AssetServer) {
         
         let entity_group = ScanDrawCall::scan_entity_group(canvas_entity, children, uirenders, canvases);
-        seija_core::log::error!("scan group:{:?}",&entity_group);
+        log::error!("scan group:{:?}",&entity_group);
         entity_group.iter().flatten().for_each(|entity| {
             ui_roots.entity2canvas.insert(*entity, canvas_entity);
         });
@@ -58,7 +58,7 @@ impl Canvas {
 
     pub fn update_drawcall_position(&self,canvas_entity:Entity,trans:&Query<&mut Transform>) {
         for draw_entity in self.draw_calls.iter() {
-           seija_core::log::error!("upppppppppppdate:{:?}",draw_entity.entity);
+           log::error!("upppppppppppdate:{:?}",draw_entity.entity);
         }
     }
 }
@@ -106,7 +106,7 @@ impl UIDrawCall {
             if let Ok(render2d) = render2ds.get(*entity) {
                 let mat4 = calc_trans(trans, parents, *entity,Some(canvas_entity));
                 let z_value:f32 = index as f32 * Z_SCALE;
-                //seija_core::log::error!("entity:{:?} z_value:{:?}",entity,z_value);
+                //log::error!("entity:{:?} z_value:{:?}",entity,z_value);
                 texture = Some(render2d.texture.clone());
                 material_def = Some(render2d.mat.clone());
                 for vert in render2d.mesh2d.points.iter() {

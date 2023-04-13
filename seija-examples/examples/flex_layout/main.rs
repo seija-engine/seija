@@ -38,7 +38,7 @@ fn start(world: &mut World) {
     let mut ui_camera = Camera::from_2d(ortho);
     ui_camera.sort_type = SortType::Z;
     let canvas_id = world.spawn_empty().insert(Canvas::default()).insert(Transform::default()).insert(ui_camera).insert(UICanvas::default()).id();
-    seija_core::log::error!("canvas_id:{:?}",canvas_id);
+    log::error!("canvas_id:{:?}",canvas_id);
     let no_wrap_size = Vec2::new(466f32, 100f32);
     let nowrap_infos = vec![(Vec2::ZERO,FlexJustify::Start),
                              (Vec2::new(466f32, 0f32),FlexJustify::Center),
@@ -47,7 +47,7 @@ fn start(world: &mut World) {
                              (Vec2::new(466f32, 100f32),FlexJustify::SpaceAround)];
     for info in nowrap_infos.iter() {
         let back_id = create_background(world, info.0, no_wrap_size, canvas_id,h_sheet.clone(),bg_index);
-        seija_core::log::error!("back_id:{:?}",back_id);
+        log::error!("back_id:{:?}",back_id);
         let mut flex = LayoutElement::create_flex(FlexLayout {
             justify:info.1,
             warp:FlexWrap::NoWrap,
@@ -60,7 +60,7 @@ fn start(world: &mut World) {
          flex.common.padding = Thickness::new1(10f32);
          flex.common.ui_size = UISize::from_number(no_wrap_size);
          let flex_id = world.spawn((flex,Rect2D::default(),Canvas::default(),Transform::default())).set_parent(Some(canvas_id)).id();
-         seija_core::log::error!("flex_id:{:?}",flex_id);
+         log::error!("flex_id:{:?}",flex_id);
          for _ in 0..3 {
             let item = FlexItem::default();
             let t = Transform::default();

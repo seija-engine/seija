@@ -37,6 +37,15 @@ pub unsafe extern "C" fn core_spawn_entity(world_ptr:*mut u8) -> u64 {
    
     world_ptr.spawn_empty().id().to_bits()
 }
+
+#[no_mangle]
+pub unsafe extern "C" fn init_log()  {
+    env_logger::init();
+    let mut builder = env_logger::builder();
+    builder.filter_level(log::LevelFilter::Info);
+    builder.init();
+    
+}
 /*
 #[repr(C)]
 pub struct FFIEntityMut {

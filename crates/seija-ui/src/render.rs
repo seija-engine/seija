@@ -2,7 +2,7 @@ use std::{sync::Arc, num::NonZeroU32};
 use glyph_brush::Rectangle;
 use bevy_ecs::{world::World, prelude::{Component, Events}};
 use seija_asset::{Handle, Assets};
-use seija_render::{RenderContext, resource::{Texture, BufferId, RenderResources, RenderResourceId}, material::MaterialDef,wgpu};
+use seija_render::{RenderContext, resource::{Texture, BufferId, RenderResources}, material::MaterialDef};
 use crate::{mesh2d::Mesh2D, system::UIRenderRoot};
 
 #[derive(Component,Debug)]
@@ -33,7 +33,7 @@ pub fn update_ui_render(world:&mut World,ctx:&mut RenderContext) {
     ctx.resources.map_buffer(&font_buffer_id, wgpu::MapMode::Write);
     ctx.resources.write_mapped_buffer(&font_buffer_id, 0..cache_bytes.len() as u64, &mut |bytes,_| {
         //for rect in write_events.iter() {
-        //    seija_core::log::error!("write rect:{:?}",rect.rect);
+        //    log::error!("write rect:{:?}",rect.rect);
         //}
         bytes[0..cache_bytes.len()].copy_from_slice(cache_bytes);
     });

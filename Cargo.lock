@@ -2750,6 +2750,8 @@ name = "seija-app"
 version = "0.1.0"
 dependencies = [
  "bevy_ecs",
+ "env_logger 0.9.3",
+ "log",
 ]
 
 [[package]]
@@ -2778,6 +2780,7 @@ dependencies = [
  "bevy_ecs",
  "bytemuck",
  "core-derive",
+ "env_logger 0.9.3",
  "glam 0.20.5",
  "log",
  "raw-window-handle 0.5.0",
@@ -2857,6 +2860,7 @@ dependencies = [
  "seija-render",
  "seija-skeleton3d",
  "seija-transform",
+ "wgpu",
 ]
 
 [[package]]
@@ -2992,6 +2996,7 @@ dependencies = [
  "fnv",
  "glyph_brush",
  "lazy_static",
+ "log",
  "num_enum",
  "seija-app",
  "seija-asset",
@@ -3001,6 +3006,7 @@ dependencies = [
  "seija-transform",
  "smol",
  "spritesheet",
+ "wgpu",
 ]
 
 [[package]]

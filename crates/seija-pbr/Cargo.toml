@@ -7,7 +7,7 @@ edition = "2021"
 glam = "0.20.3"
 bevy_ecs = "0.9.0"
 anyhow = "1.0.58"
-log = "0.4.16"
+log = {workspace = true }
 seija-render = {path = "../seija-render"}
 seija-transform = {path = "../seija-transform"}
 #lite-clojure-eval = {git = "https://github.com/seija-engine/lite-clojure.git"}

@@ -40,6 +40,7 @@ impl IModule for AssetModule {
         app.schedule.add_stage_after(CoreStage::PostUpdate, AssetStage::AssetEvents, SystemStage::parallel());
         app.add_system(CoreStage::PreUpdate, server::free_unused_assets_system);
         app.add_system(CoreStage::PreUpdate, update_asset_system);
+        println!("init asset module");
     }
 }
 
@@ -51,9 +52,13 @@ pub trait AddAsset {
 
 impl AddAsset for App {
     fn add_asset<T>(&mut self) where T: Asset {
-        let asset_server = self.world.get_resource::<AssetServer>().unwrap();
-        let assets = asset_server.register_type::<T>();
-        self.add_resource(assets);
+        if let  Some(asset_server)  = self.world.get_resource::<AssetServer>() {
+            let assets = asset_server.register_type::<T>();
+            self.add_resource(assets);
+        } else {
+            panic!("AssetServer not found");
+        }
+       
         self.add_system(AssetStage::AssetEvents, Assets::<T>::asset_event_system);
         self.add_system(AssetStage::LoadAssets, Assets::<T>::update_assets_system);
         self.add_event::<AssetEvent<T>>();

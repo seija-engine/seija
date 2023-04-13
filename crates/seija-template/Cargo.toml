@@ -10,7 +10,7 @@ seija-app = {path = "../seija-app"}
 seija-core = {path = "../seija-core"}
 seija-asset = {path = "../seija-asset"}
 seija-transform = {path = "../seija-transform"}
-log = "0.4.16"
+log = {workspace = true }
 smallvec = "1.6.1"
 thiserror = "1.0.25"
 relative-path = "1.7.2"

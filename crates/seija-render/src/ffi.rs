@@ -38,7 +38,7 @@ pub unsafe fn render_camera_set_path(camera_ptr:*mut Camera,path:*const i8) {
 
 
 #[no_mangle]
-pub unsafe fn render_add_module(app_ptr:*mut App) {
+pub unsafe fn render_add_module(app_ptr:*mut App,config_ptr:*mut RenderConfig) {
     let render_module = RenderModule::default();
     (&mut *app_ptr).add_module(render_module);
 }

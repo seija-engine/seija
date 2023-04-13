@@ -6,7 +6,7 @@ edition = "2018"
 
 [dependencies]
 gltf = "1.0.0"
-log = "0.4.16"
+log = {workspace = true}
 seija-render = {path = "../seija-render"}
 seija-asset = {path = "../seija-asset"}
 seija-core = {path = "../seija-core"}
@@ -17,4 +17,5 @@ seija-geometry = {path = "../seija-geometry"}
 glam = "0.20.2"
 bevy_ecs = "0.9.0"
 relative-path = "1.7.2"
+wgpu = {workspace = true}
 base64 = { version = "0.12.3" }

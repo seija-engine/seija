@@ -11,5 +11,5 @@ seija-template = {path = "../seija-template"}
 seija-asset = {path = "../seija-asset"}
 seija-pbr = {path = "../seija-pbr"}
 seija-gltf = {path = "../seija-gltf"}
-log = "*"
+log = {workspace = true }
 relative-path = "1.7.2"

@@ -328,7 +328,7 @@ fn arrange_flex_element_wrap(entity:Entity,flex:&FlexLayout,elem:&LayoutElement,
         }
     }
     if last_line_start < child_count {
-        seija_core::log::error!("{} .. {}",last_line_start,child_count);
+        log::error!("{} .. {}",last_line_start,child_count);
         calc_align_jusitfy(flex.justify,this_axis_size.x, axis_pos,&mut chid_size_lst[last_line_start..child_count],flex.direction,&mut child_pos_lst);
         line_idx_range.push(last_line_start..child_count);
     }

@@ -48,7 +48,7 @@ fn start(world: &mut World) {
     let mut ui_camera = Camera::from_2d(ortho);
     ui_camera.sort_type = SortType::Z;
     let canvas_id = world.spawn_empty().insert(Canvas::default()).insert(Transform::default()).insert(ui_camera).insert(UICanvas::default()).id();
-    seija_core::log::error!("canvas_id:{:?}",canvas_id);
+    log::error!("canvas_id:{:?}",canvas_id);
     //背景图
     let mut view = LayoutElement::create_view();
     view.common.hor = LayoutAlignment::Stretch;
@@ -57,10 +57,10 @@ fn start(world: &mut World) {
     let bg_id = world.spawn((Sprite::sliced(bg_index,Some(h_sheet.clone()), 
                             Thickness::new1(35f32), Vec4::ONE),view,
                             Rect2D::default(),Transform::default())).set_parent(Some(canvas_id)).id();
-    seija_core::log::error!("bg_id:{:?}",bg_id);
+    log::error!("bg_id:{:?}",bg_id);
     //StackPanel 
     let stack_id = create_stackpanel(world, Some(canvas_id));
-    seija_core::log::error!("stack_id:{:?}",stack_id);
+    log::error!("stack_id:{:?}",stack_id);
     create_sprite(world,sprite_index,Some(stack_id),h_sheet.clone(),LayoutAlignment::Start);
     create_sprite(world,sprite_index,Some(stack_id),h_sheet.clone(),LayoutAlignment::Center);
     create_sprite(world,sprite_index,Some(stack_id),h_sheet.clone(),LayoutAlignment::End);

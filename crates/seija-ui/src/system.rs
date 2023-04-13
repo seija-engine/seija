@@ -1,6 +1,6 @@
 use std::{sync::Arc, collections::{HashSet, HashMap}};
 use bevy_ecs::{world::World, system::{Resource, 
-    SystemParam, Query, Commands, Res, ResMut, RemovedComponents, ParamSet}, prelude::{Entity, EventWriter, EventReader}, query::{Or, Changed, Without}};
+    SystemParam, Query, Commands, Res, ResMut, RemovedComponents}, prelude::{Entity, EventWriter, EventReader}, query::{Or, Changed}};
 use seija_asset::{AssetServer, Assets, Handle};
 use seija_render::{material::{MaterialDefineAsset, MaterialDef, Material},
                    resource::{ Mesh, Texture, ImageInfo, TextureDescInfo, BufferId}};
@@ -10,7 +10,7 @@ use glyph_brush::{GlyphBrush, GlyphBrushBuilder,VerticalAlign,HorizontalAlign,Fo
     ab_glyph::PxScale, Section, BrushAction, Layout};
 use crate::{components::{sprite::Sprite, rect2d::Rect2D, canvas::{Canvas, ZOrder}}, 
             render::{UIRender2D, WriteFontAtlas}, mesh2d::Vertex2D, text::{Text, Font, glyph_to_mesh, write_font_texture}};
-use seija_render::wgpu::{TextureFormat};
+use wgpu::{TextureFormat};
 #[derive(Resource)]
 pub struct UIRenderRoot {
     pub(crate) baseui:Arc<MaterialDef>,
@@ -143,7 +143,7 @@ pub fn update_render_mesh_system(mut params:RenderMeshParams) {
                 }
                 Ok(BrushAction::ReDraw) => {}
                 Err(err) => {
-                    seija_core::log::error!("text brush error:{:?}",err);
+                    log::error!("text brush error:{:?}",err);
                 }
             }
 

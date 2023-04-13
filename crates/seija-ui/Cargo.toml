@@ -19,3 +19,5 @@ lazy_static = "1.4.0"
 glyph_brush = "0.7.5"
 smol = "1.2.5"
 num_enum = "0.5.7"
+wgpu = {workspace = true }
+log = { workspace = true }

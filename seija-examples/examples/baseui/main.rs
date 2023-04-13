@@ -61,7 +61,7 @@ fn start(world: &mut World) {
        let t = Transform::default();
        let rect2d = Rect2D::new(1024f32, 768f32);
        let e_bg = world.spawn((Sprite::sliced(bg_index,Some(h_sheet.clone()), Thickness::new1(35f32), Vec4::ONE),rect2d,t)).set_parent(Some(panel_id)).id();
-       seija_core::log::error!("bg:{:?}",e_bg);
+       log::error!("bg:{:?}",e_bg);
     }
     {
         let mut t = Transform::default();
@@ -70,7 +70,7 @@ fn start(world: &mut World) {
         let mut event = EventNode::default();
         event.event_type = UIEventType::CLICK;
         let e_btn = world.spawn((Sprite::simple(add_index,Some(h_sheet), Vec4::ONE),rect2d,t,event)).set_parent(Some(panel_id)).id();
-        seija_core::log::error!("btn:{:?}",e_btn);
+        log::error!("btn:{:?}",e_btn);
         
      
     }
@@ -83,7 +83,7 @@ fn start(world: &mut World) {
         text.font_size = 24;
         let canvas = Canvas::default();
         let e_text = world.spawn((text,rect2d,t,canvas)).set_parent(Some(panel_id)).id();
-        seija_core::log::error!("text:{:?}",e_text);
+        log::error!("text:{:?}",e_text);
         e_text
     };
    
@@ -119,7 +119,7 @@ fn on_update(mut commands: Commands,
         } else if ui_data.number == 6 {
             if let Some(pop_entity) = ui_data.add_entitys.pop() {
                 commands.entity(pop_entity).despawn_recursive();
-                seija_core::log::error!("despawn {:?}",&ui_data.add_entitys);
+                log::error!("despawn {:?}",&ui_data.add_entitys);
             }
         } else {
             if let Some(pop_entity) = ui_data.add_entitys.pop() {

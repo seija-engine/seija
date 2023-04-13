@@ -22,7 +22,7 @@ serde_derive = "1.0.136"
 serde = "1.0.136"
 uuid = "0.8.2"
 bitflags = "1.3.2"
-wgpu = {version = "0.15.1", features =["spirv"]} 
+wgpu = {workspace = true} 
 futures-lite = "1.12.0"
 bevy_ecs = "0.9.0"
 raw-window-handle = "0.5.0"
@@ -32,7 +32,7 @@ num_enum = "0.5.1"
 parking_lot = "0.11.1"
 fnv = "1.0.7"
 once_cell = "1.8.0"
-log = "0.4.14"
+log = {workspace = true }
 image = {version = "0.24.5",features=["hdr"]} 
 env_logger = "0.9.0"
 glsl-pack-rtbase = {path = "../../../glsl-pack/glsl-pack-rtbase"}
