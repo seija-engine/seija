@@ -1,4 +1,7 @@
+use std::{ffi::c_char, str::FromStr};
+
 use bevy_ecs::{prelude::World};
+use log::Level;
 use seija_app::App;
 use seija_app::ecs::prelude::*;
 use crate::{CoreModule, time::Time, CoreStage, StartupStage};
@@ -39,12 +42,10 @@ pub unsafe extern "C" fn core_spawn_entity(world_ptr:*mut u8) -> u64 {
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn init_log()  {
-    env_logger::init();
-    let mut builder = env_logger::builder();
-    builder.filter_level(log::LevelFilter::Info);
-    builder.init();
-    
+pub unsafe extern "C" fn init_log(level:*const c_char) {
+    let str_level = std::ffi::CStr::from_ptr(level).to_str().unwrap();
+    let level:Level = Level::from_str(str_level).unwrap();
+    simple_logger::init_with_level(level).unwrap();
 }
 /*
 #[repr(C)]

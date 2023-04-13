@@ -4,7 +4,8 @@ use seija_asset::Handle;
 use smol_str::SmolStr;
 use crate::resource::Texture;
 
-#[derive(Clone,Copy)]
+#[derive(Clone,Copy)]   
+#[repr(u8)]
 pub enum SortType {
     Distance,
     Z
@@ -15,8 +16,8 @@ pub struct Camera {
     pub order:i32,
     pub layer:u32,
     pub cull_type:i32,
-    pub sort_type:SortType,
     pub is_hdr:bool,
+    pub sort_type:SortType,
 
     pub projection:Projection,
     pub path:SmolStr,
@@ -116,13 +117,14 @@ impl Orthographic {
 }
 
 #[derive(Debug,PartialEq, Eq,Clone,Copy)]
+#[repr(u8)]
 pub enum FovDirection {
+    Ver,
     Hor,
-    Ver
 }
 
 #[derive(Debug,Clone)]
-pub struct Perspective {
+pub struct  Perspective {
     pub fov: f32,
     pub aspect_ratio: f32,
     pub near: f32,

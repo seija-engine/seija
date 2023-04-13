@@ -27,7 +27,7 @@ members = [
 [workspace.dependencies]
 log = "0.4.17"
 wgpu = {version = "0.15.1", features =["spirv"]}
-env_logger = "0.9.3"
+simple_logger = "4.1.0"
 
 [profile.release]
 #lto = true
