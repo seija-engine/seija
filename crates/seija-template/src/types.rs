@@ -38,7 +38,7 @@ impl Template {
 #[derive(Debug)]
 pub struct TEntity {
     pub name:Option<SmolStr>,
-    pub layer:u32,
+    pub layer:i32,
     pub tag:Option<SmolStr>,
     pub components:Vec<TComponent>,
     pub children:Vec<TEntityChildren>

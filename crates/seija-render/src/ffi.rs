@@ -1,5 +1,6 @@
 use std::sync::Arc;
 
+use bevy_ecs::{prelude::Entity, world::World};
 use seija_app::App;
 use crate::{camera::camera::{Camera, Projection,Orthographic,Perspective}, RenderModule, RenderConfig};
 
@@ -71,4 +72,20 @@ pub unsafe fn render_camera_set_path(camera_ptr:*mut Camera,path:*const i8) {
     let camera = &mut *camera_ptr;
     let path = std::ffi::CStr::from_ptr(path).to_str().unwrap_or_default();
     camera.path = path.into();
+}
+
+#[no_mangle]
+pub unsafe fn render_entity_get_camera(world:&mut World,entity_id:u64) -> *mut Camera {
+    let entity = Entity::from_bits(entity_id);
+    if let Some(mut camera_ptr) = world.entity_mut(entity).get_mut::<Camera>() {
+       return camera_ptr.as_mut() as *mut Camera;
+    }
+    std::ptr::null_mut()
+}
+
+#[no_mangle]
+pub unsafe fn render_entity_add_camera(world:&mut World,entity_id:u64,camera_ptr:*mut Camera) {
+    let entity = Entity::from_bits(entity_id);
+    let camera = Box::from_raw(camera_ptr);
+    world.entity_mut(entity).insert(*camera);
 }

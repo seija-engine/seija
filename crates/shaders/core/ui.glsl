@@ -23,6 +23,8 @@ vec4 ui_fs_main(VSInput inv) {
 vec4 text_fs_main(VSInput inv) {
     vec4 textureColor = texture(sampler2D(tex_mainTexture,tex_mainTextureSampler),inv.uv);
     float c = 0;
-     
+    float r = 0.0196;
+    float g = 0.498;
+    float b = 1;
     return vec4(c,c,c,textureColor.r);
 }

@@ -12,9 +12,10 @@ pub enum SortType {
 }
 
 #[derive(Component)]
+#[repr(C)]
 pub struct Camera {
     pub order:i32,
-    pub layer:u32,
+    pub layer:i32,
     pub cull_type:i32,
     pub is_hdr:bool,
     pub sort_type:SortType,

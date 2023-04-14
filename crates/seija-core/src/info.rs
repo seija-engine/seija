@@ -4,7 +4,7 @@ use smol_str::SmolStr;
 #[derive(Component,Debug)]
 pub struct EInfo {
     pub name:Option<SmolStr>,
-    pub layer:u32,
+    pub layer:i32,
     pub tag:Option<SmolStr>
 }
 impl Default for EInfo {

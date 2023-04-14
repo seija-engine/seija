@@ -22,7 +22,7 @@ pub fn read_tmpl_entity(xml_string: &str) -> Result<TEntity> {
                                     now_entity.name = Some(std::str::from_utf8(&item.value)?.into())
                                 }
                                 b"layer" => {
-                                    now_entity.layer = u32::from_str_radix(std::str::from_utf8(&item.value)?,10)?;
+                                    now_entity.layer = i32::from_str_radix(std::str::from_utf8(&item.value)?,10)?;
                                 }
                                 b"tag" => {
                                     now_entity.tag = Some(std::str::from_utf8(&item.value)?.into())
