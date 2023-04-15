@@ -7,8 +7,8 @@ use crate::{asset::Asset, RefEvent};
 
 #[derive(Debug,Clone, Copy,PartialEq, Eq,Hash)]
 pub struct  HandleId {
-    typ:Uuid,
-    id:u64
+    pub(crate) typ:Uuid,
+    pub(crate) id:u64
 }
 
 impl HandleId {

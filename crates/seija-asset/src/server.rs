@@ -242,6 +242,11 @@ impl AssetServer {
         self.inner.request_list.write().push_back((SmolStr::new(path),asset_info.handle_id,params,loader));
         Ok(AssetRequest::new(asset_info))
     }
+
+    pub fn unload(&self,id:HandleId) {
+        let sender = self.inner.life_cycle.sender();
+        let _ = sender.try_send(RefEvent::Decrement(id));
+    }
 }
 
 
