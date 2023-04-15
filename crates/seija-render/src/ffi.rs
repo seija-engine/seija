@@ -1,8 +1,9 @@
-use std::sync::Arc;
+use std::{sync::Arc};
 
 use bevy_ecs::{prelude::Entity, world::World};
 use seija_app::App;
-use crate::{camera::camera::{Camera, Projection,Orthographic,Perspective}, RenderModule, RenderConfig};
+use seija_asset::{uuid_from_u64, Handle, HandleId, AssetServer};
+use crate::{camera::camera::{Camera, Projection,Orthographic,Perspective}, RenderModule, RenderConfig, resource::Mesh, material::Material};
 
 
 #[no_mangle]
@@ -63,7 +64,9 @@ pub unsafe fn render_create_ortho_projection(ortho_ptr:*mut Orthographic) -> *mu
 #[no_mangle]
 pub unsafe fn render_create_perpective_projection(perspective_ptr:*mut Perspective) -> *mut Projection {
     let perspective = &*perspective_ptr;
-    let projection = Box::new(Projection::Perspective(perspective.clone()));
+    dbg!(perspective);
+    dbg!(Perspective::default());
+    let projection = Box::new(Projection::Perspective(Default::default()));
     Box::into_raw(projection)
 }
 
@@ -87,5 +90,27 @@ pub unsafe fn render_entity_get_camera(world:&mut World,entity_id:u64) -> *mut C
 pub unsafe fn render_entity_add_camera(world:&mut World,entity_id:u64,camera_ptr:*mut Camera) {
     let entity = Entity::from_bits(entity_id);
     let camera = Box::from_raw(camera_ptr);
+    
     world.entity_mut(entity).insert(*camera);
+}
+
+#[no_mangle]
+pub unsafe fn render_entity_add_mesh(world:&mut World,entity_id:u64,id:u64,ta:u64,tb:u64) {
+    let entity = Entity::from_bits(entity_id);
+    let typ_uuid = uuid_from_u64(ta, tb);
+    let hid = HandleId::new(typ_uuid, id);
+    let sender = world.get_resource::<AssetServer>().unwrap().clone().get_ref_sender();
+    let mesh_handle:Handle<Mesh> = Handle::strong(hid,sender);
+    world.entity_mut(entity).insert(mesh_handle);
+    
+}
+
+#[no_mangle]
+pub unsafe fn render_entity_add_material(world:&mut World,entity_id:u64,id:u64,ta:u64,tb:u64) {
+    let entity = Entity::from_bits(entity_id);
+    let typ_uuid = uuid_from_u64(ta, tb);
+    let hid = HandleId::new(typ_uuid, id);
+    let sender = world.get_resource::<AssetServer>().unwrap().clone().get_ref_sender();
+    let mat_handle:Handle<Material> = Handle::strong(hid,sender);
+    world.entity_mut(entity).insert(mat_handle);
 }

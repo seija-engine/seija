@@ -1,5 +1,5 @@
 use std::{ffi::CStr, path::PathBuf};
-
+use crate::{uuid_to_u64,uuid_from_u64};
 use bevy_ecs::world::World;
 use seija_app::App;
 use seija_core::ResultExt;
@@ -93,26 +93,4 @@ pub unsafe extern "C" fn string_to_uuid(str:*const i8,ta:&mut u64,tb:&mut u64) -
     }
 }
 
-fn uuid_to_u64(uuid:&Uuid) -> (u64,u64) {
-    let bytes = uuid.as_bytes();
-    let mut a = 0u64;
-    let mut b = 0u64;
-    for i in 0..8 {
-        a |= (bytes[i] as u64) << (i * 8);
-    }
-    for i in 8..16 {
-        b |= (bytes[i] as u64) << ((i - 8) * 8);
-    }
-    (a,b)
-}
 
-fn uuid_from_u64(a:u64,b:u64) -> Uuid {
-    let mut bytes = [0u8;16];
-    for i in 0..8 {
-        bytes[i] = ((a >> (i * 8)) & 0xff) as u8;
-    }
-    for i in 8..16 {
-        bytes[i] = ((b >> ((i - 8) * 8)) & 0xff) as u8;
-    }
-    Uuid::from_bytes(bytes)
-}

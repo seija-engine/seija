@@ -14,6 +14,7 @@ pub unsafe extern "C" fn transform_add(world: *mut World, entity_id:u64,t: *cons
     let mut t = Transform::default();
     t.local = local_t;
     let entity = Entity::from_bits(entity_id);
+    log::error!("add transform to entity: {:?} with local: {:?}",entity,&t);
     world_mut.entity_mut(entity).insert(t);  
 }
 

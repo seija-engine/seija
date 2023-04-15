@@ -21,6 +21,7 @@ pub use lifecycle::{RefEvent,LifecycleEvent};
 use seija_core::bevy_ecs::change_detection::Mut;
 pub use downcast_rs;
 pub use async_trait;
+use uuid::Uuid;
 pub mod ffi;
 
 #[derive(Debug, Hash, PartialEq, Eq, Clone,StageLabel)]
@@ -95,4 +96,28 @@ pub fn this_asset_path(this_dir:&RelativePath,cur_path:&str) -> String {
     } else {
         this_dir.join_normalized(cur_path).as_str().into()
     }
+}
+
+pub fn uuid_to_u64(uuid:&Uuid) -> (u64,u64) {
+    let bytes = uuid.as_bytes();
+    let mut a = 0u64;
+    let mut b = 0u64;
+    for i in 0..8 {
+        a |= (bytes[i] as u64) << (i * 8);
+    }
+    for i in 8..16 {
+        b |= (bytes[i] as u64) << ((i - 8) * 8);
+    }
+    (a,b)
+}
+
+pub fn uuid_from_u64(a:u64,b:u64) -> Uuid {
+    let mut bytes = [0u8;16];
+    for i in 0..8 {
+        bytes[i] = ((a >> (i * 8)) & 0xff) as u8;
+    }
+    for i in 8..16 {
+        bytes[i] = ((b >> ((i - 8) * 8)) & 0xff) as u8;
+    }
+    Uuid::from_bytes(bytes)
 }

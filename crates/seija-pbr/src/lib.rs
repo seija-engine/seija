@@ -3,6 +3,7 @@ mod exposure;
 pub mod lights;
 mod elems;
 mod plugin;
+pub mod ffi;
 pub use camera_info::{PBRCameraInfo};
 pub use exposure::{Exposure};
 pub use plugin::{create_pbr_plugin};

@@ -77,8 +77,9 @@ impl CameraNode {
             let mut clone_global = t.global().clone();
             clone_global.scale = Vec3::ONE;
             let inv_global =  clone_global.matrix().inverse();
-
+            //log::error!("camera clone_global: {:?}",clone_global);
             let proj = camera.projection.matrix();
+            //log::error!("camera.projection: {:?}",camera.projection);
             let proj_view = proj * inv_global;
             let view = inv_global;
             let v3 = t.global().position;

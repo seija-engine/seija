@@ -243,6 +243,10 @@ impl AssetServer {
         Ok(AssetRequest::new(asset_info))
     }
 
+    pub fn get_ref_sender(&self) -> Sender<RefEvent> {
+        self.inner.life_cycle.sender()
+    }
+
     pub fn unload(&self,id:HandleId) {
         let sender = self.inner.life_cycle.sender();
         let _ = sender.try_send(RefEvent::Decrement(id));

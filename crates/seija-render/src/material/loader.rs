@@ -29,6 +29,7 @@ impl IAssetLoader for MaterialDefineLoader {
 
     fn sync_load(&self,_:&mut World,path:&str,server:&AssetServer,_:Option<Box<dyn AssetLoaderParams>>) -> Result<Box<dyn AssetDynamic>> {
         let full_path = server.full_path(path)?;
+        log::info!("loader material define full_path: {:?}",&full_path);
         let code_string = std::fs::read_to_string(full_path)?;
         load_material_def(&code_string)
     }
@@ -74,6 +75,7 @@ impl IAssetLoader for MaterialLoader {
         let cur_dir = file_path.parent().get()?;
         
         let full_path = server.full_path(path)?;
+        log::info!("loader material full_path: {:?}",&full_path);
         let bytes = std::fs::read(full_path)?;
         let json_value:Value = serde_json::from_slice(&bytes)?;
         let json_map = json_value.as_object().get()?;
