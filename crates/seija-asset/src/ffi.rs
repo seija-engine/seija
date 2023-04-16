@@ -10,7 +10,7 @@ use crate::{AssetModule, AssetServer, HandleId, HandleUntyped};
 pub unsafe extern "C" fn asset_add_module(app_ptr:&mut App,path:*mut i8) {
     let path_str = CStr::from_ptr(path).to_str().log_err().unwrap_or_default();
     let pathbuf = PathBuf::from(path_str);
-    println!("add asset module:{:?}",&pathbuf);
+    log::info!("init asset module:{:?}",&pathbuf);
     app_ptr.add_module(AssetModule(pathbuf));
 }
 

@@ -3,6 +3,7 @@ use seija_core::math::{Vec2, Vec3, Vec4};
 use seija_transform::{TransformMatrix, Transform};
 
 #[derive(Debug,Component,Clone)]
+#[repr(C)]
 pub struct Rect2D {
    pub width:f32,
    pub height:f32,

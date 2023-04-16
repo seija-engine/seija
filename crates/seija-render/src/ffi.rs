@@ -62,11 +62,8 @@ pub unsafe fn render_create_ortho_projection(ortho_ptr:*mut Orthographic) -> *mu
 }
 
 #[no_mangle]
-pub unsafe fn render_create_perpective_projection(perspective_ptr:*mut Perspective) -> *mut Projection {
-    let perspective = &*perspective_ptr;
-    dbg!(perspective);
-    dbg!(Perspective::default());
-    let projection = Box::new(Projection::Perspective(Default::default()));
+pub unsafe fn render_create_perpective_projection(perspective:&mut Perspective) -> *mut Projection {
+    let projection = Box::new(Projection::Perspective(perspective.clone()));
     Box::into_raw(projection)
 }
 

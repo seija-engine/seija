@@ -41,7 +41,6 @@ impl IModule for AssetModule {
         app.schedule.add_stage_after(CoreStage::PostUpdate, AssetStage::AssetEvents, SystemStage::parallel());
         app.add_system(CoreStage::PreUpdate, server::free_unused_assets_system);
         app.add_system(CoreStage::PreUpdate, update_asset_system);
-        println!("init asset module");
     }
 }
 

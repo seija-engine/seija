@@ -34,7 +34,6 @@ impl IAssetLoader for TextureLoader {
             return Ok(Box::new(texture));
         }
         let full_path = server.full_path(path)?;
-        log::error!("full_path:{}",full_path.display());
         let bytes = std::fs::read(full_path)?;
         let texture = Texture::from_image_bytes(&bytes, read_desc(params))?;
         Ok(Box::new(texture))

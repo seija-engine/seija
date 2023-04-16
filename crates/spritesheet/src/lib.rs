@@ -9,6 +9,7 @@ mod loader;
 use seija_core::uuid::Uuid;
 use seija_core::smol_str::{SmolStr};
 use serde::Deserialize;
+pub mod ffi;
 
 pub struct SpriteSheetModule;
 

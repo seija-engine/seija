@@ -6,6 +6,8 @@ pub use seija_input::ffi::*;
 pub use seija_asset::ffi::*;
 pub use seija_render::ffi::*;
 pub use seija_pbr::ffi::*;
+pub use spritesheet::ffi::*;
+pub use seija_ui::ffi::*;
 
 #[no_mangle]
 pub extern "C" fn get_version() -> usize {

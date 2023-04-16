@@ -70,6 +70,7 @@ impl Projection {
         }
     }
 }
+#[repr(C)]
 #[derive(Debug,Clone)]
 pub struct Orthographic {
     pub left: f32,
@@ -124,6 +125,7 @@ pub enum FovDirection {
     Hor,
 }
 
+#[repr(C)]
 #[derive(Debug,Clone)]
 pub struct  Perspective {
     pub fov: f32,

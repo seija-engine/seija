@@ -1,6 +1,6 @@
-use bevy_ecs::{world::{World, EntityMut}, prelude::Entity};
+use bevy_ecs::{world::{World}, prelude::Entity};
 use seija_app::App;
-use crate::{TransformModule, Transform, TransformMatrix};
+use crate::{TransformModule, Transform, TransformMatrix, IEntityChildren};
 
 #[no_mangle]
 pub unsafe extern "C" fn transform_add_module(app_ptr: &mut App) {
@@ -11,10 +11,10 @@ pub unsafe extern "C" fn transform_add_module(app_ptr: &mut App) {
 pub unsafe extern "C" fn transform_add(world: *mut World, entity_id:u64,t: *const TransformMatrix) {
     let world_mut = &mut *world;
     let local_t = (&*t).clone();
+    //log::error!("add:{:?}={:?}",entity_id,&local_t);
     let mut t = Transform::default();
     t.local = local_t;
     let entity = Entity::from_bits(entity_id);
-    log::error!("add transform to entity: {:?} with local: {:?}",entity,&t);
     world_mut.entity_mut(entity).insert(t);  
 }
 
@@ -44,6 +44,12 @@ pub unsafe extern "C" fn transform_get_ptr(world:*mut World,entity_id:u64) -> *m
         t.as_mut() as *mut Transform
     } else {
         std::ptr::null_mut()
-    }
-    
+    }    
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn transform_set_parent(world:&mut World,entity_id:u64,parent_id:u64,is_null:bool) {
+    let entity = Entity::from_bits(entity_id);
+    let parent_id = Entity::from_bits(parent_id);
+    world.entity_mut(entity).set_parent(if is_null { None } else {Some(parent_id)});
 }

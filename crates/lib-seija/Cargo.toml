@@ -15,3 +15,5 @@ seija-input = {path = "../seija-input"}
 seija-asset = {path = "../seija-asset"}
 seija-render = {path = "../seija-render"}
 seija-pbr = {path = "../seija-pbr"}
+seija-ui = {path = "../seija-ui"}
+spritesheet = {path = "../spritesheet"}

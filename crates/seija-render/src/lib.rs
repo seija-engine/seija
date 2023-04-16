@@ -71,9 +71,7 @@ pub struct RenderModule(pub Arc<RenderConfig>);
 
 impl IModule for RenderModule {
     fn init(&mut self,app:&mut App) {
-        println!("start render module init");
         resource::init_resource(app);
-        println!("start render module init2");
         material::init_material(app);
         dsl_frp::init_dsl_frp(app);
         light::init_light(app);
@@ -92,7 +90,6 @@ impl IModule for RenderModule {
 
         app.add_system(CoreStage::PostUpdate, camera_frp_event_system);
         app.init_resource::<SceneEnv>();
-        println!("end render module init");
     }
 }
 

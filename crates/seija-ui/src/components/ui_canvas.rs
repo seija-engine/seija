@@ -2,9 +2,20 @@ use bevy_ecs::{prelude::{Component, Entity}, world::World, query::{Changed}};
 use seija_core::{window::AppWindow, math::Vec3};
 use seija_render::camera::camera::{Camera, Projection};
 use seija_transform::Transform;
+
+#[repr(u8)]
 pub enum UIScaleMode {
     WithScreenSize,
     ConstantPhysicalSize
+}
+
+impl Into<UIScaleMode> for u8 {
+    fn into(self) -> UIScaleMode {
+        match self {
+            0 => UIScaleMode::WithScreenSize,
+            _ => UIScaleMode::ConstantPhysicalSize
+        }
+    }
 }
 
 impl Default for UIScaleMode {
@@ -13,9 +24,10 @@ impl Default for UIScaleMode {
     }
 }
 
+#[repr(C)]
 #[derive(Component,Default)]
 pub struct UICanvas {
-    scale_mode:UIScaleMode
+   pub(crate) scale_mode:UIScaleMode
 }
 
 
