@@ -1,14 +1,15 @@
-use bevy_ecs::{prelude::{Component, Entity}, system::Query};
+use bevy_ecs::{prelude::{Component}};
 use seija_core::math::Vec2;
-use seija_transform::hierarchy::Children;
+use num_enum::FromPrimitive;
 
-
-#[derive(Clone, Copy,Hash,PartialEq, Eq)]
+#[derive(Clone,Debug,Copy,Hash,PartialEq, Eq,FromPrimitive)]
+#[repr(u8)]
 pub enum Orientation {
+    #[default]
     Horizontal,
     Vertical,
 }
-
+#[repr(C)]
 pub struct StackLayout {
     pub spacing:f32,
     pub orientation:Orientation

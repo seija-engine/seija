@@ -3,7 +3,7 @@ use seija_core::math::Vec2;
 use num_enum::{TryFromPrimitive, IntoPrimitive};
 
 
-#[derive(PartialEq,Clone,Default)]
+#[derive(PartialEq,Clone,Default,Debug)]
 pub struct Thickness {
    pub left:f32,
    pub top:f32,

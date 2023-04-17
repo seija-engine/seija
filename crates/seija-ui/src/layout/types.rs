@@ -1,18 +1,19 @@
 use bevy_ecs::prelude::Component;
 use seija_core::math::Vec2;
-
+use num_enum::FromPrimitive;
 use crate::{components::rect2d::Rect2D, types::Thickness};
-
 use super::comps::{Orientation, StackLayout, FlexLayout};
 
-#[derive(PartialEq, Eq, Clone, Copy, Debug)]
+#[derive(PartialEq, Eq, Clone, Copy, Debug,FromPrimitive)]
+#[repr(u8)]
 pub enum LayoutAlignment {
+    #[default]
     Start = 0,
     Center = 1,
     End = 2,
     Stretch = 3,
 }
-#[derive(Default,Clone, Copy)]
+#[derive(Default,Clone, Copy,Debug)]
 pub struct UISize {
    pub width:SizeValue,
    pub height:SizeValue
@@ -43,12 +44,14 @@ impl UISize {
     }
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy,Debug)]
 pub enum SizeValue {
     Auto,
     Pixel(f32),
     PixelFromRect
 }
+
+
 
 impl SizeValue {
     pub fn is_auto(&self) -> bool {
@@ -70,14 +73,15 @@ impl Default for SizeValue {
     fn default() -> Self { Self::Auto }
 }
 
-#[derive(Component)]
+#[derive(Component,Debug)]
+#[repr(C)]
 pub struct CommonView {
-    pub ui_size:UISize,
     pub margin: Thickness,
     pub padding: Thickness,
     pub hor: LayoutAlignment,
     pub ver: LayoutAlignment,
     pub use_rect_size: bool,
+    pub ui_size:UISize,
     //pub anchor_correct:bool
 }
 
@@ -99,6 +103,7 @@ impl CommonView {
     
 }
 
+#[repr(C)]
 pub enum TypeElement {
     Stack(StackLayout),
     Flex(FlexLayout),
@@ -106,6 +111,7 @@ pub enum TypeElement {
 }
 
 #[derive(Component)]
+#[repr(C)]
 pub struct LayoutElement {
     pub common: CommonView,
     pub typ_elem: TypeElement,
@@ -142,4 +148,14 @@ impl LayoutElement {
         //TODO 判断布局是否失效
         true
     }
+}
+
+
+#[test]
+fn test() {
+    let mut stack = LayoutElement::create_stack(10f32, Orientation::Vertical);
+    let ss = std::mem::size_of::<StackLayout>();
+    let aa = std::mem::size_of::<LayoutElement>();
+    dbg!(ss);
+    dbg!(aa);
 }

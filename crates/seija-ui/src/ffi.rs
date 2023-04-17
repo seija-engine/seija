@@ -1,4 +1,5 @@
 use bevy_ecs::{prelude::{Entity, Events}, world::World, event::ManualEventReader};
+use num_enum::FromPrimitive;
 use seija_app::App;
 use seija_asset::{AssetServer, Handle, HandleId};
 use seija_core::{math::Vec4, TypeUuid, smol_str::SmolStr};
@@ -9,7 +10,7 @@ use crate::{
     components::{canvas::Canvas, rect2d::Rect2D, sprite::Sprite, ui_canvas::UICanvas},
     event::{UIEventSystem, EventNode, UIEvent},
     types::Thickness,
-    update_ui_render, UIModule,
+    update_ui_render, UIModule, layout::{comps::{Orientation, StackLayout}, types::{LayoutElement, CommonView, UISize, SizeValue, TypeElement}},
 };
 
 #[no_mangle]
@@ -120,5 +121,85 @@ pub unsafe extern "C" fn read_ui_events(world: &mut World,f:extern fn(entity:u64
             f(event.entity.to_bits(),event.event_type.bits(),std::ptr::null());
         }
        
+    }
+}
+
+////////layout/////////
+#[repr(C)]
+pub struct FFIUISize {
+    typ_width:u8,
+    typ_height:u8,
+    width:f32,
+    height:f32
+}
+
+impl Into<UISize> for &FFIUISize {
+    fn into(self) -> UISize {
+        let width = match self.typ_width {
+            0 => SizeValue::Auto,
+            1 => SizeValue::PixelFromRect,
+            _ => SizeValue::Pixel(self.width)
+        };
+        let height = match self.typ_height {
+            0 => SizeValue::Auto,
+            1 => SizeValue::PixelFromRect,
+            _ => SizeValue::Pixel(self.height)
+        };
+        UISize { width , height }
+    }
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn entity_add_stack(world: &mut World,entity_id:u64,spacing:f32,ori:u8,view:&CommonView,ui_size:&FFIUISize) {
+    let orientation = Orientation::from_primitive(ori);
+    let mut layout = LayoutElement::create_stack(spacing, orientation);
+    layout.common.margin = view.margin.clone();
+    layout.common.padding = view.padding.clone();
+    layout.common.use_rect_size = view.use_rect_size;
+    layout.common.hor = view.hor;
+    layout.common.ver = view.ver;
+    layout.common.ui_size = ui_size.into();
+    log::info!("view:{:?}",&layout.common);
+    let entity = Entity::from_bits(entity_id);
+    world.entity_mut(entity).insert(layout);
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn entity_add_commonview(world: &mut World,entity_id:u64,view:&CommonView,ui_size:&FFIUISize) {
+    let mut layout = LayoutElement::create_view();
+    layout.common.margin = view.margin.clone();
+    layout.common.padding = view.padding.clone();
+    layout.common.use_rect_size = view.use_rect_size;
+    layout.common.hor = view.hor;
+    layout.common.ver = view.ver;
+    layout.common.ui_size = ui_size.into();
+    let entity = Entity::from_bits(entity_id);
+    world.entity_mut(entity).insert(layout);
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn entity_get_commonview(world: &mut World,entity_id:u64) -> *mut LayoutElement {
+    let entity = Entity::from_bits(entity_id);
+    let mut emut = world.entity_mut(entity);
+    let elem = emut.get_mut::<LayoutElement>();
+    match elem {
+        Some(mut v) => v.as_mut() as *mut LayoutElement,
+        None => std::ptr::null_mut()
+    }
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn entity_get_stack(world: &mut World,entity_id:u64) -> *mut StackLayout {
+    let entity = Entity::from_bits(entity_id);
+    let mut emut = world.entity_mut(entity);
+    let elem = emut.get_mut::<LayoutElement>();
+    match elem  {
+        Some(mut v) => {
+            match &mut v.typ_elem {
+                TypeElement::Stack(stack) => stack as *mut StackLayout,
+                _ => std::ptr::null_mut()
+            }
+        },
+        None => std::ptr::null_mut()
     }
 }
