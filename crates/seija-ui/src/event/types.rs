@@ -28,7 +28,8 @@ bitflags! {
      }
  }
 
-#[derive(Component)]
+#[derive(Component,Debug,Clone)]
+#[repr(C)]
 pub struct EventNode {
     pub state:u32,
     pub event_type:UIEventType,
