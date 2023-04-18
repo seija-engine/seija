@@ -149,13 +149,3 @@ impl LayoutElement {
         true
     }
 }
-
-
-#[test]
-fn test() {
-    let mut stack = LayoutElement::create_stack(10f32, Orientation::Vertical);
-    let ss = std::mem::size_of::<StackLayout>();
-    let aa = std::mem::size_of::<LayoutElement>();
-    dbg!(ss);
-    dbg!(aa);
-}

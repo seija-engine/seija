@@ -16,7 +16,8 @@ pub struct StackLayout {
 }
 
 
-
+#[repr(C)]
+#[derive(Clone, Copy,Debug)]
 pub struct FlexLayout {
     pub direction:FlexDirection,
     pub warp:FlexWrap,
@@ -78,7 +79,8 @@ impl Default for FlexItem {
 }
 
 
-#[derive(Clone, Copy,Hash,PartialEq, Eq)]
+#[derive(Clone,Debug,Copy,Hash,PartialEq, Eq)]
+#[repr(u8)]
 pub enum FlexDirection {
     //行
     Row,
@@ -90,13 +92,15 @@ pub enum FlexDirection {
 }
 
 
-#[derive(Clone, Copy,Hash,PartialEq, Eq)]
+#[derive(Clone,Copy,Hash,PartialEq,Eq,Debug)]
+#[repr(u8)]
 pub enum FlexWrap {
     NoWrap,
     Wrap
 }
 
-#[derive(Clone, Copy,Hash,PartialEq, Eq)]
+#[derive(Clone, Copy,Hash,PartialEq,Eq,Debug)]
+#[repr(u8)]
 pub enum FlexJustify {
     Start,
     Center,
@@ -105,7 +109,8 @@ pub enum FlexJustify {
     SpaceAround
 }
 
-#[derive(Clone, Copy,Hash,PartialEq, Eq)]
+#[derive(Clone, Copy,Hash,PartialEq,Eq,Debug)]
+#[repr(u8)]
 pub enum FlexAlignItems {
     Stretch,
     Center,
@@ -113,7 +118,8 @@ pub enum FlexAlignItems {
     End
 }
 
-#[derive(Clone, Copy,Hash,PartialEq, Eq)]
+#[derive(Clone,Copy,Hash,PartialEq,Eq,Debug)]
+#[repr(u8)]
 pub enum  FlexAlignContent {
     Stretch,
     Center,

@@ -10,7 +10,7 @@ use crate::{
     components::{canvas::Canvas, rect2d::Rect2D, sprite::Sprite, ui_canvas::UICanvas},
     event::{UIEventSystem, EventNode, UIEvent},
     types::Thickness,
-    update_ui_render, UIModule, layout::{comps::{Orientation, StackLayout}, types::{LayoutElement, CommonView, UISize, SizeValue, TypeElement}},
+    update_ui_render, UIModule, layout::{comps::{Orientation, StackLayout, FlexLayout}, types::{LayoutElement, CommonView, UISize, SizeValue, TypeElement}},
 };
 
 #[no_mangle]
@@ -202,4 +202,18 @@ pub unsafe extern "C" fn entity_get_stack(world: &mut World,entity_id:u64) -> *m
         },
         None => std::ptr::null_mut()
     }
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn entity_add_flex(world: &mut World,entity_id:u64,view:&CommonView,ui_size:&FFIUISize,flex:&FlexLayout) {
+    let mut layout = LayoutElement::create_flex(flex.clone());
+    layout.common.margin = view.margin.clone();
+    layout.common.padding = view.padding.clone();
+    layout.common.use_rect_size = view.use_rect_size;
+    layout.common.hor = view.hor;
+    layout.common.ver = view.ver;
+    layout.common.ui_size = ui_size.into();
+    let entity = Entity::from_bits(entity_id);
+    log::info!("add flex:{:?}",&flex);
+    world.entity_mut(entity).insert(layout);
 }

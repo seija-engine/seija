@@ -1,4 +1,4 @@
-use bevy_ecs::{prelude::*, world};
+use bevy_ecs::{prelude::*};
 use glam::{Vec4, Vec2};
 use seija_asset::{AssetServer, Assets, Handle};
 use seija_core::{ CoreStage, StartupStage};
