@@ -242,8 +242,8 @@ fn measure_flex_nowrap_element(entity:Entity,flex:&FlexLayout,parent_size:Vec2,f
    let self_size:Vec2 = force_size.unwrap_or_else(|| measure_self_size(entity, parent_size, element, params));
    let content_size = element.common.margin.sub2size(element.common.padding.sub2size(self_size));
    let main_axis_number = match flex.direction {
-      FlexDirection::Column | FlexDirection::ColumnReverse => { self_size.y },
-      FlexDirection::Row | FlexDirection::RowReverse => { self_size.x }
+      FlexDirection::Column | FlexDirection::ColumnReverse => { content_size.y },
+      FlexDirection::Row | FlexDirection::RowReverse => { content_size.x }
    };
 
    let mut child_size_lst:Vec<Vec2> = vec![];

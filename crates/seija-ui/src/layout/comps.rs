@@ -57,7 +57,8 @@ impl Default for FlexLayout {
     }
 }
 
-#[derive(Component)]
+#[derive(Component,Clone)]
+#[repr(C)]
 pub struct FlexItem {
     pub order:i32,
     pub grow:f32,
@@ -130,6 +131,7 @@ pub enum  FlexAlignContent {
 }
 
 #[derive(Clone, Copy,Hash,PartialEq, Eq)]
+#[repr(C)]
 pub enum FlexAlignSelf {
     Auto,
     Stretch,
@@ -138,6 +140,8 @@ pub enum FlexAlignSelf {
     End
 }
 
+#[repr(C)]
+#[derive(Clone)]
 pub struct FlexBasis {
     pub length:f32,
     pub is_relative:bool

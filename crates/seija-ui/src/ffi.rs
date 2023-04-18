@@ -10,7 +10,7 @@ use crate::{
     components::{canvas::Canvas, rect2d::Rect2D, sprite::Sprite, ui_canvas::UICanvas},
     event::{UIEventSystem, EventNode, UIEvent},
     types::Thickness,
-    update_ui_render, UIModule, layout::{comps::{Orientation, StackLayout, FlexLayout}, types::{LayoutElement, CommonView, UISize, SizeValue, TypeElement}},
+    update_ui_render, UIModule, layout::{comps::{Orientation, StackLayout, FlexLayout, FlexItem}, types::{LayoutElement, CommonView, UISize, SizeValue, TypeElement}},
 };
 
 #[no_mangle]
@@ -173,6 +173,7 @@ pub unsafe extern "C" fn entity_add_commonview(world: &mut World,entity_id:u64,v
     layout.common.hor = view.hor;
     layout.common.ver = view.ver;
     layout.common.ui_size = ui_size.into();
+    log::info!("add commonview:{:?}",&layout.common);
     let entity = Entity::from_bits(entity_id);
     world.entity_mut(entity).insert(layout);
 }
@@ -216,4 +217,10 @@ pub unsafe extern "C" fn entity_add_flex(world: &mut World,entity_id:u64,view:&C
     let entity = Entity::from_bits(entity_id);
     log::info!("add flex:{:?}",&flex);
     world.entity_mut(entity).insert(layout);
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn entity_add_flexitem(world: &mut World,entity_id: u64,item:&FlexItem) {
+    let entity = Entity::from_bits(entity_id);
+    world.entity_mut(entity).insert(item.clone());
 }
