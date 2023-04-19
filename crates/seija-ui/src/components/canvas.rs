@@ -98,6 +98,7 @@ impl UIDrawCall {
         let fst_zorder = zorders.get(entitys[0]).map(|v| v.value).unwrap_or_default();
         let mut positons:Vec<[f32;3]> = vec![];
         let mut uvs:Vec<[f32;2]> = vec![];
+        let mut colors:Vec<[f32;4]> = vec![];
         let mut indexs:Vec<u32> = vec![];
         let mut index_offset = 0;
         let mut texture = None;
@@ -114,6 +115,7 @@ impl UIDrawCall {
                     pos4 = mat4 * pos4;
                     positons.push(pos4.xyz().into());
                     uvs.push(vert.uv.into());
+                    colors.push(render2d.mesh2d.color.into());
                 }
                 indexs.extend(render2d.mesh2d.indexs.iter().map(|v| v + index_offset));
                 index_offset += render2d.mesh2d.points.len() as u32;
@@ -124,6 +126,7 @@ impl UIDrawCall {
         let mut mesh = Mesh::new(PrimitiveTopology::TriangleList);
         mesh.set(MeshAttributeType::POSITION, positons);
         mesh.set(MeshAttributeType::UV0, uvs);
+        mesh.set(MeshAttributeType::COLOR, colors);
         mesh.set_indices(Some(Indices::U32(indexs)));
         mesh.build();
         let h_mesh = meshes.add(mesh);

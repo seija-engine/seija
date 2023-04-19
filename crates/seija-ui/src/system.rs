@@ -104,7 +104,7 @@ pub fn update_render_mesh_system(mut params:RenderMeshParams) {
     
     //更新Text的Mesh
     for entity in params.update_texts.iter() {
-        if let Ok((text,_)) = params.texts.get(entity) {
+        if let Ok((text,rect)) = params.texts.get(entity) {
             if let Some(h_font) = text.font.as_ref() {
                 //更新字体缓存
                 if !params.ui_roots.font_caches.contains_key(h_font) {
@@ -113,11 +113,8 @@ pub fn update_render_mesh_system(mut params:RenderMeshParams) {
                       params.ui_roots.font_caches.insert(h_font.clone(),font_id);
                    });
                 }
-                let text = glyph_brush::Text::new(&text.text).with_scale(PxScale::from(text.font_size as f32));
-                let section = Section::default().with_layout(Layout::default()
-                                                .v_align(VerticalAlign::Center)
-                                                .h_align(HorizontalAlign::Center))
-                                                .add_text(text);
+               
+                let section = text.build_section(rect);
                 params.ui_roots.text_brush.queue(section);
             }
             let font_texture = params.textures.get_mut(&params.ui_roots.font_texture.id).unwrap();
@@ -128,7 +125,7 @@ pub fn update_render_mesh_system(mut params:RenderMeshParams) {
             },glyph_to_mesh);
             match action {
                 Ok(BrushAction::Draw(verts)) => {
-                   let mesh2d = Text::build_mesh(verts);
+                   let mesh2d = Text::build_mesh(verts,text.color);
                    if let Ok(mut render) = params.render2d.get_mut(entity) {
                       render.texture = params.ui_roots.font_texture.clone();
                       render.mesh2d = mesh2d;

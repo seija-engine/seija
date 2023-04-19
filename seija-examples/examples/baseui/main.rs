@@ -14,7 +14,7 @@ use seija_transform::{hierarchy::Parent, BuildChildren, IEntityChildren, PushChi
 use seija_ui::{
     components::{canvas::Canvas, rect2d::Rect2D, sprite::Sprite, ui_canvas::UICanvas},
     types::Thickness,
-     update_ui_render, text::{Font, Text}, event::{EventNode, UIEventType, UIEvent, UIEventSystem},
+     update_ui_render, text::{Font, Text, LineMode}, event::{EventNode, UIEventType, UIEvent, UIEventSystem},
 };
 use spritesheet::SpriteSheet;
 
@@ -81,6 +81,7 @@ fn start(world: &mut World) {
         let rect2d = Rect2D::new(100f32, 50f32);
         let mut text = Text::new(h_font.clone(),"swash demo".to_string());
         text.font_size = 12;
+        text.line_mode = LineMode::Wrap;
         let canvas = Canvas::default();
         let e_text = world.spawn((text,rect2d,t,canvas)).set_parent(Some(panel_id)).id();
         log::error!("text:{:?}",e_text);

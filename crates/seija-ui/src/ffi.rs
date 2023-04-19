@@ -10,7 +10,7 @@ use crate::{
     components::{canvas::Canvas, rect2d::Rect2D, sprite::Sprite, ui_canvas::UICanvas},
     event::{UIEventSystem, EventNode, UIEvent},
     types::Thickness,
-    update_ui_render, UIModule, layout::{comps::{Orientation, StackLayout, FlexLayout, FlexItem}, types::{LayoutElement, CommonView, UISize, SizeValue, TypeElement}},
+    update_ui_render, UIModule, layout::{comps::{Orientation, StackLayout, FlexLayout, FlexItem}, types::{LayoutElement, CommonView, UISize, SizeValue, TypeElement}}, text::{Text, Font},
 };
 
 #[no_mangle]
@@ -223,4 +223,22 @@ pub unsafe extern "C" fn entity_add_flex(world: &mut World,entity_id:u64,view:&C
 pub unsafe extern "C" fn entity_add_flexitem(world: &mut World,entity_id: u64,item:&FlexItem) {
     let entity = Entity::from_bits(entity_id);
     world.entity_mut(entity).insert(item.clone());
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn entity_add_text(world: &mut World,entity_id: u64,text:&Text,size:i32,text_str:*mut i8,font_id:u64) {
+    let entity = Entity::from_bits(entity_id);
+    let text_string = std::ffi::CStr::from_ptr(text_str).to_str().unwrap();
+    let ref_sender = world.get_resource::<AssetServer>().clone().unwrap().get_ref_sender();
+    let new_text:Text = Text {
+        anchor:text.anchor,
+        color:text.color.clone(),
+        font_size: size as u32,
+        text:text_string.into(),
+        line_mode: text.line_mode,
+        font:Some(Handle::strong(HandleId::new(Font::TYPE_UUID, font_id), ref_sender)),
+        is_auto_size: text.is_auto_size
+    };
+    dbg!(&new_text);
+    world.entity_mut(entity).insert(new_text);
 }

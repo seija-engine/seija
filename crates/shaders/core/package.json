@@ -16,7 +16,8 @@
         "name": "ui",
         "vertex": {
           "POSITION": "require",
-          "UV0":"require"
+          "UV0":"require",
+          "COLOR":"require"
         },
         "backend": [ "Camera3D", "Transform"],
        
@@ -27,7 +28,8 @@
         "name": "text",
         "vertex": {
           "POSITION": "require",
-          "UV0":"require"
+          "UV0":"require",
+          "COLOR":"require"
         },
         "backend": [ "Camera3D", "Transform"],
        

@@ -3,9 +3,11 @@ use glam::{Vec4, Vec3};
 use seija_asset::AssetServer;
 use seija_core::{CoreStage, StartupStage};
 use seija_examples::init_core_app;
-use seija_render::{camera::camera::{Orthographic, Camera}, resource::load_image_info};
+use seija_render::{camera::camera::{Orthographic, Camera, SortType}, resource::load_image_info};
 use seija_transform::{Transform, IEntityChildren};
-use seija_ui::{update_ui_render, text::{Font, Text}, event::UIEventSystem, components::{ui_canvas::UICanvas, rect2d::Rect2D, sprite::Sprite, canvas::Canvas}, types::Thickness};
+use seija_ui::{update_ui_render, text::{Font, Text, LineMode}, event::UIEventSystem, components::{ui_canvas::UICanvas, rect2d::Rect2D, sprite::Sprite, canvas::Canvas}, types::{Thickness, AnchorAlign}};
+
+const show_text:&'static str = "体验诗仙李白的豪放飘逸，诗圣杜甫的沉郁顿挫，诗佛王维的诗中有画，诗魔白居易的晓畅通俗，诗豪刘禹锡的旷达沉雄，七绝圣手王昌龄的清畅雄浑，五言长城刘长卿的清旷淡雅，孟浩然的淡泊清逸，高适的慷慨悲壮，岑参的雄奇弘阔，李商隐的精工典丽，杜牧的俊爽清妙";
 
 fn main() {
     let mut app = init_core_app("FRPRender.clj", vec![update_ui_render],None);
@@ -15,35 +17,32 @@ fn main() {
 }
 
 fn start(world: &mut World) {
-    /*
     let server = world.get_resource::<AssetServer>().unwrap().clone();
-    let mut sprite_alloc = world.get_resource_mut::<SpriteAllocator>().unwrap();
-    let btn4_index = sprite_alloc.alloc(load_image_info(server.full_path("ui/Btn4On.png").unwrap()).unwrap()).unwrap();
-
-    let ui_camera = Camera::from_2d(Orthographic::default());
-    let canvas_id = world.spawn_empty().insert(UIEventSystem::default()).insert(Transform::default()).insert(ui_camera).insert(UICanvas::default()).id();
-    let h_font = server.load_sync::<Font>(world,"ui/WenQuanYiMicroHei.ttf", None).unwrap();
+    let mut ui_camera = Camera::from_2d(Orthographic::default());
+    ui_camera.sort_type = SortType::Z;
+    let event_system = UIEventSystem::default();
+    let canvas_id = world.spawn_empty().insert(Transform::default())
+                         .insert(ui_camera)
+                         .insert(event_system).insert(UICanvas::default()).id();
     
-    let rect2d = Rect2D::new(1024f32, 768f32);
-    let mut panel_t = Transform::default();
-    panel_t.local.position = Vec3::new(0f32, 0f32, -1f32);
-    let panel_id = world.spawn((Panel::default(),panel_t,rect2d)).set_parent(Some(canvas_id)).id();
+    let server = world.get_resource::<AssetServer>().unwrap().clone();
+    let h_font = server.load_sync::<Font>(world, "ui/WenQuanYiMicroHei.ttf", None).unwrap();
+    
 
-    let rect2d = Rect2D::new(120f32,50f32);
-    let mut t = Transform::default();
-    world.spawn((Sprite::sliced(btn4_index, Thickness::new1(35f32), Vec4::ONE),rect2d,t)).set_parent(Some(panel_id));
-
-    let rect2d = Rect2D::new(120f32,50f32);
-    let t = Transform::default();
-    let mut text = Text::new(h_font.clone());
-    text.text = "Fuck World".to_string();
-    world.spawn((text,rect2d,t)).set_parent(Some(panel_id));
-
-    let rect2d = Rect2D::new(120f32,50f32);
-    let t = Transform::default();
-    let mut text = Text::new(h_font);
-    text.text = "天生万物".to_string();
-    world.spawn((text,rect2d,t)).set_parent(Some(panel_id));*/
+    let text_id = {
+        let mut t = Transform::default();
+        t.local.position = Vec3::new(0f32, 0f32, -2f32);
+        t.local.position.x = 0f32;
+        let rect2d = Rect2D::new(100f32, 100f32);
+        let mut text = Text::new(h_font.clone(),show_text.into());
+        text.line_mode = LineMode::Wrap;
+        text.font_size = 20;
+        text.anchor = AnchorAlign::Center;
+        let canvas = Canvas::default();
+        let e_text = world.spawn((text,rect2d,t,canvas)).set_parent(Some(canvas_id)).id();
+        log::error!("text:{:?}",e_text);
+        e_text
+    };
 }
 
 

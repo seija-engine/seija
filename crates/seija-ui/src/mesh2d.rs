@@ -21,13 +21,16 @@ impl Into<Mesh> for Mesh2D {
         let mut mesh = Mesh::new(PrimitiveTopology::TriangleList);
         let mut positons:Vec<[f32;3]> = vec![];
         let mut uvs:Vec<[f32;2]> = vec![];
+        let mut colors:Vec<[f32;4]> = vec![];
         for vertex in self.points.iter() {
            positons.push([vertex.pos.x,vertex.pos.y,vertex.pos.z]);
            uvs.push([vertex.uv.x,vertex.uv.y]);
+           colors.push(self.color.into());
         }
         
         mesh.set(MeshAttributeType::POSITION, positons);
         mesh.set(MeshAttributeType::UV0, uvs);
+        mesh.set(MeshAttributeType::COLOR,colors);
        
         mesh.set_indices(Some(Indices::U32(self.indexs)));
         mesh.build();

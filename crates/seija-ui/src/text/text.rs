@@ -1,8 +1,9 @@
 use bevy_ecs::prelude::*;
+use glyph_brush::{Section, ab_glyph::PxScale, Layout,VerticalAlign,HorizontalAlign,BuiltInLineBreaker, LineBreaker};
 use seija_asset::Handle;
 use seija_core::math::{Vec4};
 use seija_render::resource::{Texture, TextureType};
-use crate::{types::AnchorAlign, mesh2d::{Vertex2D, Mesh2D}};
+use crate::{types::AnchorAlign, mesh2d::{Vertex2D, Mesh2D}, components::rect2d::Rect2D};
 use super::Font;
 use num_enum::{TryFromPrimitive,IntoPrimitive};
 #[derive(Debug, Clone, Eq, PartialEq,Copy,TryFromPrimitive,IntoPrimitive)]
@@ -12,14 +13,34 @@ pub enum LineMode {
     Wrap,
 }
 
-#[derive(Component, Debug)]
+impl Into<(HorizontalAlign,VerticalAlign)> for AnchorAlign {
+    fn into(self) -> (HorizontalAlign,VerticalAlign) {
+        match self {
+            AnchorAlign::TopLeft => (HorizontalAlign::Left,VerticalAlign::Top),
+            AnchorAlign::Top => (HorizontalAlign::Center,VerticalAlign::Top),
+            AnchorAlign::TopRight => (HorizontalAlign::Right,VerticalAlign::Top),
+            AnchorAlign::Left => (HorizontalAlign::Left,VerticalAlign::Center),
+            AnchorAlign::Center => (HorizontalAlign::Center,VerticalAlign::Center),
+            AnchorAlign::Right => (HorizontalAlign::Right,VerticalAlign::Center),
+            AnchorAlign::BottomLeft => (HorizontalAlign::Left,VerticalAlign::Bottom),
+            AnchorAlign::Bottom => (HorizontalAlign::Center,VerticalAlign::Bottom),
+            AnchorAlign::BottomRight => (HorizontalAlign::Right,VerticalAlign::Bottom),
+        }
+    }
+}
+
+
+#[derive(Component,Debug,Clone)]
+#[repr(C)]
 pub struct Text {
-    pub text:String,
-    pub font_size:u32,
-    pub font:Option<Handle<Font>>,
+    pub color:Vec4,
     pub anchor:AnchorAlign,
     pub line_mode:LineMode,
-    pub color:Vec4,
+    pub is_auto_size:bool,
+    pub font_size:u32,
+    pub font:Option<Handle<Font>>,
+    pub text:String,
+    
 }
 
 impl Text {
@@ -28,14 +49,15 @@ impl Text {
             text,
             font_size:24,
             font:Some(font),
-            anchor:AnchorAlign::Left,
+            is_auto_size:true,
+            anchor:AnchorAlign::Center,
             line_mode:LineMode::Single,
             color:Vec4::new(1.0,1.0,1.0,1.0),
         }
     }
 
 
-    pub fn build_mesh(verts:Vec<Vec<Vertex2D>>) -> Mesh2D {
+    pub fn build_mesh(verts:Vec<Vec<Vertex2D>>,color:Vec4) -> Mesh2D {
         let mut points:Vec<Vertex2D> = vec![];
         let mut indexs:Vec<u32> = vec![];
         let mut index_offset:usize = 0;
@@ -47,9 +69,35 @@ impl Text {
 
         Mesh2D {
             points,
-            color:Vec4::ONE,
+            color,
             indexs
         }
+    }
+
+    pub fn build_section(&self,rect:&Rect2D) -> Section {
+      let text = glyph_brush::Text::new(&self.text).with_scale(PxScale::from(self.font_size as f32));
+      let (h_align,v_align) = self.anchor.into();
+      let section = match self.line_mode {
+          LineMode::Single => {
+              Section::default().with_layout(Layout::SingleLine {
+                  h_align,
+                  v_align,
+                  line_breaker: BuiltInLineBreaker::UnicodeLineBreaker,
+              }).add_text(text)
+          },
+          LineMode::Wrap => {
+              Section::default().with_layout(Layout::Wrap {
+                  h_align,
+                  v_align,
+                  line_breaker: BuiltInLineBreaker::UnicodeLineBreaker,
+              }).add_text(text)
+          }
+      };
+      if !self.is_auto_size {
+        section.with_bounds((rect.width,rect.height))
+      } else {
+        section
+      }
     }
 }
 
@@ -91,5 +139,20 @@ pub fn write_font_texture(texture:&mut Texture,rect:glyph_brush::Rectangle<u32>,
           offset = offset + min_x;
           image.data[offset..(offset + rect.width() as usize)].copy_from_slice(row);
        }
+    }
+}
+
+#[derive(Debug, Hash, Clone, Copy)]
+enum CustomLineBreaker {
+    BuiltIn(BuiltInLineBreaker),
+    None,
+}
+
+impl LineBreaker for CustomLineBreaker {
+    fn line_breaks<'a>(&self, glyph_info: &'a str) -> Box<dyn Iterator<Item = glyph_brush::LineBreak> + 'a> {
+      match self {
+        CustomLineBreaker::BuiltIn(inner) => inner.line_breaks(glyph_info),
+        CustomLineBreaker::None => Box::new(std::iter::empty()),
+    }
     }
 }
