@@ -548,7 +548,7 @@ fn arrange_by_start_pos(start_pos:Vec2,flex: &FlexLayout,entity: Entity,inner_si
                 cur_pos.x += child_rect.width + spacing;
             }
             FlexDirection::Column | FlexDirection::ColumnReverse => {
-                cur_pos.y = align_flex_cross(flex.align_items, start_pos.x, inner_size.x, child_rect.width, 1f32);
+                cur_pos.x = align_flex_cross(flex.align_items, start_pos.x, inner_size.x, child_rect.width, 1f32);
                 arrange_layout_element(child_entity,child_elem,
                     Vec2::new(cur_pos.x, cur_pos.y - child_rect.height * 0.5f32),
                     inner_size,

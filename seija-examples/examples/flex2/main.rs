@@ -3,7 +3,7 @@ use glam::{Vec4, Vec2};
 use seija_asset::{AssetServer, Assets, Handle};
 use seija_core::{ CoreStage, StartupStage};
 use seija_examples::{init_core_app};
-use seija_ui::layout::comps::{FlexAlignItems, FlexJustify, FlexWrap};
+use seija_ui::layout::comps::{FlexAlignItems, FlexJustify, FlexWrap, FlexDirection};
 use seija_render::{camera::camera::{Orthographic, Camera, SortType},
 };
 use seija_ui::layout::comps::FlexAlignContent;
@@ -16,7 +16,7 @@ use spritesheet::SpriteSheet;
 
 
 fn main() {
-    let mut app = init_core_app("FRPRender.clj", vec![update_ui_render],Some(Vec2::new(1400f32, 900f32)));
+    let mut app = init_core_app("FRPRender.clj", vec![update_ui_render],Some(Vec2::new(1024f32,768f32)));
     app.add_system2(CoreStage::Startup, StartupStage::PreStartup, start);
     app.run();
 }
@@ -40,27 +40,30 @@ fn start(world: &mut World) {
     log::error!("canvas_id:{:?}",canvas_id);
 
     let sprite = Sprite::sliced(bg_index, Some(h_sheet.clone()), Thickness::new1(30f32), Vec4::ONE);
-    let mut flex = LayoutElement::create_flex(FlexLayout { 
+    let mut flex = LayoutElement::create_flex(FlexLayout {
+        justify:FlexJustify::Start,
+        align_items:FlexAlignItems::Start,
+        direction: FlexDirection::Column,
         ..Default::default()
      });
-     flex.common.padding = Thickness::new1(30f32);
+    flex.common.padding = Thickness::new1(30f32);
     let flex_entity = world.spawn((Transform::default(),Rect2D::default(),sprite,flex)).set_parent(Some(canvas_id)).id();
 
     let sprite = Sprite::sliced(sprite_index, Some(h_sheet.clone()), Thickness::new1(30f32), Vec4::ONE);
     let mut item = FlexItem::default();
     let mut view = LayoutElement::create_view();
-    view.common.ver = LayoutAlignment::Start;
-    view.common.hor = LayoutAlignment::Start;
-    view.common.ui_size = UISize::from_number(Vec2::new(100f32, 50f32));
+    //view.common.ver = LayoutAlignment::Start;
+    //view.common.hor = LayoutAlignment::Start;
+    view.common.ui_size = UISize::from_number(Vec2::new(150f32, 50f32));
     world.spawn((Transform::default(),Rect2D::default(),sprite,item,view)).set_parent(Some(flex_entity));
 
     let sprite = Sprite::sliced(sprite_index, Some(h_sheet.clone()), Thickness::new1(30f32), Vec4::ONE);
     let mut item = FlexItem::default();
     item.grow = 1f32;
     let mut view = LayoutElement::create_view();
-    view.common.ver = LayoutAlignment::Start;
-    view.common.hor = LayoutAlignment::Start;
-    view.common.ui_size.width = SizeValue::Pixel(100f32);
+    //view.common.ver = LayoutAlignment::Start;
+    //view.common.hor = LayoutAlignment::Start;
+    view.common.ui_size.width = SizeValue::Pixel(150f32);
     view.common.ui_size.height = SizeValue::Pixel(50f32);
     world.spawn((Transform::default(),Rect2D::default(),sprite,item,view)).set_parent(Some(flex_entity));
 }
