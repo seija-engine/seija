@@ -25,7 +25,7 @@ fn main() {
 
 fn start(world: &mut World) {
     let server: AssetServer = world.get_resource::<AssetServer>().unwrap().clone();
-    let h_sheet = server.load_sync::<SpriteSheet>(world, "ui/ui.json", None).unwrap();
+    let h_sheet = server.load_sync::<SpriteSheet>(world, "ui/default.json", None).unwrap();
     let sheets = world.get_resource::<Assets<SpriteSheet>>().unwrap();
     let ui_sheet = sheets.get(&h_sheet.id).unwrap();
     let bg_index = ui_sheet.get_index("lm-db").unwrap();

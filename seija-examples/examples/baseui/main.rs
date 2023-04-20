@@ -45,7 +45,7 @@ fn start(world: &mut World) {
     
     let server = world.get_resource::<AssetServer>().unwrap().clone();
     let h_font = server.load_sync::<Font>(world, "ui/WenQuanYiMicroHei.ttf", None).unwrap();
-    let h_sheet = server.load_sync::<SpriteSheet>(world, "ui/ui.json", None).unwrap();
+    let h_sheet = server.load_sync::<SpriteSheet>(world, "ui/default.json", None).unwrap();
     let sheets = world.get_resource::<Assets<SpriteSheet>>().unwrap();
     let ui_sheet = sheets.get(&h_sheet.id).unwrap();
     let btn3on_index = ui_sheet.get_index("Btn3On").unwrap();
