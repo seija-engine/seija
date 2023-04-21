@@ -58,14 +58,14 @@ pub unsafe extern "C" fn entity_add_sprite_simple(
     color: &mut Vec4,
 ) {
     let handle_id = HandleId::new(SpriteSheet::TYPE_UUID, atlas_id);
-    let ref_sender = world
-        .get_resource::<AssetServer>()
-        .clone()
-        .unwrap()
-        .get_ref_sender();
-    let handle = Handle::strong(handle_id, ref_sender);
+    let ref_sender = world.get_resource::<AssetServer>().clone().unwrap().get_ref_sender();
+    let handle = if index >= 0 {
+        Some(Handle::strong(handle_id, ref_sender))
+    } else {
+        None
+    };
     let entity = Entity::from_bits(entity_id);
-    let sprite = Sprite::simple(index as usize, Some(handle), color.clone());
+    let sprite = Sprite::simple(index as usize, handle, color.clone());
     world.entity_mut(entity).insert(sprite);
 }
 
@@ -80,12 +80,16 @@ pub unsafe extern "C" fn entity_add_sprite_slice(
 ) {
     let handle_id = HandleId::new(SpriteSheet::TYPE_UUID, atlas_id);
     let ref_sender = world.get_resource::<AssetServer>().clone().unwrap().get_ref_sender();
-    let handle = Handle::strong(handle_id, ref_sender);
+    let handle = if index >= 0 {
+        Some(Handle::strong(handle_id, ref_sender))
+    } else {
+        None
+    };
     let entity = Entity::from_bits(entity_id);
 
     let sprite = Sprite::sliced(
         index as usize,
-        Some(handle),
+        handle,
         thickness.clone(),
         color.clone(),
     );
