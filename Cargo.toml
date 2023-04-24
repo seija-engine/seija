@@ -21,7 +21,8 @@ members = [
     "crates/tools/ffi-parser",
     "crates/tools/gltf2template",
     "seija-examples",
-    "crates/lib-seija"
+    "crates/lib-seija",
+    "crates/quick-xml-ffi"
 ]
 
 [workspace.dependencies]

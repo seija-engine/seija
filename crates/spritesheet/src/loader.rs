@@ -24,6 +24,7 @@ struct SerdeSprite {
     name:SmolStr
 }
 
+
 #[derive(Deserialize)]
 struct SerdeData {
     pub meta:MetaData,

@@ -2568,6 +2568,22 @@ dependencies = [
 ]
 
 [[package]]
+name = "quick-xml"
+version = "0.28.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0ce5e73202a820a31f8a0ee32ada5e21029c81fd9e3ebf668a40832e4219d9d1"
+dependencies = [
+ "memchr",
+]
+
+[[package]]
+name = "quick-xml-ffi"
+version = "0.1.0"
+dependencies = [
+ "quick-xml 0.28.2",
+]
+
+[[package]]
 name = "quote"
 version = "1.0.26"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3006,7 +3022,7 @@ version = "0.1.0"
 dependencies = [
  "bevy_ecs",
  "log",
- "quick-xml",
+ "quick-xml 0.23.1",
  "relative-path",
  "seija-app",
  "seija-asset",
