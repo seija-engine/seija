@@ -17,3 +17,4 @@ seija-render = {path = "../seija-render"}
 seija-pbr = {path = "../seija-pbr"}
 seija-ui = {path = "../seija-ui"}
 spritesheet = {path = "../spritesheet"}
+quick-xml-ffi = {path = "../quick-xml-ffi"}

@@ -8,6 +8,7 @@ pub use seija_render::ffi::*;
 pub use seija_pbr::ffi::*;
 pub use spritesheet::ffi::*;
 pub use seija_ui::ffi::*;
+pub use quick_xml_ffi::*;
 
 const OUT_STRING:&str = "Aaa_汉字";
 #[no_mangle]
