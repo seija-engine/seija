@@ -149,7 +149,7 @@ fn calc_desired_flex_nowrap_size(entity:Entity,flex:&FlexLayout,cur_size:UISize,
    ret_size
 }
 
-fn calc_desired_flex_wrap_size(entity:Entity,flex:&FlexLayout,cur_size:UISize,elem:&LayoutElement,params:&LayoutParams) -> Vec2 {
+fn calc_desired_flex_wrap_size(entity:Entity,flex:&FlexLayout,cur_size:UISize,_elem:&LayoutElement,params:&LayoutParams) -> Vec2 {
    //warp的情况下，主轴不能是auto
    let mut ret_size:Vec2 = uisize2size(cur_size, Vec2::ZERO);
    let mut line_max_size = 0f32;

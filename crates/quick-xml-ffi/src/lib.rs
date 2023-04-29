@@ -51,11 +51,12 @@ pub extern "C" fn xml_reader_from_string(cstr: *mut i8) -> *mut StringReader {
     let len = pin_bytes.len();
     let array_ptr = pin_bytes.as_ptr();
    
-    let reader = Box::new(StringReader {
+    let mut reader = Box::new(StringReader {
         _bytes: pin_bytes,
         reader: Reader::from_reader(unsafe { &*std::ptr::slice_from_raw_parts(array_ptr, len) }),
         common:CommonData { last_error: CString::default(), cur_attr: None }
     });
+    reader.reader.trim_text(true);
     Box::into_raw(reader)
 }
 
