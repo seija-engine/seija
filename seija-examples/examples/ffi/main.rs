@@ -44,13 +44,22 @@ fn on_start(world:&mut World) {
         t.local.position = Vec3::new(0f32, 0f32, -2f32);
         world.spawn((rect2d,t,Canvas::default(),item)).set_parent(Some(canvas_id)).id()
     };
+    let checkbox_id = {
+        let mut item = LayoutElement::create_view();
+        item.common.hor = LayoutAlignment::Stretch;
+        item.common.ver = LayoutAlignment::Stretch;
+        let rect2d = Rect2D::default();
+        let t = Transform::default();
+        world.spawn((rect2d,t,item)).set_parent(Some(panel_id)).id()
+    };
     {
         let t = Transform::default();
         let sprite = Sprite::simple(btn3on_index,Some(h_sheet), Vec4::ONE);
         let mut item = LayoutElement::create_view();
-        item.common.hor = LayoutAlignment::Start;
+        item.common.hor = LayoutAlignment::Center;
+        item.common.ver = LayoutAlignment::Start;
         item.common.ui_size = UISize::from_number(Vec2::new(100f32, 100f32));
-        let e_btn = world.spawn((sprite,Rect2D::default(),t,item)).set_parent(Some(panel_id)).id();
+        let e_btn = world.spawn((sprite,Rect2D::default(),t,item)).set_parent(Some(checkbox_id)).id();
         log::error!("btn:{:?}",e_btn);
     }
 }

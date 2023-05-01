@@ -34,11 +34,13 @@ pub fn arrange_layout_element(entity: Entity,element: &LayoutElement,parent_orig
     let arrange_position = match &element.typ_elem {
         TypeElement::View => {
             let ret_pos = arrange_view_element(entity, element, parent_origin, parent_size, axy, params);
+            //log::error!("ret_pos:{:?}={:?} p:{:?}",entity,ret_pos,parent_origin);
             if let Ok(rect2d) = params.rect2ds.get(entity) {
                 let lt_pos = Vec2::new(
                     -rect2d.width * 0.5f32 + element.common.padding.left,
                     rect2d.height * 0.5f32 - element.common.padding.top,
                 );
+                //log::error!("rect:{:?} = {:?}",rect2d,lt_pos);
                 if let Ok(childs) = params.childrens.get(entity) {
                     for child_entity in childs.iter() {
                         let elem = params.elems.get(*child_entity).unwrap_or(&VIEW_ID);
@@ -83,7 +85,7 @@ pub fn arrange_view_element(
                     ret_pos.x +=  element.common.margin.left + rect2d.width * 0.5f32;
                 }
                 LayoutAlignment::Center | LayoutAlignment::Stretch => {
-                    let offset = rect2d.width * 0.5f32 + element.common.margin.left;
+                    let offset = parent_size.x * 0.5f32 + element.common.margin.left;
                     ret_pos.x += offset;
                 }
                 LayoutAlignment::End => {
