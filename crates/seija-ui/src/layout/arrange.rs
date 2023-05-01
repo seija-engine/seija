@@ -40,11 +40,13 @@ pub fn arrange_layout_element(entity: Entity,element: &LayoutElement,parent_orig
                     -rect2d.width * 0.5f32 + element.common.padding.left,
                     rect2d.height * 0.5f32 - element.common.padding.top,
                 );
+                let inner_size = element.common.padding.sub2size(Vec2::new(rect2d.width, rect2d.height));
                 //log::error!("rect:{:?} = {:?}",rect2d,lt_pos);
                 if let Ok(childs) = params.childrens.get(entity) {
                     for child_entity in childs.iter() {
                         let elem = params.elems.get(*child_entity).unwrap_or(&VIEW_ID);
-                        arrange_layout_element(*child_entity,elem,lt_pos,parent_size,ArrangeXY::ALL,params);
+                        
+                        arrange_layout_element(*child_entity,elem,lt_pos,inner_size,ArrangeXY::ALL,params);
                         
                     }
                 }
