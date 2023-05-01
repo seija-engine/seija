@@ -113,6 +113,15 @@ pub unsafe extern "C" fn entity_add_event_node(world: &mut World, entity_id: u64
 }
 
 #[no_mangle]
+pub unsafe extern "C" fn entity_remove_event_node(world: &mut World, entity_id: u64) -> bool {
+    let entity = Entity::from_bits(entity_id);
+    if let Some(mut entity_mut) = world.get_entity_mut(entity) {
+       return entity_mut.remove::<EventNode>().is_some();
+    }
+    false
+}
+
+#[no_mangle]
 pub unsafe extern "C" fn read_ui_events(world: &mut World,f:extern fn(entity:u64,typ:u32,user_key_ptr:*const i8)) {
     let events = world.get_resource_mut::<Events<UIEvent>>().unwrap();
     let mut reader:ManualEventReader<UIEvent> = events.get_reader();
