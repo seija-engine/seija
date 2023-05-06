@@ -2,7 +2,7 @@ use bevy_ecs::{prelude::{Entity, Events}, world::World, event::ManualEventReader
 use num_enum::FromPrimitive;
 use seija_app::App;
 use seija_asset::{AssetServer, Handle, HandleId};
-use seija_core::{math::Vec4, TypeUuid, smol_str::SmolStr};
+use seija_core::{math::Vec4, TypeUuid};
 use seija_render::RenderConfig;
 use spritesheet::SpriteSheet;
 
@@ -69,6 +69,7 @@ pub unsafe extern "C" fn entity_add_sprite_simple(
     world.entity_mut(entity).insert(sprite);
 }
 
+
 #[no_mangle]
 pub unsafe extern "C" fn entity_add_sprite_slice(
     world: &mut World,
@@ -97,7 +98,36 @@ pub unsafe extern "C" fn entity_add_sprite_slice(
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn entity_add_event_node2(world: &mut World,entity_id:u64,node:&EventNode) {
+pub unsafe extern "C" fn entity_get_sprite(world: &mut World,entity_id:u64,is_mut:bool) -> *mut Sprite {
+    let entity = Entity::from_bits(entity_id);
+    if !is_mut {
+        if let Some(sprite) = world.get::<Sprite>(entity) {
+            return sprite as *const Sprite as *mut Sprite;
+        }
+    } else {
+        if let Some(mut sprite) = world.get_mut::<Sprite>(entity) {
+            return sprite.as_mut() as *mut Sprite;
+        }
+    }
+    std::ptr::null_mut()
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn sprite_set_sprite(world: &mut World,sprite:&mut Sprite,index: i32,atlas_id: u64) {
+    if index < 0 {
+        sprite.atlas = None;
+        sprite.sprite_index = 0;
+        return;
+    }
+    let handle_id = HandleId::new(SpriteSheet::TYPE_UUID, atlas_id);
+    let ref_sender = world.get_resource::<AssetServer>().clone().unwrap().get_ref_sender();
+    let atlas = Handle::strong(handle_id, ref_sender);
+    sprite.atlas = Some(atlas);
+    sprite.sprite_index = index as usize;
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn entity_add_event_node(world: &mut World,entity_id:u64,node:&EventNode) {
     let entity = Entity::from_bits(entity_id);
     let mut event_node = EventNode::default();
     event_node.event_type = node.event_type;
