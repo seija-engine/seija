@@ -97,18 +97,13 @@ pub unsafe extern "C" fn entity_add_sprite_slice(
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn entity_add_event_node(world: &mut World, entity_id: u64,node:&EventNode,user_key_ptr:*const i8) {
+pub unsafe extern "C" fn entity_add_event_node2(world: &mut World,entity_id:u64,node:&EventNode) {
     let entity = Entity::from_bits(entity_id);
-    let mut event_node = node.clone();
-    
-    if !user_key_ptr.is_null() {
-        let user_key_str = std::ffi::CStr::from_ptr(user_key_ptr).to_str().unwrap();
-        let user_key = Some(SmolStr::new(user_key_str));
-        event_node.user_key = user_key;
-    } else {
-        event_node.user_key = None;
-    }
-    //log::info!("event_node:{:?}",&event_node);
+    let mut event_node = EventNode::default();
+    event_node.event_type = node.event_type;
+    event_node.stop_bubble = node.stop_bubble;
+    event_node.stop_capture = node.stop_capture;
+    event_node.use_capture = node.use_capture;
     world.entity_mut(entity).insert(event_node);
 }
 
