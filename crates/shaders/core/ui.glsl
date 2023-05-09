@@ -19,6 +19,7 @@ vec4 ui_fs_main(VSInput inv) {
     if(textureColor.a < 0.001) {
         discard;
     }
+    textureColor = textureColor * inv.color;
     return textureColor;
 }
 

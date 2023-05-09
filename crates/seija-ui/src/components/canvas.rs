@@ -30,7 +30,7 @@ impl Canvas {
                            asset_server:&AssetServer) {
         
         let entity_group = ScanDrawCall::scan_entity_group(canvas_entity, children, uirenders, canvases);
-        log::error!("scan group:{:?}",&entity_group);
+        log::info!("scan group:{:?}",&entity_group);
         entity_group.iter().flatten().for_each(|entity| {
             ui_roots.entity2canvas.insert(*entity, canvas_entity);
         });
