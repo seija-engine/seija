@@ -11,6 +11,7 @@ seija-asset = {path = "../seija-asset"}
 seija-render = {path = "../seija-render"}
 seija-transform = {path = "../seija-transform"}
 seija-input = {path = "../seija-input" }
+seija-winit = {path = "../seija-winit"}
 spritesheet = {path = "../spritesheet" }
 fnv = "1.0.7"
 bitflags = "1.3.2"

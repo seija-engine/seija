@@ -2,7 +2,8 @@ use std::collections::HashSet;
 use bevy_ecs::{system::{SystemParam, Query, RemovedComponents, Res}, prelude::{Entity, EventReader}, query::Changed};
 use seija_core::{math::{Vec2}, window::AppWindow};
 use seija_transform::{events::HierarchyEvent, hierarchy::{Parent, Children}, Transform};
-use crate::components::rect2d::Rect2D;
+use seija_winit::event::WindowResized;
+use crate::components::{rect2d::Rect2D, ui_canvas::UICanvas};
 use super::{types::LayoutElement, measure, arrange::{arrange_layout_element, ArrangeXY}, comps::FlexItem};
 
 #[derive(SystemParam)]
@@ -16,7 +17,9 @@ pub struct LayoutParams<'w,'s> {
     pub(crate) rect2ds:Query<'w,'s,&'static mut Rect2D>,
     pub(crate) trans:Query<'w,'s,&'static mut Transform>,
     pub(crate) flexitems:Query<'w,'s,&'static FlexItem>,
-    pub(crate) window:Res<'w,AppWindow>
+    pub(crate) window:Res<'w,AppWindow>,
+    pub(crate) resize_events:EventReader<'w,'s,WindowResized>,
+    pub(crate) ui_canvas:Query<'w,'s,(Entity,&'static UICanvas)>,
 }
 
 
@@ -47,6 +50,17 @@ pub fn ui_layout_system(params:LayoutParams) {
 /////计算需要重布局的Element
 fn collect_dirty(params:&LayoutParams) -> HashSet<Entity> {
     let mut layouts = HashSet::default();
+    if !params.resize_events.is_empty() {
+        for (entity,_) in params.ui_canvas.iter() {
+           if let Ok(canvas_childs) = params.childrens.get(entity) {
+                for child in canvas_childs.iter() {
+                     layouts.insert(*child);
+                }
+           }
+        }
+        return layouts;
+    }
+    
     for entity in params.update_elems.iter() {
         let dirty_entity = get_top_elem_dirty(entity, params);
         layouts.insert(dirty_entity);

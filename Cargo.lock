@@ -3065,6 +3065,7 @@ dependencies = [
  "seija-input",
  "seija-render",
  "seija-transform",
+ "seija-winit",
  "smol",
  "spritesheet",
  "wgpu",

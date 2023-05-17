@@ -277,6 +277,5 @@ pub unsafe extern "C" fn entity_add_text(world: &mut World,entity_id: u64,text:&
         font:Some(Handle::strong(HandleId::new(Font::TYPE_UUID, font_id), ref_sender)),
         is_auto_size: text.is_auto_size
     };
-    dbg!(&new_text);
     world.entity_mut(entity).insert(new_text);
 }
