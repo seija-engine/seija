@@ -62,7 +62,7 @@ pub extern "C" fn xml_reader_from_string(cstr: *mut i8) -> *mut StringReader {
 
 
 
-fn process_event<'a>(event:&quick_xml::Result<Event<'a>>,common:&mut CommonData,out_type: &mut u8,name_len: &mut i32,name_ptr: &mut *const u8) {
+fn process_event<'a>(event:&quick_xml::Result<Event<'a>>,common:&mut CommonData,out_type: &mut u8,name_len: &mut i32,name_ptr: &mut *const u8) -> bool {
     match event {
         Ok(event) => {
             match event {
@@ -98,12 +98,19 @@ fn process_event<'a>(event:&quick_xml::Result<Event<'a>>,common:&mut CommonData,
                 Event::Eof => { *out_type = 6u8; }
                 _ => { *out_type = 7u8; }
             }
+            return true;
         }
         Err(err) => {
             let err_string = err.to_string();
             common.last_error = CString::new(err_string.as_str()).unwrap();
+            return false;
         }
     }
+}
+
+#[no_mangle]
+pub extern "C" fn xml_get_last_error(common:&mut CommonData) -> *const i8 {
+    common.last_error.as_ptr()
 }
 
 #[no_mangle]
@@ -112,13 +119,13 @@ pub extern "C" fn string_reader_read_event(
     out_type: &mut u8,
     name_len: &mut i32,
     name_ptr: &mut *const u8,
-) {
+) -> bool {
     let event = reader.reader.read_event();
-    process_event(&event, &mut reader.common, out_type, name_len, name_ptr);
+    process_event(&event, &mut reader.common, out_type, name_len, name_ptr)
 }
 
 #[no_mangle]
-pub extern "C" fn reader_read_attr(
+pub extern "C" fn xml_reader_read_attr(
     reader: &mut CommonData,
     is_err: &mut bool,
     kl: &mut i32,
@@ -126,6 +133,7 @@ pub extern "C" fn reader_read_attr(
     vl: &mut i32,
     vptr: &mut *const u8,
 ) -> bool {
+    *is_err = false;
     if let Some(attrs) = &mut reader.cur_attr {
         match attrs.next() {
             Some(Ok(attr)) => {
