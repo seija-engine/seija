@@ -16,12 +16,14 @@ pub struct StringReader {
 #[repr(C)]
 pub struct FileReader {
     common:CommonData,
+    buffer:Vec<u8>,
     reader: Reader<BufReader<File>>,
 }
 
 #[no_mangle]
-fn xml_reader_from_file(path: *mut i8) -> *mut FileReader  {
+pub extern "C" fn xml_reader_from_file(path: *mut i8) -> *mut FileReader  {
     let c_str = unsafe { assert!(!path.is_null());  CStr::from_ptr(path) };
+    
     match c_str.to_str() {
         Ok(path_str) => {
             let reader = Reader::from_file(path_str);
@@ -29,11 +31,16 @@ fn xml_reader_from_file(path: *mut i8) -> *mut FileReader  {
                 Ok(v) => {
                     let file_reader = Box::new(FileReader {
                         reader: v,
+                        buffer:vec![],
                         common:CommonData { last_error: CString::default(), cur_attr: None }
                     });
                     return Box::into_raw(file_reader);
                 },
-                Err(_) => { return std::ptr::null_mut(); }
+                Err(err) => {
+                    eprintln!("read xml {:?} err:{:?}",c_str,err);
+
+                    return std::ptr::null_mut(); 
+                }
             }
         },
         Err(_) => { return std::ptr::null_mut(); } 
@@ -93,7 +100,11 @@ fn process_event<'a>(event:&quick_xml::Result<Event<'a>>,common:&mut CommonData,
                     };
                     common.cur_attr = Some(attrs);
                 }
-                Event::Text(_) => { *out_type = 4u8; }
+                Event::Text(text) => {
+                    *name_ptr = text.as_ptr();
+                    *name_len = text.len() as i32;
+                    *out_type = 4u8; 
+                }
                 Event::Comment(_) => { *out_type = 5u8; }
                 Event::Eof => { *out_type = 6u8; }
                 _ => { *out_type = 7u8; }
@@ -125,6 +136,18 @@ pub extern "C" fn string_reader_read_event(
 }
 
 #[no_mangle]
+pub extern "C" fn file_reader_read_event(
+    reader: &mut FileReader,
+    out_type: &mut u8,
+    name_len: &mut i32,
+    name_ptr: &mut *const u8,
+) -> bool {
+    let event = reader.reader.read_event_into(&mut reader.buffer);
+    process_event(&event, &mut reader.common, out_type, name_len, name_ptr)
+}
+
+
+#[no_mangle]
 pub extern "C" fn xml_reader_read_attr(
     reader: &mut CommonData,
     is_err: &mut bool,
@@ -154,4 +177,15 @@ pub extern "C" fn xml_reader_read_attr(
         }
     }
     false
+}
+
+
+#[no_mangle]
+pub unsafe extern "C" fn xml_reader_release_string(string:*mut StringReader) {
+    let _ = Box::from_raw(string);
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn xml_reader_release_file(file:*mut FileReader) {
+    let _ = Box::from_raw(file);
 }
