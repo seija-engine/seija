@@ -1,7 +1,7 @@
 use smol_str::SmolStr;
 use thiserror::Error;
-#[derive(Debug,Error)]
 
+#[derive(Debug,Error)]
 pub(crate) enum Errors {
     #[error("not found info set")]
     NotFoundInfoSet,

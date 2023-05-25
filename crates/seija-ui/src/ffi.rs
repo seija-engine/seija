@@ -279,3 +279,20 @@ pub unsafe extern "C" fn entity_add_text(world: &mut World,entity_id: u64,text:&
     };
     world.entity_mut(entity).insert(new_text);
 }
+
+#[no_mangle]
+pub unsafe extern "C" fn entity_get_text(world: &mut World,entity_id: u64) -> *mut Text {
+    let entity = Entity::from_bits(entity_id);
+    let mut emut = world.entity_mut(entity);
+    let text_mut = emut.get_mut::<Text>();
+    match text_mut {
+        Some(mut ptr) => ptr.as_mut() as *mut Text,
+        None => std::ptr::null_mut()
+    }
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn entity_text_setstring(text_mut:&mut Text,cstr:*mut i8) {
+    let text_string = std::ffi::CStr::from_ptr(cstr).to_str().unwrap();
+    text_mut.text = text_string.into();
+}

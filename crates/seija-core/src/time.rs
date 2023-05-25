@@ -1,14 +1,13 @@
 use std::time::{Duration, Instant};
-
 use bevy_ecs::{prelude::ResMut, system::Resource};
-
+#[repr(C)]
 #[derive(Resource)]
 pub struct Time {
+    delta_seconds: f32,
+    frame:u64,
     last_update: Instant,
     delta: Duration,
-    delta_seconds: f32,
     startup: Instant,
-    frame:u64,
 }
 
 impl Default for Time {
