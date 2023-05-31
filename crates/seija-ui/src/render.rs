@@ -29,21 +29,22 @@ pub fn update_ui_render(world:&mut World,ctx:&mut RenderContext) {
     let cache_bytes = font_texture.cast_image_data().unwrap();
     let texture_id = ctx.resources.get_render_resource(&render_root.font_texture.id, 0).and_then(|v| v.into_texture_id()).unwrap();
     
-
-    ctx.resources.map_buffer(&font_buffer_id, wgpu::MapMode::Write);
-    ctx.resources.write_mapped_buffer(&font_buffer_id, 0..cache_bytes.len() as u64, &mut |bytes,_| {
-        //for rect in write_events.iter() {
-        //    log::error!("write rect:{:?}",rect.rect);
-        //}
-        bytes[0..cache_bytes.len()].copy_from_slice(cache_bytes);
-    });
-    ctx.resources.unmap_buffer(&font_buffer_id);
-
-    let command = ctx.command_encoder.as_mut().unwrap();
-    let aligned_width = RenderResources::get_aligned_texture_size(1024);
-    ctx.resources.copy_buffer_to_texture(command,font_buffer_id,0,
-                                         NonZeroU32::new((1 * aligned_width) as u32).unwrap(), 
-                                         &texture_id,wgpu::Origin3d::default(),0,font_texture_size,None)
+    if write_events.len() > 0 {
+        ctx.resources.map_buffer(&font_buffer_id, wgpu::MapMode::Write);
+        ctx.resources.write_mapped_buffer(&font_buffer_id, 0..cache_bytes.len() as u64, &mut |bytes,_| {
+            //for rect in write_events.iter() {
+            //    log::error!("write rect:{:?}",rect.rect);
+            //}
+            bytes[0..cache_bytes.len()].copy_from_slice(cache_bytes);
+        });
+        ctx.resources.unmap_buffer(&font_buffer_id);
+    
+        let command = ctx.command_encoder.as_mut().unwrap();
+        let aligned_width = RenderResources::get_aligned_texture_size(1024);
+        ctx.resources.copy_buffer_to_texture(command,font_buffer_id,0,
+                                             NonZeroU32::new((1 * aligned_width) as u32).unwrap(), 
+                                             &texture_id,wgpu::Origin3d::default(),0,font_texture_size,None)
+    }
 }
 
 fn check_init_font_buffer(world:&mut World,ctx:&mut RenderContext) -> BufferId {
