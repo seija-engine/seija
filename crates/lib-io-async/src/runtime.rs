@@ -12,7 +12,7 @@ pub enum AsyncEvent {
 }
 
 #[no_mangle]
-pub extern "C" fn create_runtime() -> *mut AsyncRuntime {
+pub extern "C" fn _ia_create_runtime() -> *mut AsyncRuntime {
    let (sender,receiver) = unbounded::<AsyncEvent>();
    let tokio_runtime = tokio::runtime::Builder::new_multi_thread().enable_all().build().unwrap();
    Box::into_raw(Box::new(AsyncRuntime {
@@ -25,12 +25,7 @@ pub extern "C" fn create_runtime() -> *mut AsyncRuntime {
 
 
 #[no_mangle]
-pub extern "C" fn runtime_poll_event(runtime:&mut AsyncRuntime) {
+pub extern "C" fn _ia_runtime_poll_event(runtime:&mut AsyncRuntime) {
    for event in runtime.receiver.iter() {
-      match event {
-         AsyncEvent::HttpResp(resp) => {
-           resp.unwrap().chunk();
-         }
-      }
    }
 }
