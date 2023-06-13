@@ -127,6 +127,12 @@ pub unsafe extern "C" fn sprite_set_sprite(world: &mut World,sprite:&mut Sprite,
 }
 
 #[no_mangle]
+pub unsafe extern "C" fn sprite_set_color(sprite:&mut Sprite,color:&Vec4) {
+    //println!("sprite set color {:?}",color);
+    sprite.info.color = color.clone();
+}
+
+#[no_mangle]
 pub unsafe extern "C" fn entity_add_event_node(world: &mut World,entity_id:u64,node:&EventNode) {
     let entity = Entity::from_bits(entity_id);
     let mut event_node = EventNode::default();

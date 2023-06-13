@@ -11,6 +11,7 @@ use super::{ rect2d::Rect2D, image_info::{ImageGenericInfo, ImageType}};
 
 
 #[derive(Component)]
+#[repr(C)]
 pub struct Sprite {
     pub info:ImageGenericInfo,
     pub atlas:Option<Handle<SpriteSheet>>,

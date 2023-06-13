@@ -36,10 +36,10 @@ impl Default for ImageType {
 }
 
 
-
+#[repr(C)]
 pub struct ImageGenericInfo {
-    pub typ:ImageType,
     pub color:Vec4,
+    pub typ:ImageType,
 }
 
 impl Default for ImageGenericInfo {
