@@ -23,7 +23,6 @@ pub struct FileReader {
 #[no_mangle]
 pub extern "C" fn xml_reader_from_file(path: *mut i8) -> *mut FileReader  {
     let c_str = unsafe { assert!(!path.is_null());  CStr::from_ptr(path) };
-    
     match c_str.to_str() {
         Ok(path_str) => {
             let reader = Reader::from_file(path_str);
@@ -37,7 +36,7 @@ pub extern "C" fn xml_reader_from_file(path: *mut i8) -> *mut FileReader  {
                     return Box::into_raw(file_reader);
                 },
                 Err(err) => {
-                    eprintln!("read xml {:?} err:{:?}",c_str,err);
+                    eprintln!("read xml error: {:?} err:{:?}",c_str,err);
 
                     return std::ptr::null_mut(); 
                 }

@@ -18,3 +18,4 @@ seija-pbr = {path = "../seija-pbr"}
 seija-ui = {path = "../seija-ui"}
 spritesheet = {path = "../spritesheet"}
 quick-xml-ffi = {path = "../quick-xml-ffi"}
+lib-io-async = {path = "../lib-io-async"}
