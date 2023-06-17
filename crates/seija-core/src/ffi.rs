@@ -37,8 +37,10 @@ pub unsafe extern "C" fn core_time_get_delta_seconds(time_ptr:* const u8) -> f32
 #[no_mangle]
 pub unsafe extern "C" fn core_spawn_entity(world_ptr:*mut u8) -> u64 {
     let world_ptr = &mut *(world_ptr as *mut World);
-   
-    world_ptr.spawn_empty().id().to_bits()
+    let new_entity = world_ptr.spawn_empty().id();
+    let bits = new_entity.to_bits();
+    //println!("spawn {:?} - {}",new_entity,bits);
+    bits
 }
 
 #[no_mangle]

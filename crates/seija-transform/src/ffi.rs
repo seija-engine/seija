@@ -53,3 +53,17 @@ pub unsafe extern "C" fn transform_set_parent(world:&mut World,entity_id:u64,par
     let parent_id = Entity::from_bits(parent_id);
     world.entity_mut(entity).set_parent(if is_null { None } else {Some(parent_id)});
 }
+
+#[no_mangle]
+pub unsafe extern "C" fn transform_add_child_index(world:&mut World,entity_id:u64,child_id:u64,index:i32) {
+    let cur_entity = Entity::from_bits(entity_id);
+    let child_entity = Entity::from_bits(child_id);
+    //println!("transform_add_child_index:{:?} {:?} {}",&cur_entity,&child_entity,index);
+    world.entity_mut(cur_entity).add_child_index(child_entity, index as usize);
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn transform_despawn(world:&mut World,entity_id:u64) {
+    let entity = Entity::from_bits(entity_id);
+    world.entity_mut(entity).despawn_recursive();
+}

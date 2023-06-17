@@ -87,6 +87,7 @@ fn despawn_with_children_recursive_inner(world: &mut World, entity: Entity) {
 pub trait IEntityChildren {
     fn despawn_recursive(self);
     fn set_parent(&mut self,parent:Option<Entity>) -> &mut Self;
+    fn add_child_index(&mut self,child:Entity,index:usize) -> &mut Self { self }
 }
 
 impl<'a, 'b,'c> IEntityChildren for EntityCommands<'a, 'b,'c> {
@@ -106,8 +107,41 @@ impl<'w> IEntityChildren for EntityMut<'w> {
     fn despawn_recursive(mut self) {
         let entity = self.id();
         let world_mut = unsafe { self.world_mut() };
+        let old_parent = world_mut.entity_mut(entity).get::<Parent>().map(|p|p.0);
         despawn_with_children_recursive(world_mut, entity);
-        
+        if let Some(mut event) = world_mut.get_resource_mut::<Events<HierarchyEvent>>() {
+            event.send(HierarchyEvent::Remove { entity, parent: old_parent });
+        }
+    }
+
+    fn add_child_index(&mut self,child:Entity,index:usize) -> &mut Self {
+        let cur_entity = self.id();
+        self.world_scope(|world| {
+            //清除child旧Parent
+            let old_parent = world.entity_mut(child).get::<Parent>().map(|p|p.0);
+            if let Some(old) = old_parent {
+                if let Some(mut children) = world.get_mut::<Children>(old) {
+                    children.0.retain(|c| *c != cur_entity);
+                }
+            }
+            //设置child的Parent为当前Entity
+            if let Some(mut parent_mut) = world.entity_mut(child).get_mut::<Parent>() {
+               parent_mut.0 = cur_entity;
+            } else {
+                world.entity_mut(child).insert(Parent(cur_entity));
+            }
+            //添加到自己的children列表
+            if let Some(mut cur_children) = world.get_mut::<Children>(cur_entity) {
+                cur_children.0.insert(index, child);
+            } else {
+                world.entity_mut(cur_entity).insert(Children(SmallVec::from_slice(&[child])));
+            }
+
+            if let Some(mut event) = world.get_resource_mut::<Events<HierarchyEvent>>() {
+                event.send(HierarchyEvent::ParentChange { entity:child, old_parent, new_parent: Some(cur_entity) });
+            }
+        });
+        self
     }
 
     fn set_parent(&mut self,parent:Option<Entity>) -> &mut Self {

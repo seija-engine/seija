@@ -5,5 +5,9 @@ pub enum HierarchyEvent {
         entity:Entity,
         old_parent:Option<Entity>,
         new_parent:Option<Entity>
+    },
+    Remove {
+        entity:Entity,
+        parent:Option<Entity>
     }
 }

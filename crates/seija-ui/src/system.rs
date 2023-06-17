@@ -202,8 +202,8 @@ pub fn update_canvas_render(mut params:CanvasRenderParams) {
                         changed_canvas.insert(canvas_entity);
                     }
                 });
-                
-            }
+            },
+            HierarchyEvent::Remove { .. } => {}
         }
     }
     

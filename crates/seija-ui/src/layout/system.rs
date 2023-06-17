@@ -1,5 +1,5 @@
 use std::collections::HashSet;
-use bevy_ecs::{system::{SystemParam, Query, RemovedComponents, Res}, prelude::{Entity, EventReader}, query::Changed};
+use bevy_ecs::{system::{SystemParam, Query, Res}, prelude::{Entity, EventReader}, query::Changed};
 use seija_core::{math::{Vec2}, window::AppWindow};
 use seija_transform::{events::HierarchyEvent, hierarchy::{Parent, Children}, Transform};
 use seija_winit::event::WindowResized;
@@ -10,7 +10,6 @@ use super::{types::LayoutElement, measure, arrange::{arrange_layout_element, Arr
 pub struct LayoutParams<'w,'s> {
     pub(crate) update_elems:Query<'w,'s,Entity,Changed<LayoutElement>>,
     pub(crate) events:EventReader<'w,'s,HierarchyEvent>,
-    pub(crate) removes:RemovedComponents<'w,LayoutElement>,
     pub(crate) parents:Query<'w,'s,(Entity,&'static Parent)>,
     pub(crate) childrens:Query<'w,'s,&'static Children>,
     pub(crate) elems:Query<'w,'s,&'static LayoutElement>,
@@ -23,8 +22,8 @@ pub struct LayoutParams<'w,'s> {
 }
 
 
-pub fn ui_layout_system(params:LayoutParams) {
-    let dirty_layouts = collect_dirty(&params);
+pub fn ui_layout_system(mut params:LayoutParams) {
+    let dirty_layouts = collect_dirty(&mut params);
     for elem_entity in dirty_layouts {
        //这里只会修改Element的属性，所以是安全的
        if let Ok(element) = params.elems.get(elem_entity) {
@@ -48,7 +47,7 @@ pub fn ui_layout_system(params:LayoutParams) {
 
 
 /////计算需要重布局的Element
-fn collect_dirty(params:&LayoutParams) -> HashSet<Entity> {
+fn collect_dirty(params:&mut LayoutParams) -> HashSet<Entity> {
     let mut layouts = HashSet::default();
     if !params.resize_events.is_empty() {
         for (entity,_) in params.ui_canvas.iter() {
@@ -62,6 +61,22 @@ fn collect_dirty(params:&LayoutParams) -> HashSet<Entity> {
     }
     
     for entity in params.update_elems.iter() {
+        let dirty_entity = get_top_elem_dirty(entity, params);
+        layouts.insert(dirty_entity);
+    }
+    let mut remove_parents:Vec<Entity> = vec![];
+    for event in params.events.iter() {
+        match event {
+            HierarchyEvent::Remove { parent,.. } => {
+                if let Some(parent) = parent {
+                    remove_parents.push(*parent);
+                }
+            }
+            _ => {}
+        }
+    }
+
+    for entity in remove_parents.drain(..) {
         let dirty_entity = get_top_elem_dirty(entity, params);
         layouts.insert(dirty_entity);
     }
