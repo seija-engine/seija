@@ -1,15 +1,16 @@
 use std::{sync::Arc, collections::{HashSet, HashMap}};
 use bevy_ecs::{world::World, system::{Resource, 
-    SystemParam, Query, Commands, Res, ResMut, RemovedComponents}, prelude::{Entity, EventWriter, EventReader}, query::{Or, Changed}};
+    SystemParam, Query, Commands, Res, ResMut, RemovedComponents}, prelude::{Entity, EventWriter, EventReader}, query::{Or, Changed, Added}};
 use seija_asset::{AssetServer, Assets, Handle};
+use seija_core::math::{Vec3, Vec4};
 use seija_render::{material::{MaterialDefineAsset, MaterialDef, Material},
                    resource::{ Mesh, Texture, ImageInfo, TextureDescInfo, BufferId}};
 use seija_transform::{hierarchy::{Parent, Children}, Transform, events::HierarchyEvent};
 use spritesheet::SpriteSheet;
-use glyph_brush::{GlyphBrush, GlyphBrushBuilder,VerticalAlign,HorizontalAlign,FontId,
-    ab_glyph::PxScale, Section, BrushAction, Layout};
+use glyph_brush::{GlyphBrush, GlyphBrushBuilder,FontId,BrushAction};
 use crate::{components::{sprite::Sprite, rect2d::Rect2D, canvas::{Canvas, ZOrder}}, 
-            render::{UIRender2D, WriteFontAtlas}, mesh2d::Vertex2D, text::{Text, Font, glyph_to_mesh, write_font_texture}};
+            render::{UIRender2D, WriteFontAtlas}, 
+            mesh2d::Vertex2D, text::{Text, Font, glyph_to_mesh, write_font_texture}, types::Box2D};
 use wgpu::{TextureFormat};
 #[derive(Resource)]
 pub struct UIRenderRoot {
@@ -150,8 +151,6 @@ pub fn update_render_mesh_system(mut params:RenderMeshParams) {
         }
     }
 
-    
-
     //刷新ZOrder
     if !top_changed_canvas.is_empty() {
         for top_entity in top_changed_canvas {
@@ -161,10 +160,6 @@ pub fn update_render_mesh_system(mut params:RenderMeshParams) {
     }
 }
 
-
-
-
-
 #[derive(SystemParam)]
 pub struct CanvasRenderParams<'w,'s> {
     pub(crate) update_render2ds:Query<'w,'s,Entity,Changed<UIRender2D>>,
@@ -172,6 +167,7 @@ pub struct CanvasRenderParams<'w,'s> {
     pub(crate) update_trans:Query<'w,'s,Entity,Changed<Transform>>,
     pub(crate) tree_events:EventReader<'w,'s,HierarchyEvent>,
     pub(crate) render2d:Query<'w,'s,&'static UIRender2D>,
+    pub(crate) rect2ds:Query<'w,'s,&'static Rect2D>,
     pub(crate) canvases:Query<'w,'s,&'static mut Canvas>,
     pub(crate) parents:Query<'w,'s,&'static Parent>,
     pub(crate) zorders:Query<'w,'s,&'static ZOrder>,
@@ -207,7 +203,6 @@ pub fn update_canvas_render(mut params:CanvasRenderParams) {
         }
     }
     
-    
     //处理删除
     for rm_entity in params.remove_render2ds.iter() {
         if let Some(canvas_entity) = params.ui_roots.entity2canvas.remove(&rm_entity) {
@@ -223,8 +218,6 @@ pub fn update_canvas_render(mut params:CanvasRenderParams) {
         } 
     }
 
-    
-    
     //处理渲染元素更新
     for entity in params.update_render2ds.iter() {
         if let Some(canvas_entity) = find_canvas(entity, &params.parents, &params.canvases) {
@@ -232,10 +225,8 @@ pub fn update_canvas_render(mut params:CanvasRenderParams) {
         }
     }
 
-   
-
-    for entity in changed_canvas {
-        Canvas::update_drawcall(entity,
+    for entity in changed_canvas.iter() {
+        Canvas::update_drawcall(*entity,
              &params.children,
              &mut params.render2d,
              &mut params.canvases,
@@ -247,7 +238,7 @@ pub fn update_canvas_render(mut params:CanvasRenderParams) {
              &mut params.commands,
              &mut params.ui_roots,
              &params.asset_server);
-    }    
+    }
 }
 
 
@@ -272,6 +263,72 @@ pub fn update_canvas_trans(world:&mut World) {
         }
      }
    }
+}
+
+
+#[derive(SystemParam)]
+pub struct ClipParams<'w,'s> {
+    pub(crate) children:Query<'w,'s,&'static Children>,
+    pub(crate) update_trans:Query<'w,'s,Entity,Changed<Transform>>,
+    pub(crate) add_canvas:Query<'w,'s,Entity,Added<Canvas>>,
+    pub(crate) infos:Query<'w,'s,(&'static Canvas,&'static Transform,&'static Rect2D)>,
+    pub(crate) parents:Query<'w,'s,&'static Parent>,
+    pub(crate) hmats:Query<'w,'s,&'static Handle<Material>>,
+    pub(crate) materials:ResMut<'w,Assets<Material>>,
+}
+
+pub(crate) fn update_ui_clips(mut params:ClipParams) {
+    let mut changed_clip_canvas:HashSet<Entity> = HashSet::new();
+    for entity in params.add_canvas.iter() {
+        if let Ok((canvas,_,_)) = params.infos.get(entity) {
+            if canvas.is_clip {
+                changed_clip_canvas.insert(entity);
+            }
+        }
+    }
+    for entity in params.update_trans.iter() {
+      visit_children(entity, &params.children, &mut |ve:Entity| {
+         if let Ok((canvas,_,_)) = params.infos.get(ve) {
+            if canvas.is_clip {
+                changed_clip_canvas.insert(ve);
+            }
+         }
+      });
+    }
+    
+    for entity in changed_clip_canvas.iter() {
+        let cur_box = calc_box2d(*entity, &params);
+        if let Ok((canvas,_,_)) = params.infos.get(*entity) {
+            for drawcall in canvas.draw_calls.iter() {
+                if let Ok(hmat) = params.hmats.get(drawcall.entity) {
+                   if let Some(mat) = params.materials.get_mut(&hmat.id) {
+                    let clip_rect = Vec4::new(cur_box.lt.x, cur_box.lt.y, cur_box.rb.x, cur_box.rb.y);
+                    //println!("set clipRect:{}",clip_rect);
+                    mat.props.set_float4("clipRect",clip_rect , 0);
+                   }
+                }
+            }
+        }
+    }
+}
+
+fn calc_box2d(entity:Entity,params:&ClipParams) -> Box2D {
+    let mut cur_entity = Some(entity);
+    let mut cur_box = Box2D::max();
+    while let Some(entity) = cur_entity {
+        if let Ok((canvas,t,rect)) = params.infos.get(entity) {
+            if canvas.is_clip {
+                let mut lt = Vec3::new(rect.left(),rect.top(),1f32);
+                let mut rb = Vec3::new(rect.right(),rect.bottom(),1f32);
+                lt = t.global().mul_vec3(lt);
+                rb = t.global().mul_vec3(rb);
+                let now_box = Box2D::new(lt.x,lt.y,rb.x,rb.y);
+                cur_box = cur_box.intersection(&now_box);
+            }
+        }
+        cur_entity = params.parents.get(entity).ok().map(|v| v.0);
+    }
+    cur_box
 }
 
 fn find_top_canvas(entity:Entity,parents:&Query<&Parent>,canvases:&Query<&Canvas>) -> Option<Entity> {

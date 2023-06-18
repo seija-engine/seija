@@ -5,17 +5,25 @@ use seija_asset::{HandleId, Assets, AssetServer};
 use seija_core::math::{Mat4, Vec4, Vec4Swizzles};
 use seija_render::{resource::{Mesh, MeshAttributeType, Indices}, material::{Material, MaterialDef}};
 use seija_transform::{hierarchy::{Children, Parent}, Transform};
-use crate::{render::UIRender2D, system::UIRenderRoot};
+use crate::{render::UIRender2D, system::UIRenderRoot, types::Box2D};
 use  wgpu::PrimitiveTopology;
 const Z_SCALE: f32 = 0.00001;
 
 #[derive(Component,Default)]
 pub struct Canvas {
     pub(crate) draw_calls:Vec<UIDrawCall>,
+    pub(crate) clip_rect:Box2D,
+    pub is_clip:bool,
 }
 
-
 impl Canvas {
+    pub fn new(is_clip:bool) -> Canvas {
+        Canvas {
+            is_clip,
+            ..Default::default()
+        }
+    }
+
     pub fn update_drawcall(canvas_entity:Entity,
                            children:&Query<&Children>,
                            uirenders:&Query<&UIRender2D>,
@@ -53,13 +61,6 @@ impl Canvas {
             }   
         }
 
-    }
-
-
-    pub fn update_drawcall_position(&self,canvas_entity:Entity,trans:&Query<&mut Transform>) {
-        for draw_entity in self.draw_calls.iter() {
-           log::error!("upppppppppppdate:{:?}",draw_entity.entity);
-        }
     }
 }
 
@@ -184,14 +185,14 @@ impl ZOrder {
 
 struct ScanDrawCall {
     cur_texture:Option<HandleId>,
-    cur_canvas:Option<Entity>,
+    //cur_canvas:Option<Entity>,
     entity_group:Vec<Vec<Entity>>,
     cache:Vec<Entity>,
 }
 
 impl ScanDrawCall {
     pub fn scan_entity_group(entity:Entity,children:&Query<&Children>,uirenders:&Query<&UIRender2D>,canvases:&Query<&mut Canvas>) -> Vec<Vec<Entity>> {
-        let mut scan_drawcall = ScanDrawCall { entity_group:vec![],cache:vec![], cur_texture:None,cur_canvas:None };
+        let mut scan_drawcall = ScanDrawCall { entity_group:vec![],cache:vec![], cur_texture:None  };
         if let Ok(render2d) = uirenders.get(entity) {
             scan_drawcall.cur_texture = Some(render2d.texture.id);
             scan_drawcall.cache.push(entity);

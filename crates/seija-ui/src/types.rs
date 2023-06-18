@@ -54,3 +54,42 @@ pub enum AnchorAlign {
     BottomRight
 }
 
+#[derive(Debug,Default,Clone,Copy)]
+pub struct Box2D {
+  pub lt:Vec2,
+  pub rb:Vec2
+}
+
+impl Box2D {
+    pub fn new(l:f32,t:f32,r:f32,b:f32) -> Box2D {
+        Box2D {
+            lt:Vec2::new(l, t),
+            rb:Vec2::new(r,b)
+        }
+    }
+
+    pub fn max() -> Box2D {
+        let fmax = f32::MAX;
+        Box2D::new(-fmax, fmax, fmax, -fmax)
+    }
+
+    pub fn zero() -> Box2D {
+        Box2D::new(0f32, 0f32, 0f32, 0f32)
+    }
+
+    pub fn intersection(&self,other:&Box2D) -> Box2D {
+       if self.is_cross(other) {
+          let lx = self.lt.x.max(other.lt.x);
+          let rx = self.rb.x.min(other.rb.x);
+          let ly = self.lt.y.min(other.lt.y);
+          let ry = self.rb.y.max(other.rb.y);
+          return Box2D::new(lx, ly, rx, ry);
+       }
+       Box2D::zero()
+    }
+
+    pub fn is_cross(&self,other:&Box2D) -> bool {
+        return    self.lt.x.max(other.lt.x) <= self.rb.x.min(other.rb.x) 
+               && self.lt.y.min(other.lt.y) >= self.rb.y.max(other.rb.y)
+    }
+}
