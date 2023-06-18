@@ -22,10 +22,11 @@ vec4 ui_fs_main(VSInput inv) {
     if(textureColor.a < 0.001) {
         discard;
     }
-    if (   inv.outPos.x < material.clipRect.x 
+    if (material.isClip > 0 && 
+        (inv.outPos.x < material.clipRect.x 
         || inv.outPos.x > material.clipRect.z
         || inv.outPos.y > material.clipRect.y
-        || inv.outPos.y < material.clipRect.w) {
+        || inv.outPos.y < material.clipRect.w)) {
         discard;
     }
     textureColor = textureColor * inv.color;

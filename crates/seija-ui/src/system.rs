@@ -304,6 +304,7 @@ pub(crate) fn update_ui_clips(mut params:ClipParams) {
                    if let Some(mat) = params.materials.get_mut(&hmat.id) {
                     let clip_rect = Vec4::new(cur_box.lt.x, cur_box.lt.y, cur_box.rb.x, cur_box.rb.y);
                     //println!("set clipRect:{}",clip_rect);
+                    mat.props.set_i32("isClip", 1, 0);
                     mat.props.set_float4("clipRect",clip_rect , 0);
                    }
                 }
