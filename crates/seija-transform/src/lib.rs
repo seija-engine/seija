@@ -7,6 +7,7 @@ pub mod hierarchy;
 mod commands;
 mod system;
 mod transform;
+mod events2;
 pub mod ffi;
 
 use seija_core::{CoreStage, StartupStage, AddCore};

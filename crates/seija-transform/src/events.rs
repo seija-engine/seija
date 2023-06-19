@@ -1,4 +1,4 @@
-use bevy_ecs::prelude::Entity;
+use bevy_ecs::{prelude::{Entity, Bundle}, world::World};
 #[derive(Debug,Clone)]
 pub enum HierarchyEvent {
     ParentChange {

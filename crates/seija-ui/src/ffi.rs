@@ -44,9 +44,9 @@ pub unsafe extern "C" fn entity_add_rect2d(world: &mut World, entity_id: u64, re
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn entity_add_canvas(world: &mut World, entity_id: u64) {
+pub unsafe extern "C" fn entity_add_canvas(world: &mut World, entity_id: u64,is_clip:bool) {
     let entity = Entity::from_bits(entity_id);
-    world.entity_mut(entity).insert(Canvas::default());
+    world.entity_mut(entity).insert(Canvas::new(is_clip));
 }
 
 #[no_mangle]

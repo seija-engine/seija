@@ -5,14 +5,13 @@ use seija_asset::{HandleId, Assets, AssetServer};
 use seija_core::math::{Mat4, Vec4, Vec4Swizzles};
 use seija_render::{resource::{Mesh, MeshAttributeType, Indices}, material::{Material, MaterialDef}};
 use seija_transform::{hierarchy::{Children, Parent}, Transform};
-use crate::{render::UIRender2D, system::UIRenderRoot, types::Box2D};
+use crate::{render::UIRender2D, system::UIRenderRoot};
 use  wgpu::PrimitiveTopology;
 const Z_SCALE: f32 = 0.00001;
 
 #[derive(Component,Default)]
 pub struct Canvas {
     pub(crate) draw_calls:Vec<UIDrawCall>,
-    pub(crate) clip_rect:Box2D,
     pub is_clip:bool,
 }
 

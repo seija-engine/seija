@@ -280,42 +280,42 @@ pub struct ClipParams<'w,'s> {
 pub(crate) fn update_ui_clips(mut params:ClipParams) {
     let mut changed_clip_canvas:HashSet<Entity> = HashSet::new();
     for entity in params.add_canvas.iter() {
-        if let Ok((canvas,_,_)) = params.infos.get(entity) {
-            if canvas.is_clip {
-                changed_clip_canvas.insert(entity);
+        visit_children(entity, &params.children, &mut |ve:Entity| {
+            if params.infos.contains(ve) {
+               changed_clip_canvas.insert(ve);
             }
-        }
+         });
     }
     for entity in params.update_trans.iter() {
       visit_children(entity, &params.children, &mut |ve:Entity| {
-         if let Ok((canvas,_,_)) = params.infos.get(ve) {
-            if canvas.is_clip {
-                changed_clip_canvas.insert(ve);
-            }
+         if params.infos.contains(ve) {
+            changed_clip_canvas.insert(ve);
          }
       });
     }
     
     for entity in changed_clip_canvas.iter() {
-        let cur_box = calc_box2d(*entity, &params);
-        if let Ok((canvas,_,_)) = params.infos.get(*entity) {
-            for drawcall in canvas.draw_calls.iter() {
-                if let Ok(hmat) = params.hmats.get(drawcall.entity) {
-                   if let Some(mat) = params.materials.get_mut(&hmat.id) {
-                    let clip_rect = Vec4::new(cur_box.lt.x, cur_box.lt.y, cur_box.rb.x, cur_box.rb.y);
-                    //println!("set clipRect:{}",clip_rect);
-                    mat.props.set_i32("isClip", 1, 0);
-                    mat.props.set_float4("clipRect",clip_rect , 0);
-                   }
+        if let Some(cur_box) = calc_box2d(*entity, &params) {
+            if let Ok((canvas,_,_)) = params.infos.get(*entity) {
+                for drawcall in canvas.draw_calls.iter() {
+                    if let Ok(hmat) = params.hmats.get(drawcall.entity) {
+                       if let Some(mat) = params.materials.get_mut(&hmat.id) {
+                        let clip_rect = Vec4::new(cur_box.lt.x, cur_box.lt.y, cur_box.rb.x, cur_box.rb.y);
+                        //println!("set clipRect:{}",clip_rect);
+                        mat.props.set_i32("isClip", 1, 0);
+                        mat.props.set_float4("clipRect",clip_rect , 0);
+                       }
+                    }
                 }
             }
         }
     }
 }
 
-fn calc_box2d(entity:Entity,params:&ClipParams) -> Box2D {
+fn calc_box2d(entity:Entity,params:&ClipParams) -> Option<Box2D> {
     let mut cur_entity = Some(entity);
     let mut cur_box = Box2D::max();
+    let mut has_clip = false;
     while let Some(entity) = cur_entity {
         if let Ok((canvas,t,rect)) = params.infos.get(entity) {
             if canvas.is_clip {
@@ -325,11 +325,12 @@ fn calc_box2d(entity:Entity,params:&ClipParams) -> Box2D {
                 rb = t.global().mul_vec3(rb);
                 let now_box = Box2D::new(lt.x,lt.y,rb.x,rb.y);
                 cur_box = cur_box.intersection(&now_box);
+                has_clip = true;
             }
         }
         cur_entity = params.parents.get(entity).ok().map(|v| v.0);
     }
-    cur_box
+    if has_clip { Some(cur_box) } else { None }
 }
 
 fn find_top_canvas(entity:Entity,parents:&Query<&Parent>,canvases:&Query<&Canvas>) -> Option<Entity> {
