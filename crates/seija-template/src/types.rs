@@ -70,11 +70,11 @@ pub struct TTemplateEntity {
 impl TEntity {
     pub fn not_default_info(&self) -> Option<EInfo> {
         if self.name.is_some() || self.layer > 0 || self.tag.is_some() {
-            return Some(EInfo {
-                name:self.name.clone(),
-                layer:self.layer,
-                tag:self.tag.clone()
-            });
+            let mut einfo = EInfo::default();
+            einfo.name = self.name.clone();
+            einfo.layer = self.layer;
+            einfo.tag = self.tag.clone();
+            return Some(einfo);
         }
         None
     }

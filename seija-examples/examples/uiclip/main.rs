@@ -43,10 +43,10 @@ fn start(world: &mut World) {
     let rect2d = Rect2D::new(640f32, 480f32);
     let mut t = Transform::default();
     t.local.position = Vec3::new(0f32, 0f32, -2f32);
-    //let mut view = LayoutElement::create_view();
-    //view.common.ver = LayoutAlignment::Start;
-    //view.common.ui_size.height = SizeValue::Pixel(300f32);
-    let panel_id = world.spawn((bg_sprite,rect2d,t,Canvas::new(true))).set_parent(Some(canvas_id)).id();
+    let mut view = LayoutElement::create_view();
+    view.common.ver = LayoutAlignment::Start;
+    view.common.ui_size.height = SizeValue::Pixel(300f32);
+    let panel_id = world.spawn((view,bg_sprite,rect2d,t,Canvas::new(true))).set_parent(Some(canvas_id)).id();
     {
         let mut t = Transform::default();
         let rect2d = Rect2D::new(120f32, 120f32);

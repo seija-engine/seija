@@ -16,6 +16,7 @@ pub mod layout;
 pub mod ffi;
 use components::ui_canvas::update_ui_canvas;
 pub use render::update_ui_render;
+use seija_transform::update_transform_system;
 use system::{on_ui_start, update_render_mesh_system, update_canvas_render, update_canvas_trans, update_ui_clips};
 use text::{FontLoader, Font};
 #[derive(Clone, Copy,Hash,Debug,PartialEq, Eq,StageLabel)]
@@ -58,7 +59,7 @@ impl IModule for UIModule {
         app.schedule.add_stage_before(UIStage::UI, UIStage::PreUI, SystemStage::single_threaded());
 
         
-        app.add_system(UIStage::PreUI,ui_layout_system.before(update_render_mesh_system));
+        app.add_system(CoreStage::PostUpdate,ui_layout_system.before(update_transform_system));
         app.add_system(UIStage::PreUI, update_render_mesh_system);
         app.add_system(UIStage::UI, update_canvas_render);
         app.add_system(UIStage::UI, update_canvas_trans);
