@@ -6,9 +6,8 @@ use seija_examples::{init_core_app};
 use seija_input::Input;
 use seija_render::{
     camera::camera::{Camera, Orthographic, SortType},
-   
 };
-use seija_transform::{IEntityChildren,Transform};
+use seija_transform::{events::EntityMutEx,Transform};
 use seija_ui::{
     components::{canvas::Canvas, rect2d::Rect2D, sprite::Sprite, ui_canvas::UICanvas},
     types::Thickness,

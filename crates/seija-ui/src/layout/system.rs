@@ -67,7 +67,7 @@ fn collect_dirty(params:&mut LayoutParams) -> HashSet<Entity> {
     let mut remove_parents:Vec<Entity> = vec![];
     for event in params.events.iter() {
         match event {
-            HierarchyEvent::Remove { parent,.. } => {
+            HierarchyEvent::Delete(_,_,parent) => {
                 if let Some(parent) = parent {
                     remove_parents.push(*parent);
                 }

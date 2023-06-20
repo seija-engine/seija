@@ -1,16 +1,13 @@
-use std::sync::Arc;
-
 use bevy_ecs::world::World;
 use glam::{Vec3, Vec4, Vec2};
-use seija_app::App;
-use seija_asset::{AssetModule, AssetServer, Assets};
-use seija_core::{CoreModule, CoreStage, StartupStage};
+use seija_asset::{ AssetServer, Assets};
+use seija_core::{CoreStage, StartupStage};
 use seija_examples::init_core_app;
-use seija_input::InputModule;
-use seija_render::{RenderModule, RenderConfig, camera::camera::{Camera, Orthographic, SortType}};
-use seija_transform::{Transform, IEntityChildren};
-use seija_ui::{UIModule, update_ui_render, event::UIEventSystem, components::{ui_canvas::UICanvas, canvas::Canvas, rect2d::Rect2D, sprite::Sprite}, layout::types::{LayoutElement, UISize, LayoutAlignment}};
-use seija_winit::WinitModule;
+use seija_render::{camera::camera::{Camera, Orthographic, SortType}};
+use seija_transform::{Transform,events::EntityMutEx};
+use seija_ui::{update_ui_render, event::UIEventSystem, 
+    components::{ui_canvas::UICanvas, canvas::Canvas, rect2d::Rect2D, sprite::Sprite}, 
+    layout::types::{LayoutElement, UISize, LayoutAlignment}};
 use spritesheet::SpriteSheet;
 
 

@@ -21,7 +21,7 @@ use spritesheet::SpriteSheetModule;
 
 
 pub fn init_core_app(render_file:&str,pre_renders:Vec<fn(world:&mut World,ctx:&mut RenderContext)>,win_size:Option<Vec2>) -> App {
-    env_logger::Builder::new().filter_level(log::LevelFilter::Error).try_init().unwrap();
+    env_logger::Builder::new().filter_level(log::LevelFilter::Info).try_init().unwrap();
     let mut app = App::new();
     app.add_module(CoreModule);
     app.add_module(AssetModule(std::env::current_dir().unwrap().join("res").into()));

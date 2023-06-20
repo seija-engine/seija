@@ -189,7 +189,7 @@ pub fn update_canvas_render(mut params:CanvasRenderParams) {
     //处理Tansform层级变化
     for event in params.tree_events.iter() {
         match event {
-            HierarchyEvent::ParentChange { entity,.. } => { 
+            HierarchyEvent::SetParent { entity,.. } => { 
                 visit_children(*entity, &params.children, &mut |ve: Entity| {
                     if let Some(canvas_entity) = params.ui_roots.entity2canvas.remove(&ve) {
                         changed_canvas.insert(canvas_entity);
@@ -199,7 +199,7 @@ pub fn update_canvas_render(mut params:CanvasRenderParams) {
                     }
                 });
             },
-            HierarchyEvent::Remove { .. } => {}
+            _ => {}
         }
     }
     

@@ -1,16 +1,12 @@
-use bevy_ecs::{prelude::*, system::Command, world};
-use glam::{Vec3, Vec4, Quat};
+use bevy_ecs::prelude::*;
+use glam::{Vec3, Vec4};
 use seija_asset::{AssetServer, Assets, Handle};
 use seija_core::{time::Time, CoreStage, StartupStage};
-use seija_examples::{init_core_app, load_material};
-use seija_input::Input;
+use seija_examples::{init_core_app};
 use seija_render::{
-    camera::camera::{Camera, Orthographic, SortType},
-    material::Material,
-    resource::{load_image_info, Mesh},
+    camera::camera::{Camera, Orthographic, SortType}
 };
-use seija_template::Template;
-use seija_transform::{hierarchy::Parent, BuildChildren, IEntityChildren, PushChildren, Transform};
+use seija_transform::{events::{EntityMutEx,EntityCommandsEx}, Transform};
 use seija_ui::{
     components::{canvas::Canvas, rect2d::Rect2D, sprite::Sprite, ui_canvas::UICanvas},
     types::Thickness,
@@ -119,7 +115,7 @@ fn on_update(mut commands: Commands,
             ui_data.add_entitys.push(text_id);
         } else if ui_data.number == 6 {
             if let Some(pop_entity) = ui_data.add_entitys.pop() {
-                commands.entity(pop_entity).despawn_recursive();
+                commands.entity(pop_entity).delete();
                 log::error!("despawn {:?}",&ui_data.add_entitys);
             }
         } else {

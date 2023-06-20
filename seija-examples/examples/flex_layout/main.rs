@@ -7,7 +7,7 @@ use seija_ui::layout::comps::{FlexAlignItems, FlexJustify, FlexWrap};
 use seija_render::{camera::camera::{Orthographic, Camera, SortType},
 };
 use seija_ui::layout::comps::FlexAlignContent;
-use seija_transform::{Transform, IEntityChildren};
+use seija_transform::{Transform, events::{EntityMutEx}};
 use seija_ui::{update_ui_render, 
                components::{canvas::Canvas, ui_canvas::UICanvas, 
                sprite::Sprite, rect2d::Rect2D}, 

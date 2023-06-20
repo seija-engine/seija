@@ -6,11 +6,10 @@ use seija_examples::{init_core_app, load_material};
 use seija_input::Input;
 use seija_render::{
     camera::camera::{Camera, Orthographic},
-    material::Material,
     resource::{load_image_info, Mesh},
 };
 use seija_template::Template;
-use seija_transform::{hierarchy::Parent, BuildChildren, IEntityChildren, PushChildren, Transform};
+use seija_transform::{hierarchy::Parent, events::EntityMutEx, Transform};
 use seija_ui::{
     components::{canvas::Canvas, rect2d::Rect2D, sprite::Sprite, ui_canvas::UICanvas},
     types::Thickness,

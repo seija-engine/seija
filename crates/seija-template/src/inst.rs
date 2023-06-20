@@ -1,13 +1,12 @@
 use std::collections::HashMap;
 
-use seija_app::ecs::{system::{CommandQueue, Command}};
+use seija_app::ecs::{system::{CommandQueue}};
 use seija_asset::{AssetServer, HandleUntyped, Assets};
 use seija_core::{bevy_ecs::{entity::Entity,world::{World}}, info::EInfo};
 use seija_core::anyhow::{Result};
-use seija_transform::{ PushChildren};
 use smallvec::SmallVec;
 use smol_str::SmolStr;
-
+use seija_transform::events::{WorldEntityEx};
 use crate::{TEntity, TComponentManager, types::TEntityChildren, Template, errors::TemplateError};
 
 
@@ -41,7 +40,7 @@ fn instance_entity_sync(world:&mut World,server:&AssetServer,tentity:&TEntity,mg
                     mgr.create(component, server,queue,template_entity_id)?
                }
                childrens.push(template_entity_id);
-               PushChildren {children:SmallVec::from_slice(&[entity]) ,parent:template_entity_id}.write(world);
+               world.set_parent(entity, Some(template_entity_id));
             }
         }
     }
@@ -52,9 +51,10 @@ fn instance_entity_sync(world:&mut World,server:&AssetServer,tentity:&TEntity,mg
     for component in tentity.components.iter() {
         mgr.create(component, server,queue,eid)?
     }
-   
-    PushChildren {children:childrens,parent:eid}.write(world);   
-   Ok(eid)
+    for child in childrens {
+        world.set_parent(child, Some(eid));
+    }  
+    Ok(eid)
 }
 
 fn create_einfo(entity:&TEntity) -> EInfo {

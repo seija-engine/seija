@@ -11,7 +11,7 @@ use seija_app::{IModule, App};
 use seija_asset::{Handle, AddAsset};
 
 use seija_render::{material::{Material}, shadow::Shadow};
-use seija_transform::{BuildChildren, Transform};
+use seija_transform::{Transform,events::EntityCommandsEx};
 
 pub struct GLTFModule;
 
@@ -42,7 +42,10 @@ pub fn create_gltf<T>(asset:&GltfAsset,commands:&mut Commands,mut mat_fn:T) -> E
     }
     let mut root = commands.spawn_empty();
     root.insert(Transform::default());
-    root.add_children(&mesh_list);
-    root.id()
+    let root_id = root.id();
+    for child in mesh_list {
+      commands.entity(child).set_parent(Some(child));
+    }
+    root_id
 }
 
