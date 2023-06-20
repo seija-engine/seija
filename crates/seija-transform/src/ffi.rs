@@ -58,8 +58,7 @@ pub unsafe extern "C" fn transform_set_parent(world:&mut World,entity_id:u64,par
 pub unsafe extern "C" fn transform_add_child_index(world:&mut World,entity_id:u64,child_id:u64,index:i32) {
     let cur_entity = Entity::from_bits(entity_id);
     let child_entity = Entity::from_bits(child_id);
-    //println!("transform_add_child_index:{:?} {:?} {}",&cur_entity,&child_entity,index);
-    //world.entity_mut(cur_entity).add_child_index(child_entity, index as usize);
+    world.set_parent(child_entity, Some(cur_entity));
     world.move_child(cur_entity,child_entity,index as usize);
 }
 
@@ -67,4 +66,11 @@ pub unsafe extern "C" fn transform_add_child_index(world:&mut World,entity_id:u6
 pub unsafe extern "C" fn transform_despawn(world:&mut World,entity_id:u64) {
     let entity = Entity::from_bits(entity_id);
     world.delete(entity);
+}
+
+
+#[no_mangle]
+pub unsafe extern "C" fn core_spawn_entity(world:&mut World) -> u64 {
+    let new_entity = world.new_empty(true);
+    new_entity.to_bits()
 }

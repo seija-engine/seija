@@ -10,6 +10,7 @@ mod transform;
 pub mod ffi;
 
 use seija_core::{CoreStage, StartupStage, AddCore};
+use system::clear_delete_entity;
 pub use system::update_transform_system;
 pub use  transform::{Transform,TransformMatrix};
 //pub use  commands::{PushChildren,BuildChildren,IEntityChildren,DespawnRecursive};
@@ -33,5 +34,6 @@ impl IModule for TransformModule {
         //app.add_system(CoreStage::PostUpdate,system::parent_update_system.label(TransformLabel::ParentUpdate));
     
         app.add_system(CoreStage::PostUpdate,update_transform_system);
+        app.add_system(CoreStage::Last, clear_delete_entity);
     }
 }

@@ -1,6 +1,7 @@
 use std::collections::{HashSet};
 
-use bevy_ecs::prelude::{Changed, Entity, Query,Without, Commands, ParamSet};
+use bevy_ecs::{prelude::{Changed, Entity, Query,Without, Commands, ParamSet}, world::World};
+use seija_core::info::EInfo;
 
 use crate::{hierarchy::{Children, Parent, PreviousParent}, Transform, TransformMatrix, transform::TRANSFORM_MAT_ID};
 
@@ -92,4 +93,17 @@ fn cacl_top_changed(
         } else { break; }
     }
     top_entity
+}
+
+pub(crate) fn clear_delete_entity(world:&mut World) {
+   let mut entitys = world.query::<(Entity,&EInfo)>();
+   let mut delete_list = vec![];
+   for (entity,info) in entitys.iter(world) {
+    if info.is_delete() {
+        delete_list.push(entity);
+    }
+   }
+   for e in delete_list {
+      world.despawn(e);
+   }
 }

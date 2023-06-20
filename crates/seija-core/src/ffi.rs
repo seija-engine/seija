@@ -34,14 +34,6 @@ pub unsafe extern "C" fn core_time_get_delta_seconds(time_ptr:* const u8) -> f32
     time_ref.delta_seconds()
 }
 
-#[no_mangle]
-pub unsafe extern "C" fn core_spawn_entity(world_ptr:*mut u8) -> u64 {
-    let world_ptr = &mut *(world_ptr as *mut World);
-    let new_entity = world_ptr.spawn_empty().id();
-    let bits = new_entity.to_bits();
-    //println!("spawn {:?} - {}",new_entity,bits);
-    bits
-}
 
 #[no_mangle]
 pub unsafe extern "C" fn init_log(level:*const c_char) {
@@ -49,22 +41,6 @@ pub unsafe extern "C" fn init_log(level:*const c_char) {
     let level:Level = Level::from_str(str_level).unwrap();
     simple_logger::init_with_level(level).unwrap();
 }
-/*
-#[repr(C)]
-pub struct FFIEntityMut {
-    entity:Entity,
-    location:EntityLocation,
-}
-
-#[no_mangle]
-pub unsafe extern "C" fn core_spawn_empty_entity(world_ptr:*mut u8,entity_mut:*mut FFIEntityMut) {
-    let world_ptr = &mut *(world_ptr as *mut World);
-    let entity_mut_ptr = &mut *entity_mut;
-    let emut = world_ptr.spawn_empty();
-    entity_mut_ptr.entity = emut.id();
-    entity_mut_ptr.location = emut.location();
-   
-}*/
 
 
 type WorldFN = extern fn(world:*mut World);

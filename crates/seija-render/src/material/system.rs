@@ -67,7 +67,8 @@ impl MaterialSystem {
             let rm_list: Vec<Entity> = world.removed::<Handle<Material>>().collect();
             for define in self.datas.values_mut() {
                 for rm_entity in rm_list.iter() {
-                    define.remove_material(rm_entity)
+                    //TODO 这里有bug
+                    //define.remove_material(rm_entity)
                 }
             }
         };

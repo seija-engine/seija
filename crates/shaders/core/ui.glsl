@@ -30,10 +30,19 @@ vec4 ui_fs_main(VSInput inv) {
         discard;
     }
     textureColor = textureColor * inv.color;
+    textureColor = textureColor * material.color;
     return textureColor;
 }
 
 vec4 text_fs_main(VSInput inv) {
     vec4 textureColor = texture(sampler2D(tex_mainTexture,tex_mainTextureSampler),inv.uv);
+    if (material.isClip > 0 && 
+        (inv.outPos.x < material.clipRect.x 
+        || inv.outPos.x > material.clipRect.z
+        || inv.outPos.y > material.clipRect.y
+        || inv.outPos.y < material.clipRect.w)) {
+        discard;
+    }
+    
     return vec4(inv.color.r,inv.color.g,inv.color.b,textureColor.r);
 }

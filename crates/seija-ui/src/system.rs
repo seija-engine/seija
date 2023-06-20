@@ -189,7 +189,7 @@ pub fn update_canvas_render(mut params:CanvasRenderParams) {
     //处理Tansform层级变化
     for event in params.tree_events.iter() {
         match event {
-            HierarchyEvent::SetParent { entity,.. } => { 
+            HierarchyEvent::SetParent { entity,.. } => {
                 visit_children(*entity, &params.children, &mut |ve: Entity| {
                     if let Some(canvas_entity) = params.ui_roots.entity2canvas.remove(&ve) {
                         changed_canvas.insert(canvas_entity);
@@ -301,9 +301,10 @@ pub(crate) fn update_ui_clips(mut params:ClipParams) {
                     if let Ok(hmat) = params.hmats.get(drawcall.entity) {
                        if let Some(mat) = params.materials.get_mut(&hmat.id) {
                         let clip_rect = Vec4::new(cur_box.lt.x, cur_box.lt.y, cur_box.rb.x, cur_box.rb.y);
-                        //println!("set clipRect:{}",clip_rect);
+                        //println!("set clipRect:{:?} {:?}",entity,drawcall.entity);
                         mat.props.set_i32("isClip", 1, 0);
                         mat.props.set_float4("clipRect",clip_rect , 0);
+                        //mat.props.set_float4("color", Vec4::new(1f32, 0f32, 0f32, 1f32), 0);
                        }
                     }
                 }
@@ -316,8 +317,8 @@ fn calc_box2d(entity:Entity,params:&ClipParams) -> Option<Box2D> {
     let mut cur_entity = Some(entity);
     let mut cur_box = Box2D::max();
     let mut has_clip = false;
-    while let Some(entity) = cur_entity {
-        if let Ok((canvas,t,rect)) = params.infos.get(entity) {
+    while let Some(loop_entity) = cur_entity {
+        if let Ok((canvas,t,rect)) = params.infos.get(loop_entity) {
             if canvas.is_clip {
                 let mut lt = Vec3::new(rect.left(),rect.top(),1f32);
                 let mut rb = Vec3::new(rect.right(),rect.bottom(),1f32);
@@ -328,7 +329,7 @@ fn calc_box2d(entity:Entity,params:&ClipParams) -> Option<Box2D> {
                 has_clip = true;
             }
         }
-        cur_entity = params.parents.get(entity).ok().map(|v| v.0);
+        cur_entity = params.parents.get(loop_entity).ok().map(|v| v.0);
     }
     if has_clip { Some(cur_box) } else { None }
 }
