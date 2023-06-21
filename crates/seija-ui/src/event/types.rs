@@ -17,6 +17,9 @@ bitflags! {
         const MOUSE_ENTER = 0b00000100;
         const MOUSE_LEAVE = 0b00001000;
         const CLICK       = 0b00010000;
+        const BEGIN_DRAG  = 0b00100000;
+        const DRAG        = 0b01000000;
+        const END_DRAG    = 0b10000000;
     }
 }
 
@@ -25,6 +28,7 @@ bitflags! {
          const NONE     = 0b00000000;
          const TOUCH_IN = 0b00000001;
          const MOVE_IN  = 0b00000010;
+         const DRAG_IN  = 0b00000100;
      }
  }
 
