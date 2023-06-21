@@ -91,7 +91,7 @@ impl MaterialSystem {
 
             for define in self.datas.values_mut() {
                 if define.buffer_dirty {
-                    for item in define.items.values().chain(define.free_items.iter()) {
+                    for item in define.items.values() {
                         if let Some(mat) = item.mat_id.and_then(|id| materials.get_mut(&id)) {
                             define.create_bind_group(mat, item.index, res, &self.common_buffer_layout);
                         }
@@ -100,7 +100,7 @@ impl MaterialSystem {
                 }
                 
                 let mut cur_has_dirty = false;
-                for item in define.items.values_mut().chain(define.free_items.iter_mut()) {
+                for item in define.items.values_mut() {
                     if item.is_dirty {
                         if let Some(mat) = item.mat_id.and_then(|id| materials.get_mut(&id)) {
                             if cur_has_dirty == false {

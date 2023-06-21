@@ -150,7 +150,7 @@ pub fn update_render_mesh_system(mut params:RenderMeshParams) {
             }
         }
     }
-
+    //TODO 这里如果是已有渲染元素单纯改变层级，ZOrder刷新会有问题
     //刷新ZOrder
     if !top_changed_canvas.is_empty() {
         for top_entity in top_changed_canvas {
@@ -163,11 +163,9 @@ pub fn update_render_mesh_system(mut params:RenderMeshParams) {
 #[derive(SystemParam)]
 pub struct CanvasRenderParams<'w,'s> {
     pub(crate) update_render2ds:Query<'w,'s,Entity,Changed<UIRender2D>>,
-    pub(crate) remove_render2ds:RemovedComponents<'w,UIRender2D>,
     pub(crate) update_trans:Query<'w,'s,Entity,Changed<Transform>>,
     pub(crate) tree_events:EventReader<'w,'s,HierarchyEvent>,
     pub(crate) render2d:Query<'w,'s,&'static UIRender2D>,
-    pub(crate) rect2ds:Query<'w,'s,&'static Rect2D>,
     pub(crate) canvases:Query<'w,'s,&'static mut Canvas>,
     pub(crate) parents:Query<'w,'s,&'static Parent>,
     pub(crate) zorders:Query<'w,'s,&'static ZOrder>,
@@ -186,7 +184,7 @@ pub fn update_canvas_render(mut params:CanvasRenderParams) {
     }
     
     let mut changed_canvas:HashSet<Entity> = HashSet::default();
-    //处理Tansform层级变化
+    //处理hierarchy事件
     for event in params.tree_events.iter() {
         match event {
             HierarchyEvent::SetParent { entity,.. } => {
@@ -199,16 +197,20 @@ pub fn update_canvas_render(mut params:CanvasRenderParams) {
                     }
                 });
             },
+            HierarchyEvent::Delete(cur_entity,all_entity,_) => {
+                for delete_entity in all_entity.iter() {
+                    if let Some(canvas_entity) = params.ui_roots.entity2canvas.remove(delete_entity) {
+                        changed_canvas.insert(canvas_entity);
+                    }
+                }
+                if let Some(canvas_entity) = find_canvas(*cur_entity, &params.parents, &params.canvases) {
+                    changed_canvas.insert(canvas_entity);
+                }
+            }
             _ => {}
         }
     }
-    
-    //处理删除
-    for rm_entity in params.remove_render2ds.iter() {
-        if let Some(canvas_entity) = params.ui_roots.entity2canvas.remove(&rm_entity) {
-            changed_canvas.insert(canvas_entity);
-        }
-    }
+   
     //处理Transform变化
     for entity in params.update_trans.iter() {
         if !params.canvases.contains(entity) {
@@ -270,7 +272,7 @@ pub fn update_canvas_trans(world:&mut World) {
 pub struct ClipParams<'w,'s> {
     pub(crate) children:Query<'w,'s,&'static Children>,
     pub(crate) update_trans:Query<'w,'s,Entity,Changed<Transform>>,
-    pub(crate) add_canvas:Query<'w,'s,Entity,Added<Canvas>>,
+    pub(crate) add_canvas:Query<'w,'s,Entity,Changed<Canvas>>,
     pub(crate) infos:Query<'w,'s,(&'static Canvas,&'static Transform,&'static Rect2D)>,
     pub(crate) parents:Query<'w,'s,&'static Parent>,
     pub(crate) hmats:Query<'w,'s,&'static Handle<Material>>,
