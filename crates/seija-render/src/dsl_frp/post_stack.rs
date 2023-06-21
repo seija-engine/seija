@@ -1,7 +1,7 @@
-use bevy_ecs::{prelude::Component, system::{ResMut, Query, Res}};
-use seija_asset::{Handle, Assets};
+use bevy_ecs::{prelude::Component};
+use seija_asset::{Handle};
 
-use crate::material::{Material, GlobalImportMaterials};
+use crate::material::{Material};
 
 
 pub struct EffectItem {

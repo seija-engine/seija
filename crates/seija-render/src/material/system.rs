@@ -1,5 +1,5 @@
 use std::{
-    collections::{HashMap, HashSet},
+    collections::{HashMap},
     sync::Arc,
 };
 use super::{Material, MaterialDef};
@@ -11,7 +11,7 @@ use crate::{
 use bevy_ecs::{
     change_detection::Mut,
     entity::Entity,
-    prelude::World, system::Resource,
+    prelude::World
 };
 use seija_asset::{Assets, Handle, HandleId};
 use smol_str::SmolStr;
@@ -52,23 +52,12 @@ impl MaterialSystem {
         res: &mut RenderResources,
         commands: &mut CommandEncoder,
     ) {
-        {
-            let mut global_materials = world.get_resource_mut::<GlobalImportMaterials>().unwrap();
-            if global_materials.is_dirty {
-                for material_def in global_materials.material_defs.iter() {
-                    if !self.datas.contains_key(material_def.name.as_str()) {
-                        self.add_material_define(material_def.clone(), res);
-                    }
-                }
-                global_materials.is_dirty = false;
-            }
-        };
+        
         {
             let rm_list: Vec<Entity> = world.removed::<Handle<Material>>().collect();
             for define in self.datas.values_mut() {
                 for rm_entity in rm_list.iter() {
-                    //TODO 这里有bug
-                    //define.remove_material(rm_entity)
+                    define.remove_material(rm_entity)
                 }
             }
         };
@@ -103,7 +92,7 @@ impl MaterialSystem {
             for define in self.datas.values_mut() {
                 if define.buffer_dirty {
                     for item in define.items.values().chain(define.free_items.iter()) {
-                        if let Some(mat) = materials.get_mut(&item.mat_id) {
+                        if let Some(mat) = item.mat_id.and_then(|id| materials.get_mut(&id)) {
                             define.create_bind_group(mat, item.index, res, &self.common_buffer_layout);
                         }
                     }
@@ -113,9 +102,7 @@ impl MaterialSystem {
                 let mut cur_has_dirty = false;
                 for item in define.items.values_mut().chain(define.free_items.iter_mut()) {
                     if item.is_dirty {
-                        if let Some(mat) = materials.get_mut(&item.mat_id) {
-                            
-
+                        if let Some(mat) = item.mat_id.and_then(|id| materials.get_mut(&id)) {
                             if cur_has_dirty == false {
                                 res.map_buffer(&define.cache_buffer, wgpu::MapMode::Write);
                                 cur_has_dirty = true;
@@ -159,14 +146,14 @@ impl MaterialSystem {
 #[derive(Debug)]
 pub struct DefineItem {
     index: usize,
-    mat_id:HandleId,
+    mat_id:Option<HandleId>,
     is_dirty:bool,
 }
 
 impl DefineItem {
     pub fn new(index: usize,mat_id:HandleId) -> Self {
         DefineItem {
-            mat_id,
+            mat_id:Some(mat_id),
             index,
             is_dirty:true
         }
@@ -230,7 +217,8 @@ impl MaterialDefine {
         if self.items.contains_key(&id) {
             return;
         }
-        if let Some(free_item) = self.free_items.pop() {
+        if let Some(mut free_item) = self.free_items.pop() {
+            free_item.mat_id = Some(mat_id);
             self.items.insert(id, free_item);
             return;
         }
@@ -253,7 +241,8 @@ impl MaterialDefine {
     }
 
     pub fn remove_material(&mut self, id: &Entity) {
-        if let Some(rm_item) = self.items.remove(id) {
+        if let Some(mut rm_item) = self.items.remove(id) {
+            rm_item.mat_id = None;
             self.free_items.push(rm_item);
         }
     }
@@ -281,24 +270,4 @@ impl MaterialDefine {
         material.bind_group = Some(build_group_builder.build(layout, &res.device, res));
 
     }
-}
-
-
-#[derive(Default,Resource)]
-pub struct GlobalImportMaterials {
-    material_defs:Vec<Arc<MaterialDef>>,
-    name_set:HashSet<SmolStr>,
-    is_dirty:bool
-}
-
-impl GlobalImportMaterials {
-    pub fn add(&mut self,define:&Arc<MaterialDef>) {
-        if !self.name_set.contains(define.name.as_str()) {
-            self.is_dirty = true;
-            self.material_defs.push(define.clone());
-            self.name_set.insert(define.name.clone());
-        }
-    }
-
-   
 }
