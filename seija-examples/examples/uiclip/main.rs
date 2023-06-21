@@ -37,22 +37,34 @@ fn start(world: &mut World) {
     let sheets = world.get_resource::<Assets<SpriteSheet>>().unwrap();
     let ui_sheet = sheets.get(&h_sheet.id).unwrap();
     let bg_index = ui_sheet.get_index("lm-db").unwrap();
-    let add_index = ui_sheet.get_index("dl").unwrap();
+    let add_index = ui_sheet.get_index("Btn3On").unwrap();
 
     let bg_sprite = Sprite::sliced(bg_index,Some(h_sheet.clone()), Thickness::new1(35f32), Vec4::ONE);
     let rect2d = Rect2D::new(640f32, 480f32);
     let mut t = Transform::default();
     t.local.position = Vec3::new(0f32, 0f32, -2f32);
     let mut view = LayoutElement::create_view();
-    view.common.ver = LayoutAlignment::Start;
-    view.common.ui_size.height = SizeValue::Pixel(300f32);
-    let panel_id = world.spawn((view,bg_sprite,rect2d,t,Canvas::new(true))).set_parent(Some(canvas_id)).id();
-    {
-        let mut t = Transform::default();
+    view.common.ver = LayoutAlignment::Stretch;
+    view.common.hor = LayoutAlignment::Stretch;
+    view.common.margin = Thickness::new1(20f32);
+    let panel_id = world.spawn((view,rect2d,t,Canvas::new(false))).set_parent(Some(canvas_id)).id();
+    let e2 = {
+        let mut view = LayoutElement::create_view();
+        let t = Transform::default();
         let rect2d = Rect2D::new(120f32, 120f32);
-        t.local.position.x = 300f32;
-        t.local.position.y = -200f32;
-        world.spawn((Sprite::simple(add_index,Some(h_sheet), Vec4::ONE),rect2d,t))
-                         .set_parent(Some(panel_id));
-    }
+        //view.common.margin = Thickness { left:50f32,top:50f32,right:50f32,bottom:50f32 };
+        //Sprite::simple(bg_index,Some(h_sheet.clone()), Vec4::ONE)
+        world.spawn((bg_sprite,view,rect2d,t))
+                         .set_parent(Some(panel_id)).id()
+    };
+    /*{
+        let mut view = LayoutElement::create_view();
+        let t = Transform::default();
+        let rect2d = Rect2D::new(120f32, 120f32);
+        //view.common.ver = LayoutAlignment::Start;
+        //view.common.ui_size.height = SizeValue::Pixel(100f32);
+        //view.common.margin = Thickness { left:0f32,top:50f32,right:0f32,bottom:0f32 };
+        world.spawn((view,bg_sprite,rect2d,t))
+                         .set_parent(Some(e2));
+    }*/
 }

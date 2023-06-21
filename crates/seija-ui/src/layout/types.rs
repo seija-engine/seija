@@ -100,7 +100,10 @@ impl Default for CommonView {
 }
 
 impl CommonView {
-    
+    pub fn sub_margin_and_padding(&self,size:Vec2) -> Vec2 {
+        Vec2::new(size.x - self.margin.horizontal() - self.padding.horizontal(),
+                  size.y - self.margin.vertical() - self.padding.vertical())
+    }
 }
 
 #[repr(C)]
