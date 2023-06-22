@@ -1,15 +1,13 @@
-use bevy_ecs::{prelude::*, system::Command, world};
+use bevy_ecs::prelude::*;
 use glam::{Vec3, Vec4};
-use seija_asset::{AssetServer, Assets, Handle};
+use seija_asset::{AssetServer, Assets};
 use seija_core::{time::Time, CoreStage, StartupStage};
-use seija_examples::{init_core_app, load_material};
+use seija_examples::init_core_app;
 use seija_input::Input;
 use seija_render::{
-    camera::camera::{Camera, Orthographic},
-    resource::{load_image_info, Mesh},
+    camera::camera::{Camera, Orthographic}
 };
-use seija_template::Template;
-use seija_transform::{hierarchy::Parent, events::EntityMutEx, Transform};
+use seija_transform::{events::EntityMutEx, Transform};
 use seija_ui::{
     components::{canvas::Canvas, rect2d::Rect2D, sprite::Sprite, ui_canvas::UICanvas},
     types::Thickness,
@@ -60,7 +58,7 @@ fn start(world: &mut World) {
     t.local.position = Vec3::new(100f32, 0f32, 0f32);
     let mut event_node = EventNode::default();
     event_node.user_key = Some("test_button".into());
-    event_node.event_type = UIEventType::TOUCH_END | UIEventType::TOUCH_START | UIEventType::CLICK;
+    event_node.event_type = UIEventType::TOUCH_END | UIEventType::TOUCH_START | UIEventType::CLICK | UIEventType::BEGIN_DRAG | UIEventType::END_DRAG | UIEventType::DRAG;
     let btn_entity = world.spawn((event_node,Sprite::sliced(btn4_index,Some(h_sheet.clone()),Thickness::new1(35f32), Vec4::ONE),rect2d,t)).set_parent(Some(panel_id)).id();
 
     let rect2d = Rect2D::new(120f32,50f32);
@@ -94,6 +92,12 @@ fn on_update(mut render:EventReader<UIEvent>, _:Commands,
                 sprite.sprite_index = ui_data.normal_sprite;
             } else if event.event_type == UIEventType::CLICK {
                 log::error!("click!");
+            } else if event.event_type == UIEventType::BEGIN_DRAG {
+                log::error!("begin drag!");
+            }  else if event.event_type == UIEventType::DRAG {
+                log::error!("drag!");
+            } else if event.event_type == UIEventType::END_DRAG {
+                log::error!("end drag!");
             }
         }
         if event.entity == ui_data.btn2_entity {

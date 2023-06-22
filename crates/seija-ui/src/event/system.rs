@@ -34,8 +34,17 @@ pub fn ui_system_handle(system_entity:Entity,_:&UIEventSystem,params:&EventParam
         capture_ui_system(system_entity,fire_type,mouse_pos,params,event_nodes,sender);
         
         if params.input.has_mouse_up() {
-            for (_,mut event_node) in event_nodes.iter_mut() {
+            for (entity,mut event_node) in event_nodes.iter_mut() {
                 event_node.state &= !EventNodeState::TOUCH_IN.bits();
+                if   event_node.event_type.bits() & UIEventType::END_DRAG.bits() > 0
+                  && event_node.state & EventNodeState::DRAG_IN.bits() > 0 {
+                    sender.send(UIEvent {
+                        entity,
+                        event_type:UIEventType::END_DRAG,
+                        user_key:event_node.user_key.clone(),
+                    });
+                }
+                event_node.state &= !EventNodeState::DRAG_IN.bits();
             }
         }
     }
@@ -49,6 +58,30 @@ pub fn ui_system_handle(system_entity:Entity,_:&UIEventSystem,params:&EventParam
                     is_in_rect = true;
                 }
             }
+
+            if event_node.event_type.bits() & UIEventType::BEGIN_DRAG.bits() != 0 {
+                if event_node.state & EventNodeState::TOUCH_IN.bits() > 0 
+                   && is_in_rect
+                   && event_node.state & EventNodeState::DRAG_IN.bits() == 0 {
+                    event_node.state |= EventNodeState::DRAG_IN.bits();
+                    sender.send(UIEvent {
+                        entity:entity,
+                        event_type:UIEventType::BEGIN_DRAG,
+                        user_key:event_node.user_key.clone(),
+                    });
+                }
+            }
+
+            if event_node.event_type.bits() & UIEventType::DRAG.bits() != 0 {
+                if event_node.state & EventNodeState::DRAG_IN.bits() > 0 {
+                    sender.send(UIEvent {
+                        entity:entity,
+                        event_type:UIEventType::DRAG,
+                        user_key:event_node.user_key.clone(),
+                    });
+                }
+            }
+
             if event_node.event_type.bits() & UIEventType::MOUSE_ENTER.bits() != 0 {
                 if event_node.state & EventNodeState::MOVE_IN.bits() == 0 {
                     if is_in_rect {

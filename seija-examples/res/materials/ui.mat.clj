@@ -3,7 +3,7 @@
     :order "Transparent"
     :props [
         {:name "mainTexture" :type "texture2D" :default "white"}
-        {:name "color"       :type "float4" :default [0.2,0.2,0,1]}
+        {:name "color"       :type "float4" :default [1,1,1,1]}
         {:name "clipRect"    :type "float4"}
         {:name "isClip"      :type "int"}
     ]
