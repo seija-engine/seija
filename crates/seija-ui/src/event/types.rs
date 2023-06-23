@@ -23,6 +23,8 @@ bitflags! {
     }
 }
 
+
+
 bitflags! {
     pub struct EventNodeState: u32 {
          const NONE     = 0b00000000;
@@ -31,6 +33,7 @@ bitflags! {
          const DRAG_IN  = 0b00000100;
      }
  }
+
 
 #[derive(Component,Debug,Clone)]
 #[repr(C)]

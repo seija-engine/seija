@@ -4,12 +4,15 @@ use glam::Vec2;
 
 use crate::{keycode::KeyCode, event::MouseButton};
 
+#[repr(C)]
 #[derive(Default,Resource)]
 pub struct Input {
-    pub is_mouse_move:bool,
     pub mouse_position:Vec2,
-    pub(crate) frame_mouse_wheel:Option<Vec2>,
+    pub mouse_move_delta:Vec2,
+    pub is_mouse_move:bool,
 
+    pub last_frame_pos:Vec2,
+    pub(crate) frame_mouse_wheel:Option<Vec2>,
     pub(crate) key_pressing:HashSet<KeyCode>,
     pub(crate) frame_keydown:HashSet<KeyCode>,
     pub(crate) frame_keyup:HashSet<KeyCode>,
@@ -65,5 +68,6 @@ impl Input {
 
         self.frame_mouse_wheel = None;
         self.is_mouse_move = false;
+        self.last_frame_pos = self.mouse_position;
     }
 }

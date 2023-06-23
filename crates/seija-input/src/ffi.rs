@@ -1,3 +1,4 @@
+use glam::Vec2;
 use seija_app::{App, ecs::world::World};
 use crate::{InputModule, Input, keycode::KeyCode};
 

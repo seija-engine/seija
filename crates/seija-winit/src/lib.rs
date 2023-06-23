@@ -3,7 +3,7 @@ pub mod event;
 pub mod ffi;
 use event::{WindowCreated, WindowResized, conv_mouse_input};
 use seija_app::{IModule,App};
-use seija_core::{ window::{AppWindow, WindowConfig},AddCore};
+use seija_core::{ window::{AppWindow, WindowConfig},AddCore, math::Vec2};
 use seija_core::bevy_ecs::{event::{Events}};
 use window::WinitWindow;
 use seija_input::{event::{KeyboardInput as IKeyboardInput, MouseInput, MouseWheelInput}, Input};
@@ -66,8 +66,8 @@ fn winit_runner(event_loop:EventLoop<()>,mut app:App) {
                     WindowEvent::CursorMoved { position,.. } => {
                         if let Some(mut input) = app.world.get_resource_mut::<Input>() {
                             input.is_mouse_move = true;
-                            input.mouse_position.x = position.x as f32;
-                            input.mouse_position.y = position.y as f32;
+                            let new_pos = Vec2::new(position.x as f32, position.y as f32);
+                            input.mouse_position = new_pos;
                         }
                     }
                     WindowEvent::MouseWheel { delta, .. } => {

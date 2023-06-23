@@ -57,6 +57,9 @@ fn input_system(mut input:ResMut<Input>,mut key_inputs:EventReader<KeyboardInput
     for mouse_wheel in mouse_wheel_inputs.iter() {
         input.frame_mouse_wheel = Some(mouse_wheel.delta);
     }
+
+    input.mouse_move_delta = input.mouse_position - input.last_frame_pos;
+    input.mouse_move_delta.y = -input.mouse_move_delta.y;
 }
 
 fn clear_input(mut input:ResMut<Input>) {

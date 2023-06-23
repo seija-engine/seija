@@ -1,6 +1,6 @@
 use std::{sync::Arc, collections::{HashSet, HashMap}};
 use bevy_ecs::{world::World, system::{Resource, 
-    SystemParam, Query, Commands, Res, ResMut, RemovedComponents}, prelude::{Entity, EventWriter, EventReader}, query::{Or, Changed, Added}};
+    SystemParam, Query, Commands, Res, ResMut}, prelude::{Entity, EventWriter, EventReader}, query::{Or, Changed, Added}};
 use seija_asset::{AssetServer, Assets, Handle};
 use seija_core::math::{Vec3, Vec4};
 use seija_render::{material::{MaterialDefineAsset, MaterialDef, Material},
