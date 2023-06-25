@@ -1,7 +1,7 @@
 use bevy_ecs::prelude::Entity;
 use seija_core::math::Vec2;
 use crate::layout::{types::LayoutElement, system::LayoutParams};
-use super::{types::{TypeElement, LayoutAlignment, UISize, SizeValue}, comps::{StackLayout, FlexLayout, Orientation, FlexWrap, FlexDirection, FlexAlignItems, FlexAlignContent}, VIEW_ID};
+use super::{types::{TypeElement, LayoutAlignment, UISize, SizeValue, FreeLayout}, comps::{StackLayout, FlexLayout, Orientation, FlexWrap, FlexDirection, FlexAlignItems, FlexAlignContent}, VIEW_ID};
 
 //parent_size是给子元素的实际可用空间，去除了margin和padding
 
@@ -11,6 +11,7 @@ pub fn measure_layout_element(entity:Entity,parent_size:Vec2,params:&LayoutParam
        TypeElement::View => measure_view_element(entity,parent_size,None,element,params),
        TypeElement::Stack(stack) => measure_stack_element(entity, stack, parent_size,None, element, params),
        TypeElement::Flex(flex) => measure_flex_element(entity, flex, parent_size,None, element, params),
+       TypeElement::Free(free) => measure_free_element(entity,parent_size,free),
    };
 
   if let Ok(mut rect2d) = unsafe { params.rect2ds.get_unchecked(entity) } {
@@ -19,6 +20,10 @@ pub fn measure_layout_element(entity:Entity,parent_size:Vec2,params:&LayoutParam
   }
 }
 
+fn measure_free_element(entity:Entity,parent_size:Vec2,free:&FreeLayout) -> Vec2 {
+   
+   Vec2::ZERO
+}
 
 fn fill_desired_ui_size(entity:Entity,psize:UISize,elem:&LayoutElement,params:&LayoutParams) -> UISize {
    

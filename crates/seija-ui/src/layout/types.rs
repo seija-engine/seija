@@ -110,7 +110,15 @@ impl CommonView {
 pub enum TypeElement {
     Stack(StackLayout),
     Flex(FlexLayout),
+    Free(FreeLayout),
     View,
+}
+
+#[derive(Component)]
+#[repr(C)]
+pub struct FreeLayout {
+    pub free_size:bool,
+    pub pos:Vec2,
 }
 
 #[derive(Component)]
@@ -118,8 +126,6 @@ pub enum TypeElement {
 pub struct LayoutElement {
     pub common: CommonView,
     pub typ_elem: TypeElement,
-    
-    
 }
 
 impl LayoutElement {
