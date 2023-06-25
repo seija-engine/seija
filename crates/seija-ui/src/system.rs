@@ -179,9 +179,7 @@ pub struct CanvasRenderParams<'w,'s> {
 }
 
 pub fn update_canvas_render(mut params:CanvasRenderParams) {
-    for del_entity in params.ui_roots.despawn_next_frame.drain(..) {
-        params.commands.entity(del_entity).despawn();
-    }
+   
     
     let mut changed_canvas:HashSet<Entity> = HashSet::default();
     //处理hierarchy事件
@@ -240,6 +238,9 @@ pub fn update_canvas_render(mut params:CanvasRenderParams) {
              &mut params.commands,
              &mut params.ui_roots,
              &params.asset_server);
+    }
+    for del_entity in params.ui_roots.despawn_next_frame.drain(..) {
+        params.commands.entity(del_entity).despawn();
     }
 }
 

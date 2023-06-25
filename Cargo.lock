@@ -1391,8 +1391,7 @@ dependencies = [
  "lang-util",
  "lazy_static",
  "log",
- "naga 0.10.1",
- "rspirv",
+ "naga",
  "serde",
  "serde_derive",
  "serde_json",
@@ -2227,23 +2226,6 @@ dependencies = [
 
 [[package]]
 name = "naga"
-version = "0.10.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "21bb1a241901d94de4725d638a5295187b046ceb89ed8b2be368038654d9c81d"
-dependencies = [
- "bit-set",
- "bitflags",
- "indexmap",
- "log",
- "num-traits",
- "pp-rs",
- "rustc-hash",
- "spirv",
- "thiserror",
-]
-
-[[package]]
-name = "naga"
 version = "0.11.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5eafe22a23b797c9bc227c6c896419b26b5bb88fa903417a3adaed08778850d5"
@@ -2256,6 +2238,7 @@ dependencies = [
  "log",
  "num-traits",
  "petgraph 0.6.2",
+ "pp-rs",
  "rustc-hash",
  "spirv",
  "termcolor",
@@ -3054,17 +3037,6 @@ dependencies = [
  "wasm-bindgen-futures",
  "web-sys",
  "winreg",
-]
-
-[[package]]
-name = "rspirv"
-version = "0.11.0+1.5.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1503993b59ca9ae4127365c3293517576d7ce56be9f3d8abb1625c85ddc583ba"
-dependencies = [
- "fxhash",
- "num-traits",
- "spirv",
 ]
 
 [[package]]
@@ -4330,7 +4302,7 @@ dependencies = [
  "cfg-if",
  "js-sys",
  "log",
- "naga 0.11.0",
+ "naga",
  "parking_lot 0.12.1",
  "profiling",
  "raw-window-handle 0.5.0",
@@ -4356,7 +4328,7 @@ dependencies = [
  "codespan-reporting",
  "fxhash",
  "log",
- "naga 0.11.0",
+ "naga",
  "parking_lot 0.12.1",
  "profiling",
  "raw-window-handle 0.5.0",
@@ -4394,7 +4366,7 @@ dependencies = [
  "libloading",
  "log",
  "metal",
- "naga 0.11.0",
+ "naga",
  "objc",
  "parking_lot 0.12.1",
  "profiling",

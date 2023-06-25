@@ -137,6 +137,9 @@ impl UIDrawCall {
         let canvas_t = trans.get(canvas_entity).unwrap();
         let mut t = Transform::from_matrix(canvas_t.global().matrix());
         t.local.position.z += fst_zorder as f32 * Z_SCALE;
+        let mut clone_global = canvas_t.global().clone();
+        clone_global.position.z += fst_zorder as f32 * Z_SCALE;
+        t.set_global(clone_global);
         
         let drawcall_entity = commands.spawn((h_mesh,h_material,t)).id();
         let mut hasher = DefaultHasher::default();
