@@ -116,9 +116,13 @@ pub enum TypeElement {
 
 #[derive(Component)]
 #[repr(C)]
-pub struct FreeLayout {
-    pub free_size:bool,
-    pub pos:Vec2,
+pub struct FreeLayout {}
+
+
+#[derive(Component,Default)]
+#[repr(C)]
+pub struct FreeLayoutItem {
+   pub pos:Vec2
 }
 
 #[derive(Component)]
@@ -150,6 +154,13 @@ impl LayoutElement {
         LayoutElement {
             common: CommonView::default(),
             typ_elem: TypeElement::Flex(flex)
+        }
+    }
+
+    pub fn create_free() -> LayoutElement {
+        LayoutElement {
+            common: CommonView::default(),
+            typ_elem: TypeElement::Free(FreeLayout {  })
         }
     }
 

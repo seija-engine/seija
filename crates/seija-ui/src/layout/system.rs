@@ -4,11 +4,12 @@ use seija_core::{math::{Vec2}, window::AppWindow};
 use seija_transform::{events::HierarchyEvent, hierarchy::{Parent, Children}, Transform};
 use seija_winit::event::WindowResized;
 use crate::components::{rect2d::Rect2D, ui_canvas::UICanvas};
-use super::{types::LayoutElement, measure, arrange::{arrange_layout_element, ArrangeXY}, comps::FlexItem};
+use super::{types::{LayoutElement, FreeLayoutItem}, measure, arrange::{arrange_layout_element, ArrangeXY, arrange_flexitem_layout}, comps::FlexItem};
 
 #[derive(SystemParam)]
 pub struct LayoutParams<'w,'s> {
     pub(crate) update_elems:Query<'w,'s,Entity,Changed<LayoutElement>>,
+    pub(crate) update_freeitems:Query<'w,'s,Entity,Changed<FreeLayoutItem>>,
     pub(crate) events:EventReader<'w,'s,HierarchyEvent>,
     pub(crate) parents:Query<'w,'s,(Entity,&'static Parent)>,
     pub(crate) childrens:Query<'w,'s,&'static Children>,
@@ -16,6 +17,7 @@ pub struct LayoutParams<'w,'s> {
     pub(crate) rect2ds:Query<'w,'s,&'static mut Rect2D>,
     pub(crate) trans:Query<'w,'s,&'static mut Transform>,
     pub(crate) flexitems:Query<'w,'s,&'static FlexItem>,
+    pub(crate) freeitems:Query<'w,'s,&'static FreeLayoutItem>,
     pub(crate) window:Res<'w,AppWindow>,
     pub(crate) resize_events:EventReader<'w,'s,WindowResized>,
     pub(crate) ui_canvas:Query<'w,'s,(Entity,&'static UICanvas)>,
@@ -42,6 +44,8 @@ pub fn ui_layout_system(mut params:LayoutParams) {
           
        }
     }
+
+    arrange_flexitem_layout(&mut params);
 }
 
 

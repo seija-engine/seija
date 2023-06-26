@@ -63,6 +63,7 @@ pub fn arrange_layout_element(entity: Entity,element: &LayoutElement,parent_orig
             axy,
             params,
         ),
+        TypeElement::Free(_) => { arrange_free_element(entity, element, parent_origin, parent_size, axy, params) }
     };
     if let Ok(mut transform) = unsafe { params.trans.get_unchecked(entity) } {
         transform.local.position.x = arrange_position.x;
@@ -168,6 +169,25 @@ pub fn arrange_stack_element(
         }
     }
 
+    this_pos
+}
+
+
+pub fn arrange_free_element(entity: Entity,element: &LayoutElement,parent_origin: Vec2,parent_size: Vec2,axy: ArrangeXY,params: &LayoutParams) -> Vec2 {
+    let this_pos = arrange_view_element(entity, element, parent_origin, parent_size, axy, params);
+    if let Ok(rect2d) = params.rect2ds.get(entity) {
+        let lt_pos = Vec2::new(
+            -rect2d.width * 0.5f32 + element.common.padding.left,
+            rect2d.height * 0.5f32 - element.common.padding.top,
+        );
+        let inner_size = element.common.padding.sub2size(Vec2::new(rect2d.width, rect2d.height));
+        if let Ok(childs) = params.childrens.get(entity) {
+            for child_entity in childs.iter() {
+                let elem = params.elems.get(*child_entity).unwrap_or(&VIEW_ID);
+                arrange_layout_element(*child_entity,elem,lt_pos,inner_size,ArrangeXY::NONE,params);
+            }
+        }
+    }
     this_pos
 }
 
@@ -578,4 +598,26 @@ fn arrange_by_start_pos(start_pos:Vec2,flex: &FlexLayout,entity: Entity,inner_si
             }
         }
     }
+}
+
+pub(crate) fn arrange_flexitem_layout(params:&mut LayoutParams) {
+   for item_entity in params.update_freeitems.iter() {
+     if let Some(new_pos) = arrange_flexitem(item_entity,params) {
+        if let Ok(mut trans) = params.trans.get_mut(item_entity) {
+            trans.local.position.x = new_pos.x;
+            trans.local.position.y = new_pos.y;
+        }
+     }
+   }
+}
+
+fn arrange_flexitem(entity:Entity,params:&LayoutParams) -> Option<Vec2> {
+    let parent_entity = params.parents.get(entity).ok()?.1.0;
+    let parent_rect = params.rect2ds.get(parent_entity).ok()?;
+    let mut lt_pos = Vec2::new(-parent_rect.width * 0.5f32,parent_rect.height * 0.5f32);
+    let rect = params.rect2ds.get(entity).ok()?;
+    let free_item = params.freeitems.get(entity).ok()?;
+    lt_pos.x += rect.width * 0.5f32 + free_item.pos.x;
+    lt_pos.y -= rect.height * 0.5f32 + free_item.pos.y;
+    Some(lt_pos)
 }

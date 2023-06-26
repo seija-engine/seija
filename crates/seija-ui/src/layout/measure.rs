@@ -11,18 +11,13 @@ pub fn measure_layout_element(entity:Entity,parent_size:Vec2,params:&LayoutParam
        TypeElement::View => measure_view_element(entity,parent_size,None,element,params),
        TypeElement::Stack(stack) => measure_stack_element(entity, stack, parent_size,None, element, params),
        TypeElement::Flex(flex) => measure_flex_element(entity, flex, parent_size,None, element, params),
-       TypeElement::Free(free) => measure_free_element(entity,parent_size,free),
+       TypeElement::Free(free) => measure_free_element(entity,parent_size,None,element,free,params),
    };
 
   if let Ok(mut rect2d) = unsafe { params.rect2ds.get_unchecked(entity) } {
     rect2d.width  = size.x - element.common.margin.horizontal();
     rect2d.height = size.y - element.common.margin.vertical();
   }
-}
-
-fn measure_free_element(entity:Entity,parent_size:Vec2,free:&FreeLayout) -> Vec2 {
-   
-   Vec2::ZERO
 }
 
 fn fill_desired_ui_size(entity:Entity,psize:UISize,elem:&LayoutElement,params:&LayoutParams) -> UISize {
@@ -58,6 +53,7 @@ fn calc_desired_size(entity:Entity,psize:UISize,params:&LayoutParams) -> Vec2 {
       TypeElement::View => calc_desired_view_size(entity,cur_size,&element,params),
       TypeElement::Stack(stack) =>  calc_desired_stack_size(entity,&stack,cur_size,&element,params),
       TypeElement::Flex(flex) => calc_desired_flex_size(entity,&flex,cur_size,&element,params),
+      TypeElement::Free(_) => cur_size.get_number_size(params.rect2ds.get(entity).ok())
    }
 }
 
@@ -199,6 +195,39 @@ fn measure_self_size(entity:Entity,parent_size:Vec2,element:&LayoutElement,param
       number_size = calc_desired_size(entity, UISize::from_number(parent_size), params);
    }
    number_size
+}
+
+fn measure_self_free_size(entity:Entity,parent_size:Vec2,element:&LayoutElement,free:&FreeLayout,params:&LayoutParams) -> Vec2 {
+   let number_size:Vec2;
+   if !element.common.ui_size.has_auto() {
+      number_size = element.common.margin.add2size(element.common.ui_size.get_number_size(params.rect2ds.get(entity).ok()))
+   } else {
+      let mut desired_size = element.common.ui_size.get_number_size(params.rect2ds.get(entity).ok());
+      if !element.common.ui_size.width.is_auto() {
+         desired_size.x += element.common.margin.horizontal();
+      } else if element.common.hor == LayoutAlignment::Stretch {
+         desired_size.x = parent_size.x;
+      }
+
+      if !element.common.ui_size.height.is_auto() {
+         desired_size.y += element.common.margin.vertical();
+      } else if element.common.ver == LayoutAlignment::Stretch {
+         desired_size.y = parent_size.y;
+      }
+      number_size = desired_size;
+   }
+   
+   number_size
+}
+
+fn measure_free_element(entity:Entity,parent_size:Vec2,force_size:Option<Vec2>,element:&LayoutElement,free:&FreeLayout,params:&LayoutParams) -> Vec2 {
+   let self_size:Vec2 = force_size.unwrap_or_else(|| measure_self_free_size(entity,parent_size, element,free,params));
+   if let Ok(childs_comp) = params.childrens.get(entity) {
+      for child_entity in childs_comp.iter() {
+         measure_layout_element(*child_entity, element.common.sub_margin_and_padding(self_size),params);
+      }
+   }
+   self_size
 }
 
 fn measure_view_element(entity:Entity,parent_size:Vec2,force_size:Option<Vec2>,element:&LayoutElement,params:&LayoutParams) -> Vec2 {
@@ -384,6 +413,7 @@ pub fn measure_flex_item_element(entity:Entity,cur_size:Vec2,params:&LayoutParam
       TypeElement::View => measure_view_element(entity,cur_size,Some(cur_size),element,params),
       TypeElement::Stack(stack) => measure_stack_element(entity, stack,cur_size,Some(cur_size), element, params),
       TypeElement::Flex(flex) => measure_flex_element(entity, flex,cur_size, Some(cur_size), element, params),
+      TypeElement::Free(free) => measure_free_element(entity, cur_size, Some(cur_size),element,free,params),
    };
 }
 
