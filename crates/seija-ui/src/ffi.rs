@@ -2,7 +2,7 @@ use bevy_ecs::{prelude::{Entity, Events}, world::World, event::ManualEventReader
 use num_enum::FromPrimitive;
 use seija_app::App;
 use seija_asset::{AssetServer, Handle, HandleId};
-use seija_core::{math::Vec4, TypeUuid};
+use seija_core::{math::{Vec4, Vec2}, TypeUuid};
 use seija_render::RenderConfig;
 use spritesheet::SpriteSheet;
 
@@ -10,7 +10,7 @@ use crate::{
     components::{canvas::Canvas, rect2d::Rect2D, sprite::Sprite, ui_canvas::UICanvas},
     event::{UIEventSystem, EventNode, UIEvent},
     types::Thickness,
-    update_ui_render, UIModule, layout::{comps::{Orientation, StackLayout, FlexLayout, FlexItem}, types::{LayoutElement, CommonView, UISize, SizeValue, TypeElement}}, text::{Text, Font},
+    update_ui_render, UIModule, layout::{comps::{Orientation, StackLayout, FlexLayout, FlexItem}, types::{LayoutElement, CommonView, UISize, SizeValue, TypeElement, FreeLayoutItem}}, text::{Text, Font},
 };
 
 #[no_mangle]
@@ -209,6 +209,52 @@ pub unsafe extern "C" fn entity_add_stack(world: &mut World,entity_id:u64,spacin
 }
 
 #[no_mangle]
+pub unsafe extern "C" fn entity_get_stack(world: &mut World,entity_id:u64) -> *mut StackLayout {
+    let entity = Entity::from_bits(entity_id);
+    let mut emut = world.entity_mut(entity);
+    let elem = emut.get_mut::<LayoutElement>();
+    match elem  {
+        Some(mut v) => {
+            match &mut v.typ_elem {
+                TypeElement::Stack(stack) => stack as *mut StackLayout,
+                _ => std::ptr::null_mut()
+            }
+        },
+        None => std::ptr::null_mut()
+    }
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn entity_add_free_layout(world: &mut World,entity_id:u64,view:&CommonView,ui_size:&FFIUISize) {
+    let mut layout = LayoutElement::create_free();
+    layout.common.margin = view.margin.clone();
+    layout.common.padding = view.padding.clone();
+    layout.common.use_rect_size = view.use_rect_size;
+    layout.common.hor = view.hor;
+    layout.common.ver = view.ver;
+    layout.common.ui_size = ui_size.into();
+    log::info!("free layout:{:?}",&layout.common);
+    let entity = Entity::from_bits(entity_id);
+    world.entity_mut(entity).insert(layout);
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn entity_add_layout_freeitem(world: &mut World,entity_id:u64,x:f32,y:f32) {
+    let entity = Entity::from_bits(entity_id);
+    world.entity_mut(entity).insert(FreeLayoutItem { pos:Vec2::new(x, y) });
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn entity_get_layout_freeitem(world: &mut World,entity_id:u64) -> *mut FreeLayoutItem {
+    let entity = Entity::from_bits(entity_id);
+    if let Some(mut item) = world.entity_mut(entity).get_mut::<FreeLayoutItem>() {
+        return item.as_mut() as *mut FreeLayoutItem;
+    }
+    return std::ptr::null_mut();
+}
+
+
+#[no_mangle]
 pub unsafe extern "C" fn entity_add_commonview(world: &mut World,entity_id:u64,view:&CommonView,ui_size:&FFIUISize) {
     let mut layout = LayoutElement::create_view();
     layout.common.margin = view.margin.clone();
@@ -233,21 +279,6 @@ pub unsafe extern "C" fn entity_get_commonview(world: &mut World,entity_id:u64) 
     }
 }
 
-#[no_mangle]
-pub unsafe extern "C" fn entity_get_stack(world: &mut World,entity_id:u64) -> *mut StackLayout {
-    let entity = Entity::from_bits(entity_id);
-    let mut emut = world.entity_mut(entity);
-    let elem = emut.get_mut::<LayoutElement>();
-    match elem  {
-        Some(mut v) => {
-            match &mut v.typ_elem {
-                TypeElement::Stack(stack) => stack as *mut StackLayout,
-                _ => std::ptr::null_mut()
-            }
-        },
-        None => std::ptr::null_mut()
-    }
-}
 
 #[no_mangle]
 pub unsafe extern "C" fn entity_add_flex(world: &mut World,entity_id:u64,view:&CommonView,ui_size:&FFIUISize,flex:&FlexLayout) {
