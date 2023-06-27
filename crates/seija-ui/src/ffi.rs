@@ -44,6 +44,22 @@ pub unsafe extern "C" fn entity_add_rect2d(world: &mut World, entity_id: u64, re
 }
 
 #[no_mangle]
+pub unsafe extern "C" fn entity_get_rect2d(world: &mut World, entity_id: u64,is_mut:bool) -> *mut Rect2D {
+    let entity = Entity::from_bits(entity_id);
+    if is_mut {
+        match world.entity_mut(entity).get_mut::<Rect2D>() {
+            None => std::ptr::null_mut(),
+            Some(mut v) => v.as_mut() as *mut Rect2D 
+        }
+    } else {
+        match world.entity(entity).get::<Rect2D>() {
+            None => std::ptr::null_mut(),
+            Some(v) => v as *const Rect2D as *mut Rect2D 
+        }
+    }
+}
+
+#[no_mangle]
 pub unsafe extern "C" fn entity_add_canvas(world: &mut World, entity_id: u64,is_clip:bool) {
     let entity = Entity::from_bits(entity_id);
     world.entity_mut(entity).insert(Canvas::new(is_clip));
