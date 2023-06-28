@@ -4,7 +4,7 @@ use seija_core::{math::{Vec2}, window::AppWindow};
 use seija_transform::{events::HierarchyEvent, hierarchy::{Parent, Children}, Transform};
 use seija_winit::event::WindowResized;
 use crate::components::{rect2d::Rect2D, ui_canvas::UICanvas};
-use super::{types::{LayoutElement, FreeLayoutItem}, measure, arrange::{arrange_layout_element, ArrangeXY, arrange_flexitem_layout}, comps::FlexItem};
+use super::{types::{LayoutElement, FreeLayoutItem}, measure, arrange::{arrange_layout_element, ArrangeXY, arrange_freeitem_layout}, comps::FlexItem};
 
 #[derive(SystemParam)]
 pub struct LayoutParams<'w,'s> {
@@ -45,7 +45,7 @@ pub fn ui_layout_system(mut params:LayoutParams) {
        }
     }
 
-    arrange_flexitem_layout(&mut params);
+    arrange_freeitem_layout(&mut params);
 }
 
 

@@ -185,7 +185,14 @@ pub fn arrange_free_element(entity: Entity,element: &LayoutElement,parent_origin
             for child_entity in childs.iter() {
                 let elem = params.elems.get(*child_entity).unwrap_or(&VIEW_ID);
                 if params.freeitems.contains(*child_entity) {
+                    
                     arrange_layout_element(*child_entity,elem,lt_pos,inner_size,ArrangeXY::NONE,params);
+                    if let Some(ret_pos) = arrange_freeitem(*child_entity, params) {
+                        if let Ok(mut transform) = unsafe { params.trans.get_unchecked(*child_entity) } {
+                            transform.local.position.x = ret_pos.x;
+                            transform.local.position.y = ret_pos.y;
+                        }
+                    }
                 } else {
                     arrange_layout_element(*child_entity,elem,lt_pos,inner_size,ArrangeXY::ALL,params);
                 }
@@ -604,9 +611,9 @@ fn arrange_by_start_pos(start_pos:Vec2,flex: &FlexLayout,entity: Entity,inner_si
     }
 }
 
-pub(crate) fn arrange_flexitem_layout(params:&mut LayoutParams) {
+pub(crate) fn arrange_freeitem_layout(params:&mut LayoutParams) {
    for item_entity in params.update_freeitems.iter() {
-     if let Some(new_pos) = arrange_flexitem(item_entity,params) {
+     if let Some(new_pos) = arrange_freeitem(item_entity,params) {
         if let Ok(mut trans) = params.trans.get_mut(item_entity) {
             trans.local.position.x = new_pos.x;
             trans.local.position.y = new_pos.y;
@@ -615,7 +622,7 @@ pub(crate) fn arrange_flexitem_layout(params:&mut LayoutParams) {
    }
 }
 
-fn arrange_flexitem(entity:Entity,params:&LayoutParams) -> Option<Vec2> {
+fn arrange_freeitem(entity:Entity,params:&LayoutParams) -> Option<Vec2> {
     let parent_entity = params.parents.get(entity).ok()?.1.0;
     let parent_rect = params.rect2ds.get(parent_entity).ok()?;
     let mut lt_pos = Vec2::new(-parent_rect.width * 0.5f32,parent_rect.height * 0.5f32);
