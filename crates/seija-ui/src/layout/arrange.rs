@@ -184,7 +184,11 @@ pub fn arrange_free_element(entity: Entity,element: &LayoutElement,parent_origin
         if let Ok(childs) = params.childrens.get(entity) {
             for child_entity in childs.iter() {
                 let elem = params.elems.get(*child_entity).unwrap_or(&VIEW_ID);
-                arrange_layout_element(*child_entity,elem,lt_pos,inner_size,ArrangeXY::NONE,params);
+                if params.freeitems.contains(*child_entity) {
+                    arrange_layout_element(*child_entity,elem,lt_pos,inner_size,ArrangeXY::NONE,params);
+                } else {
+                    arrange_layout_element(*child_entity,elem,lt_pos,inner_size,ArrangeXY::ALL,params);
+                }
             }
         }
     }
