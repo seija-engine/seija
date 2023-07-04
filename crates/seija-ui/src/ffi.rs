@@ -295,6 +295,24 @@ pub unsafe extern "C" fn entity_get_commonview(world: &mut World,entity_id:u64) 
     }
 }
 
+#[no_mangle]
+pub unsafe extern "C" fn entity_set_layout_size_w(view:&mut CommonView,typ:u8,value:f32) {
+    match typ {
+        0 => view.ui_size.width = SizeValue::Auto,
+        1 => view.ui_size.width = SizeValue::PixelFromRect,
+        _ => view.ui_size.width = SizeValue::Pixel(value)
+    }
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn entity_set_layout_size_h(view:&mut CommonView,typ:u8,value:f32) {
+    match typ {
+        0 => view.ui_size.height = SizeValue::Auto,
+        1 => view.ui_size.height = SizeValue::PixelFromRect,
+        _ => view.ui_size.height = SizeValue::Pixel(value)
+    }
+}
+
 
 #[no_mangle]
 pub unsafe extern "C" fn entity_add_flex(world: &mut World,entity_id:u64,view:&CommonView,ui_size:&FFIUISize,flex:&FlexLayout) {
