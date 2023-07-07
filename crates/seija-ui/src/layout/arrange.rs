@@ -87,7 +87,10 @@ pub fn arrange_view_element(
                 LayoutAlignment::Start => {
                     ret_pos.x +=  element.common.margin.left + rect2d.width * 0.5f32;
                 }
-                LayoutAlignment::Center | LayoutAlignment::Stretch => {
+                LayoutAlignment::Stretch => {
+                    ret_pos.x += (parent_size.x - element.common.margin.horizontal())  * 0.5f32 + element.common.margin.left;
+                }
+                LayoutAlignment::Center => {
                     let offset = parent_size.x * 0.5f32;
                     ret_pos.x += offset;
                 }
@@ -102,7 +105,10 @@ pub fn arrange_view_element(
                 LayoutAlignment::Start => {
                     ret_pos.y = ret_pos.y - element.common.margin.top - rect2d.height * 0.5f32;
                 }
-                LayoutAlignment::Center | LayoutAlignment::Stretch => {
+                LayoutAlignment::Stretch => {
+                    ret_pos.y -= (parent_size.y - element.common.margin.vertical())  * 0.5f32 + element.common.margin.left;
+                }
+                LayoutAlignment::Center => {
                     ret_pos.y += -parent_size.y * 0.5f32;
                 }
                 LayoutAlignment::End => {
