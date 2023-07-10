@@ -1,8 +1,8 @@
-use bevy_ecs::{prelude::{Entity, Events}, world::World, event::ManualEventReader};
+use bevy_ecs::{prelude::{Entity, Events}, world::World, event::ManualEventReader, system::Resource};
 use num_enum::FromPrimitive;
 use seija_app::App;
 use seija_asset::{AssetServer, Handle, HandleId};
-use seija_core::{math::{Vec4, Vec2}, TypeUuid};
+use seija_core::{math::{Vec4, Vec2}, TypeUuid, FrameDirty};
 use seija_render::RenderConfig;
 use spritesheet::SpriteSheet;
 
@@ -221,7 +221,7 @@ pub unsafe extern "C" fn entity_add_stack(world: &mut World,entity_id:u64,spacin
     layout.common.ui_size = ui_size.into();
     log::info!("view:{:?}",&layout.common);
     let entity = Entity::from_bits(entity_id);
-    world.entity_mut(entity).insert(layout);
+    world.entity_mut(entity).insert((layout,FrameDirty::default()));
 }
 
 #[no_mangle]
@@ -251,7 +251,7 @@ pub unsafe extern "C" fn entity_add_free_layout(world: &mut World,entity_id:u64,
     layout.common.ui_size = ui_size.into();
     log::info!("free layout:{:?}",&layout.common);
     let entity = Entity::from_bits(entity_id);
-    world.entity_mut(entity).insert(layout);
+    world.entity_mut(entity).insert((layout,FrameDirty::default()));
 }
 
 #[no_mangle]
@@ -281,7 +281,7 @@ pub unsafe extern "C" fn entity_add_commonview(world: &mut World,entity_id:u64,v
     layout.common.ui_size = ui_size.into();
     log::info!("add commonview:{:?}",&layout.common);
     let entity = Entity::from_bits(entity_id);
-    world.entity_mut(entity).insert(layout);
+    world.entity_mut(entity).insert((layout,FrameDirty::default()));
 }
 
 #[no_mangle]
@@ -325,7 +325,7 @@ pub unsafe extern "C" fn entity_add_flex(world: &mut World,entity_id:u64,view:&C
     layout.common.ui_size = ui_size.into();
     let entity = Entity::from_bits(entity_id);
     log::info!("add flex:{:?}",&flex);
-    world.entity_mut(entity).insert(layout);
+    world.entity_mut(entity).insert((layout,FrameDirty::default()));
 }
 
 #[no_mangle]
@@ -367,3 +367,11 @@ pub unsafe extern "C" fn entity_text_setstring(text_mut:&mut Text,cstr:*mut i8) 
     let text_string = std::ffi::CStr::from_ptr(cstr).to_str().unwrap();
     text_mut.text = text_string.into();
 }
+
+#[no_mangle]
+pub unsafe extern "C" fn ui_set_on_post_layout(world: &mut World,f:extern fn(world:*mut World)) {
+    world.insert_resource(OnPostLayoutFN(f));
+}
+
+#[derive(Resource)]
+pub(crate) struct OnPostLayoutFN(pub extern fn(world:*mut World));

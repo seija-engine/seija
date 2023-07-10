@@ -1,6 +1,6 @@
 use std::collections::HashSet;
-use bevy_ecs::{system::{SystemParam, Query, Res}, prelude::{Entity, EventReader}, query::Changed};
-use seija_core::{math::{Vec2}, window::AppWindow};
+use bevy_ecs::{system::{SystemParam, Query, Res}, prelude::{Entity, EventReader}, query::Changed, world::World};
+use seija_core::{math::{Vec2}, window::AppWindow, FrameDirty, time::Time};
 use seija_transform::{events::HierarchyEvent, hierarchy::{Parent, Children}, Transform};
 use seija_winit::event::WindowResized;
 use crate::components::{rect2d::Rect2D, ui_canvas::UICanvas};
@@ -21,11 +21,14 @@ pub struct LayoutParams<'w,'s> {
     pub(crate) window:Res<'w,AppWindow>,
     pub(crate) resize_events:EventReader<'w,'s,WindowResized>,
     pub(crate) ui_canvas:Query<'w,'s,(Entity,&'static UICanvas)>,
+    pub(crate) frame_dirty:Query<'w,'s,&'static mut FrameDirty>,
+    pub(crate) time:Res<'w,Time>,
 }
 
 
 pub fn ui_layout_system(mut params:LayoutParams) {
     let dirty_layouts = collect_dirty(&mut params);
+    let mut changed_entity_lst:Vec<Entity> = Vec::new();
     for elem_entity in dirty_layouts {
        //这里只会修改Element的属性，所以是安全的
        if let Ok(element) = params.elems.get(elem_entity) {
@@ -40,12 +43,19 @@ pub fn ui_layout_system(mut params:LayoutParams) {
           } else {
             Vec2::new(params.window.width() as f32, params.window.height() as f32)
           };
-          arrange_layout_element(elem_entity, element, origin,parent_size,ArrangeXY::ALL,&params);
+          arrange_layout_element(elem_entity, element, origin,parent_size,ArrangeXY::ALL,&params,&mut changed_entity_lst);
           
        }
     }
-
     arrange_freeitem_layout(&mut params);
+    if changed_entity_lst.len() > 0 {
+       let cur_frame = params.time.frame();
+       let mut iter = params.frame_dirty.iter_many_mut(changed_entity_lst);
+       //log::error!("set to {:?}",cur_frame);
+       while let Some(mut fd) = iter.fetch_next() { 
+          fd.frame = cur_frame;
+       }
+    }
 }
 
 
@@ -92,10 +102,10 @@ fn get_top_elem_dirty(entity:Entity,params:&LayoutParams) -> Entity {
     let mut last_elem_entity = cur_entity;
     while let Ok(parent) = params.parents.get(cur_entity) {
         let parent_entity = parent.1.0;
-        if let Ok(element) = params.elems.get(parent_entity) {
+        if let Ok(parent_element) = params.elems.get(parent_entity) {
             last_elem_entity = parent_entity;
             if let Ok(cur_element) = params.elems.get(cur_entity) {
-               if !element.is_invalid_measure(cur_element) {
+               if !parent_element.is_invalid_measure(cur_element) {
                   return cur_entity;
                }
             }

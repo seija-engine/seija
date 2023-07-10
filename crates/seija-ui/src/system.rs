@@ -86,6 +86,7 @@ pub fn update_render_mesh_system(mut params:RenderMeshParams) {
     //更新Sprite的Mesh
     for entity in params.update_sprites.iter() {
         if let Ok((sprite,rect)) = params.sprites.get(entity) {
+            //log::error!("size:{:?} = {:?}",entity,rect);
             if let Some(atlas) = sprite.atlas.as_ref().map(|h| params.spritesheets.get(&h.id).unwrap()) {
                if let Some(render2d) = sprite.build_render(rect,atlas,params.ui_roots.baseui.clone()) {
                     if let Ok(mut render) = params.render2d.get_mut(entity) {

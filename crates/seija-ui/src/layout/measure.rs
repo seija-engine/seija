@@ -197,7 +197,7 @@ fn measure_self_size(entity:Entity,parent_size:Vec2,element:&LayoutElement,param
    number_size
 }
 
-fn measure_self_free_size(entity:Entity,parent_size:Vec2,element:&LayoutElement,free:&FreeLayout,params:&LayoutParams) -> Vec2 {
+fn measure_self_free_size(entity:Entity,parent_size:Vec2,element:&LayoutElement,_:&FreeLayout,params:&LayoutParams) -> Vec2 {
    let number_size:Vec2;
    if !element.common.ui_size.has_auto() {
       number_size = element.common.margin.add2size(element.common.ui_size.get_number_size(params.rect2ds.get(entity).ok()))

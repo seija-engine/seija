@@ -25,6 +25,7 @@ pub enum CoreStage {
     First,
     PreUpdate,
     Update,
+    LateUpdate,
     PostUpdate,
     Last,
 }
@@ -35,6 +36,8 @@ pub enum StartupStage {
     Startup,
     PostStartup,
 }
+
+
 
 
 pub struct CoreModule;
@@ -59,6 +62,7 @@ impl CoreModule {
         app.schedule.add_stage(CoreStage::Startup, startup);
         app.schedule.add_stage(CoreStage::PreUpdate, SystemStage::parallel());
         app.schedule.add_stage(CoreStage::Update, SystemStage::parallel());
+        app.schedule.add_stage(CoreStage::LateUpdate, SystemStage::parallel());
         app.schedule.add_stage(CoreStage::PostUpdate, SystemStage::parallel());
         app.schedule.add_stage(CoreStage::Last, SystemStage::parallel());
     }
@@ -172,3 +176,8 @@ pub struct Rect<T:Default> {
     pub height:T
 }
 
+#[derive(Component,Default)]
+#[repr(C)]
+pub struct FrameDirty {
+    pub frame:u64
+}

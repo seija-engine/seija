@@ -1,4 +1,5 @@
 use event::{UIEvent, ui_event_system};
+use ffi::OnPostLayoutFN;
 use layout::system::ui_layout_system;
 use render::WriteFontAtlas;
 use seija_app::{IModule, App};
@@ -59,16 +60,21 @@ impl IModule for UIModule {
         app.schedule.add_stage_before(UIStage::UI, UIStage::PreUI, SystemStage::single_threaded());
 
         
-        app.add_system(CoreStage::PostUpdate,ui_layout_system.before(update_transform_system));
+        app.add_system(CoreStage::LateUpdate,ui_layout_system);
+        app.add_system(CoreStage::PostUpdate, on_post_layout.at_start());
         app.add_system(UIStage::PreUI, update_render_mesh_system);
         app.add_system(UIStage::UI, update_canvas_render);
         app.add_system(UIStage::UI, update_canvas_trans);
         app.add_system(UIStage::PostUI, update_ui_clips);
         app.add_system(UIStage::PostUI, ui_event_system);
-
-
         
     }
+}
+
+fn on_post_layout(world:&mut World) {
+    if let Some(f) =  world.get_resource::<OnPostLayoutFN>() {
+        f.0(world);
+   }
 }
 
 

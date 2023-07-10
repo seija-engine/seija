@@ -82,7 +82,6 @@ pub struct CommonView {
     pub ver: LayoutAlignment,
     pub use_rect_size: bool,
     pub ui_size:UISize,
-    //pub anchor_correct:bool
 }
 
 impl Default for CommonView {
@@ -165,7 +164,13 @@ impl LayoutElement {
     }
 
     pub fn is_invalid_measure(&self, child: &LayoutElement) -> bool {
-        //TODO 判断布局是否失效
+        if !self.common.ui_size.has_auto() {
+            return false;
+        }
+        match self.typ_elem {
+            TypeElement::Free(_) => { return false } 
+            _ => ()
+        }
         true
     }
 }

@@ -30,10 +30,12 @@ bitflags! {
     }
 }
 
-pub fn arrange_layout_element(entity: Entity,element: &LayoutElement,parent_origin: Vec2,parent_size: Vec2,axy: ArrangeXY,params: &LayoutParams) {
+pub fn arrange_layout_element(entity: Entity,element: &LayoutElement,parent_origin: Vec2,
+                              parent_size: Vec2,axy: ArrangeXY,params: &LayoutParams,changed_entitys:&mut Vec<Entity>) {
+    changed_entitys.push(entity);
     let arrange_position = match &element.typ_elem {
         TypeElement::View => {
-            let ret_pos = arrange_view_element(entity, element, parent_origin, parent_size, axy, params);
+            let ret_pos = arrange_view_element(entity, element, parent_origin, parent_size, axy, params,changed_entitys);
             //log::error!("ret_pos:{:?}={:?} p:{:?}",entity,ret_pos,parent_origin);
             if let Ok(rect2d) = params.rect2ds.get(entity) {
                 let lt_pos = Vec2::new(
@@ -46,14 +48,14 @@ pub fn arrange_layout_element(entity: Entity,element: &LayoutElement,parent_orig
                     for child_entity in childs.iter() {
                         let elem = params.elems.get(*child_entity).unwrap_or(&VIEW_ID);
                         
-                        arrange_layout_element(*child_entity,elem,lt_pos,inner_size,ArrangeXY::ALL,params);
+                        arrange_layout_element(*child_entity,elem,lt_pos,inner_size,ArrangeXY::ALL,params,changed_entitys);
                         
                     }
                 }
             }
             ret_pos
         }
-        TypeElement::Stack(stack) => arrange_stack_element(entity,stack,element,parent_origin,parent_size,axy,params),
+        TypeElement::Stack(stack) => arrange_stack_element(entity,stack,element,parent_origin,parent_size,axy,params,changed_entitys),
         TypeElement::Flex(flex) => arrange_flex_element(
             entity,
             flex,
@@ -62,8 +64,9 @@ pub fn arrange_layout_element(entity: Entity,element: &LayoutElement,parent_orig
             parent_size,
             axy,
             params,
+            changed_entitys
         ),
-        TypeElement::Free(_) => { arrange_free_element(entity, element, parent_origin, parent_size, axy, params) }
+        TypeElement::Free(_) => { arrange_free_element(entity, element, parent_origin, parent_size, axy, params,changed_entitys) }
     };
     if let Ok(mut transform) = unsafe { params.trans.get_unchecked(entity) } {
         transform.local.position.x = arrange_position.x;
@@ -79,6 +82,7 @@ pub fn arrange_view_element(
     parent_size: Vec2,
     axy: ArrangeXY,
     params: &LayoutParams,
+    changed_entitys:&mut Vec<Entity>
 ) -> Vec2 {
     let mut ret_pos = parent_origin;
     if let Ok(rect2d) = params.rect2ds.get(entity) {
@@ -129,8 +133,9 @@ pub fn arrange_stack_element(
     parent_size: Vec2,
     axy: ArrangeXY,
     params: &LayoutParams,
+    changed_entitys:&mut Vec<Entity>
 ) -> Vec2 {
-    let this_pos = arrange_view_element(entity, element, parent_origin, parent_size, axy, params);
+    let this_pos = arrange_view_element(entity, element, parent_origin, parent_size, axy, params,changed_entitys);
     if let Ok(rect2d) = params.rect2ds.get(entity) {
         let lt_pos = Vec2::new(
             -rect2d.width * 0.5f32 + element.common.padding.left,
@@ -153,7 +158,7 @@ pub fn arrange_stack_element(
                                     Vec2::new(cur_pos.x + child_size.width * 0.5f32, cur_pos.y),
                                     inner_size,
                                     ArrangeXY::Y,
-                                    params,
+                                    params,changed_entitys
                                 );
                                 cur_pos.x += stack.spacing + child_size.width;
                             }
@@ -165,6 +170,7 @@ pub fn arrange_stack_element(
                                     inner_size,
                                     ArrangeXY::X,
                                     params,
+                                    changed_entitys
                                 );
                                 cur_pos.y -= stack.spacing + child_size.height;
                             }
@@ -179,8 +185,8 @@ pub fn arrange_stack_element(
 }
 
 
-pub fn arrange_free_element(entity: Entity,element: &LayoutElement,parent_origin: Vec2,parent_size: Vec2,axy: ArrangeXY,params: &LayoutParams) -> Vec2 {
-    let this_pos = arrange_view_element(entity, element, parent_origin, parent_size, axy, params);
+pub fn arrange_free_element(entity: Entity,element: &LayoutElement,parent_origin: Vec2,parent_size: Vec2,axy: ArrangeXY,params: &LayoutParams,changed_entitys:&mut Vec<Entity>) -> Vec2 {
+    let this_pos = arrange_view_element(entity, element, parent_origin, parent_size, axy, params,changed_entitys);
     if let Ok(rect2d) = params.rect2ds.get(entity) {
         let lt_pos = Vec2::new(
             -rect2d.width * 0.5f32 + element.common.padding.left,
@@ -192,7 +198,7 @@ pub fn arrange_free_element(entity: Entity,element: &LayoutElement,parent_origin
                 let elem = params.elems.get(*child_entity).unwrap_or(&VIEW_ID);
                 if params.freeitems.contains(*child_entity) {
                     
-                    arrange_layout_element(*child_entity,elem,lt_pos,inner_size,ArrangeXY::NONE,params);
+                    arrange_layout_element(*child_entity,elem,lt_pos,inner_size,ArrangeXY::NONE,params,changed_entitys);
                     if let Some(ret_pos) = arrange_freeitem(*child_entity, params) {
                         if let Ok(mut transform) = unsafe { params.trans.get_unchecked(*child_entity) } {
                             transform.local.position.x = ret_pos.x;
@@ -200,7 +206,7 @@ pub fn arrange_free_element(entity: Entity,element: &LayoutElement,parent_origin
                         }
                     }
                 } else {
-                    arrange_layout_element(*child_entity,elem,lt_pos,inner_size,ArrangeXY::ALL,params);
+                    arrange_layout_element(*child_entity,elem,lt_pos,inner_size,ArrangeXY::ALL,params,changed_entitys);
                 }
             }
         }
@@ -216,10 +222,11 @@ fn arrange_flex_element(
     parent_size: Vec2,
     _: ArrangeXY,
     params: &LayoutParams,
+    changed_entitys:&mut Vec<Entity>
 ) -> Vec2 {
     match flex.warp {
-        FlexWrap::Wrap => {  arrange_flex_element_wrap(entity, flex, element, parent_origin, parent_size, params) }
-        FlexWrap::NoWrap => { arrange_flex_element_nowrap(entity, flex, element, parent_origin, parent_size, params) }
+        FlexWrap::Wrap => {  arrange_flex_element_wrap(entity, flex, element, parent_origin, parent_size, params,changed_entitys) }
+        FlexWrap::NoWrap => { arrange_flex_element_nowrap(entity, flex, element, parent_origin, parent_size, params,changed_entitys) }
     }
 }
 
@@ -273,8 +280,9 @@ impl<'a> Iterator for FlexIter<'a> {
    
 }
 
-fn arrange_flex_element_nowrap(entity: Entity,flex: &FlexLayout,element: &LayoutElement,parent_origin: Vec2,parent_size: Vec2,params: &LayoutParams) -> Vec2 {
-    let this_pos = arrange_view_element(entity,element,parent_origin,parent_size,ArrangeXY::ALL,params);
+fn arrange_flex_element_nowrap(entity: Entity,flex: &FlexLayout,element: &LayoutElement,
+                               parent_origin: Vec2,parent_size: Vec2,params: &LayoutParams,changed_entitys:&mut Vec<Entity>) -> Vec2 {
+    let this_pos = arrange_view_element(entity,element,parent_origin,parent_size,ArrangeXY::ALL,params,changed_entitys);
     let this_size = params.rect2ds.get(entity).unwrap_or(&RECT2D_ID);
     let inner_size = element.common.padding.sub2size(Vec2::new(this_size.width, this_size.height));
     let this_axis_size = flex.get_axis_size(inner_size);
@@ -293,13 +301,13 @@ fn arrange_flex_element_nowrap(entity: Entity,flex: &FlexLayout,element: &Layout
 
     //没有空余空间，直接根据size进行排列
     if main_axis_size >= this_axis_size.x  {
-        arrange_by_start_pos(lt_pos,flex,entity,inner_size,0f32,params);
+        arrange_by_start_pos(lt_pos,flex,entity,inner_size,0f32,params,changed_entitys);
         return this_pos;
     }
 
     //有空余空间，根据justify进行排列
     match flex.justify {
-        FlexJustify::Start => { arrange_by_start_pos(lt_pos,flex,entity,inner_size,0f32,params); },
+        FlexJustify::Start => { arrange_by_start_pos(lt_pos,flex,entity,inner_size,0f32,params,changed_entitys); },
         FlexJustify::Center => {
             let start_pos:Vec2 = match flex.direction {
                 FlexDirection::Row | FlexDirection::RowReverse => {
@@ -309,7 +317,7 @@ fn arrange_flex_element_nowrap(entity: Entity,flex: &FlexLayout,element: &Layout
                     Vec2::new(lt_pos.x,lt_pos.y - (this_axis_size.x - main_axis_size) * 0.5f32)
                 }
             };
-            arrange_by_start_pos(start_pos,flex,entity,inner_size,0f32,params);
+            arrange_by_start_pos(start_pos,flex,entity,inner_size,0f32,params,changed_entitys);
         }
         FlexJustify::End => {
             let start_pos = match flex.direction {
@@ -320,7 +328,7 @@ fn arrange_flex_element_nowrap(entity: Entity,flex: &FlexLayout,element: &Layout
                     Vec2::new(lt_pos.x,lt_pos.y - (this_axis_size.x - main_axis_size))
                 }
             };
-            arrange_by_start_pos(start_pos,flex,entity,inner_size,0f32,params);
+            arrange_by_start_pos(start_pos,flex,entity,inner_size,0f32,params,changed_entitys);
         }
 
         //分散对齐,两边贴靠
@@ -331,7 +339,7 @@ fn arrange_flex_element_nowrap(entity: Entity,flex: &FlexLayout,element: &Layout
             } else {
                 spacing = (inner_size.y - main_axis_size) / (child_count - 1) as f32;
             }
-            arrange_by_start_pos(lt_pos,flex,entity,inner_size,spacing,params);
+            arrange_by_start_pos(lt_pos,flex,entity,inner_size,spacing,params,changed_entitys);
         }
         //分散对齐，两边是中间的一半
         FlexJustify::SpaceAround => { 
@@ -344,7 +352,7 @@ fn arrange_flex_element_nowrap(entity: Entity,flex: &FlexLayout,element: &Layout
                 spacing = (inner_size.y - main_axis_size) / child_count as f32;
                 start_pos = Vec2::new(lt_pos.x, lt_pos.y - spacing * 0.5f32);
             }
-            arrange_by_start_pos(start_pos,flex,entity,inner_size,spacing,params);
+            arrange_by_start_pos(start_pos,flex,entity,inner_size,spacing,params,changed_entitys);
         }
     }
 
@@ -353,8 +361,10 @@ fn arrange_flex_element_nowrap(entity: Entity,flex: &FlexLayout,element: &Layout
 
 
 //计算换行情况下的排列
-fn arrange_flex_element_wrap(entity:Entity,flex:&FlexLayout,elem:&LayoutElement,parent_origin:Vec2,parent_size:Vec2,params:&LayoutParams) -> Vec2 {
-    let this_pos = arrange_view_element(entity,elem,parent_origin,parent_size,ArrangeXY::ALL,params);
+fn arrange_flex_element_wrap(entity:Entity,flex:&FlexLayout,
+   elem:&LayoutElement,parent_origin:Vec2,parent_size:Vec2,params:&LayoutParams,
+   changed_entitys:&mut Vec<Entity>) -> Vec2 {
+    let this_pos = arrange_view_element(entity,elem,parent_origin,parent_size,ArrangeXY::ALL,params,changed_entitys);
     let this_size = params.rect2ds.get(entity).unwrap_or(&RECT2D_ID);
     let inner_size = elem.common.padding.sub2size(Vec2::new(this_size.width, this_size.height));
     let this_axis_size = flex.get_axis_size(inner_size);
@@ -393,7 +403,7 @@ fn arrange_flex_element_wrap(entity:Entity,flex:&FlexLayout,elem:&LayoutElement,
     let flex_iter = FlexIter::new(params.childrens.get(entity).ok(),flex.direction);
     for (index,child_entity) in flex_iter.enumerate() {
         let cur_pos = child_pos_lst[index];
-        arrange_layout_element(child_entity, params.elems.get(child_entity).unwrap_or(&VIEW_ID), cur_pos, parent_size, ArrangeXY::NONE, params)
+        arrange_layout_element(child_entity, params.elems.get(child_entity).unwrap_or(&VIEW_ID), cur_pos, parent_size, ArrangeXY::NONE, params,changed_entitys)
     }
     this_pos
 }
@@ -586,7 +596,9 @@ fn align_flex_cross(align_item: FlexAlignItems,axis_start:f32,axis_size:f32,self
     }
 }
 
-fn arrange_by_start_pos(start_pos:Vec2,flex: &FlexLayout,entity: Entity,inner_size:Vec2,spacing:f32,params: &LayoutParams) {
+fn arrange_by_start_pos(start_pos:Vec2,flex: &FlexLayout,
+  entity: Entity,inner_size:Vec2,spacing:f32,params: &LayoutParams,
+  changed_entitys:&mut Vec<Entity>) {
     let flex_iter = FlexIter::new(params.childrens.get(entity).ok(), flex.direction);
     let mut cur_pos: Vec2 = start_pos;
     for child_entity in flex_iter {
@@ -599,7 +611,7 @@ fn arrange_by_start_pos(start_pos:Vec2,flex: &FlexLayout,entity: Entity,inner_si
                     Vec2::new(cur_pos.x + child_rect.width * 0.5f32, cur_pos.y),
                     inner_size,
                     ArrangeXY::NONE,
-                    params,
+                    params,changed_entitys
                 );
                 cur_pos.x += child_rect.width + spacing;
             }
@@ -609,7 +621,7 @@ fn arrange_by_start_pos(start_pos:Vec2,flex: &FlexLayout,entity: Entity,inner_si
                     Vec2::new(cur_pos.x, cur_pos.y - child_rect.height * 0.5f32),
                     inner_size,
                     ArrangeXY::NONE,
-                    params,
+                    params,changed_entitys
                 );
                 cur_pos.y -= child_rect.height + spacing;
             }

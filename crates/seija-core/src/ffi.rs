@@ -4,7 +4,7 @@ use bevy_ecs::{prelude::World};
 use log::Level;
 use seija_app::App;
 use seija_app::ecs::prelude::*;
-use crate::{CoreModule, time::Time, CoreStage, StartupStage};
+use crate::{CoreModule, time::Time, CoreStage, StartupStage, FrameDirty};
 
 #[no_mangle]
 pub unsafe extern "C" fn core_add_module(app_ptr:*mut u8) {
@@ -42,6 +42,18 @@ pub unsafe extern "C" fn init_log(level:*const c_char) {
     simple_logger::init_with_level(level).unwrap();
 }
 
+
+#[no_mangle]
+pub unsafe extern "C" fn is_frame_dirty(world: &mut World,eid:u64,frame:u64) -> bool {
+    let entity = Entity::from_bits(eid);
+    let entity_dirty_frame = world.get_entity(entity).and_then(|e| e.get::<FrameDirty>()).map(|d| d.frame);
+    match entity_dirty_frame {
+        None => false,
+        Some(dirty_frame) => {
+            dirty_frame >= frame
+        } 
+    }
+}
 
 type WorldFN = extern fn(world:*mut World);
 
