@@ -176,8 +176,9 @@ pub struct Rect<T:Default> {
     pub height:T
 }
 
-#[derive(Component,Default)]
+#[derive(Component,Default,Clone)]
 #[repr(C)]
 pub struct FrameDirty {
-    pub frame:u64
+    pub frame:u64,
+    pub index:i32
 }

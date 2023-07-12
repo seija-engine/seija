@@ -44,13 +44,13 @@ pub unsafe extern "C" fn init_log(level:*const c_char) {
 
 
 #[no_mangle]
-pub unsafe extern "C" fn is_frame_dirty(world: &mut World,eid:u64,frame:u64) -> bool {
+pub unsafe extern "C" fn is_frame_dirty(world: &mut World,eid:u64,frame:u64,index:i32) -> bool {
     let entity = Entity::from_bits(eid);
-    let entity_dirty_frame = world.get_entity(entity).and_then(|e| e.get::<FrameDirty>()).map(|d| d.frame);
-    match entity_dirty_frame {
+    let frame_dirty = world.get_entity(entity).and_then(|e| e.get::<FrameDirty>());
+    match frame_dirty {
         None => false,
-        Some(dirty_frame) => {
-            dirty_frame >= frame
+        Some(value) => {
+            value.frame >= frame && value.index == index
         } 
     }
 }

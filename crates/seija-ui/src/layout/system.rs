@@ -33,11 +33,13 @@ pub fn ui_layout_system(mut params:LayoutParams) {
         process_entity_layout(elem_entity,&mut params,&mut changed_entity_lst)
     }
     arrange_freeitem_layout(&mut params);
+
     if changed_entity_lst.len() > 0 {
        let cur_frame = params.time.frame();
        let mut iter = params.frame_dirty.iter_many_mut(&changed_entity_lst);
        while let Some(mut fd) = iter.fetch_next() { 
           fd.frame = cur_frame;
+          fd.index = 0;
        }
     }
 
@@ -46,15 +48,20 @@ pub fn ui_layout_system(mut params:LayoutParams) {
         let mut step:i32 = 0;
         let lst_ptr = std::ptr::addr_of_mut!(dirty_entitys);
         while step < 10 {
-            log::error!("lst_ptr:{:?}",lst_ptr);
             post_layout_fn(step,lst_ptr);
             if dirty_entitys.is_empty() { break; }
+            changed_entity_lst.clear();
             for dirty_id in dirty_entitys.iter() {
                 process_entity_layout(Entity::from_bits(*dirty_id),&mut params,&mut changed_entity_lst)
             }
             arrange_freeitem_layout(&mut params);
             step += 1;
             dirty_entitys.clear();
+
+            let mut iter = params.frame_dirty.iter_many_mut(&changed_entity_lst);
+            while let Some(mut fd) = iter.fetch_next() { 
+                fd.index = step;
+            }
         }
     }
 }
