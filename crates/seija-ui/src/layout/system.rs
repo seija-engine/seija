@@ -42,18 +42,19 @@ pub fn ui_layout_system(mut params:LayoutParams) {
     }
 
     if let Some(post_layout_fn) = params.post_process.as_ref().map(|v| v.0) {
-        let mut post_entitys:Vec<u64> = vec![];
+        let mut dirty_entitys:Vec<u64> = vec![];
         let mut step:i32 = 0;
-        let lst_ptr = post_entitys.as_mut_ptr();
+        let lst_ptr = std::ptr::addr_of_mut!(dirty_entitys);
         while step < 10 {
+            log::error!("lst_ptr:{:?}",lst_ptr);
             post_layout_fn(step,lst_ptr);
-            if post_entitys.is_empty() { break; }
-            for dirty_id in post_entitys.iter() {
+            if dirty_entitys.is_empty() { break; }
+            for dirty_id in dirty_entitys.iter() {
                 process_entity_layout(Entity::from_bits(*dirty_id),&mut params,&mut changed_entity_lst)
             }
             arrange_freeitem_layout(&mut params);
             step += 1;
-            post_entitys.clear();
+            dirty_entitys.clear();
         }
     }
 }

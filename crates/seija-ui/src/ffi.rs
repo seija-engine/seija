@@ -368,10 +368,15 @@ pub unsafe extern "C" fn entity_text_setstring(text_mut:&mut Text,cstr:*mut i8) 
     text_mut.text = text_string.into();
 }
 
-type PostLayoutProcessF = extern fn(step:i32,vec_ptr:*mut u64);
+type PostLayoutProcessF = extern fn(step:i32,vec_ptr:*mut Vec<u64>);
 #[no_mangle]
 pub unsafe extern "C" fn ui_set_post_layout_process(world: &mut World,f:PostLayoutProcessF) {
     world.insert_resource(PostLayoutProcess(f));
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn vec_add_u64(vec_lst:&mut Vec<u64>,value:u64) {
+   vec_lst.push(value);
 }
 
 #[derive(Resource)]
