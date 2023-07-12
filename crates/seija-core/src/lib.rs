@@ -62,7 +62,7 @@ impl CoreModule {
         app.schedule.add_stage(CoreStage::Startup, startup);
         app.schedule.add_stage(CoreStage::PreUpdate, SystemStage::parallel());
         app.schedule.add_stage(CoreStage::Update, SystemStage::parallel());
-        app.schedule.add_stage(CoreStage::LateUpdate, SystemStage::parallel());
+        app.schedule.add_stage(CoreStage::LateUpdate, SystemStage::single_threaded());
         app.schedule.add_stage(CoreStage::PostUpdate, SystemStage::parallel());
         app.schedule.add_stage(CoreStage::Last, SystemStage::parallel());
     }

@@ -1,9 +1,9 @@
 use std::collections::HashSet;
-use bevy_ecs::{system::{SystemParam, Query, Res}, prelude::{Entity, EventReader}, query::Changed, world::World};
+use bevy_ecs::{system::{SystemParam, Query, Res}, prelude::{Entity, EventReader}, query::{Changed}};
 use seija_core::{math::{Vec2}, window::AppWindow, FrameDirty, time::Time};
 use seija_transform::{events::HierarchyEvent, hierarchy::{Parent, Children}, Transform};
 use seija_winit::event::WindowResized;
-use crate::components::{rect2d::Rect2D, ui_canvas::UICanvas};
+use crate::{components::{rect2d::Rect2D, ui_canvas::UICanvas}, ffi::PostLayoutProcess};
 use super::{types::{LayoutElement, FreeLayoutItem}, measure, arrange::{arrange_layout_element, ArrangeXY, arrange_freeitem_layout}, comps::FlexItem};
 
 #[derive(SystemParam)]
@@ -23,42 +23,58 @@ pub struct LayoutParams<'w,'s> {
     pub(crate) ui_canvas:Query<'w,'s,(Entity,&'static UICanvas)>,
     pub(crate) frame_dirty:Query<'w,'s,&'static mut FrameDirty>,
     pub(crate) time:Res<'w,Time>,
+    pub(crate) post_process:Option<Res<'w,PostLayoutProcess>>
 }
-
 
 pub fn ui_layout_system(mut params:LayoutParams) {
     let dirty_layouts = collect_dirty(&mut params);
     let mut changed_entity_lst:Vec<Entity> = Vec::new();
     for elem_entity in dirty_layouts {
-       //这里只会修改Element的属性，所以是安全的
-       if let Ok(element) = params.elems.get(elem_entity) {
-          let x = size_request_x(elem_entity, &params);
-          let y = size_request_y(elem_entity, &params);
-          let request_size:Vec2 = Vec2::new(x, y);
-          measure::measure_layout_element(elem_entity,request_size,&params);
-         
-          let origin = origin_request(elem_entity, &params);
-          let parent_size = if let Ok(size) = params.parents.get(elem_entity).and_then(|p| params.rect2ds.get(p.1.0)) {
-             Vec2::new(size.width, size.height)
-          } else {
-            Vec2::new(params.window.width() as f32, params.window.height() as f32)
-          };
-          arrange_layout_element(elem_entity, element, origin,parent_size,ArrangeXY::ALL,&params,&mut changed_entity_lst);
-          
-       }
+        process_entity_layout(elem_entity,&mut params,&mut changed_entity_lst)
     }
     arrange_freeitem_layout(&mut params);
     if changed_entity_lst.len() > 0 {
        let cur_frame = params.time.frame();
-       let mut iter = params.frame_dirty.iter_many_mut(changed_entity_lst);
-       //log::error!("set to {:?}",cur_frame);
+       let mut iter = params.frame_dirty.iter_many_mut(&changed_entity_lst);
        while let Some(mut fd) = iter.fetch_next() { 
           fd.frame = cur_frame;
        }
     }
+
+    if let Some(post_layout_fn) = params.post_process.as_ref().map(|v| v.0) {
+        let mut post_entitys:Vec<u64> = vec![];
+        let mut step:i32 = 0;
+        let lst_ptr = post_entitys.as_mut_ptr();
+        while step < 10 {
+            post_layout_fn(step,lst_ptr);
+            if post_entitys.is_empty() { break; }
+            for dirty_id in post_entitys.iter() {
+                process_entity_layout(Entity::from_bits(*dirty_id),&mut params,&mut changed_entity_lst)
+            }
+            arrange_freeitem_layout(&mut params);
+            step += 1;
+            post_entitys.clear();
+        }
+    }
 }
 
-
+fn process_entity_layout(elem_entity:Entity,params:&mut LayoutParams,changed_entity_lst:&mut Vec<Entity>) {
+    //这里只会修改Element的属性，所以是安全的
+    if let Ok(element) = params.elems.get(elem_entity) {
+        let x = size_request_x(elem_entity, &params);
+        let y = size_request_y(elem_entity, &params);
+        let request_size:Vec2 = Vec2::new(x, y);
+        measure::measure_layout_element(elem_entity,request_size,&params);
+       
+        let origin = origin_request(elem_entity, &params);
+        let parent_size = if let Ok(size) = params.parents.get(elem_entity).and_then(|p| params.rect2ds.get(p.1.0)) {
+           Vec2::new(size.width, size.height)
+        } else {
+          Vec2::new(params.window.width() as f32, params.window.height() as f32)
+        };
+        arrange_layout_element(elem_entity, element, origin,parent_size,ArrangeXY::ALL,&params,changed_entity_lst);
+     }
+}
 
 /////计算需要重布局的Element
 fn collect_dirty(params:&mut LayoutParams) -> HashSet<Entity> {
