@@ -1,12 +1,13 @@
 use bitflags::bitflags;
 use bevy_ecs::prelude::{Component, Entity};
-use seija_core::smol_str::SmolStr;
+use seija_core::{smol_str::SmolStr, math::Vec2};
 
 #[derive(Clone,Debug)]
 pub struct UIEvent {
     pub entity:Entity,
     pub event_type:UIEventType,
     pub user_key:Option<SmolStr>,
+    pub pos:Vec2
 }
 
 bitflags! {
@@ -44,7 +45,8 @@ pub struct EventNode {
     pub stop_bubble:bool,
     ///是否使用捕获模式
     pub use_capture:bool,
-    pub user_key:Option<SmolStr> 
+    pub user_key:Option<SmolStr>,
+    pub drag_pos:Vec2
 }
 
 impl Default for EventNode {
@@ -56,6 +58,7 @@ impl Default for EventNode {
             use_capture:true,
             user_key:None,
             event_type:UIEventType::NONE,
+            drag_pos:Vec2::ZERO
         }
     }
 }

@@ -169,18 +169,11 @@ pub unsafe extern "C" fn entity_remove_event_node(world: &mut World, entity_id: 
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn read_ui_events(world: &mut World,f:extern fn(entity:u64,typ:u32,user_key_ptr:*const i8)) {
+pub unsafe extern "C" fn read_ui_events(world: &mut World,f:extern fn(entity:u64,typ:u32,px:f32,py:f32)) {
     let events = world.get_resource_mut::<Events<UIEvent>>().unwrap();
     let mut reader:ManualEventReader<UIEvent> = events.get_reader();
     for event in reader.iter(&events) {
-        if let Some(user_key) = &event.user_key {
-           //TODO 考虑优化这里
-           let c_string = std::ffi::CString::new(user_key.as_str()).unwrap();
-           f(event.entity.to_bits(),event.event_type.bits(),c_string.as_ptr());
-        } else {
-            f(event.entity.to_bits(),event.event_type.bits(),std::ptr::null());
-        }
-       
+        f(event.entity.to_bits(),event.event_type.bits(),event.pos.x,event.pos.y);  
     }
 }
 

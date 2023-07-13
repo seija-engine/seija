@@ -25,7 +25,7 @@ pub fn ui_event_system(params:EventParams,mut event_nodes:Query<(Entity,&mut Eve
 pub fn ui_system_handle(system_entity:Entity,_:&UIEventSystem,params:&EventParams,event_nodes:&mut Query<(Entity,&mut EventNode)>,sender:&mut EventWriter<UIEvent>) {
     if params.input.has_mouse_down() || params.input.has_mouse_up() {
         let mouse_pos = mouse_pos_to_world(params.input.mouse_position, system_entity, params);
-
+        let ui_pos = mouse_pos_to_ui(params.input.mouse_position,params);
         let fire_type = if params.input.has_mouse_down() {
             UIEventType::TOUCH_START
         } else {
@@ -42,6 +42,7 @@ pub fn ui_system_handle(system_entity:Entity,_:&UIEventSystem,params:&EventParam
                         entity,
                         event_type:UIEventType::END_DRAG,
                         user_key:event_node.user_key.clone(),
+                        pos:ui_pos
                     });
                 }
                 event_node.state &= !EventNodeState::DRAG_IN.bits();
@@ -51,6 +52,7 @@ pub fn ui_system_handle(system_entity:Entity,_:&UIEventSystem,params:&EventParam
 
     if params.input.is_mouse_move {
         let mouse_pos = mouse_pos_to_world(params.input.mouse_position, system_entity, params);
+        let ui_pos = mouse_pos_to_ui(params.input.mouse_position,params);
         for (entity,mut event_node) in event_nodes.iter_mut() {
             let mut is_in_rect = false;
             if let Ok((_,Some(rect),t)) = params.infos.get(entity) {
@@ -64,20 +66,25 @@ pub fn ui_system_handle(system_entity:Entity,_:&UIEventSystem,params:&EventParam
                    && is_in_rect
                    && event_node.state & EventNodeState::DRAG_IN.bits() == 0 {
                     event_node.state |= EventNodeState::DRAG_IN.bits();
+                    event_node.drag_pos = ui_pos;
                     sender.send(UIEvent {
                         entity:entity,
                         event_type:UIEventType::BEGIN_DRAG,
                         user_key:event_node.user_key.clone(),
+                        pos:ui_pos
                     });
                 }
             }
 
             if event_node.event_type.bits() & UIEventType::DRAG.bits() != 0 {
                 if event_node.state & EventNodeState::DRAG_IN.bits() > 0 {
+                    let delta = ui_pos - event_node.drag_pos;
+                    event_node.drag_pos = ui_pos;
                     sender.send(UIEvent {
                         entity:entity,
                         event_type:UIEventType::DRAG,
                         user_key:event_node.user_key.clone(),
+                        pos:delta
                     });
                 }
             }
@@ -90,6 +97,7 @@ pub fn ui_system_handle(system_entity:Entity,_:&UIEventSystem,params:&EventParam
                             entity:entity,
                             event_type:UIEventType::MOUSE_ENTER,
                             user_key:event_node.user_key.clone(),
+                            pos:mouse_pos
                         });  
                     }
                 }
@@ -102,6 +110,7 @@ pub fn ui_system_handle(system_entity:Entity,_:&UIEventSystem,params:&EventParam
                             entity,
                             event_type:UIEventType::MOUSE_LEAVE,
                             user_key:event_node.user_key.clone(),
+                            pos:mouse_pos
                         });  
                     }
                 }
@@ -118,6 +127,12 @@ fn mouse_pos_to_world(mut mouse_pos:Vec2,entity:Entity,params:&EventParams) -> V
         let new_pos = transform.global().matrix() * Vec4::new(mouse_pos.x,mouse_pos.y,0.0,1.0);
         return Vec2::new(new_pos.x, new_pos.y);
     }
+    mouse_pos
+}
+
+fn mouse_pos_to_ui(mut mouse_pos:Vec2,params:&EventParams) -> Vec2 {
+    mouse_pos.x -= params.window.width() as f32 * 0.5f32;
+    mouse_pos.y = params.window.height() as f32 * 0.5f32 - mouse_pos.y;
     mouse_pos
 }
 
@@ -167,6 +182,7 @@ fn capture_event_node(event_entity:Entity,
                             entity:event_entity,
                             event_type:fire_type,
                             user_key:event_node.user_key.clone(),
+                            pos:mouse_pos
                         });
                     }
                     if is_click {
@@ -174,6 +190,7 @@ fn capture_event_node(event_entity:Entity,
                             entity:event_entity,
                             event_type:UIEventType::CLICK,
                             user_key:event_node.user_key.clone(),
+                            pos:mouse_pos
                         });
                     }
                 }
@@ -219,6 +236,7 @@ fn bubble_event_node(event_entity:Entity,
                         entity:event_entity,
                         event_type:fire_type,
                         user_key:event_node.user_key.clone(),
+                        pos:mouse_pos
                     });
                 }
                 if is_click {
@@ -226,6 +244,7 @@ fn bubble_event_node(event_entity:Entity,
                         entity:event_entity,
                         event_type:UIEventType::CLICK,
                         user_key:event_node.user_key.clone(),
+                        pos:mouse_pos
                     });
                 }
             }

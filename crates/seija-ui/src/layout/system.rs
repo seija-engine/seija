@@ -54,7 +54,6 @@ pub fn ui_layout_system(mut params:LayoutParams) {
             for dirty_id in dirty_entitys.iter() {
                 process_entity_layout(Entity::from_bits(*dirty_id),&mut params,&mut changed_entity_lst)
             }
-            arrange_freeitem_layout(&mut params);
             step += 1;
             dirty_entitys.clear();
 
@@ -64,6 +63,8 @@ pub fn ui_layout_system(mut params:LayoutParams) {
             }
         }
     }
+    
+    arrange_freeitem_layout(&mut params);
 }
 
 fn process_entity_layout(elem_entity:Entity,params:&mut LayoutParams,changed_entity_lst:&mut Vec<Entity>) {
