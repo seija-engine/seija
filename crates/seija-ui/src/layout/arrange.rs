@@ -640,6 +640,15 @@ pub(crate) fn arrange_freeitem_layout(params:&mut LayoutParams) {
    }
 }
 
+pub(crate) fn arrange_freeitem_and_set_pos(entity:Entity,params:&mut LayoutParams) {
+    if let Some(new_pos) = arrange_freeitem(entity,params) {
+        if let Ok(mut trans) = params.trans.get_mut(entity) {
+            trans.local.position.x = new_pos.x;
+            trans.local.position.y = new_pos.y;
+        }
+     }
+}
+
 fn arrange_freeitem(entity:Entity,params:&LayoutParams) -> Option<Vec2> {
     let parent_entity = params.parents.get(entity).ok()?.1.0;
     let parent_rect = params.rect2ds.get(parent_entity).ok()?;

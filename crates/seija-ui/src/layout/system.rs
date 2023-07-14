@@ -4,7 +4,8 @@ use seija_core::{math::{Vec2}, window::AppWindow, FrameDirty, time::Time};
 use seija_transform::{events::HierarchyEvent, hierarchy::{Parent, Children}, Transform};
 use seija_winit::event::WindowResized;
 use crate::{components::{rect2d::Rect2D, ui_canvas::UICanvas}, ffi::PostLayoutProcess};
-use super::{types::{LayoutElement, FreeLayoutItem}, measure, arrange::{arrange_layout_element, ArrangeXY, arrange_freeitem_layout}, comps::FlexItem};
+use super::{types::{LayoutElement, FreeLayoutItem}, measure, arrange::{arrange_layout_element, 
+    ArrangeXY,arrange_freeitem_and_set_pos,arrange_freeitem_layout}, comps::FlexItem};
 
 #[derive(SystemParam)]
 pub struct LayoutParams<'w,'s> {
@@ -52,7 +53,10 @@ pub fn ui_layout_system(mut params:LayoutParams) {
             if dirty_entitys.is_empty() { break; }
             changed_entity_lst.clear();
             for dirty_id in dirty_entitys.iter() {
-                process_entity_layout(Entity::from_bits(*dirty_id),&mut params,&mut changed_entity_lst)
+                let cur_entity = Entity::from_bits(*dirty_id);
+                process_entity_layout(cur_entity,&mut params,&mut changed_entity_lst);
+
+                arrange_freeitem_and_set_pos(cur_entity,&mut params);
             }
             step += 1;
             dirty_entitys.clear();
@@ -63,8 +67,6 @@ pub fn ui_layout_system(mut params:LayoutParams) {
             }
         }
     }
-    
-    arrange_freeitem_layout(&mut params);
 }
 
 fn process_entity_layout(elem_entity:Entity,params:&mut LayoutParams,changed_entity_lst:&mut Vec<Entity>) {
