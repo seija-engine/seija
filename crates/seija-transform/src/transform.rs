@@ -64,7 +64,7 @@ impl Default for TransformMatrix {
 #[derive(Default,PartialEq,Clone,Debug,Component)]
 pub struct Transform {
     pub local:TransformMatrix,
-    pub(crate) global:TransformMatrix
+    pub global:TransformMatrix
 }
 
 impl Transform {

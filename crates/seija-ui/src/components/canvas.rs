@@ -7,7 +7,7 @@ use seija_render::{resource::{Mesh, MeshAttributeType, Indices}, material::{Mate
 use seija_transform::{hierarchy::{Children, Parent}, Transform};
 use crate::{render::UIRender2D, system::UIRenderRoot};
 use  wgpu::PrimitiveTopology;
-const Z_SCALE: f32 = 0.00001;
+pub const Z_SCALE: f32 = 0.00001;
 
 #[derive(Component,Default)]
 pub struct Canvas {
@@ -67,7 +67,7 @@ impl Canvas {
 
 pub(crate) struct UIDrawCall {
    pub(crate) entity:Entity,
-    hash_key:u64
+   pub fst_entity:Entity
 }
 /*
 Canvas       Z:0
@@ -147,7 +147,7 @@ impl UIDrawCall {
         let hash_key = hasher.finish();
         UIDrawCall {
             entity:drawcall_entity,
-            hash_key
+            fst_entity:entitys[0]
         }
     }
 }

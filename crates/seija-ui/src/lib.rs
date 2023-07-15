@@ -61,7 +61,7 @@ impl IModule for UIModule {
         app.add_system(CoreStage::LateUpdate,ui_layout_system);
         app.add_system(UIStage::PreUI, update_render_mesh_system);
         app.add_system(UIStage::UI, update_canvas_render);
-        app.add_system(UIStage::UI, update_canvas_trans);
+        app.add_system(UIStage::UI, update_canvas_trans.after(update_canvas_render));
         app.add_system(UIStage::PostUI, update_ui_clips);
         app.add_system(UIStage::PostUI, ui_event_system);
         

@@ -8,7 +8,7 @@ use seija_render::{material::{MaterialDefineAsset, MaterialDef, Material},
 use seija_transform::{hierarchy::{Parent, Children}, Transform, events::HierarchyEvent};
 use spritesheet::SpriteSheet;
 use glyph_brush::{GlyphBrush, GlyphBrushBuilder,FontId,BrushAction};
-use crate::{components::{sprite::Sprite, rect2d::Rect2D, canvas::{Canvas, ZOrder}}, 
+use crate::{components::{sprite::Sprite, rect2d::Rect2D, canvas::{Canvas, ZOrder, Z_SCALE}}, 
             render::{UIRender2D, WriteFontAtlas}, 
             mesh2d::Vertex2D, text::{Text, Font, glyph_to_mesh, write_font_texture}, types::Box2D};
 use wgpu::{TextureFormat};
@@ -248,20 +248,24 @@ pub fn update_canvas_render(mut params:CanvasRenderParams) {
 
 pub fn update_canvas_trans(world:&mut World) {
    let mut update_canvas:Vec<Entity> = Vec::new();
-   let mut update_trans = world.query_filtered::<(Entity,&Canvas),Changed<Transform>>();
+   let mut update_trans = world.query_filtered::<(Entity,&Canvas),Or<(Changed<Transform>,Changed<ZOrder>)>>();
    for (entity,_) in update_trans.iter(world) {
         update_canvas.push(entity);
    }
 
    let mut canvaes = world.query::<&Canvas>();
+   let mut zorders = world.query::<&ZOrder>();
    let mut trans = world.query::<&mut Transform>();
    for entity in update_canvas.iter() {
      if let Ok(canvas) = canvaes.get(world, *entity) {
         if let Ok(canvas_t) = trans.get(world, *entity) {
             for draw_call in canvas.draw_calls.iter() {
                 if let Ok(mut drawcall_t) = unsafe { trans.get_unchecked(world, draw_call.entity) } {
-                    drawcall_t.local.position.x = canvas_t.global().position.x;
-                    drawcall_t.local.position.y = canvas_t.global().position.y;
+                    if let Ok(zorder) = zorders.get(world,draw_call.fst_entity) {
+                        drawcall_t.local.position.x = canvas_t.global().position.x;
+                        drawcall_t.local.position.y = canvas_t.global().position.y;
+                        drawcall_t.local.position.z = canvas_t.global().position.z + zorder.value as f32 * Z_SCALE
+                    }
                 }
             }
         }
