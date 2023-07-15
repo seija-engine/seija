@@ -167,7 +167,7 @@ impl LayoutElement {
         if !self.common.ui_size.has_auto() {
             return false;
         }
-        match self.typ_elem {
+        match child.typ_elem {
             TypeElement::Free(_) => { return false } 
             _ => ()
         }
