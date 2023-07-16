@@ -9,7 +9,7 @@ use seija_gltf::GLTFModule;
 use seija_input::{InputModule, Input, event::MouseButton};
 use seija_pbr::{PBRCameraInfo, create_pbr_plugin};
 use seija_render::{camera::{camera::Perspective,camera::Camera}, 
-                   material::{MaterialDefineAsset}, resource::{Texture, TextureDescInfo}
+                   material::MaterialDefineAsset, resource::{Texture, TextureDescInfo}
                   ,RenderConfig, GraphSetting, RenderModule, RenderContext};
 
 use seija_render_template::add_render_templates;

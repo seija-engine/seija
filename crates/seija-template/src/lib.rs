@@ -4,7 +4,7 @@ mod inst;
 mod component;
 use std::collections::HashMap;
 pub use component::{ITComponentOpt,TComponentManager};
-use component::{TransformTemplateOpt};
+use component::TransformTemplateOpt;
 use loader::TemplateLoader;
 use seija_app::{IModule, App, ecs::{world::World, system::Resource}};
 use seija_asset::AddAsset;

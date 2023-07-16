@@ -251,7 +251,7 @@ impl PipelineCache {
    
 }
 
-//TODO Delete it
+/*
 pub fn read_spirv<R: io::Read + io::Seek>(mut x: R) -> io::Result<Vec<u32>> {
     let size = x.seek(io::SeekFrom::End(0))?;
     if size % 4 != 0 {
@@ -288,7 +288,7 @@ pub fn read_spirv<R: io::Read + io::Seek>(mut x: R) -> io::Result<Vec<u32>> {
         ));
     }
     Ok(result)
-}
+}*/
 
 
 fn get_shader_name_prefix(mesh:&Mesh,shader:&ShaderInfoDef,shaders:&RuntimeShaderInfo) -> Option<String> {

@@ -1,6 +1,6 @@
 use std::collections::HashSet;
-use bevy_ecs::{system::{SystemParam, Query, Res}, prelude::{Entity, EventReader}, query::{Changed}};
-use seija_core::{math::{Vec2}, window::AppWindow, FrameDirty, time::Time};
+use bevy_ecs::{system::{SystemParam, Query, Res}, prelude::{Entity, EventReader}, query::{Changed, ChangeTrackers}};
+use seija_core::{math::Vec2, window::AppWindow, FrameDirty, time::Time, info::EStateInfo};
 use seija_transform::{events::HierarchyEvent, hierarchy::{Parent, Children}, Transform};
 use seija_winit::event::WindowResized;
 use crate::{components::{rect2d::Rect2D, ui_canvas::UICanvas}, ffi::PostLayoutProcess};
@@ -24,11 +24,17 @@ pub struct LayoutParams<'w,'s> {
     pub(crate) ui_canvas:Query<'w,'s,(Entity,&'static UICanvas)>,
     pub(crate) frame_dirty:Query<'w,'s,&'static mut FrameDirty>,
     pub(crate) time:Res<'w,Time>,
-    pub(crate) post_process:Option<Res<'w,PostLayoutProcess>>
+    pub(crate) post_process:Option<Res<'w,PostLayoutProcess>>,
 }
 
-pub fn ui_layout_system(mut params:LayoutParams) {
-    let dirty_layouts = collect_dirty(&mut params);
+pub fn ui_layout_system(mut params:LayoutParams,_info_states:Query<&EStateInfo>,
+                        changed_states:Query<(Entity,ChangeTrackers<EStateInfo>)>) {
+    let mut dirty_layouts = collect_dirty(&mut params);
+    for (dirty_entity,tracker) in changed_states.iter() {
+        if !tracker.is_added() && tracker.is_changed() {
+            dirty_layouts.insert(dirty_entity);
+        }
+    }
     let mut changed_entity_lst:Vec<Entity> = Vec::new();
     for elem_entity in dirty_layouts {
         process_entity_layout(elem_entity,&mut params,&mut changed_entity_lst)

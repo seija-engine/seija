@@ -1,6 +1,6 @@
 use bevy_ecs::prelude::Component;
-use seija_core::math::{Vec2, Vec3, Vec4};
-use seija_transform::{TransformMatrix, Transform};
+use seija_core::math::{Vec2, Vec4};
+use seija_transform::TransformMatrix;
 
 #[derive(Debug,Component,Clone)]
 #[repr(C)]

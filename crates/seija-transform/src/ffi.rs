@@ -1,4 +1,4 @@
-use bevy_ecs::{world::{World}, prelude::Entity};
+use bevy_ecs::{world::World, prelude::Entity};
 use seija_app::App;
 use crate::{TransformModule, Transform, TransformMatrix};
 use crate::events::WorldEntityEx;

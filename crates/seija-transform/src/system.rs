@@ -1,44 +1,10 @@
-use std::collections::{HashSet};
+use std::collections::HashSet;
+use bevy_ecs::{prelude::{Changed, Entity, Query,ParamSet}, world::World};
+use seija_core::info::EStateInfo;
 
-use bevy_ecs::{prelude::{Changed, Entity, Query,Without, Commands, ParamSet}, world::World};
-use seija_core::info::EInfo;
+use crate::{hierarchy::{Children, Parent}, Transform, TransformMatrix, transform::TRANSFORM_MAT_ID};
 
-use crate::{hierarchy::{Children, Parent, PreviousParent}, Transform, TransformMatrix, transform::TRANSFORM_MAT_ID};
 
-/*
-
-pub(crate) fn parent_update_system(
-                                   mut commands: Commands,
-                                   mut children_query: Query<&mut Children>,
-                                   mut parent_query: Query<(Entity, &Parent, Option<&mut PreviousParent>)>,
-                                   removed_parent_query: Query<(Entity, &PreviousParent), Without<Parent>>
-                                  ) {
-    //parent被移除后同步移除PreviousParent以及父节点的Children
-    for (entity, previous_parent) in removed_parent_query.iter() {
-        if let Ok(mut previous_parent_children) = children_query.get_mut(previous_parent.0) {
-            previous_parent_children.0.retain(|e| *e != entity);
-            commands.entity(entity).remove::<PreviousParent>();
-        }
-    }
-
-    for (entity, parent, pre_parent) in parent_query.iter_mut() {
-        if let Some(mut pre_parent) = pre_parent {
-            //上一个和当前相同跳过
-            if pre_parent.0 == parent.0 {
-                continue; 
-            }
-            //父节点变更后
-            *pre_parent = PreviousParent(parent.0);
-        } else {
-            //首次创建同步和Parent创建一个PreviousParent
-            commands.entity(entity).insert(PreviousParent(parent.0));
-        }
-        
-        
-    }
-   
-}
-*/
 
 pub fn update_transform_system(
     parent_query: Query<(Entity,Option<&Parent>)>,
@@ -64,7 +30,9 @@ pub fn update_transform_system(
     }
 }
 
-fn update_transform(entity:Entity,parent:&TransformMatrix,params:&mut ParamSet<(Query<Entity,Changed<Transform>>,Query<&mut Transform>)>,child_query:&Query<Option<&Children>>) {
+fn update_transform(entity:Entity,parent:&TransformMatrix,
+                    params:&mut ParamSet<(Query<Entity,Changed<Transform>>,
+                    Query<&mut Transform>)>,child_query:&Query<Option<&Children>>) {
     let parent_trans = if let Ok(mut t) = params.p1().get_mut(entity) {
         t.global = parent.mul_transform(&t.local);
         t.global.clone()
@@ -96,10 +64,10 @@ fn cacl_top_changed(
 }
 
 pub(crate) fn clear_delete_entity(world:&mut World) {
-   let mut entitys = world.query::<(Entity,&EInfo)>();
+   let mut entitys = world.query::<(Entity,&EStateInfo)>();
    let mut delete_list = vec![];
    for (entity,info) in entitys.iter(world) {
-    if info.is_delete() {
+    if info.is_delete {
         delete_list.push(entity);
     }
    }

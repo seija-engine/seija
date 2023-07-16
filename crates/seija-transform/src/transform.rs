@@ -1,7 +1,7 @@
 
 use bevy_ecs::prelude::Component;
 use glam::{Mat4, Quat, Vec3};
-use lazy_static::{lazy_static};
+use lazy_static::lazy_static;
 
 lazy_static! {
     pub static ref TRANSFORM_MAT_ID:TransformMatrix = TransformMatrix::default(); 

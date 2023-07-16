@@ -1,25 +1,10 @@
-use std::{collections::HashSet};
-
-use bevy_ecs::{prelude::{Entity, Bundle, Events}, world::{World, EntityMut}, system::{Commands, EntityCommands, Command}};
-use seija_core::info::EInfo;
+use std::collections::HashSet;
+use bevy_ecs::{ prelude::{Entity, Bundle, Events}, 
+                world::{World, EntityMut}, 
+                system::{Commands, EntityCommands, Command}};
+use seija_core::info::EStateInfo;
 use smallvec::SmallVec;
-
 use crate::hierarchy::{Children, Parent};
-/*
-startup
-
-preupdate
-update
-postupdate
-preUI
-ui
-postUI
-assetEvents
-PreReder
-Render
-PostRender
-Last
-*/
 
 pub enum HierarchyEvent {
     New(Entity),
@@ -33,7 +18,8 @@ pub enum HierarchyEvent {
       entity:Entity,
       parent:Entity,
       index:usize
-    }
+    },
+    SetActive(Entity,bool)
 }
 
 struct DeleteCommand(Entity);
@@ -47,6 +33,11 @@ struct ChildMove {
     pub entity:Entity,
     parent:Entity,
     pub index:usize
+}
+
+struct SetActive {
+    pub entity:Entity,
+    pub active:bool
 }
 
 impl Command for ChildMove {
@@ -73,12 +64,20 @@ impl Command for HierarchyEvent {
     }
 }
 
+impl Command for SetActive {
+    fn write(self, world: &mut World) {
+        _set_active(world,self.entity,self.active)
+    }
+}
+
 pub trait WorldEntityEx {
    fn new_empty(&mut self,send_event:bool) -> Entity;
    fn new<B:Bundle>(&mut self,bundle:B,send_event:bool) -> Entity;
    fn delete(&mut self,entity:Entity);
    fn set_parent(&mut self,entity:Entity,parent:Option<Entity>);
    fn move_child(&mut self,entity:Entity,parent:Entity,index:usize);
+
+   fn set_active(&mut self,entity:Entity,active:bool);
 }
 
 
@@ -103,6 +102,10 @@ impl WorldEntityEx for World {
 
     fn move_child(&mut self,child:Entity,parent:Entity,index:usize) {
         _move_child(self,child,parent,index);
+    }
+
+    fn set_active(&mut self,entity:Entity,active:bool) {
+        _set_active(self,entity,active)
     }
 
     fn delete(&mut self,entity:Entity) {
@@ -171,11 +174,11 @@ fn _delete_entity(world:&mut World,entity:Entity) {
 
 fn _delete_entity_rec(world:&mut World,entity:Entity,sets:&mut HashSet<Entity>) {
     sets.insert(entity);
-    if let Some(einfo) = world.get_mut::<EInfo>(entity) {
-        einfo.delete();
+    if let Some(mut einfo) = world.get_mut::<EStateInfo>(entity) {
+        einfo.is_delete = true;
     } else {
-        let new_info = EInfo::default();
-        new_info.delete();
+        let mut new_info = EStateInfo::default();
+        new_info.is_delete = true;
         world.entity_mut(entity).insert(new_info);
     }
     if let Some(mut children) = world.get_mut::<Children>(entity) {
@@ -185,10 +188,24 @@ fn _delete_entity_rec(world:&mut World,entity:Entity,sets:&mut HashSet<Entity>) 
     }
 }
 
+fn _set_active(world:&mut World,entity:Entity,active:bool) {
+   if let Some(info) = world.get::<EStateInfo>(entity) {
+      info.set_active(active)
+   } else {
+      let state_info = EStateInfo::default();
+      state_info.set_active(active);
+      world.entity_mut(entity).insert(state_info);
+   }
+   if let Some(mut event) = world.get_resource_mut::<Events<HierarchyEvent>>() {
+     event.send(HierarchyEvent::SetActive(entity,active));
+   }
+}
+
 pub trait EntityCommandsEx<'w,'s,'a> {
     fn delete(&mut self);
     fn set_parent(&mut self,parent:Option<Entity>) -> &mut Self;
     fn move_child(&mut self,child:Entity,index:usize);
+    fn set_active(&mut self,active:bool);
 }
 
 impl<'w,'s,'a> EntityCommandsEx<'w,'s,'a> for EntityCommands<'w, 's, 'a> {
@@ -206,6 +223,11 @@ impl<'w,'s,'a> EntityCommandsEx<'w,'s,'a> for EntityCommands<'w, 's, 'a> {
    fn move_child(&mut self,child:Entity,index:usize) {
      let cur_entity = self.id();
      self.commands().add(ChildMove { entity:child,parent:cur_entity ,index });
+   }
+
+   fn set_active(&mut self,active:bool) {
+     let cur_entity = self.id();
+     self.commands().add(SetActive { entity:cur_entity,active });
    }
 }
 
