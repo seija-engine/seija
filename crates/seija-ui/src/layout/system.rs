@@ -4,8 +4,8 @@ use seija_core::{math::Vec2, window::AppWindow, FrameDirty, time::Time, info::ES
 use seija_transform::{events::HierarchyEvent, hierarchy::{Parent, Children}, Transform};
 use seija_winit::event::WindowResized;
 use crate::{components::{rect2d::Rect2D, ui_canvas::UICanvas}, ffi::PostLayoutProcess};
-use super::{types::{LayoutElement, FreeLayoutItem}, measure, arrange::{arrange_layout_element, 
-    ArrangeXY,arrange_freeitem_and_set_pos,arrange_freeitem_layout}, comps::FlexItem};
+use super::{types::{LayoutElement, FreeLayoutItem}, measure::MeasureScope, arrange::{ 
+    ArrangeXY,arrange_freeitem_and_set_pos,arrange_freeitem_layout, ArrangeScope}, comps::FlexItem};
 
 #[derive(SystemParam)]
 pub struct LayoutParams<'w,'s> {
@@ -27,17 +27,13 @@ pub struct LayoutParams<'w,'s> {
     pub(crate) post_process:Option<Res<'w,PostLayoutProcess>>,
 }
 
-pub fn ui_layout_system(mut params:LayoutParams,_info_states:Query<&EStateInfo>,
+pub fn ui_layout_system(mut params:LayoutParams,info_states:Query<&EStateInfo>,
                         changed_states:Query<(Entity,ChangeTrackers<EStateInfo>)>) {
-    let mut dirty_layouts = collect_dirty(&mut params);
-    for (dirty_entity,tracker) in changed_states.iter() {
-        if !tracker.is_added() && tracker.is_changed() {
-            dirty_layouts.insert(dirty_entity);
-        }
-    }
+    let dirty_layouts = collect_dirty(&mut params,&changed_states);
+    
     let mut changed_entity_lst:Vec<Entity> = Vec::new();
     for elem_entity in dirty_layouts {
-        process_entity_layout(elem_entity,&mut params,&mut changed_entity_lst)
+        process_entity_layout(elem_entity,&info_states,&mut params,&mut changed_entity_lst);
     }
     arrange_freeitem_layout(&mut params);
 
@@ -60,7 +56,7 @@ pub fn ui_layout_system(mut params:LayoutParams,_info_states:Query<&EStateInfo>,
             changed_entity_lst.clear();
             for dirty_id in dirty_entitys.iter() {
                 let cur_entity = Entity::from_bits(*dirty_id);
-                process_entity_layout(cur_entity,&mut params,&mut changed_entity_lst);
+                process_entity_layout(cur_entity,&info_states,&mut params,&mut changed_entity_lst);
 
                 arrange_freeitem_and_set_pos(cur_entity,&mut params);
             }
@@ -75,26 +71,35 @@ pub fn ui_layout_system(mut params:LayoutParams,_info_states:Query<&EStateInfo>,
     }
 }
 
-fn process_entity_layout(elem_entity:Entity,params:&mut LayoutParams,changed_entity_lst:&mut Vec<Entity>) {
+fn process_entity_layout(elem_entity:Entity,state_infos:&Query<&EStateInfo>,
+                         params:&mut LayoutParams,
+                         changed_entity_lst:&mut Vec<Entity>) {
+    let is_active = state_infos.get(elem_entity).map(|info| info.is_active_global()).unwrap_or(true);
     //这里只会修改Element的属性，所以是安全的
     if let Ok(element) = params.elems.get(elem_entity) {
-        let x = size_request_x(elem_entity, &params);
-        let y = size_request_y(elem_entity, &params);
-        let request_size:Vec2 = Vec2::new(x, y);
-        measure::measure_layout_element(elem_entity,request_size,&params);
+        if is_active {
+            let x = size_request_x(elem_entity, &params);
+            let y = size_request_y(elem_entity, &params);
+            let request_size:Vec2 = Vec2::new(x, y);
+
+            let scope = MeasureScope { params:params,infos:state_infos };
+            scope.measure_layout_element(elem_entity, request_size);
        
-        let origin = origin_request(elem_entity, &params);
-        let parent_size = if let Ok(size) = params.parents.get(elem_entity).and_then(|p| params.rect2ds.get(p.1.0)) {
-           Vec2::new(size.width, size.height)
-        } else {
-          Vec2::new(params.window.width() as f32, params.window.height() as f32)
-        };
-        arrange_layout_element(elem_entity, element, origin,parent_size,ArrangeXY::ALL,&params,changed_entity_lst);
+            let origin = origin_request(elem_entity, &params);
+            let parent_size = if let Ok(size) = params.parents.get(elem_entity).and_then(|p| params.rect2ds.get(p.1.0)) {
+                Vec2::new(size.width, size.height)
+            } else {
+                Vec2::new(params.window.width() as f32, params.window.height() as f32)
+            };
+            let arrange_scope = ArrangeScope { params,infos:state_infos };
+            arrange_scope.arrange_layout_element(elem_entity, element,origin,
+                                                 parent_size,ArrangeXY::ALL,changed_entity_lst);   
+        }
      }
 }
 
 /////计算需要重布局的Element
-fn collect_dirty(params:&mut LayoutParams) -> HashSet<Entity> {
+fn collect_dirty(params:&mut LayoutParams,changed_states:&Query<(Entity,ChangeTrackers<EStateInfo>)>) -> HashSet<Entity> {
     let mut layouts = HashSet::default();
     if !params.resize_events.is_empty() {
         for (entity,_) in params.ui_canvas.iter() {
@@ -111,6 +116,15 @@ fn collect_dirty(params:&mut LayoutParams) -> HashSet<Entity> {
         let dirty_entity = get_top_elem_dirty(entity, params);
         layouts.insert(dirty_entity);
     }
+
+    for (dirty_entity,tracker) in changed_states.iter() {
+        if !tracker.is_added() && tracker.is_changed() {
+            let dirty_entity = get_top_elem_dirty(dirty_entity, params);
+            layouts.insert(dirty_entity);
+        }
+    }
+
+
     let mut remove_parents:Vec<Entity> = vec![];
     for event in params.events.iter() {
         match event {
