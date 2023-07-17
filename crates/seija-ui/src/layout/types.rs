@@ -163,11 +163,11 @@ impl LayoutElement {
         }
     }
 
-    pub fn is_invalid_measure(&self, child: &LayoutElement) -> bool {
+    pub fn is_invalid_measure(&self, _child: &LayoutElement) -> bool {
         if !self.common.ui_size.has_auto() {
             return false;
         }
-        match child.typ_elem {
+        match self.typ_elem {
             TypeElement::Free(_) => { return false } 
             _ => ()
         }

@@ -190,6 +190,7 @@ fn _delete_entity_rec(world:&mut World,entity:Entity,sets:&mut HashSet<Entity>) 
 
 fn _set_active(world:&mut World,entity:Entity,active:bool) {
    if let Some(info) = world.get::<EStateInfo>(entity) {
+      if info.is_active() == active { return; }
       info.set_active(active)
    } else {
       let state_info = EStateInfo::default();

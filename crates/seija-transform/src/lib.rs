@@ -1,4 +1,4 @@
-use active_system::active_system;
+use active_system::{active_system,active_add_system};
 use bevy_ecs::schedule::SystemLabel;
 use events::HierarchyEvent;
 use seija_app::IModule;
@@ -32,6 +32,7 @@ impl IModule for TransformModule {
         //app.add_system(CoreStage::PostUpdate,system::parent_update_system.label(TransformLabel::ParentUpdate));
     
         app.add_system(CoreStage::PostUpdate,update_transform_system);
+        app.add_system(CoreStage::LateUpdate, active_add_system);
         app.add_system(CoreStage::Last, active_system);
         app.add_system(CoreStage::Last, clear_delete_entity);
     }

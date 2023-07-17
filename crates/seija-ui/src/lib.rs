@@ -58,7 +58,7 @@ impl IModule for UIModule {
         app.schedule.add_stage_before(UIStage::UI, UIStage::PreUI, SystemStage::single_threaded());
 
         
-        app.add_system(CoreStage::LateUpdate,ui_layout_system);
+        app.add_system(CoreStage::LateUpdate,ui_layout_system.at_end());
         app.add_system(UIStage::PreUI, update_render_mesh_system);
         app.add_system(UIStage::UI, update_canvas_render);
         app.add_system(UIStage::UI, update_canvas_trans.after(update_canvas_render));

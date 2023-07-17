@@ -124,7 +124,6 @@ fn collect_dirty(params:&mut LayoutParams,changed_states:&Query<(Entity,ChangeTr
         }
     }
 
-
     let mut remove_parents:Vec<Entity> = vec![];
     for event in params.events.iter() {
         match event {

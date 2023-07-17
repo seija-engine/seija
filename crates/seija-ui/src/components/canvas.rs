@@ -58,7 +58,6 @@ impl Canvas {
             return;
         }
         let entity_group = ScanDrawCall::scan_entity_group(canvas_entity,infos,children, uirenders, canvases);
-        log::info!("scan group:{:?}",&entity_group);
         entity_group.iter().flatten().for_each(|entity| {
             ui_roots.entity2canvas.insert(*entity, canvas_entity);
         });
@@ -128,7 +127,6 @@ impl UIDrawCall {
             if let Ok(render2d) = render2ds.get(*entity) {
                 let mat4 = calc_trans(trans, parents, *entity,Some(canvas_entity));
                 let z_value:f32 = index as f32 * Z_SCALE;
-                //log::error!("entity:{:?} z_value:{:?}",entity,z_value);
                 texture = Some(render2d.texture.clone());
                 material_def = Some(render2d.mat.clone());
                 for vert in render2d.mesh2d.points.iter() {

@@ -81,6 +81,15 @@ pub unsafe extern "C" fn transform_is_active_global(world:&mut World,entity_id:u
     world.entity(entity).get::<EStateInfo>().map(|v| v.is_active_global()).unwrap_or(true)
 }
 
+#[no_mangle]
+pub unsafe extern "C" fn transform_add_state_info(world:&mut World,entity_id:u64,is_active:bool) {
+    let entity = Entity::from_bits(entity_id);
+    let mut info = EStateInfo::default();
+    info.set_active(is_active);
+    info._is_active_global = is_active;
+    world.entity_mut(entity).insert(info);
+}
+
 
 #[no_mangle]
 pub unsafe extern "C" fn core_spawn_entity(world:&mut World) -> u64 {
