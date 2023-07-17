@@ -262,7 +262,8 @@ pub fn update_canvas_trans(world:&mut World) {
    for (entity,_) in update_trans.iter(world) {
         update_canvas.push(entity);
    }
-
+   //这里已经过了Transform的system了，所以如果修改位置需要修改Global
+   //因为drawcall必然没有子节点，所以直接修改drawcall的Global位置是没问题的
    let mut canvaes = world.query::<&Canvas>();
    let mut zorders = world.query::<&ZOrder>();
    let mut trans = world.query::<&mut Transform>();
@@ -274,7 +275,11 @@ pub fn update_canvas_trans(world:&mut World) {
                     if let Ok(zorder) = zorders.get(world,draw_call.fst_entity) {
                         drawcall_t.local.position.x = canvas_t.global().position.x;
                         drawcall_t.local.position.y = canvas_t.global().position.y;
-                        drawcall_t.local.position.z = canvas_t.global().position.z + zorder.value as f32 * Z_SCALE
+                        drawcall_t.global.position.x = canvas_t.global().position.x;
+                        drawcall_t.global.position.y = canvas_t.global().position.y;
+                        let zvalue = canvas_t.global().position.z + zorder.value as f32 * Z_SCALE;
+                        drawcall_t.local.position.z = zvalue;
+                        drawcall_t.global.position.z = zvalue;
                     }
                 }
             }

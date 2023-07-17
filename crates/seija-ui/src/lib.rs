@@ -38,11 +38,12 @@ impl IModule for UIModule {
         app.add_system(CoreStage::PreUpdate,update_ui_canvas);
 
         /*
-        CoreStage::First"
+    CoreStage::First"
     "CoreStage::Startup"
     "AssetStage::LoadAssets"
     "CoreStage::PreUpdate"
     "CoreStage::Update"
+    "CoreStage::LateUpdate"
     "CoreStage::PostUpdate"
     "UIStage::PreUI"
     "UIStage::UI"
