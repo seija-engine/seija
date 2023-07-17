@@ -1,5 +1,6 @@
 use bevy_ecs::{world::World, prelude::Entity};
 use seija_app::App;
+use seija_core::info::EStateInfo;
 use crate::{TransformModule, Transform, TransformMatrix};
 use crate::events::WorldEntityEx;
 #[no_mangle]
@@ -66,6 +67,18 @@ pub unsafe extern "C" fn transform_add_child_index(world:&mut World,entity_id:u6
 pub unsafe extern "C" fn transform_despawn(world:&mut World,entity_id:u64) {
     let entity = Entity::from_bits(entity_id);
     world.delete(entity);
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn transform_set_active(world:&mut World,entity_id:u64,is_active:bool) {
+    let entity = Entity::from_bits(entity_id);
+    world.set_active(entity,is_active);
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn transform_is_active_global(world:&mut World,entity_id:u64) -> bool {
+    let entity = Entity::from_bits(entity_id);
+    world.entity(entity).get::<EStateInfo>().map(|v| v.is_active_global()).unwrap_or(true)
 }
 
 
