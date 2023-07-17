@@ -2,7 +2,7 @@ use std::{hash::{Hash, Hasher}, collections::hash_map::DefaultHasher, sync::Arc}
 
 use bevy_ecs::{prelude::{Component, Entity}, system::{Query, Commands}};
 use seija_asset::{HandleId, Assets, AssetServer};
-use seija_core::math::{Mat4, Vec4, Vec4Swizzles};
+use seija_core::{math::{Mat4, Vec4, Vec4Swizzles}, info::EStateInfo};
 use seija_render::{resource::{Mesh, MeshAttributeType, Indices}, material::{Material, MaterialDef}};
 use seija_transform::{hierarchy::{Children, Parent}, Transform};
 use crate::{render::UIRender2D, system::UIRenderRoot};
@@ -24,6 +24,7 @@ impl Canvas {
     }
 
     pub fn update_drawcall(canvas_entity:Entity,
+                           infos:&Query<&EStateInfo>,
                            children:&Query<&Children>,
                            uirenders:&Query<&UIRender2D>,
                            canvases:&mut Query<&mut Canvas>,
@@ -35,8 +36,28 @@ impl Canvas {
                            commands:&mut Commands,
                            ui_roots:&mut UIRenderRoot,
                            asset_server:&AssetServer) {
-        
-        let entity_group = ScanDrawCall::scan_entity_group(canvas_entity, children, uirenders, canvases);
+        let is_canvas_active = infos.get(canvas_entity).map(|v| v.is_active_global()).unwrap_or(true);
+        if !is_canvas_active {
+            if let Ok(mut canvas) = canvases.get_mut(canvas_entity) {
+                for old_drawcall in canvas.draw_calls.drain(..) {
+                    ui_roots.despawn_next_frame.push(old_drawcall.entity);
+                }
+            }
+            /*
+            if let Ok(canvas) = canvases.get_mut(canvas_entity) {
+                for drawcall in canvas.draw_calls.iter() {
+                   if let Ok(drawcall_state) = infos.get(drawcall.entity) {
+                      drawcall_state.set_active(false);
+                   } else {
+                      let state = EStateInfo::default();
+                      state.set_active(false);
+                      commands.entity(drawcall.entity).insert(state);
+                   }
+                }
+            }*/
+            return;
+        }
+        let entity_group = ScanDrawCall::scan_entity_group(canvas_entity,infos,children, uirenders, canvases);
         log::info!("scan group:{:?}",&entity_group);
         entity_group.iter().flatten().for_each(|entity| {
             ui_roots.entity2canvas.insert(*entity, canvas_entity);
@@ -193,7 +214,8 @@ struct ScanDrawCall {
 }
 
 impl ScanDrawCall {
-    pub fn scan_entity_group(entity:Entity,children:&Query<&Children>,uirenders:&Query<&UIRender2D>,canvases:&Query<&mut Canvas>) -> Vec<Vec<Entity>> {
+    pub fn scan_entity_group(entity:Entity,infos:&Query<&EStateInfo>,children:&Query<&Children>,
+                             uirenders:&Query<&UIRender2D>,canvases:&Query<&mut Canvas>) -> Vec<Vec<Entity>> {
         let mut scan_drawcall = ScanDrawCall { entity_group:vec![],cache:vec![], cur_texture:None  };
         if let Ok(render2d) = uirenders.get(entity) {
             scan_drawcall.cur_texture = Some(render2d.texture.id);
@@ -201,7 +223,7 @@ impl ScanDrawCall {
         }
         if let Ok(child_comp) = children.get(entity) {
             for child_entity in child_comp.iter() {
-                scan_drawcall._scan_entity_group(*child_entity, children,uirenders,canvases);
+                scan_drawcall._scan_entity_group(*child_entity,infos,children,uirenders,canvases);
             }
         }
         
@@ -228,26 +250,29 @@ impl ScanDrawCall {
       V3          5V0
       
     */
-    fn _scan_entity_group(&mut self,entity:Entity,children:&Query<&Children>,uirenders:&Query<&UIRender2D>,canvases:&Query<&mut Canvas>) {
+    fn _scan_entity_group(&mut self,entity:Entity,infos:&Query<&EStateInfo>,children:&Query<&Children>,uirenders:&Query<&UIRender2D>,canvases:&Query<&mut Canvas>) {
         if canvases.contains(entity) {
             self.emit();
             return;
         }
         if let Ok(render2d) = uirenders.get(entity) {
-            match self.cur_texture {
-                None => self.cur_texture = Some(render2d.texture.id),
-                Some(id) => {
-                    if id != render2d.texture.id {
-                        self.emit();
-                        self.cur_texture = Some(render2d.texture.id);
+            let is_active = infos.get(entity).map(|v| v.is_active_global()).unwrap_or(true);
+            if is_active {
+                match self.cur_texture {
+                    None => self.cur_texture = Some(render2d.texture.id),
+                    Some(id) => {
+                        if id != render2d.texture.id {
+                            self.emit();
+                            self.cur_texture = Some(render2d.texture.id);
+                        }
                     }
                 }
+                self.push(entity);
             }
-            self.push(entity);
         }
         if let Ok(child_comp) = children.get(entity) {
             for child_entity in child_comp.iter() {
-                self._scan_entity_group(*child_entity, children,uirenders,canvases);
+                self._scan_entity_group(*child_entity,infos,children,uirenders,canvases);
             }
         }
     }

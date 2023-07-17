@@ -1,8 +1,8 @@
 use std::{sync::Arc, collections::{HashSet, HashMap}};
 use bevy_ecs::{world::World, system::{Resource, 
-    SystemParam, Query, Commands, Res, ResMut}, prelude::{Entity, EventWriter, EventReader}, query::{Or, Changed, Added}};
+    SystemParam, Query, Commands, Res, ResMut}, prelude::{Entity, EventWriter, EventReader}, query::{Or, Changed, Added, ChangeTrackers}};
 use seija_asset::{AssetServer, Assets, Handle};
-use seija_core::math::{Vec3, Vec4};
+use seija_core::{math::{Vec3, Vec4}, info::EStateInfo};
 use seija_render::{material::{MaterialDefineAsset, MaterialDef, Material},
                    resource::{ Mesh, Texture, ImageInfo, TextureDescInfo, BufferId}};
 use seija_transform::{hierarchy::{Parent, Children}, Transform, events::HierarchyEvent};
@@ -176,7 +176,9 @@ pub struct CanvasRenderParams<'w,'s> {
     pub(crate) materials:ResMut<'w,Assets<Material>>,
     pub(crate) asset_server:Res<'w,AssetServer>,
     pub(crate) commands:Commands<'w,'s>,
-    pub(crate) ui_roots:ResMut<'w,UIRenderRoot>
+    pub(crate) ui_roots:ResMut<'w,UIRenderRoot>,
+    pub(crate) changed_infos:Query<'w,'s,(Entity,ChangeTrackers<EStateInfo>)>,
+    pub(crate) state_infos:Query<'w,'s,&'static EStateInfo>
 }
 
 pub fn update_canvas_render(mut params:CanvasRenderParams) {
@@ -209,6 +211,15 @@ pub fn update_canvas_render(mut params:CanvasRenderParams) {
             _ => {}
         }
     }
+
+    //处理Active变化
+    for (entity,track) in params.changed_infos.iter() {
+        if track.is_changed() && !track.is_added() {
+            if let Some(canvas_entity) = find_canvas(entity, &params.parents, &params.canvases) {
+                changed_canvas.insert(canvas_entity);
+            }
+        }
+    }
    
     //处理Transform变化
     for entity in params.update_trans.iter() {
@@ -227,7 +238,7 @@ pub fn update_canvas_render(mut params:CanvasRenderParams) {
     }
 
     for entity in changed_canvas.iter() {
-        Canvas::update_drawcall(*entity,
+        Canvas::update_drawcall(*entity,&params.state_infos,
              &params.children,
              &mut params.render2d,
              &mut params.canvases,

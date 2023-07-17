@@ -1,5 +1,5 @@
 use bevy_ecs::{prelude::*, system::SystemParam};
-use seija_core::{math::{Vec4, Vec2}, window::AppWindow};
+use seija_core::{math::{Vec4, Vec2}, window::AppWindow, info::EStateInfo};
 use seija_input::{Input};
 use seija_transform::{Transform, hierarchy::{Children, Parent}};
 use crate::{components::rect2d::Rect2D};
@@ -8,7 +8,7 @@ use super::{UIEventSystem, EventNode, UIEventType, EventNodeState, UIEvent};
 #[derive(SystemParam)]
 pub struct EventParams<'w,'s> {
     pub(crate) input:Res<'w,Input>,
-    pub(crate) infos:Query<'w,'s,(Entity,Option<&'static Rect2D>,&'static Transform)>,
+    pub(crate) infos:Query<'w,'s,(Entity,Option<&'static Rect2D>,&'static Transform,Option<&'static EStateInfo>)>,
     pub(crate) ui_systems:Query<'w,'s,(Entity,&'static UIEventSystem)>,
     pub(crate) childs:Query<'w,'s,&'static Children>,
     pub(crate) window:Res<'w,AppWindow>,
@@ -55,8 +55,9 @@ pub fn ui_system_handle(system_entity:Entity,_:&UIEventSystem,params:&EventParam
         let ui_pos = mouse_pos_to_ui(params.input.mouse_position,params);
         for (entity,mut event_node) in event_nodes.iter_mut() {
             let mut is_in_rect = false;
-            if let Ok((_,Some(rect),t)) = params.infos.get(entity) {
-                if rect.test(t.global(), mouse_pos) {
+            if let Ok((_,Some(rect),t,state)) = params.infos.get(entity) {
+                let is_active = state.map(|v| v.is_active_global()).unwrap_or(true);
+                if is_active && rect.test(t.global(), mouse_pos) {
                     is_in_rect = true;
                 }
             }
@@ -123,7 +124,7 @@ pub fn ui_system_handle(system_entity:Entity,_:&UIEventSystem,params:&EventParam
 fn mouse_pos_to_world(mut mouse_pos:Vec2,entity:Entity,params:&EventParams) -> Vec2 {
     mouse_pos.x -= params.window.width() as f32 * 0.5f32;
     mouse_pos.y = params.window.height() as f32 * 0.5f32 - mouse_pos.y;
-    if let Ok((_,_,transform)) = params.infos.get(entity) {
+    if let Ok((_,_,transform,_)) = params.infos.get(entity) {
         let new_pos = transform.global().matrix() * Vec4::new(mouse_pos.x,mouse_pos.y,0.0,1.0);
         return Vec2::new(new_pos.x, new_pos.y);
     }
@@ -161,8 +162,9 @@ fn capture_event_node(event_entity:Entity,
     if let Err(err) =  params.infos.get(event_entity) {
         log::error!("capture_event_node error:{:?}",err);
     }
-    if let Ok((_,Some(rect2d),t)) = params.infos.get(event_entity) {
-        if !rect2d.test(t.global(), mouse_pos) {
+    if let Ok((_,Some(rect2d),t,state)) = params.infos.get(event_entity) {
+        let is_active = state.map(|v| v.is_active_global()).unwrap_or(true);
+        if !is_active || !rect2d.test(t.global(), mouse_pos) {
             return None;
         }
         last_hit_entity = Some(event_entity);

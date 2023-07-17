@@ -8,7 +8,9 @@ use seija_transform::{events::{EntityMutEx,WorldEntityEx,EntityCommandsEx}, Tran
 use seija_ui::{
     components::{canvas::Canvas, rect2d::Rect2D, sprite::Sprite, ui_canvas::UICanvas},
     types::Thickness,
-     update_ui_render, text::{Font, Text}, event::{EventNode, UIEventType, UIEvent, UIEventSystem}, layout::{types::{LayoutElement, LayoutAlignment, SizeValue, UISize}, comps::Orientation},
+     update_ui_render, text::{Font, Text}, 
+     event::{EventNode, UIEventType, UIEvent, UIEventSystem}, 
+     layout::{types::{LayoutElement, LayoutAlignment, SizeValue, UISize}, comps::Orientation},
 };
 use spritesheet::SpriteSheet;
 
@@ -17,6 +19,7 @@ pub struct UIData {
     number:i32,
     panel_id:Entity,
     h_font:Handle<Font>,
+    btn_id:Entity,
     add_entitys:Vec<Entity>
 }
 
@@ -63,7 +66,7 @@ fn start(world: &mut World) {
     
     let stack_id = {
         let mut view = LayoutElement::create_stack(10f32, Orientation::Vertical);
-        view.common.ui_size.width = SizeValue::Pixel(800f32);
+        view.common.ui_size.width = SizeValue::Pixel(600f32);
         view.common.ui_size.height = SizeValue::Auto;
         view.common.ver = LayoutAlignment::Start;
         view.common.hor = LayoutAlignment::Stretch;
@@ -82,7 +85,10 @@ fn start(world: &mut World) {
         view.common.ui_size.width = SizeValue::Pixel(200f32);
         let rect2d = Rect2D::new(640f32, 50f32);
         let index = match _index {
-            0 => btn4_select,
+            0 => {
+                view.common.hor = LayoutAlignment::Start;
+                btn4_select
+            },
             1 => btn3on_index,
             _ => btn4on_index
         };
@@ -90,7 +96,7 @@ fn start(world: &mut World) {
         let item_id = world.spawn((view,rect2d,t,sprite)).set_parent(Some(stack_id)).id();
         add_entitys.push(item_id);
     }
-    {
+    let btn_id = {
         let t = Transform::default();
         let rect2d = Rect2D::new(32f32, 32f32);
         let mut view = LayoutElement::create_view();
@@ -99,9 +105,10 @@ fn start(world: &mut World) {
         event.event_type = UIEventType::CLICK;
         let e_btn = world.spawn((Sprite::simple(add_index,Some(h_sheet.clone()), Vec4::ONE),rect2d,t,event,view)).set_parent(Some(panel_id)).id();
         log::error!("btn:{:?}",e_btn);
-    }
+        e_btn
+    };
 
-    world.insert_resource(UIData { number:0,panel_id,h_font: h_font.clone(),add_entitys });
+    world.insert_resource(UIData { number:0,panel_id,h_font: h_font.clone(),add_entitys,btn_id });
     
 }
 
@@ -116,6 +123,9 @@ fn on_update(mut commands: Commands,state_infos:Query<&EStateInfo>,
             let old_active = state_infos.get(opt_entity).map(|v| v.is_active()).unwrap_or(true);
             println!("set active:{:?} {:?} frame:{:?}",opt_entity,!old_active,frame);
             info_entity.set_active(!old_active);
+            if old_active == false {
+                commands.entity(ui_data.btn_id).set_active(false);
+            }
         }
     }
 }
