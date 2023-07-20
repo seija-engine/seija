@@ -81,6 +81,7 @@ pub struct CommonView {
     pub hor: LayoutAlignment,
     pub ver: LayoutAlignment,
     pub use_rect_size: bool,
+    pub pixel_ferfact:bool,
     pub ui_size:UISize,
 }
 
@@ -93,7 +94,7 @@ impl Default for CommonView {
             hor: LayoutAlignment::Stretch,
             ver: LayoutAlignment::Stretch,
             use_rect_size: false,
-            //anchor_correct:false
+            pixel_ferfact:true
         }
     }
 }

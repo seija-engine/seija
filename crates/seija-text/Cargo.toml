@@ -1,0 +1,9 @@
+[package]
+name = "seija-text"
+version = "0.1.0"
+edition = "2021"
+
+
+[dependencies]
+swash = "0.1.8"
+fontdb = "0.14.1"
