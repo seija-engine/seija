@@ -13,12 +13,22 @@ impl Font {
             fontdb::Source::SharedFile(_path, data) => {  Arc::clone(data) },
             _ => panic!("Unsupported")
         };
-        let swash = swash::FontRef::from_index((*data).as_ref(), info.index as usize)?;
-        let swash_key = (swash.offset, swash.key);
+        let swash_font_ref = swash::FontRef::from_index((*data).as_ref(), info.index as usize)?;
+        let swash_key = (swash_font_ref.offset, swash_font_ref.key);
         Some(Font {
             swash:swash_key,
             data,
             id:info.id
         })
+    }
+
+    pub fn as_swash_font(&self) -> swash::FontRef<'_> {
+        let swash = &self.swash;
+        let bytes:&[u8] = self.data.as_ref().as_ref();
+        swash::FontRef {
+            data: bytes,
+            offset: swash.0,
+            key: swash.1,
+        }
     }
 }

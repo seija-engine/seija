@@ -3281,6 +3281,7 @@ dependencies = [
  "seija-render-template",
  "seija-skeleton3d",
  "seija-template",
+ "seija-text",
  "seija-transform",
  "seija-ui",
  "seija-winit",
@@ -3429,7 +3430,11 @@ dependencies = [
 name = "seija-text"
 version = "0.1.0"
 dependencies = [
+ "bevy_ecs",
  "fontdb",
+ "log",
+ "seija-app",
+ "seija-core",
  "swash",
 ]
 

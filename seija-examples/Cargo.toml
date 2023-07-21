@@ -15,6 +15,7 @@ seija-winit = {path = "../crates/seija-winit"}
 seija-input = {path = "../crates/seija-input"}
 seija-gltf = {path = "../crates/seija-gltf"}
 seija-pbr = {path = "../crates/seija-pbr"}
+seija-text = {path = "../crates/seija-text"}
 seija-render = {path = "../crates/seija-render"}
 seija-deferred = {path = "../crates/seija-deferred"}
 seija-transform = {path = "../crates/seija-transform"}

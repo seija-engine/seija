@@ -18,7 +18,7 @@ use seija_transform::{Transform, TransformModule};
 use seija_ui::UIModule;
 use seija_winit::WinitModule;
 use spritesheet::SpriteSheetModule;
-
+use seija_text::TextModule;
 
 pub fn init_core_app(render_file:&str,pre_renders:Vec<fn(world:&mut World,ctx:&mut RenderContext)>,win_size:Option<Vec2>) -> App {
     env_logger::Builder::new().filter_level(log::LevelFilter::Info).try_init().unwrap();
@@ -38,6 +38,7 @@ pub fn init_core_app(render_file:&str,pre_renders:Vec<fn(world:&mut World,ctx:&m
     app.add_module(win);
     app.add_module(TransformModule);
     app.add_module(TemplateModule);
+    app.add_module(TextModule);
    
     add_render_templates(&mut app);
     app.add_module(GLTFModule);

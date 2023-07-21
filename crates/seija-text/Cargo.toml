@@ -7,3 +7,7 @@ edition = "2021"
 [dependencies]
 swash = "0.1.8"
 fontdb = "0.14.1"
+bevy_ecs = "0.9.0"
+seija-core = {path = "../seija-core"}
+seija-app = {path = "../seija-app"}
+log = { workspace = true }
