@@ -1,6 +1,7 @@
 use bevy_ecs::{world::World, prelude::Entity};
 use seija_app::App;
 use seija_core::info::EStateInfo;
+use crate::hierarchy::Parent;
 use crate::{TransformModule, Transform, TransformMatrix};
 use crate::events::WorldEntityEx;
 #[no_mangle]
@@ -90,6 +91,32 @@ pub unsafe extern "C" fn transform_add_state_info(world:&mut World,entity_id:u64
     world.entity_mut(entity).insert(info);
 }
 
+#[no_mangle]
+pub unsafe extern "C" fn transform_relative_to(world:&mut World,out_ptr:&mut TransformMatrix,child:u64,parent:u64,is_nil_parent:bool) {
+    let mut parents = world.query::<&Parent>();
+    let mut trans = world.query::<&Transform>();
+    let child_entity = Entity::from_bits(child);
+    let parent_entity = Entity::from_bits(parent);
+
+    let mut cur_trans = if is_nil_parent {
+        TransformMatrix::default()
+    } else if let Ok(v) = trans.get(world, child_entity) { 
+        v.global.clone()
+    } else { TransformMatrix::default() };
+    let mut cur_entity = Some(child_entity);
+    while let Some(entity) = cur_entity {
+        if let Ok(p) = parents.get(world, entity) {
+            if p.0 == parent_entity {
+                break;
+            }
+            if let Ok(t) = trans.get(world, p.0) {
+                cur_trans = cur_trans.mul_transform(&t.local);
+            }
+            cur_entity = Some(p.0)
+        } else { break; }
+    }
+    *out_ptr = cur_trans
+}
 
 #[no_mangle]
 pub unsafe extern "C" fn core_spawn_entity(world:&mut World) -> u64 {
