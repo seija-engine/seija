@@ -2,7 +2,7 @@ use bevy_ecs::{prelude::{Entity, Events}, world::World, event::ManualEventReader
 use num_enum::FromPrimitive;
 use seija_app::App;
 use seija_asset::{AssetServer, Handle, HandleId};
-use seija_core::{math::{Vec4, Vec2}, TypeUuid, FrameDirty};
+use seija_core::{math::{Vec4, Vec2, Vec3}, TypeUuid, FrameDirty, window::AppWindow};
 use seija_render::RenderConfig;
 use spritesheet::SpriteSheet;
 
@@ -370,6 +370,16 @@ pub unsafe extern "C" fn ui_set_post_layout_process(world: &mut World,f:PostLayo
 #[no_mangle]
 pub unsafe extern "C" fn vec_add_u64(vec_lst:&mut Vec<u64>,value:u64) {
    vec_lst.push(value);
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn ui_to_ui_pos(world:&World,pos:&Vec3,out_pos:&mut Vec3) {
+    if let Some(app_win) = world.get_resource::<AppWindow>() {
+        let w = app_win.width();
+        let h = app_win.height();
+        out_pos.x = pos.x + w as f32 * 0.5f32;
+        out_pos.y = h as f32 * 0.5f32 - pos.y;
+    }
 }
 
 #[derive(Resource)]
