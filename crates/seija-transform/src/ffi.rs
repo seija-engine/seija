@@ -101,7 +101,7 @@ pub unsafe extern "C" fn transform_relative_to(world:&mut World,out_ptr:&mut Tra
     let mut cur_trans = if is_nil_parent {
         TransformMatrix::default()
     } else if let Ok(v) = trans.get(world, child_entity) { 
-        v.global.clone()
+        v.local.clone()
     } else { TransformMatrix::default() };
     let mut cur_entity = Some(child_entity);
     while let Some(entity) = cur_entity {
