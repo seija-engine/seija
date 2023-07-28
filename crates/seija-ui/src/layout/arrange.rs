@@ -358,8 +358,7 @@ pub fn arrange_view_element(entity: Entity,element: &LayoutElement,parent_origin
                     ret_pos.x += element.common.margin.left + rect2d.width * 0.5f32;
                 }
                 LayoutAlignment::Stretch => {
-                    ret_pos.x += (parent_size.x - element.common.margin.horizontal()) * 0.5f32
-                        + element.common.margin.left;
+                    ret_pos.x += (parent_size.x - element.common.margin.horizontal()) * 0.5f32 + element.common.margin.left;
                 }
                 LayoutAlignment::Center => {
                     let offset = parent_size.x * 0.5f32;
@@ -378,8 +377,7 @@ pub fn arrange_view_element(entity: Entity,element: &LayoutElement,parent_origin
                     ret_pos.y = ret_pos.y - element.common.margin.top - rect2d.height * 0.5f32;
                 }
                 LayoutAlignment::Stretch => {
-                    ret_pos.y -= (parent_size.y - element.common.margin.vertical()) * 0.5f32
-                        + element.common.margin.left;
+                    ret_pos.y -= (parent_size.y - element.common.margin.vertical()) * 0.5f32 + element.common.margin.top;
                 }
                 LayoutAlignment::Center => {
                     ret_pos.y += -parent_size.y * 0.5f32;
