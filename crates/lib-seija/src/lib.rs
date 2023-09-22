@@ -8,6 +8,5 @@ pub use seija_render::ffi::*;
 pub use seija_pbr::ffi::*;
 pub use spritesheet::ffi::*;
 pub use seija_ui::ffi::*;
-pub use quick_xml_ffi::*; 
 pub use lib_io_async::http::*;
 pub use lib_io_async::runtime::*;

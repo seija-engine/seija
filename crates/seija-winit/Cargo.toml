@@ -9,5 +9,5 @@ raw-window-handle = "0.5.0"
 seija-app = {path = "../seija-app"}
 seija-core = {path = "../seija-core"}
 seija-input = {path = "../seija-input"}
-winit = "0.27.5"
+winit = "0.28.6"
 log = { workspace = true }
