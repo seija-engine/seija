@@ -151,7 +151,7 @@ fn get_top_elem_dirty(entity:Entity,params:&LayoutParams) -> Entity {
         if let Ok(parent_element) = params.elems.get(parent_entity) {
             last_elem_entity = parent_entity;
             if let Ok(cur_element) = params.elems.get(cur_entity) {
-               if !parent_element.is_invalid_measure(cur_element) {
+               if !parent_element.is_invalid_measure(cur_element) && !parent_element.is_invalid_arrange(cur_element) {
                   return cur_entity;
                }
             }

@@ -174,4 +174,11 @@ impl LayoutElement {
         }
         true
     }
+
+    pub fn is_invalid_arrange(&self, _child: &LayoutElement) -> bool {
+        match self.typ_elem {
+            TypeElement::View => false,
+            _ => true
+        }
+    }
 }
