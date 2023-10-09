@@ -145,8 +145,8 @@ fn _set_parent(world:&mut World,entity:Entity,parent:Option<Entity>) {
 fn _move_child(world:&mut World,child:Entity,parent:Entity,index:usize) {
     if let Some(mut children) = world.get_mut::<Children>(parent) {
        let find_idx = children.0.iter().enumerate().find(|e| *e.1 == child).map(|v| v.0);
-       if let Some(index) = find_idx {
-         children.0.remove(index);
+       if let Some(old_index) = find_idx {
+         children.0.remove(old_index);
          children.0.insert(index, child);
        }
     }

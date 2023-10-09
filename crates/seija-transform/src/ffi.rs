@@ -61,7 +61,7 @@ pub unsafe extern "C" fn transform_add_child_index(world:&mut World,entity_id:u6
     let cur_entity = Entity::from_bits(entity_id);
     let child_entity = Entity::from_bits(child_id);
     world.set_parent(child_entity, Some(cur_entity));
-    world.move_child(cur_entity,child_entity,index as usize);
+    world.move_child(child_entity,cur_entity,index as usize);
 }
 
 #[no_mangle]
