@@ -1,6 +1,6 @@
 use raw_window_handle::{HasRawWindowHandle, RawWindowHandle, HasRawDisplayHandle};
 use seija_core::window::{IWindow, WindowConfig,WindowMode};
-use winit::{dpi::LogicalSize, event_loop::EventLoop, monitor::{MonitorHandle, VideoMode}, window::{Window,Fullscreen}};
+use winit::{dpi::PhysicalSize, event_loop::EventLoop, monitor::{MonitorHandle, VideoMode}, window::{Window,Fullscreen}};
 #[cfg(target_os = "windows")] 
 use winit::platform::windows::WindowBuilderExtWindows;
 pub struct WinitWindow {
@@ -51,7 +51,7 @@ impl WinitWindow {
                builder.with_fullscreen(Some(Fullscreen::Exclusive(max_mode)))
             },
             WindowMode::Windowed => { 
-                builder.with_inner_size(LogicalSize::new(config.width,config.height))
+                builder.with_inner_size(PhysicalSize::new(config.width,config.height))
              }
         };
         #[cfg(target_os = "windows")] 
