@@ -145,6 +145,7 @@ fn capture_ui_system(system_entity:Entity,fire_type:UIEventType,
         for child_entity in system_child.iter() {
            let target_entity = capture_event_node(*child_entity,fire_type,mouse_pos,false,params, event_nodes,sender);
            if let Some(target_entity) = target_entity {
+               //println!("hit target:{:?}",target_entity);
                bubble_event_node(target_entity, fire_type, false, mouse_pos, params, event_nodes, sender);
            }
         }
@@ -167,9 +168,10 @@ fn capture_event_node(event_entity:Entity,
         if !is_active || !rect2d.test(t.global(), mouse_pos) {
             return None;
         }
-        last_hit_entity = Some(event_entity);
         
         if let Ok((_,mut event_node)) = event_nodes.get_mut(event_entity) {
+
+            last_hit_entity = Some(event_entity);
             if !stop_capture {
                 if event_node.stop_capture {
                     stop_capture = true;
@@ -225,7 +227,7 @@ fn bubble_event_node(event_entity:Entity,
                      params:&EventParams,
                      event_nodes:&mut Query<(Entity,&mut EventNode)>,
                      sender:&mut EventWriter<UIEvent>) {
-    
+    //println!("bubble:{:?}",event_entity);
     if let Ok((_,event_node)) = event_nodes.get_mut(event_entity) {
         if !stop_bubble {
             let is_click =  (event_node.event_type.bits() & UIEventType::CLICK.bits() != 0) && 
