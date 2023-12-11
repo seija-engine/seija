@@ -14,7 +14,7 @@ mod render;
 mod system;
 pub mod layout;
 pub mod ffi;
-use components::ui_canvas::update_ui_canvas;
+use components::{ui_canvas::update_ui_canvas, input_system::input_system};
 pub use render::update_ui_render;
 use system::{on_ui_start, update_render_mesh_system, update_canvas_render, update_canvas_trans, update_ui_clips};
 use text::{FontLoader, Font};
@@ -60,6 +60,7 @@ impl IModule for UIModule {
 
         
         app.add_system(CoreStage::LateUpdate,ui_layout_system.at_end());
+        app.add_system(UIStage::PreUI, input_system.at_start());
         app.add_system(UIStage::PreUI, update_render_mesh_system);
         app.add_system(UIStage::UI, update_canvas_render);
         app.add_system(UIStage::UI, update_canvas_trans.after(update_canvas_render));
