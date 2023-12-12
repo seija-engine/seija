@@ -9,7 +9,7 @@ use seija_render::{
 use seija_transform::{events::{EntityMutEx,EntityCommandsEx}, Transform};
 use seija_ui::{
     components::{canvas::Canvas, rect2d::Rect2D, sprite::Sprite, ui_canvas::UICanvas},
-    types::Thickness,
+    types::{Thickness, AnchorAlign},
      update_ui_render, text::{Font, Text, LineMode}, event::{EventNode, UIEventType, UIEvent, UIEventSystem},
 };
 use spritesheet::SpriteSheet;
@@ -46,39 +46,38 @@ fn start(world: &mut World) {
     let ui_sheet = sheets.get(&h_sheet.id).unwrap();
     let btn3on_index = ui_sheet.get_index("Btn3On").unwrap();
     let bg_index = ui_sheet.get_index("lm-db").unwrap();
-    let add_index = ui_sheet.get_index("AddOn").unwrap();
     
     
-    let rect2d = Rect2D::new(1024f32, 768f32);
+    let rect2d = Rect2D::new(640f32, 480f32);
     let mut t = Transform::default();
     t.local.position = Vec3::new(0f32, 0f32, -2f32);
     let panel_id = world.spawn((rect2d,t,Canvas::default())).set_parent(Some(canvas_id)).id();
     {
        let t = Transform::default();
-       let rect2d = Rect2D::new(1024f32, 768f32);
+       let rect2d = Rect2D::new(640f32, 480f32);
        let e_bg = world.spawn((Sprite::sliced(bg_index,Some(h_sheet.clone()), Thickness::new1(35f32), Vec4::ONE),rect2d,t)).set_parent(Some(panel_id)).id();
        log::error!("bg:{:?}",e_bg);
     }
-    {
-        let mut t = Transform::default();
-        let rect2d = Rect2D::new(32f32, 32f32);
-        t.local.position.x = -50f32;
-        let mut event = EventNode::default();
-        event.event_type = UIEventType::CLICK;
-        let e_btn = world.spawn((Sprite::simple(add_index,Some(h_sheet), Vec4::ONE),rect2d,t,event)).set_parent(Some(panel_id)).id();
-        log::error!("btn:{:?}",e_btn);
-        
-     
-    }
     
-    let text_id = {
-        let mut t = Transform::default();
-        t.local.position.x = 60f32;
-        let rect2d = Rect2D::new(100f32, 50f32);
-        let mut text = Text::new(h_font.clone(),"swash demo".to_string());
-        text.font_size = 12;
-        text.line_mode = LineMode::Wrap;
+    {
         let canvas = Canvas::default();
+        let t = Transform::default();
+        let rect2d = Rect2D::new(100f32, 50f32);
+        let sprite = Sprite::simple(btn3on_index,Some(h_sheet.clone()),Vec4::ONE);
+        world.spawn((sprite,rect2d,t,canvas)).set_parent(Some(panel_id));
+    };
+
+    let text_id = {
+        let t = Transform::default();
+        let rect2d = Rect2D::new(100f32, 50f32);
+        let mut text = Text::new(h_font.clone(),"口".to_string());
+        text.font_size = 24;
+        text.is_auto_size = false;
+        text.anchor = AnchorAlign::Center;
+        text.line_mode = LineMode::Wrap;
+        text.color = Vec4::new(1f32, 1f32, 1f32, 1f32);
+        let canvas = Canvas::default();
+        
         let e_text = world.spawn((text,rect2d,t,canvas)).set_parent(Some(panel_id)).id();
         log::error!("text:{:?}",e_text);
         e_text
