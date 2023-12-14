@@ -14,7 +14,7 @@ mod render;
 mod system;
 pub mod layout;
 pub mod ffi;
-use components::{ui_canvas::update_ui_canvas, input_system::input_system};
+use components::{ui_canvas::update_ui_canvas, input::input_system};
 pub use render::update_ui_render;
 use system::{on_ui_start, update_render_mesh_system, update_canvas_render, update_canvas_trans, update_ui_clips};
 use text::{FontLoader, Font};

@@ -8,7 +8,7 @@ use seija_render::{material::{MaterialDefineAsset, MaterialDef, Material},
 use seija_transform::{hierarchy::{Parent, Children}, Transform, events::HierarchyEvent};
 use spritesheet::SpriteSheet;
 use glyph_brush::{GlyphBrush, GlyphBrushBuilder,FontId,BrushAction};
-use crate::{components::{sprite::Sprite, rect2d::Rect2D, canvas::{Canvas, ZOrder, Z_SCALE}}, 
+use crate::{components::{sprite::Sprite, rect2d::Rect2D, canvas::{Canvas, ZOrder, Z_SCALE}, input::InputTextSystemData}, 
             render::{UIRender2D, WriteFontAtlas}, 
             mesh2d::Vertex2D, text::{Text, Font, glyph_to_mesh, write_font_texture}, types::Box2D};
 use wgpu::TextureFormat;
@@ -49,6 +49,7 @@ pub(crate) fn on_ui_start(world:&mut World) {
         despawn_next_frame:vec![],
         entity2canvas:HashMap::default(),
     });
+    world.insert_resource(InputTextSystemData::default());
 }
 
 fn create_font_texture(world:&mut World) -> Handle<Texture> {

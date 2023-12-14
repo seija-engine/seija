@@ -8,7 +8,7 @@ use seija_render::{
 };
 use seija_transform::{events::{EntityMutEx,EntityCommandsEx}, Transform};
 use seija_ui::{
-    components::{canvas::Canvas, rect2d::Rect2D, sprite::Sprite, ui_canvas::UICanvas},
+    components::{canvas::Canvas, rect2d::Rect2D, sprite::Sprite, ui_canvas::UICanvas, input::Input},
     types::{Thickness, AnchorAlign},
      update_ui_render, text::{Font, Text, LineMode}, event::{EventNode, UIEventType, UIEvent, UIEventSystem},
 };
@@ -16,7 +16,7 @@ use spritesheet::SpriteSheet;
 
 #[derive( Resource)]
 pub struct UIData {
-    text:Entity,
+    text:Entity, 
     number:i32,
     panel_id:Entity,
     h_font:Handle<Font>,
@@ -77,8 +77,9 @@ fn start(world: &mut World) {
         text.line_mode = LineMode::Wrap;
         text.color = Vec4::new(1f32, 1f32, 1f32, 1f32);
         let canvas = Canvas::default();
-        
-        let e_text = world.spawn((text,rect2d,t,canvas)).set_parent(Some(panel_id)).id();
+        let mut input = Input::default();
+        input.text = String::from("Input");
+        let e_text = world.spawn((input,text,rect2d,t,canvas)).set_parent(Some(panel_id)).id();
         log::error!("text:{:?}",e_text);
         e_text
     };
