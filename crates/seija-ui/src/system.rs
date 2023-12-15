@@ -8,7 +8,7 @@ use seija_render::{material::{MaterialDefineAsset, MaterialDef, Material},
 use seija_transform::{hierarchy::{Parent, Children}, Transform, events::HierarchyEvent};
 use spritesheet::SpriteSheet;
 use glyph_brush::{GlyphBrush, GlyphBrushBuilder,FontId,BrushAction};
-use crate::{components::{sprite::Sprite, rect2d::Rect2D, canvas::{Canvas, ZOrder, Z_SCALE}, input::InputTextSystemData}, 
+use crate::{components::{sprite::Sprite, rect2d::Rect2D, canvas::{Canvas, ZOrder, Z_SCALE}, input::{InputTextSystemData, Input}}, 
             render::{UIRender2D, WriteFontAtlas}, 
             mesh2d::Vertex2D, text::{Text, Font, glyph_to_mesh, write_font_texture}, types::Box2D};
 use wgpu::TextureFormat;
@@ -66,6 +66,7 @@ fn create_font_texture(world:&mut World) -> Handle<Texture> {
 pub struct RenderMeshParams<'w,'s> {
     pub(crate) update_sprites:Query<'w,'s,Entity,Or<(Changed<Sprite>,Changed<Rect2D>)>>,
     pub(crate) update_texts:Query<'w,'s,Entity,Or<(Changed<Text>,Changed<Rect2D>)>>,
+    pub(crate) update_inputs:Query<'w,'s,(Entity,&'static Input,&'static Rect2D),Or<(Changed<Input>,Changed<Rect2D>)>>,
     pub(crate) render2d:Query<'w,'s,&'static mut UIRender2D>,
     pub(crate) font_assets:Res<'w,Assets<Font>>,
     pub(crate) sprites:Query<'w,'s,(&'static Sprite,&'static Rect2D)>,
@@ -81,8 +82,26 @@ pub struct RenderMeshParams<'w,'s> {
     pub(crate) write_font_atlas:EventWriter<'w,'s,WriteFontAtlas>
 }
 
-pub fn update_render_mesh_system(mut params:RenderMeshParams) {
+pub fn update_render_mesh_system(mut params:RenderMeshParams,server:Res<AssetServer>) {
     let mut top_changed_canvas:HashSet<Entity> = HashSet::default();
+    //更新Input的Mesh
+    for (entity,input,rect2d) in params.update_inputs.iter() {
+        if true {  
+            if let Ok(mut render2d) = params.render2d.get_mut(entity) {
+                render2d.mesh2d = Input::build_caret_mesh(rect2d,0f32);
+                render2d.texture = server.get_asset("texture:white").unwrap().make_weak_handle().typed();
+            } else {
+                let mesh = Input::build_caret_mesh(rect2d,0f32);
+                let h_white = server.get_asset("texture:white").unwrap().make_weak_handle().typed();
+                let r2d = UIRender2D {
+                    mat:params.ui_roots.baseui.clone(),
+                    mesh2d : mesh,
+                    texture:h_white
+                };
+                params.commands.entity(entity).insert(r2d);
+            }
+        }
+    }
 
     //更新Sprite的Mesh
     for entity in params.update_sprites.iter() {

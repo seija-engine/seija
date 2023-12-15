@@ -79,7 +79,7 @@ fn start(world: &mut World) {
         let canvas = Canvas::default();
         let mut input = Input::default();
         input.text = String::from("Input");
-        let e_text = world.spawn((input,text,rect2d,t,canvas)).set_parent(Some(panel_id)).id();
+        let e_text = world.spawn((input,rect2d,t,canvas)).set_parent(Some(panel_id)).id();
         log::error!("text:{:?}",e_text);
         e_text
     };
