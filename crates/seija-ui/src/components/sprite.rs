@@ -47,9 +47,10 @@ impl Sprite {
         let info = atlas.get_info(self.sprite_index)?;
         let mesh2d = self.build(rect2d, &info.uv, &Mat4::IDENTITY,&info.rect, 0f32);
         Some(UIRender2D {
-            mat:mat_def,
+            mat_def,
             mesh2d,
-            texture:atlas.texture.clone(),
+            texture:Some(atlas.texture.clone()),
+            custom_mat:None
         })  
     }
 }

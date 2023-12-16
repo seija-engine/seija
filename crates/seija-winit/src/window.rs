@@ -1,12 +1,12 @@
 use raw_window_handle::{HasRawWindowHandle, RawWindowHandle, HasRawDisplayHandle};
-use seija_core::window::{IWindow, WindowConfig,WindowMode};
-use winit::{dpi::PhysicalSize, event_loop::EventLoop, monitor::{MonitorHandle, VideoMode}, window::{Window,Fullscreen}};
+use seija_core::{window::{IWindow, WindowConfig,WindowMode}, math::Vec2};
+use winit::{dpi::{PhysicalSize, PhysicalPosition}, event_loop::EventLoop, monitor::{MonitorHandle, VideoMode}, window::{Window,Fullscreen}};
 #[cfg(target_os = "windows")] 
 use winit::platform::windows::WindowBuilderExtWindows;
 pub struct WinitWindow {
     title:String,
     vsync:bool,
-    window:Window
+    pub window:Window
 }
 
 unsafe impl HasRawWindowHandle for WinitWindow {
@@ -36,6 +36,13 @@ impl IWindow for WinitWindow {
     fn height(&self) -> u32 { self.window.inner_size().height }
 
     fn vsync(&self) -> bool { self.vsync }
+    
+    fn set_ime_position(&self,pos:Vec2) {
+        self.window.set_ime_position(PhysicalPosition::new(pos.x, pos.y));
+    }
+    fn set_ime_allowed(&self,value:bool) {
+        self.window.set_ime_allowed(value);
+    }
 }
 
 impl WinitWindow {

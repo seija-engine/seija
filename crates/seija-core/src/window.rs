@@ -1,6 +1,7 @@
 use std::{ops::{Deref, DerefMut}};
 
 use bevy_ecs::system::Resource;
+use glam::Vec2;
 use raw_window_handle::{HasRawWindowHandle, RawWindowHandle, HasRawDisplayHandle};
 
 #[repr(u32)]
@@ -17,6 +18,8 @@ pub trait IWindow : HasRawWindowHandle + HasRawDisplayHandle {
     fn width(&self) -> u32;
     fn height(&self) -> u32;
     fn vsync(&self) -> bool;
+    fn set_ime_position(&self,pos:Vec2);
+    fn set_ime_allowed(&self,value:bool);
 }
 
 #[derive(Resource)]

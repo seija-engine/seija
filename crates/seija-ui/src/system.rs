@@ -1,6 +1,6 @@
 use std::{sync::Arc, collections::{HashSet, HashMap}};
 use bevy_ecs::{world::World, system::{Resource, 
-    SystemParam, Query, Commands, Res, ResMut}, prelude::{Entity, EventWriter, EventReader}, query::{Or, Changed, Added, ChangeTrackers}};
+    SystemParam, Query, Commands, Res, ResMut}, prelude::{Entity, EventWriter, EventReader}, query::{Or, Changed, ChangeTrackers}};
 use seija_asset::{AssetServer, Assets, Handle};
 use seija_core::{math::{Vec3, Vec4}, info::EStateInfo};
 use seija_render::{material::{MaterialDefineAsset, MaterialDef, Material},
@@ -16,9 +16,10 @@ use wgpu::TextureFormat;
 pub struct UIRenderRoot {
     pub(crate) baseui:Arc<MaterialDef>,
     pub(crate) basetext:Arc<MaterialDef>,
+    pub(crate) caret_mat_def:Arc<MaterialDef>,
     pub(crate) text_brush:GlyphBrush<Vec<Vertex2D>>,
     pub(crate) font_texture:Handle<Texture>,
-    font_caches:HashMap<Handle<Font>,FontId>,
+    pub(crate) font_caches:HashMap<Handle<Font>,FontId>,
     pub(crate) font_buffer:Option<BufferId>,
 
     pub(crate) entity2canvas:HashMap<Entity,Entity>,
@@ -29,12 +30,16 @@ pub(crate) fn on_ui_start(world:&mut World) {
     let server = world.get_resource::<AssetServer>().unwrap().clone();
     let mut h_baseui = server.load_sync::<MaterialDefineAsset>(world, "materials/ui.mat.clj", None).unwrap();
     let mut h_basetext = server.load_sync::<MaterialDefineAsset>(world, "materials/text.mat.clj", None).unwrap();
+    let mut h_caret = server.load_sync::<MaterialDefineAsset>(world, "materials/inputCaret.mat.clj", None).unwrap();
+
     let mats = world.get_resource::<Assets<MaterialDefineAsset>>().unwrap();
     let arc_mat_define = mats.get(&h_baseui.id).unwrap().define.clone();
     let arc_text_mat_define = mats.get(&h_basetext.id).unwrap().define.clone();
+    let arc_caret_mat_define = mats.get(&h_caret.id).unwrap().define.clone();
     //常驻
     h_baseui.forget();
     h_basetext.forget();
+    h_caret.forget();
 
     let font_texture = create_font_texture(world);
     world.insert_resource(UIRenderRoot {
@@ -48,6 +53,7 @@ pub(crate) fn on_ui_start(world:&mut World) {
         font_buffer:None,
         despawn_next_frame:vec![],
         entity2canvas:HashMap::default(),
+        caret_mat_def:arc_caret_mat_define
     });
     world.insert_resource(InputTextSystemData::default());
 }
@@ -84,7 +90,8 @@ pub struct RenderMeshParams<'w,'s> {
 
 pub fn update_render_mesh_system(mut params:RenderMeshParams,server:Res<AssetServer>) {
     let mut top_changed_canvas:HashSet<Entity> = HashSet::default();
-    //更新Input的Mesh
+    //更新Input的Mesh 
+    /*
     for (entity,input,rect2d) in params.update_inputs.iter() {
         if true {  
             if let Ok(mut render2d) = params.render2d.get_mut(entity) {
@@ -101,7 +108,7 @@ pub fn update_render_mesh_system(mut params:RenderMeshParams,server:Res<AssetSer
                 params.commands.entity(entity).insert(r2d);
             }
         }
-    }
+    }*/
 
     //更新Sprite的Mesh
     for entity in params.update_sprites.iter() {
@@ -139,7 +146,7 @@ pub fn update_render_mesh_system(mut params:RenderMeshParams,server:Res<AssetSer
                 params.ui_roots.text_brush.queue(section);
             }
             let font_texture = params.textures.get_mut(&params.ui_roots.font_texture.id).unwrap();
-           
+            
             let action = params.ui_roots.text_brush.process_queued(|r,bytes| {
                 write_font_texture(font_texture,r,bytes);
                 params.write_font_atlas.send(WriteFontAtlas { rect:r });
@@ -148,13 +155,14 @@ pub fn update_render_mesh_system(mut params:RenderMeshParams,server:Res<AssetSer
                 Ok(BrushAction::Draw(verts)) => {
                    let mesh2d = Text::build_mesh(verts,text.color);
                    if let Ok(mut render) = params.render2d.get_mut(entity) {
-                      render.texture = params.ui_roots.font_texture.clone();
+                      render.texture = Some(params.ui_roots.font_texture.clone());
                       render.mesh2d = mesh2d;
                     } else {
                         let render2d = UIRender2D {
-                            mat:params.ui_roots.basetext.clone(),
-                            texture:params.ui_roots.font_texture.clone(),
-                            mesh2d 
+                            mat_def:params.ui_roots.basetext.clone(),
+                            texture:Some(params.ui_roots.font_texture.clone()),
+                            mesh2d,
+                            custom_mat:None
                         };
                         params.commands.entity(entity).insert(render2d);
                     }

@@ -1,7 +1,7 @@
 use std::{hash::{Hash, Hasher}, collections::hash_map::DefaultHasher, sync::Arc};
 
 use bevy_ecs::{prelude::{Component, Entity}, system::{Query, Commands}};
-use seija_asset::{HandleId, Assets, AssetServer};
+use seija_asset::{HandleId, Assets, AssetServer, Handle};
 use seija_core::{math::{Mat4, Vec4, Vec4Swizzles}, info::EStateInfo};
 use seija_render::{resource::{Mesh, MeshAttributeType, Indices}, material::{Material, MaterialDef}};
 use seija_transform::{hierarchy::{Children, Parent}, Transform};
@@ -123,12 +123,13 @@ impl UIDrawCall {
         let mut index_offset = 0;
         let mut texture = None;
         let mut material_def:Option<Arc<MaterialDef>> = None;
+        let mut custom_mat:Option<Handle<Material>> = None;
         for (index,entity) in entitys.iter().enumerate() {
             if let Ok(render2d) = render2ds.get(*entity) {
                 let mat4 = calc_trans(trans, parents, *entity,Some(canvas_entity));
                 let z_value:f32 = index as f32 * Z_SCALE;
-                texture = Some(render2d.texture.clone());
-                material_def = Some(render2d.mat.clone());
+                texture = render2d.texture.clone();
+                material_def = Some(render2d.mat_def.clone());
                 for vert in render2d.mesh2d.points.iter() {
                     let mut pos4 = Vec4::new(vert.pos.x, vert.pos.y, z_value, 1f32);
                     pos4 = mat4 * pos4;
@@ -138,6 +139,9 @@ impl UIDrawCall {
                 }
                 indexs.extend(render2d.mesh2d.indexs.iter().map(|v| v + index_offset));
                 index_offset += render2d.mesh2d.points.len() as u32;
+                if let Some(mat) = render2d.custom_mat.as_ref() {
+                    custom_mat = Some(mat.clone());
+                }
             }
         }
 
@@ -149,9 +153,17 @@ impl UIDrawCall {
         mesh.set_indices(Some(Indices::U32(indexs)));
         mesh.build();
         let h_mesh = meshes.add(mesh);
-        let mut new_material = Material::from_def(material_def.unwrap().clone(), asset_server).unwrap();
-        new_material.texture_props.set("mainTexture", texture.unwrap().clone());
-        let h_material = materials.add(new_material);
+
+        
+        let h_material = if let Some(custom_mat) = custom_mat.take() {
+            custom_mat
+        } else {
+            let mut new_material = Material::from_def(material_def.unwrap().clone(), asset_server).unwrap();
+            if let Some(texture) = texture {
+                new_material.texture_props.set("mainTexture", texture.clone());
+            }
+            materials.add(new_material)
+        };
 
         let canvas_t = trans.get(canvas_entity).unwrap();
         let mut t = Transform::from_matrix(canvas_t.global().matrix());
@@ -205,7 +217,7 @@ impl ZOrder {
 
 
 struct ScanDrawCall {
-    cur_texture:Option<HandleId>,
+    cur_texture:Option<Option<HandleId>>,
     //cur_canvas:Option<Entity>,
     entity_group:Vec<Vec<Entity>>,
     cache:Vec<Entity>,
@@ -216,7 +228,7 @@ impl ScanDrawCall {
                              uirenders:&Query<&UIRender2D>,canvases:&Query<&mut Canvas>) -> Vec<Vec<Entity>> {
         let mut scan_drawcall = ScanDrawCall { entity_group:vec![],cache:vec![], cur_texture:None  };
         if let Ok(render2d) = uirenders.get(entity) {
-            scan_drawcall.cur_texture = Some(render2d.texture.id);
+            scan_drawcall.cur_texture = Some(render2d.texture.as_ref().map(|v| v.id));
             scan_drawcall.cache.push(entity);
         }
         if let Ok(child_comp) = children.get(entity) {
@@ -257,11 +269,11 @@ impl ScanDrawCall {
             let is_active = infos.get(entity).map(|v| v.is_active_global()).unwrap_or(true);
             if is_active {
                 match self.cur_texture {
-                    None => self.cur_texture = Some(render2d.texture.id),
+                    None => self.cur_texture = Some(render2d.texture.as_ref().map(|v| v.id)),
                     Some(id) => {
-                        if id != render2d.texture.id {
+                        if id != render2d.texture.as_ref().map(|v| v.id) {
                             self.emit();
-                            self.cur_texture = Some(render2d.texture.id);
+                            self.cur_texture = Some(render2d.texture.as_ref().map(|v| v.id));
                         }
                     }
                 }

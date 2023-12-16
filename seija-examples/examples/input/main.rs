@@ -1,5 +1,5 @@
 use bevy_ecs::prelude::*;
-use glam::{Vec3, Vec4};
+use glam::{Vec3, Vec4, Vec2};
 use seija_asset::{AssetServer, Assets, Handle};
 use seija_core::{time::Time, CoreStage, StartupStage};
 use seija_examples::{init_core_app};
@@ -27,7 +27,6 @@ fn main() {
     let mut app = init_core_app("FRPRender.clj", vec![update_ui_render],None);
     app.add_system2(CoreStage::Startup, StartupStage::PreStartup, start);
     app.add_system(CoreStage::Update, on_update);
-
     app.run();
 }
 
@@ -50,7 +49,7 @@ fn start(world: &mut World) {
     
     let rect2d = Rect2D::new(640f32, 480f32);
     let mut t = Transform::default();
-    t.local.position = Vec3::new(0f32, 0f32, -2f32);
+    t.local.position = Vec3::new(0f32, 100f32, -2f32);
     let panel_id = world.spawn((rect2d,t,Canvas::default())).set_parent(Some(canvas_id)).id();
     {
        let t = Transform::default();
@@ -62,39 +61,42 @@ fn start(world: &mut World) {
     {
         let canvas = Canvas::default();
         let t = Transform::default();
-        let rect2d = Rect2D::new(100f32, 50f32);
+        let mut rect2d = Rect2D::new(100f32, 50f32);
         let sprite = Sprite::simple(btn3on_index,Some(h_sheet.clone()),Vec4::ONE);
         world.spawn((sprite,rect2d,t,canvas)).set_parent(Some(panel_id));
     };
 
+    
     let text_id = {
         let t = Transform::default();
-        let rect2d = Rect2D::new(100f32, 50f32);
+        let mut rect2d = Rect2D::new(100f32, 50f32);
         let mut text = Text::new(h_font.clone(),"口".to_string());
         text.font_size = 24;
         text.is_auto_size = false;
         text.anchor = AnchorAlign::Center;
         text.line_mode = LineMode::Wrap;
         text.color = Vec4::new(1f32, 1f32, 1f32, 1f32);
+        world.spawn((text,rect2d,t)).set_parent(Some(panel_id)).id()
+    };
+
+    let input_id = {
+        let t = Transform::default();
+        let mut rect2d = Rect2D::new(100f32, 50f32);
         let canvas = Canvas::default();
         let mut input = Input::default();
         input.text = String::from("Input");
-        let e_text = world.spawn((input,rect2d,t,canvas)).set_parent(Some(panel_id)).id();
+        input.text_entity = Some(text_id);
+        let mut event = EventNode::default();
+        event.event_type = UIEventType::TOUCH_START;
+        let e_text = world.spawn((input,rect2d,t,canvas,event)).set_parent(Some(panel_id)).id();
         log::error!("text:{:?}",e_text);
         e_text
     };
-   
 
-    world.insert_resource(UIData {text:text_id,number:0,panel_id,h_font: h_font.clone(),add_entitys:vec![] });
+   
     
 }
 
-
-fn on_update(mut commands: Commands,
-             mut trans:Query<&mut Transform>,
-             mut texts:Query<&mut Text>,
-             time: Res<Time>,
-             mut ui_data: ResMut<UIData>,
-             mut render:EventReader<UIEvent>) {
-    
+fn on_update(mut render:EventReader<UIEvent>) {
+   
 }

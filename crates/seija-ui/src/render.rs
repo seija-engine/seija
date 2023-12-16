@@ -2,13 +2,14 @@ use std::{sync::Arc, num::NonZeroU32};
 use glyph_brush::Rectangle;
 use bevy_ecs::{world::World, prelude::{Component, Events}};
 use seija_asset::{Handle, Assets};
-use seija_render::{RenderContext, resource::{Texture, BufferId, RenderResources}, material::MaterialDef};
+use seija_render::{RenderContext, resource::{Texture, BufferId, RenderResources}, material::{MaterialDef, Material}};
 use crate::{mesh2d::Mesh2D, system::UIRenderRoot};
 
 #[derive(Component,Debug)]
 pub struct UIRender2D {
-   pub mat:Arc<MaterialDef>,
-   pub texture:Handle<Texture>,
+   pub mat_def:Arc<MaterialDef>,
+   pub custom_mat:Option<Handle<Material>>,
+   pub texture:Option<Handle<Texture>>,
    pub mesh2d:Mesh2D,
 }
 

@@ -25,6 +25,18 @@
         "fs": "ui.ui_fs_main"
       },
       {
+        "name": "caret",
+        "vertex": {
+          "POSITION": "require",
+          "UV0":"require",
+          "COLOR":"require"
+        },
+        "backend": [ "Camera3D", "Transform"],
+       
+        "vs": "ui.caret_vs_main",
+        "fs": "ui.caret_fs_main"
+      },
+      {
         "name": "text",
         "vertex": {
           "POSITION": "require",

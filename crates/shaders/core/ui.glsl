@@ -46,3 +46,30 @@ vec4 text_fs_main(VSInput inv) {
     
     return vec4(inv.color.r,inv.color.g,inv.color.b,textureColor.r);
 }
+
+struct VSCaret {
+  vec3 outPos;
+};
+
+VSCaret caret_vs_main() {
+  VSCaret o;
+  mat4 trans = getTransform();
+  vec3 pos = vec3(trans * vec4(vert_position, 1.0));
+  mat4 pv = getCameraProjView();
+  vec4 glPos = pv * vec4(pos,1);
+  gl_Position = glPos;
+  o.outPos = glPos.xyz;
+  return o;
+}
+
+vec4 caret_fs_main(VSCaret inv) {
+    if (material.isClip > 0 && 
+        (inv.outPos.x < material.clipRect.x 
+        || inv.outPos.x > material.clipRect.z
+        || inv.outPos.y > material.clipRect.y
+        || inv.outPos.y < material.clipRect.w)) {
+        discard;
+    }
+    
+    return vec4(material.color);
+}
