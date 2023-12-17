@@ -1,7 +1,7 @@
 use bevy_ecs::prelude::*;
 use glyph_brush::{Section, ab_glyph::PxScale, Layout,VerticalAlign,HorizontalAlign,BuiltInLineBreaker, LineBreaker};
 use seija_asset::Handle;
-use seija_core::math::{Vec4};
+use seija_core::math::{Vec4, Vec2};
 use seija_render::resource::{Texture, TextureType};
 use crate::{types::AnchorAlign, mesh2d::{Vertex2D, Mesh2D}, components::rect2d::Rect2D};
 use super::Font;
@@ -94,7 +94,14 @@ impl Text {
           }
       };
       if !self.is_auto_size {
-        section.with_bounds((rect.width,rect.height))
+        let mut screen_pos = Vec2::new(0f32, 0f32);
+        match self.anchor   {
+            AnchorAlign::Left => {
+                screen_pos.x -= rect.width * 0.5f32;
+            }
+            _ => {}
+        };
+        section.with_bounds((rect.width,rect.height)).with_screen_position(screen_pos)
       } else {
         section
       }

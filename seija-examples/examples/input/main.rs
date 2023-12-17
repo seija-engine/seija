@@ -73,7 +73,7 @@ fn start(world: &mut World) {
         let mut text = Text::new(h_font.clone(),"口".to_string());
         text.font_size = 24;
         text.is_auto_size = false;
-        text.anchor = AnchorAlign::Center;
+        text.anchor = AnchorAlign::Left;
         text.line_mode = LineMode::Wrap;
         text.color = Vec4::new(1f32, 1f32, 1f32, 1f32);
         world.spawn((text,rect2d,t)).set_parent(Some(panel_id)).id()
@@ -84,8 +84,9 @@ fn start(world: &mut World) {
         let mut rect2d = Rect2D::new(100f32, 50f32);
         let canvas = Canvas::default();
         let mut input = Input::default();
-        input.text = String::from("Input");
+        input.text = String::from("123456");
         input.text_entity = Some(text_id);
+        input.font_size = 22;
         let mut event = EventNode::default();
         event.event_type = UIEventType::TOUCH_START;
         let e_text = world.spawn((input,rect2d,t,canvas,event)).set_parent(Some(panel_id)).id();

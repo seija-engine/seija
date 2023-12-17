@@ -28,6 +28,11 @@ pub struct MouseWheelInput {
     pub delta:Vec2
 }
 
+#[derive(Debug,Clone)]
+pub enum ImeEvent {
+    ReceivedCharacter(char)
+}
+
 
 #[derive(Debug, Hash, PartialEq, Eq, Clone, Copy)]
 #[repr(u32)]

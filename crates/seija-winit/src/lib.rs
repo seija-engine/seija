@@ -6,7 +6,7 @@ use seija_app::{IModule,App};
 use seija_core::{ window::{AppWindow, WindowConfig},AddCore, math::Vec2};
 use seija_core::bevy_ecs::{event::{Events}};
 use window::WinitWindow;
-use seija_input::{event::{KeyboardInput as IKeyboardInput, MouseInput, MouseWheelInput}, Input};
+use seija_input::{event::{KeyboardInput as IKeyboardInput, MouseInput, MouseWheelInput, ImeEvent}, Input};
 use winit::{event::{Event,WindowEvent,  MouseScrollDelta, Ime}, event_loop::{ControlFlow, EventLoop, EventLoopWindowTarget}, window::ImePurpose};
 
 use crate::event::conv_keyboard_input;
@@ -21,6 +21,7 @@ impl IModule for WinitModule {
         let app_window = AppWindow::new(winit_window);
         app.add_event::<WindowCreated>();
         app.add_event::<WindowResized>();
+        app.add_event::<ImeEvent>();
         
         let mut window_created_events = app.world.get_resource_mut::<Events<WindowCreated>>().unwrap();
         window_created_events.send(WindowCreated);
@@ -88,9 +89,12 @@ fn winit_runner(event_loop:EventLoop<()>,mut app:App) {
                             events.send(mouse_wheel);
                         }
                     }
-                    WindowEvent::Ime(ime) => {
+                    WindowEvent::Ime(_) => {
                     },
                     WindowEvent::ReceivedCharacter(chr) => {
+                        if let Some(mut events) = app.world.get_resource_mut::<Events<ImeEvent>>() {
+                            events.send(ImeEvent::ReceivedCharacter(chr));
+                        }
                     }
                 
                     _ => {}
