@@ -2,18 +2,20 @@ use std::collections::HashMap;
 
 use bevy_ecs::event::EventReader;
 use bevy_ecs::prelude::Component;
-use bevy_ecs::system::{Res, Resource, ResMut, Commands};
+use bevy_ecs::query::{Without, ChangeTrackers};
+use bevy_ecs::system::{Res, Resource, ResMut, Commands,ParamSet};
 use bevy_ecs::{system::{SystemParam, Query}, prelude::Entity, query::{Or, Changed}};
 use glyph_brush::ab_glyph::{FontArc, Font, ScaleFont};
 use seija_asset::{AssetServer, Assets, Handle};
 use seija_core::math::{Vec3, Vec2, Vec4};
 use seija_core::time::Time;
 use seija_core::window::AppWindow;
-use seija_input::event::ImeEvent;
+use seija_input::event::{ImeEvent, KeyboardInput, InputState};
+use seija_input::keycode::KeyCode;
 use seija_render::material::Material;
 use seija_transform::TransformMatrix;
 use seija_transform::{Transform,events::EntityCommandsEx}; 
-use crate::event::UIEvent;
+use crate::event::{UIEvent, UIEventType};
 use crate::mesh2d::{Vertex2D, Mesh2D};
 use crate::render::UIRender2D;
 use crate::system::UIRenderRoot;
@@ -35,6 +37,12 @@ pub struct InputTextSystemData {
     active_input:Option<Entity>
 }
 
+#[derive(Debug)]
+pub struct CharInfo {
+    chr:char,
+    advance:f32
+}
+
 pub struct InputTextCache {
     pub cursor:i32,
     pub entity:Entity,
@@ -45,7 +53,7 @@ pub struct InputTextCache {
     pub time:f32,
     pub is_show:bool,
     pub cache_rect:Rect2D,
-    pub cahce_text_sizes:Vec<f32>,
+    pub cache_char_infos:Vec<CharInfo>,
     pub caret_color:Vec4
 }
 
@@ -61,7 +69,7 @@ impl InputTextCache {
             time:0f32,
             is_show:false,
             cache_rect:Rect2D::default(),
-            cahce_text_sizes:vec![],
+            cache_char_infos:vec![],
             caret_color:Vec4::new(0f32, 1f32, 0.2f32, 1f32)
         }
     }
@@ -70,14 +78,14 @@ impl InputTextCache {
 
 #[derive(SystemParam)]
 pub struct InputParams<'w,'s> {
-    pub(crate) update_inputs:Query<'w,'s,(Entity,&'static Input,&'static Rect2D),Or<(Changed<Input>,Changed<Rect2D>)>>,
-    pub(crate) texts:Query<'w,'s,&'static mut Text>,
+    pub(crate) texts:Query<'w,'s,&'static mut Text,Without<Input>>,
     pub(crate) sys_data:ResMut<'w,InputTextSystemData>,
     pub(crate) commands:Commands<'w,'s>,
     pub(crate) ui_roots:Res<'w,UIRenderRoot>,
 }
 
 pub fn input_system(mut params:InputParams,
+                   mut sets:ParamSet<(Query<(&mut Input,&Rect2D)>,Query<Entity,Or<(Changed<Input>,Changed<Rect2D>)>>)>,
                    font_assets:Res<Assets<TextFont>>,
                    server:Res<AssetServer>,
                    mut mat_assets:ResMut<Assets<Material>>,
@@ -85,22 +93,28 @@ pub fn input_system(mut params:InputParams,
                    time:Res<Time>,
                    window:Res<AppWindow>,
                    mut trans:Query<&mut Transform>,
-                   mut ime_events:EventReader<ImeEvent>) {
-   for (entity,input,rect) in params.update_inputs.iter() {
-     //init input
-     if !params.sys_data.cache_dict.contains_key(&entity) {
-        init_input(entity, input,&rect, &mut params.sys_data, &mut params.texts,
-                   &mut params.commands,&params.ui_roots,&server,&mut mat_assets,&font_assets);
-     }
+                   mut ime_events:EventReader<ImeEvent>,
+                   mut key_events:EventReader<KeyboardInput>) {
+   for entity in sets.p1().iter().collect::<Vec<_>>() {
+        if let Ok((input,rect)) = sets.p0().get(entity) {
+            //init input
+            if !params.sys_data.cache_dict.contains_key(&entity) {
+                init_input(entity, input,&rect, &mut params.sys_data, &mut params.texts,
+                           &mut params.commands,&params.ui_roots,&server,&mut mat_assets,&font_assets);
+            }
+        }
    }
 
    for ev in ui_events.iter() {
+     if !ev.event_type.contains(UIEventType::TOUCH_START) {
+        continue;
+     }
      if let Some(input_cache) = params.sys_data.cache_dict.get_mut(&ev.entity) {
         let t = trans.get(ev.entity).unwrap();
         //这里，这个转窗口坐标方式不安全
         let end_postion = (1f32 / t.global.scale) * t.global.position;
-        click_input(input_cache,&mut mat_assets,&window,end_postion);
-        update_caret_cursor(input_cache,ev.pos,&t.global);
+        click_input(input_cache,&mut mat_assets,&window,end_postion,&ev,&t.global);
+        
         let out_pos = calc_caret_position(&input_cache);
         if let Ok(mut t) = trans.get_mut(input_cache.caret_entity) {
             t.local.position.x = out_pos.x;
@@ -108,27 +122,113 @@ pub fn input_system(mut params:InputParams,
      }
      params.sys_data.active_input = Some(ev.entity);
    }
-
    flash_input(&mut params.sys_data, &mut mat_assets, &time);
    
+   //接收到输入事件
    if let Some(active_entity) = params.sys_data.active_input {
-    if let Some(cache) = params.sys_data.cache_dict.get(&active_entity) {
+    if let Some(cache) = params.sys_data.cache_dict.get_mut(&active_entity) {
         if let Some(Ok(mut text)) = cache.text_entity.map(|v|params.texts.get_mut(v))  {
-            for event in ime_events.iter() {
-                match event {
-                   ImeEvent::ReceivedCharacter(chr) => {
-                       text.text.insert(cache.cursor as usize + 1, *chr);
-                   }
+            if let Ok((mut input,_)) = sets.p0().get_mut(cache.entity) {
+                for event in ime_events.iter() {
+                    match event {
+                       ImeEvent::ReceivedCharacter(chr) => {
+                        if !chr.is_control() { 
+                            let font_scaled = cache.font_arc.as_ref().unwrap().as_scaled(input.font_size as f32);
+                            let h_advance = font_scaled.h_advance(font_scaled.glyph_id(*chr));
+                            let char_info = CharInfo {chr:*chr,advance : h_advance };
+                            cache.cache_char_infos.insert((cache.cursor + 1) as usize, char_info);
+                            input.text = String::from_iter(cache.cache_char_infos.iter().map(|c| c.chr));
+                            text.text = input.text.clone();
+                            cache.cursor = cache.cursor + 1;
+                            let out_pos = calc_caret_position(&cache);
+                            if let Ok(mut t) = trans.get_mut(cache.caret_entity) {
+                                t.local.position.x = out_pos.x;
+                            }
+                        }
+                       },
+                       ImeEvent::Commit(s) => {
+                        let font_scaled = cache.font_arc.as_ref().unwrap().as_scaled(input.font_size as f32);
+                        let mut char_len = 0;
+                        let mut new_chars = vec![];
+                        for chr in s.chars() {
+                            let h_advance = font_scaled.h_advance(font_scaled.glyph_id(chr));
+                            let char_info = CharInfo {chr,advance : h_advance };
+                            char_len +=1;
+                            new_chars.push(char_info);
+                        }
+                        if cache.cache_char_infos.len() == 0 {
+                            cache.cache_char_infos = new_chars;
+                        } else {
+                            let idx = cache.cursor as usize + 1;
+                            cache.cache_char_infos.splice(idx..idx, new_chars);
+                        }
+                        
+                        input.text = String::from_iter(cache.cache_char_infos.iter().map(|c| c.chr));
+                        text.text = input.text.clone();
+                        cache.cursor += char_len;
+                        let out_pos = calc_caret_position(&cache);
+                        if let Ok(mut t) = trans.get_mut(cache.caret_entity) {
+                            t.local.position.x = out_pos.x;
+                        }
+                       }
+                    }
                 }
             }
         }        
     }
    }
+
+   if let Some(active_entity) = params.sys_data.active_input {
+    if let Some(cache) = params.sys_data.cache_dict.get_mut(&active_entity) {
+        if let Some(Ok(mut text)) = cache.text_entity.map(|v|params.texts.get_mut(v))  {
+            if let Ok((mut input,_)) = sets.p0().get_mut(cache.entity) {
+                for key in key_events.iter() {
+                    if key.state == InputState::Pressed {
+                        match key.key_code {
+                            KeyCode::Backspace => {
+                                if cache.cursor >= 0 && cache.cursor as usize <= cache.cache_char_infos.len() { 
+                                    cache.cache_char_infos.remove(cache.cursor as usize);
+                                    cache.cursor -= 1;
+                                    input.text = String::from_iter(cache.cache_char_infos.iter().map(|c| c.chr));
+                                    text.text = input.text.clone();
+                                    let out_pos = calc_caret_position(&cache);
+                                    if let Ok(mut t) = trans.get_mut(cache.caret_entity) {
+                                        t.local.position.x = out_pos.x;
+                                    }
+                                }
+                            },
+                            KeyCode::Left => {
+                                if cache.cursor >= 0 { 
+                                    cache.cursor = cache.cursor - 1;
+                                    let out_pos = calc_caret_position(&cache);
+                                    if let Ok(mut t) = trans.get_mut(cache.caret_entity) {
+                                        t.local.position.x = out_pos.x;
+                                    }
+                                }
+                            }
+                            KeyCode::Right => {
+                                if cache.cursor < cache.cache_char_infos.len() as i32 - 1 { 
+                                    cache.cursor += 1;
+                                    let out_pos = calc_caret_position(&cache);
+                                    if let Ok(mut t) = trans.get_mut(cache.caret_entity) {
+                                        t.local.position.x = out_pos.x;
+                                    }
+                                }
+                            }
+                            _ => {}
+                        }
+                    }
+                }
+            }
+        }
+    }
+   }
+
 }
 
 
 fn init_input(entity:Entity,input:&Input,rect:&Rect2D,sys_data:&mut InputTextSystemData,
-              texts:&mut Query<&mut Text>,commands:&mut Commands,root:&UIRenderRoot
+              texts:&mut Query<&mut Text,Without<Input>>,commands:&mut Commands,root:&UIRenderRoot
               ,server:&AssetServer,mats:&mut Assets<Material>,fonts:&Assets<TextFont>) {
     //create caret
     let mut caret_mat = Material::from_def(root.caret_mat_def.clone(), server).unwrap();
@@ -157,55 +257,74 @@ fn init_input(entity:Entity,input:&Input,rect:&Rect2D,sys_data:&mut InputTextSys
             }
         }
     }
-    calc_input_text_size(&mut text_cache,&input.text,input.font_size);
+    update_input_char_infos(&mut text_cache,&input.text,input.font_size);
     sys_data.cache_dict.insert(entity, text_cache);
 }
 
-fn calc_input_text_size(cache:&mut InputTextCache,text:&str,font_size:u32) {
+fn update_input_char_infos(cache:&mut InputTextCache,text:&str,font_size:u32) {
     if let Some(font_arc) = cache.font_arc.as_ref() {
        let font_scaled = font_arc.as_scaled(font_size as f32);
-       cache.cahce_text_sizes.clear();
+       cache.cache_char_infos.clear();
        for chr in text.chars() {
          let glyph_id = font_scaled.glyph_id(chr);
          let h_advance = font_scaled.h_advance(glyph_id);
-         cache.cahce_text_sizes.push(h_advance);
+         cache.cache_char_infos.push(CharInfo { chr, advance: h_advance });
        }
     }
 }
 
-fn click_input(input_cache:&mut InputTextCache,mats:&mut Assets<Material>,window:&AppWindow,input_pos:Vec3) {
+fn click_input(input_cache:&mut InputTextCache,mats:&mut Assets<Material>,window:&AppWindow,input_pos:Vec3,ev:&UIEvent,t:&TransformMatrix) {
+    input_cache.is_show = true;
+    input_cache.time = 0f32;
+    //激活ime
+    window.set_ime_allowed(true);
     let mut window_pos = world_to_window(Vec2::new(input_pos.x, input_pos.y),window);
     window_pos.x -= input_cache.cache_rect.width * 0.5f32;
     window_pos.y += input_cache.cache_rect.height * 0.5f32;
-    
-    input_cache.is_show = true;
-    input_cache.time = 0f32;
-    window.set_ime_allowed(true);
     window.set_ime_position(window_pos);
+    //展示光标
     if let Some(caret_material) = mats.get_mut(&input_cache.caret_mat.id) {
         let color = input_cache.caret_color;
         caret_material.props.set_float4("color", Vec4::new(color.x, color.y, color.z, 1f32), 0);
     }
+
+    update_caret_cursor(input_cache,ev.pos,t);
 }
 
 fn update_caret_cursor(cache:&mut InputTextCache,click_pos:Vec2,t:&TransformMatrix) {
     let conv_pos = t.matrix().inverse() * Vec4::new(click_pos.x, click_pos.y, 0f32,1f32);
-    let start_x = -cache.cache_rect.width * 0.5f32;
+    let start_x = cache.cache_rect.width * 0.5f32;
+    let x = conv_pos.x + start_x;
+    cache.cursor = -1;
+    let mut idx:i32 = 0;
     let mut offset_x = 0f32;
-    cache.cursor = 0;
-    for (index,char_hsize) in cache.cahce_text_sizes.iter().enumerate() {
-        if conv_pos.x > (offset_x + start_x) {
-            cache.cursor = index as i32;
+    loop {
+        if idx as usize >= cache.cache_char_infos.len() {
+            cache.cursor = cache.cache_char_infos.len() as i32;
+            break;
         }
-        offset_x += char_hsize;
+        let char_info = &cache.cache_char_infos[idx as usize];
+        let half_size = char_info.advance * 0.5f32;
+        let cur_x = offset_x + half_size;
+        if x <= cur_x {
+            cache.cursor = idx - 1; break;
+        } else if x <= cur_x + half_size {
+           cache.cursor = idx; break;
+        } else {
+            offset_x += char_info.advance;
+            idx += 1
+        }
+    }
+    if cache.cursor > 0 && cache.cursor as usize >= cache.cache_char_infos.len() {
+        cache.cursor = cache.cache_char_infos.len() as i32 - 1;
     }
 }
 
 fn calc_caret_position(cache:&InputTextCache) -> Vec2 {
     let mut offset_size = 0f32;
-    for (index,char_hsize) in cache.cahce_text_sizes.iter().enumerate() {
+    for (index,char_info) in cache.cache_char_infos.iter().enumerate() {
         if index as i32 <= cache.cursor  {
-            offset_size += char_hsize;
+            offset_size += char_info.advance;
         }
     }
     Vec2::new(offset_size - cache.cache_rect.width * 0.5f32, 0f32)

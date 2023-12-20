@@ -89,7 +89,15 @@ fn winit_runner(event_loop:EventLoop<()>,mut app:App) {
                             events.send(mouse_wheel);
                         }
                     }
-                    WindowEvent::Ime(_) => {
+                    WindowEvent::Ime(ev) => {
+                       if let Some(mut events) = app.world.get_resource_mut::<Events<ImeEvent>>() {
+                            match ev {
+                                Ime::Commit(s) => {
+                                    events.send(ImeEvent::Commit(s));
+                                },
+                                _ => {}
+                            }    
+                       }
                     },
                     WindowEvent::ReceivedCharacter(chr) => {
                         if let Some(mut events) = app.world.get_resource_mut::<Events<ImeEvent>>() {

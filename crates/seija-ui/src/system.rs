@@ -72,7 +72,6 @@ fn create_font_texture(world:&mut World) -> Handle<Texture> {
 pub struct RenderMeshParams<'w,'s> {
     pub(crate) update_sprites:Query<'w,'s,Entity,Or<(Changed<Sprite>,Changed<Rect2D>)>>,
     pub(crate) update_texts:Query<'w,'s,Entity,Or<(Changed<Text>,Changed<Rect2D>)>>,
-    pub(crate) update_inputs:Query<'w,'s,(Entity,&'static Input,&'static Rect2D),Or<(Changed<Input>,Changed<Rect2D>)>>,
     pub(crate) render2d:Query<'w,'s,&'static mut UIRender2D>,
     pub(crate) font_assets:Res<'w,Assets<Font>>,
     pub(crate) sprites:Query<'w,'s,(&'static Sprite,&'static Rect2D)>,

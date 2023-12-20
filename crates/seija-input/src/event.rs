@@ -11,7 +11,7 @@ pub struct KeyboardInput {
     pub state:InputState
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone,PartialEq, Eq)]
 pub enum InputState {
     Pressed,
     Released,
@@ -30,7 +30,8 @@ pub struct MouseWheelInput {
 
 #[derive(Debug,Clone)]
 pub enum ImeEvent {
-    ReceivedCharacter(char)
+    ReceivedCharacter(char),
+    Commit(String)
 }
 
 
