@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use bevy_ecs::event::EventReader;
 use bevy_ecs::prelude::Component;
-use bevy_ecs::query::{Without, ChangeTrackers};
+use bevy_ecs::query::{Without, With};
 use bevy_ecs::system::{Res, Resource, ResMut, Commands,ParamSet};
 use bevy_ecs::{system::{SystemParam, Query}, prelude::Entity, query::{Or, Changed}};
 use glyph_brush::ab_glyph::{FontArc, Font, ScaleFont};
@@ -10,8 +10,10 @@ use seija_asset::{AssetServer, Assets, Handle};
 use seija_core::math::{Vec3, Vec2, Vec4};
 use seija_core::time::Time;
 use seija_core::window::AppWindow;
-use seija_input::event::{ImeEvent, KeyboardInput, InputState};
+use seija_input::event::{ImeEvent, KeyboardInput, InputState, MouseButton};
 use seija_input::keycode::KeyCode;
+use seija_input::Input as SysInput;
+use seija_render::camera::camera::Camera;
 use seija_render::material::Material;
 use seija_transform::TransformMatrix;
 use seija_transform::{Transform,events::EntityCommandsEx}; 
@@ -22,6 +24,7 @@ use crate::system::UIRenderRoot;
 use crate::text::{Text, Font as TextFont};
 
 use super::rect2d::Rect2D;
+use super::ui_canvas::UICanvas;
 #[derive(Component,Debug,Clone,Default)]
 #[repr(C)] 
 pub struct Input {
@@ -94,7 +97,9 @@ pub fn input_system(mut params:InputParams,
                    window:Res<AppWindow>,
                    mut trans:Query<&mut Transform>,
                    mut ime_events:EventReader<ImeEvent>,
-                   mut key_events:EventReader<KeyboardInput>) {
+                   mut key_events:EventReader<KeyboardInput>,
+                   sys_input:Res<SysInput>,
+                   ui_canvas:Query<(Entity,&UICanvas),With<Camera>>) {
    for entity in sets.p1().iter().collect::<Vec<_>>() {
         if let Ok((input,rect)) = sets.p0().get(entity) {
             //init input
@@ -178,6 +183,7 @@ pub fn input_system(mut params:InputParams,
     }
    }
 
+   //键盘控制指令
    if let Some(active_entity) = params.sys_data.active_input {
     if let Some(cache) = params.sys_data.cache_dict.get_mut(&active_entity) {
         if let Some(Ok(mut text)) = cache.text_entity.map(|v|params.texts.get_mut(v))  {
@@ -224,7 +230,36 @@ pub fn input_system(mut params:InputParams,
     }
    }
 
+   //点击其他区域取消激活
+   if sys_input.get_mouse_down(MouseButton::Left) {
+     if let Some(active_entity) = params.sys_data.active_input {
+        let mut hide_input = false;
+        let mouse_pos = sys_input.mouse_position;
+        let world_pos = Vec2::new(mouse_pos.x - window.width() as f32 * 0.5f32, window.height() as f32 * 0.5f32 - mouse_pos.y);
+        let (canvas_entity,_) = ui_canvas.iter().next().unwrap();
+        let canvas_global = trans.get(canvas_entity).unwrap().global();
+        let ui_pos = canvas_global.matrix() * Vec4::new(world_pos.x,world_pos.y,0.0,1.0);
+        if let Some(cache) = params.sys_data.cache_dict.get(&active_entity) {
+            if let Ok(it) = trans.get(active_entity) {
+               let is_hit = cache.cache_rect.test(it.global(), Vec2::new(ui_pos.x, ui_pos.y));
+               hide_input = !is_hit;
+            }
+        }
+
+        if hide_input {
+            if let Some(cache) = params.sys_data.cache_dict.get_mut(&active_entity) {
+                if let Some(caret_material) = mat_assets.get_mut(&cache.caret_mat.id) {
+                    let color = cache.caret_color;
+                    caret_material.props.set_float4("color", Vec4::new(color.x, color.y, color.z, 0f32), 0);
+                    cache.is_show = false;
+                }
+                params.sys_data.active_input = None;
+            }
+        }
+     }
+   }
 }
+
 
 
 fn init_input(entity:Entity,input:&Input,rect:&Rect2D,sys_data:&mut InputTextSystemData,
