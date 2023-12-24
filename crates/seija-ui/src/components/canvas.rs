@@ -58,6 +58,7 @@ impl Canvas {
             return;
         }
         let entity_group = ScanDrawCall::scan_entity_group(canvas_entity,infos,children, uirenders, canvases);
+        
         entity_group.iter().flatten().for_each(|entity| {
             ui_roots.entity2canvas.insert(*entity, canvas_entity);
         });
@@ -140,11 +141,10 @@ impl UIDrawCall {
                 indexs.extend(render2d.mesh2d.indexs.iter().map(|v| v + index_offset));
                 index_offset += render2d.mesh2d.points.len() as u32;
                 if let Some(mat) = render2d.custom_mat.as_ref() {
-                    custom_mat = Some(mat.clone());
+                    custom_mat = Some(mat.clone_weak());
                 }
             }
         }
-
 
         let mut mesh = Mesh::new(PrimitiveTopology::TriangleList);
         mesh.set(MeshAttributeType::POSITION, positons);
@@ -171,11 +171,10 @@ impl UIDrawCall {
         let mut clone_global = canvas_t.global().clone();
         clone_global.position.z += fst_zorder as f32 * Z_SCALE;
         t.set_global(clone_global);
-        
         let drawcall_entity = commands.spawn((h_mesh,h_material,t)).id();
-        let mut hasher = DefaultHasher::default();
-        entitys.hash(&mut hasher);
-        let hash_key = hasher.finish();
+        //let mut hasher = DefaultHasher::default();
+        //entitys.hash(&mut hasher);
+        //let hash_key = hasher.finish();
         UIDrawCall {
             entity:drawcall_entity,
             fst_entity:entitys[0]
@@ -261,10 +260,7 @@ impl ScanDrawCall {
       
     */
     fn _scan_entity_group(&mut self,entity:Entity,infos:&Query<&EStateInfo>,children:&Query<&Children>,uirenders:&Query<&UIRender2D>,canvases:&Query<&mut Canvas>) {
-        if canvases.contains(entity) {
-            self.emit();
-            return;
-        }
+        if canvases.contains(entity) {  self.emit();  return; }
         if let Ok(render2d) = uirenders.get(entity) {
             let is_active = infos.get(entity).map(|v| v.is_active_global()).unwrap_or(true);
             if is_active {

@@ -7,7 +7,7 @@ use seija_render::RenderConfig;
 use spritesheet::SpriteSheet;
 
 use crate::{
-    components::{canvas::Canvas, rect2d::Rect2D, sprite::Sprite, ui_canvas::UICanvas},
+    components::{canvas::Canvas, rect2d::Rect2D, sprite::Sprite, ui_canvas::UICanvas, input::Input},
     event::{UIEventSystem, EventNode, UIEvent},
     types::Thickness,
     update_ui_render, UIModule, layout::{comps::{Orientation, StackLayout, FlexLayout, FlexItem}, types::{LayoutElement, CommonView, UISize, SizeValue, TypeElement, FreeLayoutItem}}, text::{Text, Font},
@@ -360,6 +360,38 @@ pub unsafe extern "C" fn entity_text_setstring(text_mut:&mut Text,cstr:*mut i8) 
     let text_string = std::ffi::CStr::from_ptr(cstr).to_str().unwrap();
     text_mut.text = text_string.into();
 }
+
+#[no_mangle]
+pub unsafe extern "C" fn entity_add_input(world: &mut World,entity_id:u64,text_entity_id:u64,font_size:i32,caret_color:&Vec3,text_str:*mut i8) {
+    let entity = Entity::from_bits(entity_id);
+    let text_entity = Entity::from_bits(text_entity_id);
+    let text_string = std::ffi::CStr::from_ptr(text_str).to_str().unwrap();
+    let mut input = Input::default();
+    input.text = text_string.to_string();
+    input.font_size = font_size as u32;
+    input.caret_color = caret_color.clone();
+    input.text_entity = Some(text_entity);
+    world.entity_mut(entity).insert(input);
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn entity_get_input(world: &mut World,entity_id: u64) -> *mut Input {
+    let entity = Entity::from_bits(entity_id);
+    let mut emut = world.entity_mut(entity);
+    let text_mut = emut.get_mut::<Input>();
+    match text_mut {
+        Some(mut ptr) => ptr.as_mut() as *mut Input,
+        None => std::ptr::null_mut()
+    }
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn input_set_string(input_mut:&mut Input,cstr:*mut i8) {
+    let text_string = std::ffi::CStr::from_ptr(cstr).to_str().unwrap();
+    input_mut.text = text_string.into();
+}
+
+
 
 type PostLayoutProcessF = extern fn(step:i32,vec_ptr:*mut Vec<u64>);
 #[no_mangle]

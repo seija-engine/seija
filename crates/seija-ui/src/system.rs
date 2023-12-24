@@ -89,26 +89,7 @@ pub struct RenderMeshParams<'w,'s> {
 
 pub fn update_render_mesh_system(mut params:RenderMeshParams,server:Res<AssetServer>) {
     let mut top_changed_canvas:HashSet<Entity> = HashSet::default();
-    //更新Input的Mesh 
-    /*
-    for (entity,input,rect2d) in params.update_inputs.iter() {
-        if true {  
-            if let Ok(mut render2d) = params.render2d.get_mut(entity) {
-                render2d.mesh2d = Input::build_caret_mesh(rect2d,0f32);
-                render2d.texture = server.get_asset("texture:white").unwrap().make_weak_handle().typed();
-            } else {
-                let mesh = Input::build_caret_mesh(rect2d,0f32);
-                let h_white = server.get_asset("texture:white").unwrap().make_weak_handle().typed();
-                let r2d = UIRender2D {
-                    mat:params.ui_roots.baseui.clone(),
-                    mesh2d : mesh,
-                    texture:h_white
-                };
-                params.commands.entity(entity).insert(r2d);
-            }
-        }
-    }*/
-
+    
     //更新Sprite的Mesh
     for entity in params.update_sprites.iter() {
         if let Ok((sprite,rect)) = params.sprites.get(entity) {

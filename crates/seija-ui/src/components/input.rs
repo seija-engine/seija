@@ -16,6 +16,7 @@ use seija_input::Input as SysInput;
 use seija_render::camera::camera::Camera;
 use seija_render::material::Material;
 use seija_transform::TransformMatrix;
+use seija_transform::events::HierarchyEvent;
 use seija_transform::{Transform,events::EntityCommandsEx}; 
 use crate::event::{UIEvent, UIEventType};
 use crate::mesh2d::{Vertex2D, Mesh2D};
@@ -28,9 +29,10 @@ use super::ui_canvas::UICanvas;
 #[derive(Component,Debug,Clone,Default)]
 #[repr(C)] 
 pub struct Input {
+    pub font_size:u32,
+    pub caret_color:Vec3,
     pub text_entity:Option<Entity>,
     pub text:String,
-    pub font_size:u32
 }
 
 
@@ -45,7 +47,7 @@ pub struct CharInfo {
     chr:char,
     advance:f32
 }
-
+#[derive(Debug)]
 pub struct InputTextCache {
     pub cursor:i32,
     pub entity:Entity,
@@ -57,13 +59,13 @@ pub struct InputTextCache {
     pub is_show:bool,
     pub cache_rect:Rect2D,
     pub cache_char_infos:Vec<CharInfo>,
-    pub caret_color:Vec4
+    pub caret_color:Vec3
 }
 
 impl InputTextCache {
     pub fn new(entity:Entity,caret_entity:Entity,caret_mat:Handle<Material>) -> InputTextCache {
         InputTextCache {
-            cursor:0, 
+            cursor:-1, 
             entity,
             text_entity:None,
             font_arc:None,
@@ -73,7 +75,7 @@ impl InputTextCache {
             is_show:false,
             cache_rect:Rect2D::default(),
             cache_char_infos:vec![],
-            caret_color:Vec4::new(0f32, 1f32, 0.2f32, 1f32)
+            caret_color:Vec3::new(1f32, 1f32, 1f32)
         }
     }
 }
@@ -99,35 +101,39 @@ pub fn input_system(mut params:InputParams,
                    mut ime_events:EventReader<ImeEvent>,
                    mut key_events:EventReader<KeyboardInput>,
                    sys_input:Res<SysInput>,
-                   ui_canvas:Query<(Entity,&UICanvas),With<Camera>>) {
+                   ui_canvas:Query<(Entity,&UICanvas),With<Camera>>,
+                   mut tree_events:EventReader<HierarchyEvent>) {
    for entity in sets.p1().iter().collect::<Vec<_>>() {
         if let Ok((input,rect)) = sets.p0().get(entity) {
             //init input
-            if !params.sys_data.cache_dict.contains_key(&entity) {
+            if let Some(cache) = params.sys_data.cache_dict.get_mut(&entity) {
+                cache.cache_rect = rect.clone();
+            } else {
                 init_input(entity, input,&rect, &mut params.sys_data, &mut params.texts,
-                           &mut params.commands,&params.ui_roots,&server,&mut mat_assets,&font_assets);
+                    &mut params.commands,&params.ui_roots,&server,&mut mat_assets,&font_assets);
             }
         }
    }
 
    for ev in ui_events.iter() {
-     if !ev.event_type.contains(UIEventType::TOUCH_START) {
-        continue;
+     if ev.event_type.contains(UIEventType::TOUCH_START)  {
+        if let Some(input_cache) = params.sys_data.cache_dict.get_mut(&ev.entity) {
+            let t = trans.get(ev.entity).unwrap();
+            //这里，这个转窗口坐标方式不安全
+            let end_postion = (1f32 / t.global.scale) * t.global.position;
+            click_input(input_cache,&mut mat_assets,&window,end_postion,&ev,&t.global);
+            
+            let out_pos = calc_caret_position(&input_cache);
+            if let Ok(mut t) = trans.get_mut(input_cache.caret_entity) {
+                t.local.position.x = out_pos.x;
+                t.local.position.y = 0f32
+            }
+
+            params.sys_data.active_input = Some(ev.entity);  
+         }
      }
-     if let Some(input_cache) = params.sys_data.cache_dict.get_mut(&ev.entity) {
-        let t = trans.get(ev.entity).unwrap();
-        //这里，这个转窗口坐标方式不安全
-        let end_postion = (1f32 / t.global.scale) * t.global.position;
-        click_input(input_cache,&mut mat_assets,&window,end_postion,&ev,&t.global);
-        
-        let out_pos = calc_caret_position(&input_cache);
-        if let Ok(mut t) = trans.get_mut(input_cache.caret_entity) {
-            t.local.position.x = out_pos.x;
-        }
-     }
-     params.sys_data.active_input = Some(ev.entity);
    }
-   flash_input(&mut params.sys_data, &mut mat_assets, &time);
+   //flash_input(&mut params.sys_data, &mut mat_assets, &time);
    
    //接收到输入事件
    if let Some(active_entity) = params.sys_data.active_input {
@@ -258,6 +264,23 @@ pub fn input_system(mut params:InputParams,
         }
      }
    }
+
+   //处理删除事件
+   for ev in tree_events.iter() {
+    match ev {
+        HierarchyEvent::Delete(_,all_entitys , _) => {
+            for e in all_entitys.iter() {
+                if Some(e) == params.sys_data.active_input.as_ref() {
+                    params.sys_data.active_input = None;
+                }
+                if params.sys_data.cache_dict.contains_key(e) {
+                    params.sys_data.cache_dict.remove(e);
+                }
+            }
+        }
+        _ => {}
+    }
+   }
 }
 
 
@@ -267,7 +290,7 @@ fn init_input(entity:Entity,input:&Input,rect:&Rect2D,sys_data:&mut InputTextSys
               ,server:&AssetServer,mats:&mut Assets<Material>,fonts:&Assets<TextFont>) {
     //create caret
     let mut caret_mat = Material::from_def(root.caret_mat_def.clone(), server).unwrap();
-    caret_mat.props.set_float4("color", Vec4::new(1f32, 0f32, 0f32, 0f32), 0);
+    caret_mat.props.set_float4("color", Vec4::new(input.caret_color.x, input.caret_color.y, input.caret_color.z, 0f32), 0);
     let caret_mesh = build_input_caret_mesh(rect, 0f32);
     let h_mat = mats.add(caret_mat);
     let r2d = UIRender2D {
@@ -277,8 +300,9 @@ fn init_input(entity:Entity,input:&Input,rect:&Rect2D,sys_data:&mut InputTextSys
         custom_mat:Some(h_mat.clone())
     };
     let caret_entity = commands.spawn((Transform::default(),rect.clone(),r2d)).set_parent(Some(entity)).id();
-
+    log::error!("caret_entity {:?}",caret_entity);
     let mut text_cache = InputTextCache::new(entity,caret_entity,h_mat);
+    text_cache.caret_color = input.caret_color;
     text_cache.text_entity = input.text_entity;
     text_cache.cache_rect = rect.clone();
     
@@ -333,6 +357,9 @@ fn update_caret_cursor(cache:&mut InputTextCache,click_pos:Vec2,t:&TransformMatr
     cache.cursor = -1;
     let mut idx:i32 = 0;
     let mut offset_x = 0f32;
+    if cache.cache_char_infos.is_empty() {
+        return;
+    }
     loop {
         if idx as usize >= cache.cache_char_infos.len() {
             cache.cursor = cache.cache_char_infos.len() as i32;
@@ -372,7 +399,7 @@ fn world_to_window(mut mouse_pos:Vec2,window:&AppWindow) -> Vec2 {
 }
 
 fn flash_input(sys_data:&mut InputTextSystemData,mats:&mut Assets<Material>,time:&Time) {
-    if let Some(active_entity) =sys_data.active_input {
+    if let Some(active_entity) = sys_data.active_input {
         if let Some(cache) = sys_data.cache_dict.get_mut(&active_entity) {
             cache.time = cache.time + time.delta_seconds();
             if cache.time > 0.5f32 {

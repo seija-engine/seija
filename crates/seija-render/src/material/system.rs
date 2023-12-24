@@ -38,7 +38,6 @@ impl MaterialSystem {
     }
 
     fn add_material_define(&mut self, define: Arc<MaterialDef>, res: &mut RenderResources) {
-        log::info!("add_material_define:{}",define.name.as_str());
         self.datas.insert(define.name.clone(), MaterialDefine::new(define, res));
     }
 
@@ -46,18 +45,13 @@ impl MaterialSystem {
         &self.common_buffer_layout
     }
 
-    pub fn update(
-        &mut self,
-        world: &mut World,
-        res: &mut RenderResources,
-        commands: &mut CommandEncoder,
-    ) {
+    pub fn update(&mut self,world: &mut World,res: &mut RenderResources,commands: &mut CommandEncoder) {
         
         {
             let rm_list: Vec<Entity> = world.removed::<Handle<Material>>().collect();
             for define in self.datas.values_mut() {
                 for rm_entity in rm_list.iter() {
-                    define.remove_material(rm_entity)
+                    define.remove_material(rm_entity);
                 }
             }
         };
@@ -81,8 +75,6 @@ impl MaterialSystem {
                         if !define.items.contains_key(&e) {
                            define.add_material(e, res,h_mat.id);
                         }
-
-                        
                         define.update_bind_group(e, res, &self.common_buffer_layout, mat);
                     } 
                  
@@ -160,6 +152,7 @@ impl DefineItem {
     }
 }
 
+//TODO 这里的Material设计有问题，材质没有办法复用和分配给多个渲染物体  
 #[derive(Debug)]
 pub struct MaterialDefine {
     buffer_item_size: u64,
@@ -214,12 +207,15 @@ impl MaterialDefine {
     }
 
     pub fn add_material(&mut self, id: Entity, res: &mut RenderResources,mat_id:HandleId) {
-        if self.items.contains_key(&id) {
-            return;
-        }
+        if self.items.contains_key(&id) { return; }
+        
         if let Some(mut free_item) = self.free_items.pop() {
             free_item.mat_id = Some(mat_id);
             self.items.insert(id, free_item);
+            for item in self.items.values_mut().chain(self.free_items.iter_mut()) {
+                item.is_dirty = true;
+            }
+            self.buffer_dirty = true;
             return;
         }
         self.len += 1;
@@ -227,7 +223,6 @@ impl MaterialDefine {
             while self.cap < self.len {
                 self.cap *= 2;
             }
-            
             let (new_cache_buffer, new_buffer) = Self::alloc_buffer(self.cap, self.buffer_item_size, res);
             self.cache_buffer = new_cache_buffer;
             self.gpu_buffer = new_buffer;

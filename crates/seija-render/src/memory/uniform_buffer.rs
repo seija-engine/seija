@@ -185,17 +185,24 @@ impl TypedUniformBuffer {
         }
     }
 
+    pub fn get_float3(&self,name:&str,idx:usize) -> [f32;3] {
+        if let Some(offset) = self.def.get_offset(name, idx) {
+            return self.buffer.read_bytes(offset,12);
+        }
+        [0f32,0f32,0f32]
+    }
+
     pub fn set_float4(&mut self,name:&str,v4:Vec4,idx:usize) {
         if let Some(offset) = self.def.get_offset(name, idx) {
             self.buffer.write_bytes(offset, v4.to_array());
         }
     }
 
-    pub fn get_float3(&self,name:&str,idx:usize) -> [f32;3] {
+    pub fn get_float4(&self,name:&str,idx:usize) -> [f32;4] {
         if let Some(offset) = self.def.get_offset(name, idx) {
-            return self.buffer.read_bytes(offset,12);
+            return self.buffer.read_bytes(offset,16);
         }
-        [0f32,0f32,0f32]
+        [0f32,0f32,0f32,0f32]
     }
 
     pub fn set_bool(&mut self,name:&str,v:bool,idx:usize) {

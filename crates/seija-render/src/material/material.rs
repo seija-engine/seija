@@ -3,10 +3,10 @@ use super::{MaterialDef, RenderOrder, MaterialDefineAsset};
 
 use bevy_ecs::prelude::{Component, World};
 use seija_asset::{Handle, AssetServer, Assets};
-use seija_core::{TypeUuid};
-use crate::pipeline::render_bindings::{BindGroupBuilder};
+use seija_core::TypeUuid;
+use crate::pipeline::render_bindings::BindGroupBuilder;
 use crate::resource::{RenderResources, Texture};
-use crate::{memory::{TypedUniformBuffer}};
+use crate::memory::TypedUniformBuffer;
 use uuid::Uuid;
 
 #[derive(Debug,TypeUuid,Component)]

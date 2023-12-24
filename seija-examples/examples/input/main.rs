@@ -12,15 +12,12 @@ use seija_ui::{
     types::{Thickness, AnchorAlign},
      update_ui_render, text::{Font, Text, LineMode}, event::{EventNode, UIEventType, UIEvent, UIEventSystem},
 };
+use seija_input::{Input as SysInput, keycode::KeyCode};
 use spritesheet::SpriteSheet;
 
 #[derive( Resource)]
 pub struct UIData {
-    text:Entity, 
-    number:i32,
-    panel_id:Entity,
-    h_font:Handle<Font>,
-    add_entitys:Vec<Entity>
+    input_entity:Option<Entity>,
 }
 
 fn main() {
@@ -87,17 +84,25 @@ fn start(world: &mut World) {
         input.text = String::from("123456");
         input.text_entity = Some(text_id);
         input.font_size = 22;
+        input.caret_color = Vec3::new(1f32, 1f32, 1f32);
         let mut event = EventNode::default();
         event.event_type = UIEventType::TOUCH_START;
         let e_text = world.spawn((input,rect2d,t,canvas,event)).set_parent(Some(panel_id)).id();
         log::error!("text:{:?}",e_text);
         e_text
     };
-
+    world.insert_resource(UIData {
+        input_entity:Some(input_id)
+    });
    
     
 }
 
-fn on_update(mut render:EventReader<UIEvent>) {
-   
+fn on_update(mut _events:EventReader<UIEvent>,input:Res<SysInput>,mut data:ResMut<UIData>,mut commands:Commands) {
+   if input.get_key_down(KeyCode::Delete) {
+      if let Some(e) = data.input_entity {
+        commands.entity(e).delete();
+        data.input_entity = None;
+      }
+   }
 }

@@ -95,7 +95,7 @@ impl Text {
       };
       if !self.is_auto_size {
         let mut screen_pos = Vec2::new(0f32, 0f32);
-        match self.anchor   {
+        match self.anchor  {
             AnchorAlign::Left => {
                 screen_pos.x -= rect.width * 0.5f32;
             }
