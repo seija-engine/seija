@@ -17,7 +17,7 @@ pub struct Material {
     pub order:RenderOrder,
     pub props:TypedUniformBuffer,
     pub texture_props:TextureProps,
-    pub bind_group:Option<wgpu::BindGroup>
+    pub bind_group:Option<Arc<wgpu::BindGroup>>
 }
 
 impl Material {

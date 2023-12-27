@@ -391,7 +391,7 @@ pub fn update_mesh_system(world:&mut World,mesh_reader:&mut ManualEventReader<As
                         changed_meshes.insert(handle.clone_weak());
                     }
                     AssetEvent::Modified { .. } => { }
-                    AssetEvent::Removed { ref handle } =>  { 
+                    AssetEvent::Removed { ref handle,.. } =>  { 
                         changed_meshes.remove(handle);
                         remove_resource(&handle.id,0,ctx);
                         remove_resource(&handle.id,1,ctx);

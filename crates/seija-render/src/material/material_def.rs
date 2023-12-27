@@ -1,12 +1,12 @@
-use std::{convert::{TryFrom}, sync::{Arc}};
-use seija_core::{TypeUuid};
+use std::{convert::TryFrom, sync::Arc};
+use seija_core::TypeUuid;
 use std::collections::hash_map::DefaultHasher;
 use std::hash::{Hash,Hasher};
 use smol_str::SmolStr;
 use wgpu::{FrontFace, PolygonMode};
 use super::{RenderOrder, errors::MaterialDefReadError, texture_prop_def::TexturePropDef, types::{Cull, SFrontFace, SPolygonMode, ZTest, RenderPath, STextureFormat, SBlendState}, TexturePropInfo};
 use lite_clojure_eval::EvalRT;
-use serde_json::{Value};
+use serde_json::Value;
 use uuid::Uuid;
 use crate::{memory::UniformBufferDef, uniforms::UniformTextureDef};
 

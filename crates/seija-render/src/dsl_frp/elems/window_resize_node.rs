@@ -37,6 +37,7 @@ impl IUpdateNode for WindowReSizeNode {
     
     fn update(&mut self,world:&mut World,_ctx:&mut RenderContext,frp_sys:&mut FRPSystem) ->Result<()> {
         //TODO 有不必要的重建需要优化
+        
         if let Some((w,h)) = self.win_event.get_new_window_size(world) {
             let mut textures = world.get_resource_mut::<Assets<Texture>>().unwrap();
             for dyn_id in self.dyn_textures.iter() {
@@ -48,7 +49,8 @@ impl IUpdateNode for WindowReSizeNode {
                            texture_desc.desc.size.width = w;
                            texture_desc.desc.size.height = h;
                           
-                           let new_h_texture = Box::new(RenderResourceId::Texture(textures.add(Texture::create_by_desc(texture_desc))));
+                           let new_h_tex = textures.add(Texture::create_by_desc(texture_desc));
+                           let new_h_texture = Box::new(RenderResourceId::Texture(new_h_tex));
                            let ptr = Box::into_raw(new_h_texture) as *mut u8;
                            dynamic.set_value(Variable::UserData(ptr));
                         }

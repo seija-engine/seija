@@ -1,14 +1,14 @@
-use std::{collections::HashMap, fmt::Debug};
+use std::{collections::HashMap, fmt::Debug, sync::Arc};
 
 use bevy_ecs::{prelude::{Res, ResMut}, system::Resource};
 use seija_core::smol::channel::{Sender, TryRecvError};
 use bevy_ecs::event::{EventWriter, Events};
-use crate::{asset::Asset, handle::{Handle, HandleId}, server::{AssetServer}, RefEvent, LifecycleEvent};
+use crate::{asset::Asset, handle::{Handle, HandleId}, server::AssetServer, RefEvent, LifecycleEvent};
 
 pub enum AssetEvent<T: Asset> {
     Created { handle: Handle<T> },
     Modified { handle: Handle<T> },
-    Removed { handle: Handle<T> },
+    Removed { handle: Handle<T>,value:Arc<T> },
 }
 impl<T: Asset> Debug for AssetEvent<T> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -17,7 +17,7 @@ impl<T: Asset> Debug for AssetEvent<T> {
               f.debug_struct(&format!("AssetEvent<{}>::Created",std::any::type_name::<T>())).field("handle", &handle.id).finish(),
             AssetEvent::Modified { handle } => 
               f.debug_struct(&format!("AssetEvent<{}>::Modified",std::any::type_name::<T>())).field("handle", &handle.id).finish(),
-            AssetEvent::Removed { handle } => 
+            AssetEvent::Removed { handle,.. } => 
               f.debug_struct(&format!("AssetEvent<{}>::Removed",std::any::type_name::<T>())).field("handle", &handle.id).finish(),
         }
     }
@@ -83,14 +83,17 @@ impl<T: Asset> Assets<T> {
         }
     }
 
-    pub fn remove(&mut self, handle_id: HandleId) -> Option<T> {
-        let asset = self.assets.remove(&handle_id);
-        if asset.is_some() {
+    pub fn remove(&mut self, handle_id: HandleId) -> Option<Arc<T>> {
+        let mut asset = self.assets.remove(&handle_id);
+        if let Some(v) = asset.take() {
+            let arc_value = Arc::new(v);
             self.events.send(AssetEvent::Removed {
                 handle: Handle::weak(handle_id),
+                value:arc_value.clone()
             });
-        }
-        asset
+            Some(arc_value)
+        } else { None }
+        
     }
 
     pub fn clear(&mut self) {

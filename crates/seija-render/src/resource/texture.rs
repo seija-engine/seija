@@ -150,7 +150,7 @@ pub fn update_texture_system(world:&mut World,texture_reader:&mut ManualEventRea
                 changed_textures.insert(handle.clone_weak());
             },
             AssetEvent::Modified { .. } => {},
-            AssetEvent::Removed { handle } => {
+            AssetEvent::Removed { handle,.. } => {
                 changed_textures.remove(&handle);
             }
         }

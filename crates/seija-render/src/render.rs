@@ -5,6 +5,7 @@ use seija_core::window::AppWindow;
 use seija_winit::event::{WindowCreated, WindowResized};
 use std::{borrow::Cow, sync::Arc};
 use wgpu::{CommandEncoderDescriptor, Device, Instance, Queue};
+use crate::material::Material;
 use crate::render_context::RenderContext;
 use crate::resource::{self, Mesh, RenderResources, Texture};
 use crate::dsl_frp::FRPDSLSystem;
@@ -19,6 +20,7 @@ pub struct AppRender {
     pub window_created_event_reader: ManualEventReader<WindowCreated>,
     mesh_event_reader:ManualEventReader<AssetEvent<Mesh>>,
     texture_event_reader:ManualEventReader<AssetEvent<Texture>>,
+    material_event_reader:ManualEventReader<AssetEvent<Material>>,
     pub pre_render_updates:Vec<fn(world:&mut World,ctx:&mut RenderContext)>
 }
 
@@ -59,6 +61,7 @@ impl AppRender {
             window_resized_event_reader:Default::default(),
             mesh_event_reader:Default::default(),
             texture_event_reader:Default::default(),
+            material_event_reader:Default::default(),
             frp_render:FRPDSLSystem::new(),
             pre_render_updates:vec![]
         }
@@ -101,7 +104,9 @@ impl AppRender {
         resource::update_mesh_system(world,&mut self.mesh_event_reader,ctx);
         resource::update_texture_system(world, &mut self.texture_event_reader, ctx);
         
-        ctx.material_system.update(world, &mut ctx.resources, ctx.command_encoder.as_mut().unwrap());
+        ctx.material_system.update(world, &mut ctx.resources,
+                                  ctx.command_encoder.as_mut().unwrap(),
+                                  &mut self.material_event_reader);
         for pre_update in self.pre_render_updates.iter() {
             pre_update(world,ctx);
         }
@@ -113,8 +118,10 @@ impl AppRender {
         
         let command_buffer = ctx.command_encoder.take().unwrap().finish();
         self.queue.submit(Some(command_buffer));
-        ctx.resources.submit_surface_texture();
-        ctx.frame_draw_pass = 0;
+        if ctx.frame_draw_pass > 0  {
+            ctx.resources.submit_surface_texture();
+            ctx.frame_draw_pass = 0;
+        }
         ctx.device.poll(wgpu::Maintain::Wait);
        
     }
