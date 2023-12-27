@@ -29,8 +29,8 @@ impl IElement for PostEffectItem {
     fn init(&mut self,world:&mut World,_:&mut RenderContext,
                 _:&mut FRPSystem,_:&mut lite_clojure_eval::EvalRT,_:&ElementCreator) -> Result<()> {
         let asset_server = world.get_resource::<AssetServer>().get()?.clone();
-        //let material = asset_server.load_sync::<Material>(world, &self.material_path, None)?;
-        //self.material = Some(material);
+        let material = asset_server.load_sync::<Material>(world, &self.material_path, None)?;
+        self.material = Some(material);
         self.material = None;
         Ok(())
     }
