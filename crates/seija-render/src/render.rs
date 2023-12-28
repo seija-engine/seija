@@ -118,10 +118,10 @@ impl AppRender {
         
         let command_buffer = ctx.command_encoder.take().unwrap().finish();
         self.queue.submit(Some(command_buffer));
-        if ctx.frame_draw_pass > 0  {
+        //if ctx.frame_draw_pass > 0  {
             ctx.resources.submit_surface_texture();
             ctx.frame_draw_pass = 0;
-        }
+        //}
         ctx.device.poll(wgpu::Maintain::Wait);
        
     }

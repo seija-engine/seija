@@ -38,7 +38,7 @@ pub struct Input {
 
 #[derive(Resource,Default)]
 pub struct InputTextSystemData {
-    cache_dict:HashMap<Entity,InputTextCache>,
+    pub(crate) cache_dict:HashMap<Entity,InputTextCache>,
     active_input:Option<Entity>
 }
 
@@ -59,7 +59,9 @@ pub struct InputTextCache {
     pub is_show:bool,
     pub cache_rect:Rect2D,
     pub cache_char_infos:Vec<CharInfo>,
-    pub caret_color:Vec3
+    pub caret_color:Vec3,
+    pub is_active:bool,
+    pub is_string_dirty:bool
 }
 
 impl InputTextCache {
@@ -73,6 +75,8 @@ impl InputTextCache {
             caret_mat,
             time:0f32,
             is_show:false,
+            is_active:false,
+            is_string_dirty:false,
             cache_rect:Rect2D::default(),
             cache_char_infos:vec![],
             caret_color:Vec3::new(1f32, 1f32, 1f32)
@@ -95,14 +99,14 @@ pub fn input_system(mut params:InputParams,
                    server:Res<AssetServer>,
                    mut mat_assets:ResMut<Assets<Material>>,
                    mut ui_events:EventReader<UIEvent>,
-                   time:Res<Time>,
                    window:Res<AppWindow>,
                    mut trans:Query<&mut Transform>,
                    mut ime_events:EventReader<ImeEvent>,
                    mut key_events:EventReader<KeyboardInput>,
                    sys_input:Res<SysInput>,
                    ui_canvas:Query<(Entity,&UICanvas),With<Camera>>,
-                   mut tree_events:EventReader<HierarchyEvent>) {
+                   mut tree_events:EventReader<HierarchyEvent>,
+                   time:Res<Time>) {
    for entity in sets.p1().iter().collect::<Vec<_>>() {
         if let Ok((input,rect)) = sets.p0().get(entity) {
             //init input
@@ -129,11 +133,16 @@ pub fn input_system(mut params:InputParams,
                 t.local.position.y = 0f32
             }
 
+            if let Some(old_input) = params.sys_data.active_input {
+               if let Some(mut old_cache) = params.sys_data.cache_dict.get_mut(&old_input) {
+                 old_cache.is_active = false;
+               }
+            }
             params.sys_data.active_input = Some(ev.entity);  
          }
      }
    }
-   //flash_input(&mut params.sys_data, &mut mat_assets, &time);
+   flash_input(&mut params.sys_data, &mut mat_assets, &time);
    
    //接收到输入事件
    if let Some(active_entity) = params.sys_data.active_input {
@@ -144,6 +153,7 @@ pub fn input_system(mut params:InputParams,
                     match event {
                        ImeEvent::ReceivedCharacter(chr) => {
                         if !chr.is_control() { 
+                            cache.is_string_dirty = true;
                             let font_scaled = cache.font_arc.as_ref().unwrap().as_scaled(input.font_size as f32);
                             let h_advance = font_scaled.h_advance(font_scaled.glyph_id(*chr));
                             let char_info = CharInfo {chr:*chr,advance : h_advance };
@@ -158,6 +168,7 @@ pub fn input_system(mut params:InputParams,
                         }
                        },
                        ImeEvent::Commit(s) => {
+                        cache.is_string_dirty = true;
                         let font_scaled = cache.font_arc.as_ref().unwrap().as_scaled(input.font_size as f32);
                         let mut char_len = 0;
                         let mut new_chars = vec![];
@@ -198,7 +209,8 @@ pub fn input_system(mut params:InputParams,
                     if key.state == InputState::Pressed {
                         match key.key_code {
                             KeyCode::Backspace => {
-                                if cache.cursor >= 0 && cache.cursor as usize <= cache.cache_char_infos.len() { 
+                                if cache.cursor >= 0 && cache.cursor as usize <= cache.cache_char_infos.len() {
+                                    cache.is_string_dirty = true;
                                     cache.cache_char_infos.remove(cache.cursor as usize);
                                     cache.cursor -= 1;
                                     input.text = String::from_iter(cache.cache_char_infos.iter().map(|c| c.chr));
@@ -258,6 +270,7 @@ pub fn input_system(mut params:InputParams,
                     let color = cache.caret_color;
                     caret_material.props.set_float4("color", Vec4::new(color.x, color.y, color.z, 0f32), 0);
                     cache.is_show = false;
+                    cache.is_active = false;
                 }
                 params.sys_data.active_input = None;
             }
@@ -300,7 +313,6 @@ fn init_input(entity:Entity,input:&Input,rect:&Rect2D,sys_data:&mut InputTextSys
         custom_mat:Some(h_mat.clone())
     };
     let caret_entity = commands.spawn((Transform::default(),rect.clone(),r2d)).set_parent(Some(entity)).id();
-    log::error!("caret_entity {:?}",caret_entity);
     let mut text_cache = InputTextCache::new(entity,caret_entity,h_mat);
     text_cache.caret_color = input.caret_color;
     text_cache.text_entity = input.text_entity;
@@ -334,6 +346,7 @@ fn update_input_char_infos(cache:&mut InputTextCache,text:&str,font_size:u32) {
 
 fn click_input(input_cache:&mut InputTextCache,mats:&mut Assets<Material>,window:&AppWindow,input_pos:Vec3,ev:&UIEvent,t:&TransformMatrix) {
     input_cache.is_show = true;
+    input_cache.is_active = true;
     input_cache.time = 0f32;
     //激活ime
     window.set_ime_allowed(true);

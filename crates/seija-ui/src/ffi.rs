@@ -7,7 +7,7 @@ use seija_render::RenderConfig;
 use spritesheet::SpriteSheet;
 
 use crate::{
-    components::{canvas::Canvas, rect2d::Rect2D, sprite::Sprite, ui_canvas::UICanvas, input::Input},
+    components::{canvas::Canvas, rect2d::Rect2D, sprite::Sprite, ui_canvas::UICanvas, input::{Input, InputTextSystemData}},
     event::{UIEventSystem, EventNode, UIEvent},
     types::Thickness,
     update_ui_render, UIModule, layout::{comps::{Orientation, StackLayout, FlexLayout, FlexItem}, types::{LayoutElement, CommonView, UISize, SizeValue, TypeElement, FreeLayoutItem}}, text::{Text, Font},
@@ -413,6 +413,44 @@ pub unsafe extern "C" fn ui_to_ui_pos(world:&World,pos:&Vec3,out_pos:&mut Vec3) 
         out_pos.y = h as f32 * 0.5f32 - pos.y;
     }
 }
+
+#[no_mangle]
+pub unsafe extern "C" fn input_get_is_active(world: &World,entity_id:u64) -> bool {
+    let entity = Entity::from_bits(entity_id);
+    if let Some(data) = world.get_resource::<InputTextSystemData>() {
+        if let Some(cache) = data.cache_dict.get(&entity) {
+            return cache.is_active;
+        }
+    }
+    false
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn input_read_string_dirty(world: &mut World,entity_id:u64) -> bool {
+    let entity = Entity::from_bits(entity_id);
+    if let Some(mut data) = world.get_resource_mut::<InputTextSystemData>() {
+        if let Some(cache) = data.cache_dict.get_mut(&entity) {
+            let is_dirty = cache.is_string_dirty;
+            cache.is_string_dirty = false;
+            return is_dirty;
+        }
+    }
+    false
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn input_get_string(world: &mut World,entity_id:u64,out_ptr:*mut i8) -> bool {
+    let entity = Entity::from_bits(entity_id);
+    if let Some(input) = world.entity(entity).get::<Input>() {
+        let c_string = std::ffi::CString::new(input.text.as_str()).unwrap();
+        let c_str = c_string.as_c_str();
+        std::ptr::copy_nonoverlapping(c_str.as_ptr(),out_ptr,c_str.to_bytes().len());
+        return true;
+    }
+    false
+}
+
+
 
 #[derive(Resource)]
 pub struct PostLayoutProcess(pub PostLayoutProcessF);
