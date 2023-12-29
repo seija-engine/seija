@@ -10,5 +10,4 @@ anyhow = "1.0.58"
 log = {workspace = true }
 seija-render = {path = "../seija-render"}
 seija-transform = {path = "../seija-transform"}
-#lite-clojure-eval = {git = "https://github.com/seija-engine/lite-clojure.git"}
-lite-clojure-eval = {path = "../../../lite-clojure/lite-clojure-eval"}
+lite-clojure-eval = {git = "https://github.com/seija-engine/lite-clojure.git"}

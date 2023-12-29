@@ -13,10 +13,10 @@ seija-core = {path = "../seija-core"}
 seija-winit = {path = "../seija-winit"}
 seija-transform = {path = "../seija-transform"}
 seija-geometry = {path = "../seija-geometry"}
-#lite-clojure-eval = {git = "https://github.com/seija-engine/lite-clojure.git"}
-#lite-clojure-frp = {git = "https://github.com/seija-engine/lite-clojure.git"}
-lite-clojure-eval = {path = "../../../lite-clojure/lite-clojure-eval"}
-lite-clojure-frp = {path = "../../../lite-clojure/lite-clojure-frp"}
+lite-clojure-eval = {git = "https://github.com/seija-engine/lite-clojure.git"}
+lite-clojure-frp = {git = "https://github.com/seija-engine/lite-clojure.git"}
+#lite-clojure-eval = {path = "../../../lite-clojure/lite-clojure-eval"}
+#lite-clojure-frp = {path = "../../../lite-clojure/lite-clojure-frp"}
 serde_json = "1.0.64"
 serde_derive = "1.0.136"
 serde = "1.0.136"
