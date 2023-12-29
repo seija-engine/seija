@@ -24,3 +24,10 @@ pub unsafe extern "C" fn app_start(app_ptr:*mut App)  {
     mut_app.start()
 }
 
+#[no_mangle]
+pub unsafe extern "C" fn app_quit(app_ptr:*mut App)  {
+    let mut_app = &mut *app_ptr;
+    mut_app.quit()
+}
+
+

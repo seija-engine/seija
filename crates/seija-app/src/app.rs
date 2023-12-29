@@ -13,6 +13,8 @@ pub struct App {
     pub last_call:Instant,
     pub frame_duration:Duration,
     fps:u32,
+
+    pub is_run:bool
 }
 
 impl App {
@@ -25,7 +27,8 @@ impl App {
             modules:vec![],
             fps,
             last_call:Instant::now(),
-            frame_duration:Duration::from_secs(1) / fps
+            frame_duration:Duration::from_secs(1) / fps,
+            is_run:true
         }
     }
 
@@ -82,5 +85,9 @@ impl App {
        } else {
            eprintln!("app runner is empty");
        }
+    }
+
+    pub fn quit(&mut self) {
+        self.is_run = false;
     }
 }
