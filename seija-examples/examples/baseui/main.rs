@@ -114,10 +114,12 @@ fn on_update(mut commands: Commands,
             let text_id = commands.spawn((text,rect2d,t)).set_parent(Some(ui_data.panel_id)).id();
             ui_data.add_entitys.push(text_id);
         } else if ui_data.number == 6 {
+           
             if let Some(pop_entity) = ui_data.add_entitys.pop() {
                 commands.entity(pop_entity).delete();
                 log::error!("despawn {:?}",&ui_data.add_entitys);
             }
+            std::process::exit(0);
         } else {
             if let Some(pop_entity) = ui_data.add_entitys.pop() {
                 commands.entity(pop_entity).set_parent(Some(ui_data.text));
