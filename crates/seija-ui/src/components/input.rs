@@ -112,6 +112,17 @@ pub fn input_system(mut params:InputParams,
             //init input
             if let Some(cache) = params.sys_data.cache_dict.get_mut(&entity) {
                 cache.cache_rect = rect.clone();
+                let cache_chars = cache.cache_char_infos.iter().map(|v| v.chr).collect::<Vec<_>>();
+                let new_chars = input.text.chars().collect::<Vec<_>>();
+                if cache_chars != new_chars {
+                    update_input_char_infos(cache,&input.text,input.font_size);
+                    if let Some(text_entity) = cache.text_entity {
+                        if let Ok(mut text) = params.texts.get_mut(text_entity) {
+                            text.text = input.text.clone();
+                        }
+                    }
+                    cache.cursor = new_chars.len() as i32;
+                }
             } else {
                 init_input(entity, input,&rect, &mut params.sys_data, &mut params.texts,
                     &mut params.commands,&params.ui_roots,&server,&mut mat_assets,&font_assets);
