@@ -1257,13 +1257,25 @@ dependencies = [
 ]
 
 [[package]]
+name = "glsl-pack-rtbase"
+version = "0.1.0"
+source = "git+https://github.com/seija-engine/glsl-pack.git#a3b1a7da67ab1dfe0f6ef7ba891b9abf0ed3cac5"
+dependencies = [
+ "base58",
+ "serde",
+ "serde_derive",
+ "serde_json",
+ "smol_str",
+]
+
+[[package]]
 name = "glsl-pkg"
 version = "0.1.0"
 dependencies = [
  "anyhow",
  "env_logger 0.8.4",
  "glsl-lang",
- "glsl-pack-rtbase",
+ "glsl-pack-rtbase 0.1.0",
  "lang-util",
  "lazy_static",
  "log",
@@ -1983,7 +1995,7 @@ dependencies = [
  "anyhow",
  "env_logger 0.8.4",
  "glob",
- "glsl-pack-rtbase",
+ "glsl-pack-rtbase 0.1.0",
  "glsl-pkg",
  "lite-clojure-eval",
  "log",
@@ -3225,7 +3237,7 @@ dependencies = [
  "fnv",
  "futures-lite",
  "glam 0.20.5",
- "glsl-pack-rtbase",
+ "glsl-pack-rtbase 0.1.0 (git+https://github.com/seija-engine/glsl-pack.git)",
  "image 0.24.5",
  "lite-clojure-eval",
  "lite-clojure-frp",
