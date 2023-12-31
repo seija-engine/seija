@@ -20,6 +20,9 @@ pub trait IWindow : HasRawWindowHandle + HasRawDisplayHandle {
     fn vsync(&self) -> bool;
     fn set_ime_position(&self,pos:Vec2);
     fn set_ime_allowed(&self,value:bool);
+    fn set_fullscreen(&self);
+    fn set_maximized(&self,value:bool);
+    fn set_inner_size(&self,w:f32,h:f32);
 }
 
 #[derive(Resource)]

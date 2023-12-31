@@ -43,6 +43,17 @@ impl IWindow for WinitWindow {
     fn set_ime_allowed(&self,value:bool) {
         self.window.set_ime_allowed(value);
     }
+    fn set_fullscreen(&self) {
+        self.window.set_fullscreen(Some(Fullscreen::Borderless(None)));
+    }
+
+    fn set_maximized(&self,value:bool) {
+        self.window.set_maximized(value);
+    }
+
+    fn set_inner_size(&self,w:f32,h:f32) {
+        self.window.set_inner_size(PhysicalSize::new(w, h));
+    }
 }
 
 impl WinitWindow {

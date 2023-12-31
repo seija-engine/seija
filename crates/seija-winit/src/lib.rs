@@ -4,7 +4,7 @@ pub mod ffi;
 use event::{WindowCreated, WindowResized, conv_mouse_input};
 use seija_app::{IModule,App};
 use seija_core::{ window::{AppWindow, WindowConfig},AddCore, math::Vec2};
-use seija_core::bevy_ecs::{event::{Events}};
+use seija_core::bevy_ecs::event::Events;
 use window::WinitWindow;
 use seija_input::{event::{KeyboardInput as IKeyboardInput, MouseInput, MouseWheelInput, ImeEvent}, Input};
 use winit::{event::{Event,WindowEvent,  MouseScrollDelta, Ime}, event_loop::{ControlFlow, EventLoop, EventLoopWindowTarget}, window::ImePurpose};

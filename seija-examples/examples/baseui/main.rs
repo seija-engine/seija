@@ -1,7 +1,7 @@
 use bevy_ecs::prelude::*;
 use glam::{Vec3, Vec4};
 use seija_asset::{AssetServer, Assets, Handle};
-use seija_core::{time::Time, CoreStage, StartupStage};
+use seija_core::{time::Time, CoreStage, StartupStage, window::AppWindow};
 use seija_examples::{init_core_app};
 use seija_render::{
     camera::camera::{Camera, Orthographic, SortType}
@@ -95,7 +95,12 @@ fn on_update(mut commands: Commands,
              mut texts:Query<&mut Text>,
              time: Res<Time>,
              mut ui_data: ResMut<UIData>,
-             mut render:EventReader<UIEvent>) {
+             mut render:EventReader<UIEvent>,
+             window:Res<AppWindow>,
+             input:Res<seija_input::Input>) {
+    if input.get_key_down(seija_input::keycode::KeyCode::F) {
+        window.set_inner_size(350f32,100f32);
+    }
     for event in render.iter() {
         ui_data.number += 1;
         let mut number_text = texts.get_mut(ui_data.text).unwrap();
