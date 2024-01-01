@@ -317,7 +317,6 @@ pub unsafe extern "C" fn entity_add_flex(world: &mut World,entity_id:u64,view:&C
     layout.common.ver = view.ver;
     layout.common.ui_size = ui_size.into();
     let entity = Entity::from_bits(entity_id);
-    log::info!("add flex:{:?}",&flex);
     world.entity_mut(entity).insert((layout,FrameDirty::default()));
 }
 

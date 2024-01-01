@@ -234,11 +234,12 @@ impl<'p,'i,'w,'s,'aa> MeasureScope<'p,'i,'w,'s,'aa> {
                                ,element:&LayoutElement) -> Vec2 {
       let self_size:Vec2 = force_size.unwrap_or_else(|| self.measure_self_size(entity, parent_size, element));
       let content_size = element.common.sub_margin_and_padding(self_size);
+      //log::error!("measure_flex_nowrap_element:{:?}",content_size);
       let main_axis_number = match flex.direction {
          FlexDirection::Column | FlexDirection::ColumnReverse => { content_size.y },
          FlexDirection::Row | FlexDirection::RowReverse => { content_size.x }
       };
-
+      //log::error!("main_axis_number:{:?}",main_axis_number);
       let mut child_size_lst:Vec<Vec2> = vec![];
       let mut all_shrink_total = 0f32;
       let mut all_grow_total = 0f32;
@@ -249,7 +250,7 @@ impl<'p,'i,'w,'s,'aa> MeasureScope<'p,'i,'w,'s,'aa> {
       for child_entity in self.params.childrens.get(entity).map(|v| v.iter()).unwrap_or_else(|_| [].iter()) {
          let child_size = self.calc_desired_size(*child_entity, UISize::from_number(content_size));
          child_size_lst.push(child_size);
-
+         //log::error!("child_size:{:?}",child_size);
          let (flex_item_shrink, flex_item_grow) = self.params.flexitems.get(*child_entity)
                                                       .ok()
                                                       .and_then(|flex_item| Some((flex_item.shrink, flex_item.grow)))
@@ -263,6 +264,7 @@ impl<'p,'i,'w,'s,'aa> MeasureScope<'p,'i,'w,'s,'aa> {
          }
          if flex_item_grow > 0f32 {
             all_grow_total += child_main_size * flex_item_grow;
+            //log::error!("all_grow_total+=:{:?} {:?}",child_main_size,flex_item_grow);
          } else {
             all_remain_grow -= child_main_size;
          }
@@ -272,6 +274,7 @@ impl<'p,'i,'w,'s,'aa> MeasureScope<'p,'i,'w,'s,'aa> {
       if all_main_child_size > main_axis_number {
          self.shrink_no_warp(entity, child_size_lst, flex, all_shrink_total, all_remain_shrink)
       } else if has_grow {
+         //log::error!("grow_no_warp:total={:?} {:?} remain={:?}",all_grow_total,child_size_lst,all_remain_grow);
          self.grow_no_warp(entity, child_size_lst, flex, all_grow_total, all_remain_grow);
       } else {
          for (index,child_entity) in self.params.childrens.get(entity).map(|v| v.iter()).unwrap_or_else(|_| [].iter()).enumerate() {
@@ -367,11 +370,12 @@ impl<'p,'i,'w,'s,'aa> MeasureScope<'p,'i,'w,'s,'aa> {
          let flex_item_grow = self.params.flexitems.get(*child_entity).map(|v| v.grow).unwrap_or(0f32);
          let child_size = child_size_lst[index];
          let (child_main_size , child_cross_size) = calc_axis_sizes(flex.direction, child_size);
-         let grow_rate = all_grow_total /  (child_main_size / flex_item_grow);
+         let grow_rate =   (child_main_size * flex_item_grow) / all_grow_total;
          let new_main_size = all_remain_grow * grow_rate;
          if flex_item_grow > 0f32 {
             self.measure_flex_item_element(*child_entity,axis2vec2(flex.direction, new_main_size, child_cross_size));
          } else {
+
             self.measure_flex_item_element(*child_entity,axis2vec2(flex.direction, child_main_size, child_cross_size));
          } 
        }

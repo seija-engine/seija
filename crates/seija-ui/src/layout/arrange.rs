@@ -137,10 +137,10 @@ impl<'p, 'i, 'w, 's, 'aa> ArrangeScope<'p, 'i, 'w, 's, 'aa> {
     }
 
     fn arrange_flex_element(&self,entity: Entity,flex:&FlexLayout,element: &LayoutElement,parent_origin: Vec2,parent_size: Vec2,
-                            _: ArrangeXY,changed_entitys: &mut Vec<Entity>) -> Vec2 {
+                            axy: ArrangeXY,changed_entitys: &mut Vec<Entity>) -> Vec2 {
         match flex.warp {
-            FlexWrap::Wrap => self.arrange_flex_element_wrap(entity,flex,element,parent_origin,parent_size,changed_entitys),
-            FlexWrap::NoWrap => self.arrange_flex_element_nowrap(entity,flex,element,parent_origin,parent_size,changed_entitys),
+            FlexWrap::Wrap => self.arrange_flex_element_wrap(entity,flex,element,parent_origin,parent_size,changed_entitys,axy),
+            FlexWrap::NoWrap => self.arrange_flex_element_nowrap(entity,flex,element,parent_origin,parent_size,changed_entitys,axy),
         }
     }
 
@@ -175,8 +175,8 @@ impl<'p, 'i, 'w, 's, 'aa> ArrangeScope<'p, 'i, 'w, 's, 'aa> {
 
     //计算换行情况下的排列
     fn arrange_flex_element_wrap(&self,entity: Entity,flex: &FlexLayout,elem: &LayoutElement,
-                                 parent_origin: Vec2,parent_size: Vec2,changed_entitys: &mut Vec<Entity>) -> Vec2 {
-        let this_pos = arrange_view_element(entity,elem,parent_origin,parent_size,ArrangeXY::ALL,self.params,changed_entitys);
+                                 parent_origin: Vec2,parent_size: Vec2,changed_entitys: &mut Vec<Entity>,axy: ArrangeXY) -> Vec2 {
+        let this_pos = arrange_view_element(entity,elem,parent_origin,parent_size,axy,self.params,changed_entitys);
         let this_size = self.params.rect2ds.get(entity).unwrap_or(&RECT2D_ID);
         let inner_size = elem.common.padding.sub2size(Vec2::new(this_size.width, this_size.height));
         let this_axis_size = flex.get_axis_size(inner_size);
@@ -236,8 +236,8 @@ impl<'p, 'i, 'w, 's, 'aa> ArrangeScope<'p, 'i, 'w, 's, 'aa> {
     }
 
     fn arrange_flex_element_nowrap(&self,entity:Entity,flex: &FlexLayout,element:&LayoutElement,
-                                   parent_origin: Vec2,parent_size: Vec2,changed_entitys: &mut Vec<Entity>) -> Vec2 {
-        let this_pos = arrange_view_element(entity,element,parent_origin,parent_size,ArrangeXY::ALL,self.params,changed_entitys);
+                                   parent_origin: Vec2,parent_size: Vec2,changed_entitys: &mut Vec<Entity>,axy:ArrangeXY) -> Vec2 {
+        let this_pos = arrange_view_element(entity,element,parent_origin,parent_size,axy,self.params,changed_entitys);
         let this_size = self.params.rect2ds.get(entity).unwrap_or(&RECT2D_ID);
         let inner_size = element.common.padding.sub2size(Vec2::new(this_size.width, this_size.height));
         let this_axis_size = flex.get_axis_size(inner_size);
