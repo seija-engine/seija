@@ -45,8 +45,13 @@ pub(crate) fn active_system(parent_query:Query<(Entity,Option<&Parent>)>,
 fn _set_children_active(entity:Entity,active:bool,state_infos:&mut Query<&mut EStateInfo>,
                         childs:&Query<Option<&Children>>,commands:&mut Commands) {
     //log::error!("real set active:{:?} = {:?}",entity,active);
-    if let Ok(mut state_info) = state_infos.get_mut(entity) {
-        state_info._is_active_global = active;
+    let mut new_active = active;
+    if let Ok(mut sinfo) = state_infos.get_mut(entity) {
+        if sinfo.is_active() {
+            sinfo._is_active_global = active;
+        } else {
+            new_active = false;
+        }
     } else {
         let mut info = EStateInfo::default();
         info._is_active_global = active;
@@ -54,7 +59,7 @@ fn _set_children_active(entity:Entity,active:bool,state_infos:&mut Query<&mut ES
     }
     if let Ok(Some(child)) = childs.get(entity) {
         for child_entity in child.iter() {
-            _set_children_active(*child_entity, active, state_infos, childs,commands)
+            _set_children_active(*child_entity, new_active, state_infos, childs,commands)
         }
     }
 }
