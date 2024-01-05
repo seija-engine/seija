@@ -5,7 +5,7 @@ use seija_core::{CoreStage, StartupStage};
 use seija_examples::init_core_app;
 use seija_render::{camera::camera::{Orthographic, Camera, SortType}};
 use seija_transform::{Transform, events::{EntityMutEx}};
-use seija_ui::{update_ui_render, text::{Font, Text, LineMode}, event::UIEventSystem, components::{ui_canvas::UICanvas, rect2d::Rect2D, sprite::Sprite, canvas::Canvas}, types::{Thickness, AnchorAlign}};
+use seija_ui::{update_ui_render,Rect2D, text::{Font, Text, LineMode}, event::UIEventSystem, components::{ui_canvas::UICanvas, sprite::Sprite, canvas::Canvas}, types::{Thickness, AnchorAlign}};
 
 const show_text:&'static str = "体验诗仙李白的豪放飘逸，诗圣杜甫的沉郁顿挫，诗佛王维的诗中有画，诗魔白居易的晓畅通俗，诗豪刘禹锡的旷达沉雄，七绝圣手王昌龄的清畅雄浑，五言长城刘长卿的清旷淡雅，孟浩然的淡泊清逸，高适的慷慨悲壮，岑参的雄奇弘阔，李商隐的精工典丽，杜牧的俊爽清妙";
 

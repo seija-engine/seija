@@ -1,8 +1,9 @@
 use bevy_ecs::prelude::Component;
 use seija_core::math::Vec2;
 use num_enum::FromPrimitive;
-use crate::{components::rect2d::Rect2D, types::Thickness};
+use crate::types::Thickness;
 use super::comps::{Orientation, StackLayout, FlexLayout};
+use seija_2d::common::Rect2D;
 
 #[derive(PartialEq, Eq, Clone, Copy, Debug,FromPrimitive)]
 #[repr(u8)]

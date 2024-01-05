@@ -8,9 +8,9 @@ use seija_render::{camera::camera::{Orthographic, Camera, SortType},
 };
 use seija_ui::layout::comps::FlexAlignContent;
 use seija_transform::{Transform, events::{EntityMutEx}};
-use seija_ui::{update_ui_render, 
+use seija_ui::{update_ui_render, Rect2D,
                components::{canvas::Canvas, ui_canvas::UICanvas, 
-               sprite::Sprite, rect2d::Rect2D}, 
+               sprite::Sprite}, 
                layout::{types::{LayoutElement, LayoutAlignment, SizeValue, UISize}, comps::{FlexLayout, FlexItem}}, types::Thickness };
 use spritesheet::SpriteSheet;
 

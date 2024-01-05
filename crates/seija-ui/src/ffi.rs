@@ -5,9 +5,9 @@ use seija_asset::{AssetServer, Handle, HandleId};
 use seija_core::{math::{Vec4, Vec2, Vec3}, TypeUuid, FrameDirty, window::AppWindow};
 use seija_render::RenderConfig;
 use spritesheet::SpriteSheet;
-
+use seija_2d::common::Rect2D;
 use crate::{
-    components::{canvas::Canvas, rect2d::Rect2D, sprite::Sprite, ui_canvas::UICanvas, input::{Input, InputTextSystemData}},
+    components::{canvas::Canvas, sprite::Sprite, ui_canvas::UICanvas, input::{Input, InputTextSystemData}},
     event::{UIEventSystem, EventNode, UIEvent},
     types::Thickness,
     update_ui_render, UIModule, layout::{comps::{Orientation, StackLayout, FlexLayout, FlexItem}, types::{LayoutElement, CommonView, UISize, SizeValue, TypeElement, FreeLayoutItem}}, text::{Text, Font},

@@ -2,13 +2,13 @@ use std::sync::Arc;
 
 use bevy_ecs::prelude::Component;
 use seija_asset::Handle;
-use seija_core::{ math::{Vec4, Mat4}};
+use seija_core::math::{Vec4, Mat4};
 use seija_render::material::MaterialDef;
 use spritesheet::SpriteSheet;
 use seija_core::Rect;
-use crate::{mesh2d::Mesh2D, types::{Thickness}, render::UIRender2D};
-use super::{ rect2d::Rect2D, image_info::{ImageGenericInfo, ImageType}};
-
+use crate::{mesh2d::Mesh2D, types::Thickness, render::UIRender2D};
+use super::image_info::{ImageGenericInfo, ImageType};
+use seija_2d::common::Rect2D;
 
 #[derive(Component)]
 #[repr(C)]

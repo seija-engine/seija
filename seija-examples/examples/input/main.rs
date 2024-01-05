@@ -7,8 +7,8 @@ use seija_render::{
     camera::camera::{Camera, Orthographic, SortType}
 };
 use seija_transform::{events::{EntityMutEx,EntityCommandsEx}, Transform};
-use seija_ui::{
-    components::{canvas::Canvas, rect2d::Rect2D, sprite::Sprite, ui_canvas::UICanvas, input::Input},
+use seija_ui::{Rect2D,
+    components::{canvas::Canvas, sprite::Sprite, ui_canvas::UICanvas, input::Input},
     types::{Thickness, AnchorAlign},
      update_ui_render, text::{Font, Text, LineMode}, event::{EventNode, UIEventType, UIEvent, UIEventSystem},
 };

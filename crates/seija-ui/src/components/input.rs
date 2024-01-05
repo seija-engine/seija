@@ -24,7 +24,7 @@ use crate::render::UIRender2D;
 use crate::system::UIRenderRoot;
 use crate::text::{Text, Font as TextFont};
 
-use super::rect2d::Rect2D;
+use seija_2d::common::Rect2D;
 use super::ui_canvas::UICanvas;
 #[derive(Component,Debug,Clone,Default)]
 #[repr(C)] 

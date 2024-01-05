@@ -8,7 +8,8 @@ use seija_render::{
 };
 use seija_transform::{events::{EntityMutEx}, Transform};
 use seija_ui::{
-    components::{canvas::Canvas, rect2d::Rect2D, sprite::Sprite, ui_canvas::UICanvas},
+    Rect2D,
+    components::{canvas::Canvas, sprite::Sprite, ui_canvas::UICanvas},
     types::Thickness,
      update_ui_render,event::{UIEventSystem},
      layout::types::{LayoutElement, FreeLayoutItem, LayoutAlignment, UISize},

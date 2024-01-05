@@ -3,8 +3,8 @@ use seija_core::{time::Time, CoreStage, StartupStage, info::EStateInfo};
 use seija_examples::init_core_app;
 use seija_text::{FontSystem, text::Text};
 use seija_transform::Transform;
-use seija_ui::{
-    components::{canvas::Canvas, rect2d::Rect2D, sprite::Sprite, ui_canvas::UICanvas},
+use seija_ui::{Rect2D,
+    components::{canvas::Canvas, sprite::Sprite, ui_canvas::UICanvas},
     types::Thickness,
      update_ui_render, 
      event::{EventNode, UIEventType, UIEvent, UIEventSystem}, 

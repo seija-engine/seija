@@ -5,9 +5,9 @@ use seija_core::{ CoreStage, StartupStage};
 use seija_examples::init_core_app;
 use seija_render::camera::camera::{Orthographic, Camera, SortType};
 use seija_transform::{Transform, events::{WorldEntityEx,EntityMutEx}};
-use seija_ui::{update_ui_render, 
+use seija_ui::{update_ui_render, Rect2D,
                components::{canvas::Canvas, ui_canvas::UICanvas, 
-               sprite::Sprite, rect2d::Rect2D}, 
+               sprite::Sprite}, 
                types::Thickness, layout::types::LayoutElement };
 use spritesheet::SpriteSheet;
 

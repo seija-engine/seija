@@ -4,7 +4,7 @@ pub mod system;
 mod measure;
 mod arrange;
 use lazy_static::lazy_static;
-use crate::components::rect2d::Rect2D;
+use seija_2d::common::Rect2D;
 
 use self::types::LayoutElement;
 

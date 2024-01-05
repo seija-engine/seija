@@ -2,7 +2,7 @@ use bevy_ecs::{prelude::*, system::SystemParam};
 use seija_core::{math::{Vec4, Vec2}, window::AppWindow, info::EStateInfo};
 use seija_input::Input;
 use seija_transform::{Transform, hierarchy::{Children, Parent}};
-use crate::components::rect2d::Rect2D;
+use seija_2d::common::Rect2D;
 use super::{UIEventSystem, EventNode, UIEventType, EventNodeState, UIEvent};
 
 #[derive(SystemParam)]

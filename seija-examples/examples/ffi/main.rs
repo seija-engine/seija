@@ -5,8 +5,8 @@ use seija_core::{CoreStage, StartupStage};
 use seija_examples::init_core_app;
 use seija_render::{camera::camera::{Camera, Orthographic, SortType}};
 use seija_transform::{Transform,events::EntityMutEx};
-use seija_ui::{update_ui_render, event::UIEventSystem, 
-    components::{ui_canvas::UICanvas, canvas::Canvas, rect2d::Rect2D, sprite::Sprite}, 
+use seija_ui::{update_ui_render, event::UIEventSystem,Rect2D, 
+    components::{ui_canvas::UICanvas, canvas::Canvas, sprite::Sprite}, 
     layout::types::{LayoutElement, UISize, LayoutAlignment}};
 use spritesheet::SpriteSheet;
 

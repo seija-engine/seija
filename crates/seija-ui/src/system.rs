@@ -8,9 +8,10 @@ use seija_render::{material::{MaterialDefineAsset, MaterialDef, Material},
 use seija_transform::{hierarchy::{Parent, Children}, Transform, events::HierarchyEvent};
 use spritesheet::SpriteSheet;
 use glyph_brush::{GlyphBrush, GlyphBrushBuilder,FontId,BrushAction};
-use crate::{components::{sprite::Sprite, rect2d::Rect2D, canvas::{Canvas, ZOrder, Z_SCALE}, input::{InputTextSystemData, Input}}, 
+use crate::{components::{sprite::Sprite, canvas::{Canvas, ZOrder, Z_SCALE}, input::InputTextSystemData}, 
             render::{UIRender2D, WriteFontAtlas}, 
             mesh2d::Vertex2D, text::{Text, Font, glyph_to_mesh, write_font_texture}, types::Box2D};
+use seija_2d::common::Rect2D;
 use wgpu::TextureFormat;
 #[derive(Resource)]
 pub struct UIRenderRoot {

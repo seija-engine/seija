@@ -7,8 +7,8 @@ use seija_render::{
     camera::camera::{Camera, Orthographic, SortType}
 };
 use seija_transform::{Transform,events::EntityMutEx};
-use seija_ui::{
-    components::{ui_canvas::UICanvas, rect2d::Rect2D, canvas::Canvas, sprite::Sprite},
+use seija_ui::{Rect2D,
+    components::{ui_canvas::UICanvas, canvas::Canvas, sprite::Sprite},
      update_ui_render, event::{UIEventSystem}, types::Thickness, layout::types::{LayoutElement, LayoutAlignment, SizeValue},
 };
 use spritesheet::SpriteSheet;

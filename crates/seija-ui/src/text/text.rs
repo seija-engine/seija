@@ -3,7 +3,8 @@ use glyph_brush::{Section, ab_glyph::PxScale, Layout,VerticalAlign,HorizontalAli
 use seija_asset::Handle;
 use seija_core::math::{Vec4, Vec2};
 use seija_render::resource::{Texture, TextureType};
-use crate::{types::AnchorAlign, mesh2d::{Vertex2D, Mesh2D}, components::rect2d::Rect2D};
+use crate::{types::AnchorAlign, mesh2d::{Vertex2D, Mesh2D}};
+use seija_2d::common::Rect2D;
 use super::Font;
 use num_enum::{TryFromPrimitive,IntoPrimitive};
 #[derive(Debug, Clone, Eq, PartialEq,Copy,TryFromPrimitive,IntoPrimitive)]

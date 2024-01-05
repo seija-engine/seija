@@ -3,9 +3,10 @@ use bevy_ecs::{system::{SystemParam, Query, Res}, prelude::{Entity, EventReader}
 use seija_core::{math::Vec2, window::AppWindow, FrameDirty, time::Time, info::EStateInfo};
 use seija_transform::{events::HierarchyEvent, hierarchy::{Parent, Children}, Transform};
 use seija_winit::event::WindowResized;
-use crate::{components::{rect2d::Rect2D, ui_canvas::UICanvas}, ffi::PostLayoutProcess};
+use crate::{components::ui_canvas::UICanvas, ffi::PostLayoutProcess};
 use super::{types::{LayoutElement, FreeLayoutItem}, measure::MeasureScope, arrange::{ 
     ArrangeXY,arrange_freeitem_and_set_pos,arrange_freeitem_layout, ArrangeScope}, comps::FlexItem};
+use seija_2d::common::Rect2D;
 
 #[derive(SystemParam)]
 pub struct LayoutParams<'w,'s> {
