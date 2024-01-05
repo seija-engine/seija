@@ -1,7 +1,7 @@
 use seija_core::math::{Vec4, Mat4,Vec4Swizzles, Vec2};
-use crate::{types::{Thickness}, mesh2d::{Mesh2D, Vertex2D}};
+use crate::common::types::Thickness;
 use seija_core::Rect;
-use seija_2d::common::Rect2D;
+use crate::common::{Rect2D,Mesh2D,Vertex2D};
 
 #[derive(Copy,Clone,PartialEq,Eq)]
 pub enum ImageFilledType {

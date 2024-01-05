@@ -6,9 +6,8 @@ use seija_examples::init_core_app;
 use seija_input::Input;
 use seija_render:: camera::camera::{Camera, Orthographic};
 use seija_transform::{events::EntityMutEx, Transform};
-use seija_ui::{Rect2D,
+use seija_ui::{Rect2D,Thickness,
     components::{canvas::Canvas, sprite::Sprite, ui_canvas::UICanvas},
-    types::Thickness,
     update_ui_render, event::{UIEventSystem, EventNode, UIEvent, UIEventType},
 };
 use spritesheet::SpriteSheet;

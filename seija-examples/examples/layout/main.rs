@@ -10,7 +10,7 @@ use seija_render::{
 use seija_transform::{events::EntityMutEx,Transform};
 use seija_ui::{Rect2D,
     components::{canvas::Canvas, sprite::Sprite, ui_canvas::UICanvas},
-    types::Thickness,
+    Thickness,
     update_ui_render, layout::{types::{LayoutElement, LayoutAlignment, SizeValue}, comps::Orientation},
 };
 use spritesheet::SpriteSheet;

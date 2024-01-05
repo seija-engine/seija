@@ -8,13 +8,15 @@ use seija_app::ecs::prelude::*;
 pub mod types;
 pub mod text;
 pub mod components;
-pub mod mesh2d;
 pub mod event;
 mod render;
 mod system;
 pub mod layout;
 pub mod ffi;
+
 pub use seija_2d::common::Rect2D;
+pub use seija_2d::common::types::Thickness;
+
 use components::{ui_canvas::update_ui_canvas, input::input_system};
 pub use render::update_ui_render;
 use system::{on_ui_start, update_render_mesh_system, update_canvas_render, update_canvas_trans, update_ui_clips};

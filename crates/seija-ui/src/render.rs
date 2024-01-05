@@ -3,8 +3,8 @@ use glyph_brush::Rectangle;
 use bevy_ecs::{world::World, prelude::{Component, Events}};
 use seija_asset::{Handle, Assets};
 use seija_render::{RenderContext, resource::{Texture, BufferId, RenderResources}, material::{MaterialDef, Material}};
-use crate::{mesh2d::Mesh2D, system::UIRenderRoot};
-
+use crate::system::UIRenderRoot;
+use seija_2d::common::Mesh2D;
 #[derive(Component,Debug)]
 pub struct UIRender2D {
    pub mat_def:Arc<MaterialDef>,

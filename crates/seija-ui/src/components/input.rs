@@ -19,12 +19,10 @@ use seija_transform::TransformMatrix;
 use seija_transform::events::HierarchyEvent;
 use seija_transform::{Transform,events::EntityCommandsEx}; 
 use crate::event::{UIEvent, UIEventType};
-use crate::mesh2d::{Vertex2D, Mesh2D};
 use crate::render::UIRender2D;
 use crate::system::UIRenderRoot;
 use crate::text::{Text, Font as TextFont};
-
-use seija_2d::common::Rect2D;
+use seija_2d::common::{Rect2D,Mesh2D,Vertex2D};
 use super::ui_canvas::UICanvas;
 #[derive(Component,Debug,Clone,Default)]
 #[repr(C)] 

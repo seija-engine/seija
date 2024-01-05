@@ -1,16 +1,13 @@
 use bevy_ecs::prelude::*;
-use glam::{Vec3, Vec4, Vec2};
-use seija_asset::{AssetServer, Assets, Handle};
-use seija_core::{time::Time, CoreStage, StartupStage};
-use seija_examples::{init_core_app};
-use seija_render::{
-    camera::camera::{Camera, Orthographic, SortType}
-};
+use glam::{Vec3, Vec4};
+use seija_asset::{AssetServer, Assets};
+use seija_core::{CoreStage, StartupStage};
+use seija_examples::init_core_app;
+use seija_render::camera::camera::{Camera, Orthographic, SortType};
 use seija_transform::{events::{EntityMutEx,EntityCommandsEx}, Transform};
-use seija_ui::{Rect2D,
-    components::{canvas::Canvas, sprite::Sprite, ui_canvas::UICanvas, input::Input},
-    types::{Thickness, AnchorAlign},
-     update_ui_render, text::{Font, Text, LineMode}, event::{EventNode, UIEventType, UIEvent, UIEventSystem},
+use seija_ui::{Rect2D,Thickness,
+    components::{canvas::Canvas, sprite::Sprite, ui_canvas::UICanvas, input::Input},types::AnchorAlign,
+    update_ui_render, text::{Font, Text, LineMode}, event::{EventNode, UIEventType, UIEvent, UIEventSystem},
 };
 use seija_input::{Input as SysInput, keycode::KeyCode};
 use spritesheet::SpriteSheet;
@@ -58,7 +55,7 @@ fn start(world: &mut World) {
     {
         let canvas = Canvas::default();
         let t = Transform::default();
-        let mut rect2d = Rect2D::new(100f32, 50f32);
+        let rect2d = Rect2D::new(100f32, 50f32);
         let sprite = Sprite::simple(btn3on_index,Some(h_sheet.clone()),Vec4::ONE);
         world.spawn((sprite,rect2d,t,canvas)).set_parent(Some(panel_id));
     };

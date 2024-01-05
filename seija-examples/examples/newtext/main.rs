@@ -4,8 +4,7 @@ use seija_examples::init_core_app;
 use seija_text::{FontSystem, text::Text};
 use seija_transform::Transform;
 use seija_ui::{Rect2D,
-    components::{canvas::Canvas, sprite::Sprite, ui_canvas::UICanvas},
-    types::Thickness,
+     Thickness,
      update_ui_render, 
      event::{EventNode, UIEventType, UIEvent, UIEventSystem}, 
      layout::{types::{LayoutElement, LayoutAlignment, SizeValue, UISize}, comps::Orientation},

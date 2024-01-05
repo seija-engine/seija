@@ -4,11 +4,11 @@ use seija_asset::{AssetServer, Assets, Handle};
 use seija_core::{time::Time, CoreStage, StartupStage, info::EStateInfo};
 use seija_examples::init_core_app;
 use seija_render::camera::camera::{Camera, Orthographic, SortType};
-use seija_transform::{events::{EntityMutEx,WorldEntityEx,EntityCommandsEx}, Transform};
+use seija_transform::{events::{EntityMutEx,EntityCommandsEx}, Transform};
 use seija_ui::{Rect2D,
     components::{canvas::Canvas, sprite::Sprite, ui_canvas::UICanvas},
-    types::Thickness,
-     update_ui_render, text::{Font, Text}, 
+     Thickness,
+     update_ui_render, text::Font, 
      event::{EventNode, UIEventType, UIEvent, UIEventSystem}, 
      layout::{types::{LayoutElement, LayoutAlignment, SizeValue, UISize}, comps::Orientation},
 };

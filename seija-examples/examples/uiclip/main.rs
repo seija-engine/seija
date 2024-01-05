@@ -2,14 +2,12 @@ use bevy_ecs::prelude::*;
 use glam::{Vec3, Vec4};
 use seija_asset::{AssetServer, Assets};
 use seija_core::{CoreStage, StartupStage};
-use seija_examples::{init_core_app};
-use seija_render::{
-    camera::camera::{Camera, Orthographic, SortType}
-};
+use seija_examples::init_core_app;
+use seija_render::camera::camera::{Camera, Orthographic, SortType};
 use seija_transform::{Transform,events::EntityMutEx};
-use seija_ui::{Rect2D,
+use seija_ui::{Rect2D,Thickness,
     components::{ui_canvas::UICanvas, canvas::Canvas, sprite::Sprite},
-     update_ui_render, event::{UIEventSystem}, types::Thickness, layout::types::{LayoutElement, LayoutAlignment, SizeValue},
+     update_ui_render, event::UIEventSystem, layout::types::{LayoutElement, LayoutAlignment},
 };
 use spritesheet::SpriteSheet;
 

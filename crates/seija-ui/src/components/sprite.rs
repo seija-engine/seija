@@ -6,9 +6,9 @@ use seija_core::math::{Vec4, Mat4};
 use seija_render::material::MaterialDef;
 use spritesheet::SpriteSheet;
 use seija_core::Rect;
-use crate::{mesh2d::Mesh2D, types::Thickness, render::UIRender2D};
-use super::image_info::{ImageGenericInfo, ImageType};
-use seija_2d::common::Rect2D;
+use crate::render::UIRender2D;
+use seija_2d::common::{ImageGenericInfo, ImageType};
+use seija_2d::common::{Rect2D,types::Thickness,mesh2d::Mesh2D};
 
 #[derive(Component)]
 #[repr(C)]

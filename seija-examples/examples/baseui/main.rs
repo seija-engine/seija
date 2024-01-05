@@ -2,16 +2,11 @@ use bevy_ecs::prelude::*;
 use glam::{Vec3, Vec4};
 use seija_asset::{AssetServer, Assets, Handle};
 use seija_core::{time::Time, CoreStage, StartupStage, window::AppWindow};
-use seija_examples::{init_core_app};
-use seija_render::{
-    camera::camera::{Camera, Orthographic, SortType}
-};
+use seija_examples::init_core_app;
+use seija_render::camera::camera::{Camera, Orthographic, SortType};
 use seija_transform::{events::{EntityMutEx,EntityCommandsEx}, Transform};
-use seija_ui::{
-    Rect2D,
-    components::{canvas::Canvas, sprite::Sprite, ui_canvas::UICanvas},
-    types::Thickness,
-     update_ui_render, text::{Font, Text, LineMode}, event::{EventNode, UIEventType, UIEvent, UIEventSystem},
+use seija_ui::{Rect2D,components::{canvas::Canvas, sprite::Sprite, ui_canvas::UICanvas},Thickness,
+    update_ui_render, text::{Font, Text, LineMode}, event::{EventNode, UIEventType, UIEvent, UIEventSystem},
 };
 use spritesheet::SpriteSheet;
 

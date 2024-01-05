@@ -1,17 +1,17 @@
-use bevy_ecs::{prelude::*};
+use bevy_ecs::prelude::*;
 use glam::{Vec4, Vec2};
 use seija_asset::{AssetServer, Assets, Handle};
 use seija_core::{ CoreStage, StartupStage};
-use seija_examples::{init_core_app};
+use seija_examples::init_core_app;
 use seija_ui::layout::comps::{FlexAlignItems, FlexJustify, FlexWrap};
-use seija_render::{camera::camera::{Orthographic, Camera, SortType},
-};
+use seija_render::camera::camera::{Orthographic, Camera, SortType};
+
 use seija_ui::layout::comps::FlexAlignContent;
-use seija_transform::{Transform, events::{EntityMutEx}};
-use seija_ui::{update_ui_render, Rect2D,
+use seija_transform::{Transform, events::EntityMutEx};
+use seija_ui::{update_ui_render, Rect2D,Thickness,
                components::{canvas::Canvas, ui_canvas::UICanvas, 
                sprite::Sprite}, 
-               layout::{types::{LayoutElement, LayoutAlignment, SizeValue, UISize}, comps::{FlexLayout, FlexItem}}, types::Thickness };
+               layout::{types::{LayoutElement, LayoutAlignment, SizeValue, UISize}, comps::{FlexLayout, FlexItem}}};
 use spritesheet::SpriteSheet;
 
 

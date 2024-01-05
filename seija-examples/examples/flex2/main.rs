@@ -4,11 +4,10 @@ use seija_asset::{AssetServer, Assets};
 use seija_core::{ CoreStage, StartupStage};
 use seija_examples::init_core_app;
 use seija_render::camera::camera::{Orthographic, Camera, SortType};
-use seija_transform::{Transform, events::{WorldEntityEx,EntityMutEx}};
-use seija_ui::{update_ui_render, Rect2D,
+use seija_transform::{Transform, events::EntityMutEx};
+use seija_ui::{update_ui_render, Rect2D,Thickness,
                components::{canvas::Canvas, ui_canvas::UICanvas, 
-               sprite::Sprite}, 
-               types::Thickness, layout::types::LayoutElement };
+               sprite::Sprite},layout::types::LayoutElement };
 use spritesheet::SpriteSheet;
 
 
@@ -26,7 +25,7 @@ fn start(world: &mut World) {
     let sheets = world.get_resource::<Assets<SpriteSheet>>().unwrap();
     let ui_sheet = sheets.get(&h_sheet.id).unwrap();
     let bg_index = ui_sheet.get_index("lm-db").unwrap();
-    let sprite_index = ui_sheet.get_index("Btn4On").unwrap();
+    //let sprite_index = ui_sheet.get_index("Btn4On").unwrap();
     //CameraCanvas
     let mut ortho = Orthographic::default();
     ortho.far = 1000f32;

@@ -8,3 +8,6 @@ edition = "2021"
 seija-transform = {path = "../seija-transform"}
 bevy_ecs = "0.9.0"
 seija-core = {path = "../seija-core"}
+seija-render = {path = "../seija-render"}
+seija-asset = {path = "../seija-asset"}
+wgpu = {workspace = true }

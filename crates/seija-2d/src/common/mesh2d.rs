@@ -1,5 +1,5 @@
 use seija_core::math::{Vec3, Vec4, Vec2};
-use seija_render::{resource::{Mesh, MeshAttributeType, Indices}};
+use seija_render::resource::{Mesh, MeshAttributeType, Indices};
 use wgpu::PrimitiveTopology;
 
 #[derive(Debug,Clone,Default)]
