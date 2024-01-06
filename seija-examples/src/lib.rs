@@ -2,6 +2,7 @@ use std::sync::Arc;
 
 use bevy_ecs::{prelude::{Commands, Entity, World}, system::{EntityCommands, Res, Local, Query}};
 use glam::{Quat, Vec3, Vec2};
+use seija_2d::R2DModule;
 use seija_app::App;
 use seija_asset::{Assets, Handle, AssetModule, AssetServer};
 use seija_core::{window::AppWindow, info::EInfo, CoreModule, time::Time};
@@ -51,6 +52,7 @@ pub fn init_core_app(render_file:&str,pre_renders:Vec<fn(world:&mut World,ctx:&m
         pre_render_updates:pre_renders
     };
     app.add_module(RenderModule(Arc::new(render_config)));
+    app.add_module(R2DModule);
     app.add_module(UIModule);
     app.start();
     app

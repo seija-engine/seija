@@ -8,6 +8,7 @@ edition = "2018"
 material-compiler = {path = "../crates/tools/material-compiler"}
 
 [dependencies]
+seija-2d = {path = "../crates/seija-2d"}
 seija-asset = {path = "../crates/seija-asset"}
 seija-app = {path = "../crates/seija-app"}
 seija-core = {path = "../crates/seija-core"}

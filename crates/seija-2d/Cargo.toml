@@ -11,4 +11,7 @@ seija-core = {path = "../seija-core"}
 seija-render = {path = "../seija-render"}
 seija-asset = {path = "../seija-asset"}
 seija-app = {path = "../seija-app"}
+seija-winit = {path = "../seija-winit"}
+spritesheet = {path = "../spritesheet" }
 wgpu = {workspace = true }
+log = {workspace = true }
