@@ -165,7 +165,7 @@ impl IElement for UniformSetElement {
         Ok(())
     }
 
-    fn deactive(&mut self,world:&mut World,ctx:&mut RenderContext,_frp_sys:&mut FRPSystem) -> Result<()> {
+    fn deactive(&mut self,_world:&mut World,_ctx:&mut RenderContext,_frp_sys:&mut FRPSystem) -> Result<()> {
         Ok(())
     }
 }

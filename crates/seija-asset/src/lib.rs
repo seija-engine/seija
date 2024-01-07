@@ -1,6 +1,6 @@
 use std::path::PathBuf;
 use bevy_ecs::prelude::World;
-use bevy_ecs::schedule::{StageLabel};
+use bevy_ecs::schedule::StageLabel;
 use bevy_ecs::schedule::SystemStage;
 use loading_queue::AssetLoadingQueue;
 use relative_path::RelativePath;
