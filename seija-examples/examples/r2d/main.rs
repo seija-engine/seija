@@ -21,7 +21,6 @@ fn start(world: &mut World) {
     let mut camera = Camera::from_2d(Orthographic::default());
     camera.sort_type = SortType::Z;
     let server = world.get_resource::<AssetServer>().unwrap().clone();
-    let h_texture = server.load_sync::<Texture>(world, "texture/backyard_evening.png", None).unwrap();
 
     let wh_info = ScreenSizeMatchWHInfo { design_size:Vec2::new(1920f32,1080f32),wh_rate:1f32 };
     
@@ -33,12 +32,14 @@ fn start(world: &mut World) {
     let canvas_id = world.spawn((t,scaler)).id();
     log::error!("camera_id id:{:?}",camera_id);
    
+    /*
+    let h_texture = server.load_sync::<Texture>(world, "texture/backyard_evening.png", None).unwrap();
     let img = Image::new(h_texture, Vec4::ONE);
     let mut rect2d = Rect2D::default();
     rect2d.width = 1920f32;
     rect2d.height = 1080f32;
     let image_id = world.spawn((img,rect2d,Transform::default())).set_parent(Some(canvas_id)).id();
-    log::error!("image id:{:?}",image_id);
+    log::error!("image id:{:?}",image_id);*/
 
     let h_sheet = server.load_sync::<SpriteSheet>(world, "ui/default.json", None).unwrap();
     let sheets = world.get_resource::<Assets<SpriteSheet>>().unwrap();

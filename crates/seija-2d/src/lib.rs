@@ -28,14 +28,19 @@ impl IModule for R2DModule {
 #[derive(Resource)]
 pub struct Module2DResource {
    pub(crate) image_material_define:Arc<MaterialDef>,
+   pub(crate) sprite_material_define:Arc<MaterialDef>,
 }
 
 fn on_2d_start(world:&mut World) {
     let server = world.get_resource::<AssetServer>().unwrap().clone();
     let mut h_image = server.load_sync::<MaterialDefineAsset>(world, "materials/ui.mat.clj", None).unwrap();
     h_image.forget();
+    let mut h_sprite = server.load_sync::<MaterialDefineAsset>(world, "materials/sprite.mat.clj", None).unwrap();
+    h_sprite.forget();
+
     let mats = world.get_resource::<Assets<MaterialDefineAsset>>().unwrap();
     let image_material_define = mats.get(&h_image.id).unwrap().define.clone();
-    let res2d = Module2DResource { image_material_define };
+    let sprite_material_define = mats.get(&h_sprite.id).unwrap().define.clone();
+    let res2d = Module2DResource { image_material_define,sprite_material_define };
     world.insert_resource(res2d);
 }

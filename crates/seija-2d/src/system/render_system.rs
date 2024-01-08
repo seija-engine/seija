@@ -1,6 +1,6 @@
 use bevy_ecs::{system::{Query, Commands, Res, ResMut}, entity::Entity, query::ChangeTrackers};
 use seija_asset::{Handle, AssetServer, Assets};
-use seija_core::math::Mat4;
+use seija_core::math::{Mat4, Vec3};
 use seija_render::{material::Material, resource::Mesh};
 use spritesheet::SpriteSheet;
 
@@ -51,20 +51,25 @@ fn init_sprite2d(entity:Entity,sprite2d:&Sprite2D,rect2d:&Rect2D,commands:&mut C
         Some(material.clone())
     } else {
         if let Some(h_texture) = cur_sheet.map(|s| &s.texture) {
-            let mut material = Material::from_def(res2d.image_material_define.clone(),server).unwrap();
+            let mut material = Material::from_def(res2d.sprite_material_define.clone(),server).unwrap();
             material.texture_props.set("mainTexture", h_texture.clone());
+            if let Some(info) = cur_sheet.and_then(|s| s.get_info(sprite2d.sprite_index)) {
+                let uv = &info.uv;
+                material.props.set_float3("uvBuffer", Vec3::new(uv.x, uv.y, 0f32), 0);
+                material.props.set_float3("uvBuffer", Vec3::new(uv.x + uv.width,uv.y, 0f32), 1);
+                material.props.set_float3("uvBuffer", Vec3::new(uv.x,uv.y + uv.height, 0f32), 2);
+                material.props.set_float3("uvBuffer", Vec3::new(uv.x + uv.width,uv.y + uv.height, 0f32), 3);
+            }
             let new_material = mats.add(material);
             Some(new_material)
         } else { None }
     };
-    /*
-    if let Some(info) = cur_sheet.and_then(|s| s.get_info(sprite2d.sprite_index)) {
-        let mesh2d = sprite2d.common.build_mesh(&Mat4::IDENTITY, rect2d, &info.uv, &info.rect, 0f32);
-        let mesh:Mesh = mesh2d.into();
-        let h_mesh = meshs.add(mesh);
-        if let Some(h_material) = h_material.take() {
-            let mut entity_mut = commands.entity(entity);
-            entity_mut.insert(h_material).insert(h_mesh);
-        }
-    }*/
+    
+    let mesh2d = sprite2d.build_mesh(rect2d);
+    let mesh:Mesh = mesh2d.into();
+    let h_mesh = meshs.add(mesh);
+    if let Some(h_material) = h_material.take() {
+        let mut entity_mut = commands.entity(entity);
+        entity_mut.insert(h_material).insert(h_mesh);
+    }
 }

@@ -45,6 +45,7 @@ impl IAssetLoader for MaterialDefineLoader {
 
 fn load_material_def(code_string:&str) -> Result<Box<dyn AssetDynamic>> {
     let mut vm = EvalRT::new();
+    
     let define = read_material_def(&mut vm, &code_string, false)?;
     let asset = MaterialDefineAsset { define:Arc::new(define) };
    

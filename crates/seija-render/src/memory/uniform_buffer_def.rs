@@ -265,6 +265,7 @@ fn build_prop_raw(ctx:&mut BuildPropContext,prop:&RawPropInfo) -> RawUniformInfo
 
 
 fn read_prop(value:&Value) -> Result<Option<PropInfo>,()>   {
+   
     let map = value.as_object().ok_or(())?;
     let name = map.get(":name").and_then(Value::as_str).ok_or(())?;
     let json_type = map.get(":type").ok_or(())?;

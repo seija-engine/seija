@@ -26,7 +26,7 @@ impl SeijaShaderBackend {
         vertexs.insert("COLOR".into(), (5,"vec4".into()));
         vertexs.insert("JOINTS".into(), (6,"uvec4".into()));
         vertexs.insert("WEIGHTS".into(), (7,"vec4".into()));
-        vertexs.insert("INDEX0".into(), (8,"i32".into()));
+        vertexs.insert("INDEX0".into(), (8,"int".into()));
         SeijaShaderBackend { vertexs,render_info:RenderInfo::new() }
     }
 }

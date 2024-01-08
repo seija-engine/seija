@@ -10,19 +10,5 @@
     (core/declare-shadow-uniform     set 5)
     (core/declare-posteffect-uniform set 7)
     (core/declare-ibl-uniform        set 8)
-    (declare-uniform set "UIAtlas" {
-        :type :Global
-        :sort 9
-        :apply :Frame
-        :shader-stage SS_FRAGMENT
-        :props []
-        :textures [
-            {
-                :name "uiAtlas"
-                :type "texture2DArray"
-                :filterable true
-            }
-        ]
-        :backends ["UIAtlas"]
-    })
+    
 )

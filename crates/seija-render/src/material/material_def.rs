@@ -94,6 +94,8 @@ pub fn read_material_def(vm:&mut EvalRT,file_string:&str,read_slot:bool) -> Resu
     let prop_value = value.get(":props").ok_or(MaterialDefReadError::InvalidProp)?;
     let buffer_def = UniformBufferDef::try_from(prop_value).map_err(|_| MaterialDefReadError::InvalidProp)?;
     let texture_prop_def = read_texture_prop(prop_value).map_err(|_| MaterialDefReadError::InvalidProp)?;
+
+    
     Ok(MaterialDef {
         name:def_name.into(),
         path,

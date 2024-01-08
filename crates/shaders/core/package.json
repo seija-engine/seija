@@ -25,6 +25,17 @@
         "fs": "ui.ui_fs_main"
       },
       {
+        "name": "sprite",
+        "vertex": {
+          "POSITION": "require",
+          "INDEX0":"require"
+        },
+        "backend": [ "Camera3D", "Transform"],
+       
+        "vs": "sprite.sprite_vs_main",
+        "fs": "sprite.sprite_fs_main"
+      },
+      {
         "name": "caret",
         "vertex": {
           "POSITION": "require",
