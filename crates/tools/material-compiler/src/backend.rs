@@ -5,7 +5,7 @@ use glsl_pkg::{IShaderBackend, backends::{BackendItem, Backends}};
 use seija_render::{UniformInfo, RawUniformInfo,MemUniformInfo,UniformType, UniformBufferDef, material::TexturePropDef};
 use smol_str::SmolStr;
 
-use crate::{render_info::RenderInfo};
+use crate::render_info::RenderInfo;
 
 pub struct SeijaShaderBackend {
     pub render_info:RenderInfo,
@@ -26,6 +26,7 @@ impl SeijaShaderBackend {
         vertexs.insert("COLOR".into(), (5,"vec4".into()));
         vertexs.insert("JOINTS".into(), (6,"uvec4".into()));
         vertexs.insert("WEIGHTS".into(), (7,"vec4".into()));
+        vertexs.insert("INDEX0".into(), (8,"i32".into()));
         SeijaShaderBackend { vertexs,render_info:RenderInfo::new() }
     }
 }

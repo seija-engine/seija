@@ -26,7 +26,7 @@ impl IModule for R2DModule {
 }
 
 #[derive(Resource)]
-struct Module2DResource {
+pub struct Module2DResource {
    pub(crate) image_material_define:Arc<MaterialDef>,
 }
 

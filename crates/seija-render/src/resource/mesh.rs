@@ -2,8 +2,8 @@ use std::{collections::HashSet, hash::{Hash, Hasher}, ops::Range};
 use bevy_ecs::prelude::*;
 use fnv::FnvHasher;
 use seija_asset::{AssetEvent, Assets, Handle, HandleId};
-use seija_core::{bytes::AsBytes};
-use bevy_ecs::{ event::{Events, ManualEventReader}};
+use seija_core::bytes::AsBytes;
+use bevy_ecs::event::{Events, ManualEventReader};
 use seija_geometry::volume::AABB3;
 use wgpu::{BufferUsages, IndexFormat, PrimitiveState, PrimitiveTopology, VertexAttribute, VertexBufferLayout, VertexFormat};
 use seija_core::TypeUuid;
@@ -25,7 +25,8 @@ bitflags! {
         const JOINTS = 6;
         const WEIGHTS = 7;
 
-        const MAX = 8;
+        const INDEX0 = 8;
+        const MAX = 9;
     }
 }
 
@@ -41,6 +42,7 @@ impl MeshAttributeType {
            5 => {"COLOR"},
            6 => {"JOINTS"},
            7 => {"WEIGHTS"},
+           8 => {"INDEX0"},
             _ => ""
         }
     }

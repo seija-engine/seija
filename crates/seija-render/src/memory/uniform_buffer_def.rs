@@ -1,6 +1,6 @@
 use std::{collections::HashMap, convert::{TryFrom, TryInto}};
 use glam::{Mat3, Mat4};
-use serde_json::{Value};
+use serde_json::Value;
 
 #[derive(Debug,Clone)]
 pub enum UniformType {

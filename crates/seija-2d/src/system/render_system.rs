@@ -57,6 +57,7 @@ fn init_sprite2d(entity:Entity,sprite2d:&Sprite2D,rect2d:&Rect2D,commands:&mut C
             Some(new_material)
         } else { None }
     };
+    /*
     if let Some(info) = cur_sheet.and_then(|s| s.get_info(sprite2d.sprite_index)) {
         let mesh2d = sprite2d.common.build_mesh(&Mat4::IDENTITY, rect2d, &info.uv, &info.rect, 0f32);
         let mesh:Mesh = mesh2d.into();
@@ -65,5 +66,5 @@ fn init_sprite2d(entity:Entity,sprite2d:&Sprite2D,rect2d:&Rect2D,commands:&mut C
             let mut entity_mut = commands.entity(entity);
             entity_mut.insert(h_material).insert(h_mesh);
         }
-    }
+    }*/
 }
