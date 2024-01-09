@@ -1,7 +1,7 @@
 use bevy_ecs::prelude::{Added, Entity, Query, RemovedComponents, Res, ResMut};
 use glam::{Mat4, Vec3};
 use seija_asset::{Assets, Handle};
-use seija_core::info::EInfo;
+use seija_core::info::{EInfo, EStateInfo};
 use seija_geometry::{bound::Relation, Frustum};
 use seija_transform::Transform;
 
@@ -37,6 +37,7 @@ pub(crate) fn camera_query_update(
         &Handle<Material>,
         &Handle<Mesh>,
         Option<&EInfo>,
+        Option<&EStateInfo>,
     )>,
     mats: Res<Assets<Material>>,
     meshs: Res<Assets<Mesh>>,
@@ -68,6 +69,7 @@ fn update_camera_normal_query(
         &Handle<Material>,
         &Handle<Mesh>,
         Option<&EInfo>,
+        Option<&EStateInfo>,
     )>,
     materials: &Assets<Material>,
     cameras: &Query<(&Camera, &Transform)>,
@@ -80,7 +82,9 @@ fn update_camera_normal_query(
     if camera.cull_type == -1 {
         let mut write_list = view_query.list.write();
         write_list.clear();
-        for (entity, t, hmat, _, info) in query.iter() {
+        for (entity, t, hmat, _, info,state_info) in query.iter() {
+            let is_active = state_info.map(|v| v.is_active_global()).unwrap_or(true);
+            if !is_active { continue; }
             if let Some(info) = info {
                 if info.layer & camera.layer < 1 {
                     continue;
@@ -103,7 +107,10 @@ fn update_camera_normal_query(
         write_list.clear();
         let proj_view = camera.projection.matrix() * t.global().matrix().inverse();
         if let Some(fru) = Frustum::from_matrix4(&proj_view) {
-            for (entity, t, hmat, hmesh, info) in query.iter() {
+            for (entity, t, hmat, hmesh, info,state_info) in query.iter() {
+                let is_active = state_info.map(|v| v.is_active_global()).unwrap_or(true);
+                if !is_active { continue; }
+
                 let position = t.global().position;
                 let dis_order = cacl_dis_order(camera.sort_type,camera_position,position);
                 let mat = materials.get(&hmat.id)?;

@@ -8,6 +8,7 @@ use seija_render::material::{MaterialDef, MaterialDefineAsset};
 pub mod common;
 mod system;
 pub mod components;
+pub mod ffi;
 
 #[derive(Clone, Copy,Hash,Debug,PartialEq, Eq,StageLabel)]
 pub enum R2DStage {

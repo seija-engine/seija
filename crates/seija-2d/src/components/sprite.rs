@@ -1,3 +1,5 @@
+use std::sync::atomic::{AtomicBool, Ordering};
+
 use bevy_ecs::component::Component;
 use seija_asset::{Handle, Assets};
 use seija_core::math::{Vec4, Vec3};
@@ -12,7 +14,10 @@ pub struct Sprite2D {
     pub(crate) color:Vec4,
     pub(crate) sheet:Option<Handle<SpriteSheet>>,
     pub(crate) custom_material:Option<Handle<Material>>,
-    pub(crate) sprite_index:usize
+    pub(crate) sprite_index:usize,
+
+    pub(crate) is_material_dirty:AtomicBool,
+    pub(crate) is_sheet_dirty:AtomicBool,
 }
 
 impl Sprite2D {
@@ -21,8 +26,38 @@ impl Sprite2D {
             color,
             sheet, 
             custom_material: None, 
-            sprite_index 
+            sprite_index,
+            is_material_dirty:AtomicBool::new(false),
+            is_sheet_dirty:AtomicBool::new(false),
         }
+    }
+
+    pub fn set_sprite_index(&mut self,index:usize) {
+        self.sprite_index = index;
+        self.is_material_dirty.store(true, Ordering::SeqCst);
+    }
+
+    pub fn set_color(&mut self,color:Vec4) {
+        self.color = color;
+        self.is_material_dirty.store(true, Ordering::SeqCst);
+    }
+
+    pub fn set_sheet(&mut self,sheet:Option<Handle<SpriteSheet>>) {
+        self.sheet = sheet;
+        self.is_sheet_dirty.store(true, Ordering::SeqCst)
+    }
+
+    pub fn is_material_dirty(&self) -> bool {
+        self.is_material_dirty.load(Ordering::SeqCst)
+    }
+
+    pub fn is_sheet_dirty(&self) -> bool {
+        self.is_sheet_dirty.load(Ordering::SeqCst)
+    }
+
+    pub fn clear_dirtys(&self) {
+        self.is_material_dirty.store(false, Ordering::SeqCst);
+        self.is_sheet_dirty.store(false, Ordering::SeqCst);
     }
 
     pub fn build_mesh(&self,rect2d:&Rect2D) -> Mesh {

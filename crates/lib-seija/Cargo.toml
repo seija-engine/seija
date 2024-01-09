@@ -16,5 +16,6 @@ seija-asset = {path = "../seija-asset"}
 seija-render = {path = "../seija-render"}
 seija-pbr = {path = "../seija-pbr"}
 seija-ui = {path = "../seija-ui"}
+seija-2d = {path = "../seija-2d"}
 spritesheet = {path = "../spritesheet"}
 lib-io-async = {path = "../lib-io-async"}

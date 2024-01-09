@@ -10,3 +10,4 @@ pub use spritesheet::ffi::*;
 pub use seija_ui::ffi::*;
 pub use lib_io_async::http::*;
 pub use lib_io_async::runtime::*;
+pub use seija_2d::ffi::*;
