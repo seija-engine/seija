@@ -1853,6 +1853,7 @@ name = "lib-seija"
 version = "0.1.0"
 dependencies = [
  "lib-io-async",
+ "seija-2d",
  "seija-app",
  "seija-asset",
  "seija-core",
@@ -2755,22 +2756,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "quick-xml"
-version = "0.28.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0ce5e73202a820a31f8a0ee32ada5e21029c81fd9e3ebf668a40832e4219d9d1"
-dependencies = [
- "memchr",
-]
-
-[[package]]
-name = "quick-xml-ffi"
-version = "0.1.0"
-dependencies = [
- "quick-xml 0.28.2",
-]
-
-[[package]]
 name = "quote"
 version = "1.0.33"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3081,6 +3066,18 @@ dependencies = [
 [[package]]
 name = "seija-2d"
 version = "0.1.0"
+dependencies = [
+ "bevy_ecs",
+ "log",
+ "seija-app",
+ "seija-asset",
+ "seija-core",
+ "seija-render",
+ "seija-transform",
+ "seija-winit",
+ "spritesheet",
+ "wgpu",
+]
 
 [[package]]
 name = "seija-app"
@@ -3154,6 +3151,7 @@ dependencies = [
  "lite-clojure-eval",
  "log",
  "material-compiler",
+ "seija-2d",
  "seija-app",
  "seija-asset",
  "seija-core",
@@ -3300,7 +3298,7 @@ version = "0.1.0"
 dependencies = [
  "bevy_ecs",
  "log",
- "quick-xml 0.23.1",
+ "quick-xml",
  "relative-path",
  "seija-app",
  "seija-asset",
@@ -3348,6 +3346,7 @@ dependencies = [
  "lazy_static",
  "log",
  "num_enum 0.6.1",
+ "seija-2d",
  "seija-app",
  "seija-asset",
  "seija-core",
