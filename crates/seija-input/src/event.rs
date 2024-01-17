@@ -54,3 +54,14 @@ impl From<u32> for MouseButton {
         }
     }
 }
+
+impl Into<u32> for MouseButton {
+    fn into(self) -> u32 {
+         match self {
+            MouseButton::Left => 0,
+            MouseButton::Right => 1,
+            MouseButton::Middle => 2,
+            MouseButton::Other(n) => n,
+        }
+    }
+}

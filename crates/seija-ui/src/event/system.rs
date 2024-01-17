@@ -1,6 +1,6 @@
 use bevy_ecs::{prelude::*, system::SystemParam};
 use seija_core::{math::{Vec4, Vec2}, window::AppWindow, info::EStateInfo};
-use seija_input::Input;
+use seija_input::{Input, event::MouseButton};
 use seija_transform::{Transform, hierarchy::{Children, Parent}};
 use seija_2d::common::Rect2D;
 use super::{UIEventSystem, EventNode, UIEventType, EventNodeState, UIEvent};
@@ -26,12 +26,14 @@ pub fn ui_system_handle(system_entity:Entity,_:&UIEventSystem,params:&EventParam
     if params.input.has_mouse_down() || params.input.has_mouse_up() {
         let mouse_pos = mouse_pos_to_world(params.input.mouse_position, system_entity, params);
         let ui_pos = mouse_pos_to_ui(params.input.mouse_position,params);
-        let fire_type = if params.input.has_mouse_down() {
-            UIEventType::TOUCH_START
+        let (fire_type,mouse_btn) = if params.input.has_mouse_down() {
+            (UIEventType::TOUCH_START,params.input.mouse_down_iter().next().cloned() )
         } else {
-            UIEventType::TOUCH_END
+            (UIEventType::TOUCH_END,params.input.mouse_up_iter().next().cloned())
         };
-        capture_ui_system(system_entity,fire_type,mouse_pos,params,event_nodes,sender);
+        let mouse_btn = mouse_btn.unwrap_or(seija_input::event::MouseButton::Left);
+        
+        capture_ui_system(system_entity,fire_type,mouse_pos,params,event_nodes,sender,mouse_btn);
         
         if params.input.has_mouse_up() {
             for (entity,mut event_node) in event_nodes.iter_mut() {
@@ -40,6 +42,7 @@ pub fn ui_system_handle(system_entity:Entity,_:&UIEventSystem,params:&EventParam
                   && event_node.state & EventNodeState::DRAG_IN.bits() > 0 {
                     sender.send(UIEvent {
                         entity,
+                        btn:MouseButton::Left,
                         event_type:UIEventType::END_DRAG,
                         user_key:event_node.user_key.clone(),
                         pos:ui_pos
@@ -69,6 +72,7 @@ pub fn ui_system_handle(system_entity:Entity,_:&UIEventSystem,params:&EventParam
                     event_node.state |= EventNodeState::DRAG_IN.bits();
                     event_node.drag_pos = ui_pos;
                     sender.send(UIEvent {
+                        btn:MouseButton::Left,
                         entity:entity,
                         event_type:UIEventType::BEGIN_DRAG,
                         user_key:event_node.user_key.clone(),
@@ -82,6 +86,7 @@ pub fn ui_system_handle(system_entity:Entity,_:&UIEventSystem,params:&EventParam
                     let delta = ui_pos - event_node.drag_pos;
                     event_node.drag_pos = ui_pos;
                     sender.send(UIEvent {
+                        btn:MouseButton::Left,
                         entity:entity,
                         event_type:UIEventType::DRAG,
                         user_key:event_node.user_key.clone(),
@@ -95,6 +100,7 @@ pub fn ui_system_handle(system_entity:Entity,_:&UIEventSystem,params:&EventParam
                     if is_in_rect {
                         event_node.state |= EventNodeState::MOVE_IN.bits();
                         sender.send(UIEvent {
+                            btn:MouseButton::Left,
                             entity:entity,
                             event_type:UIEventType::MOUSE_ENTER,
                             user_key:event_node.user_key.clone(),
@@ -108,6 +114,7 @@ pub fn ui_system_handle(system_entity:Entity,_:&UIEventSystem,params:&EventParam
                     if !is_in_rect {
                         event_node.state &= !EventNodeState::MOVE_IN.bits();
                         sender.send(UIEvent {
+                            btn:MouseButton::Left,
                             entity,
                             event_type:UIEventType::MOUSE_LEAVE,
                             user_key:event_node.user_key.clone(),
@@ -140,13 +147,13 @@ fn mouse_pos_to_ui(mut mouse_pos:Vec2,params:&EventParams) -> Vec2 {
 fn capture_ui_system(system_entity:Entity,fire_type:UIEventType,
                      mouse_pos:Vec2,params:&EventParams,
                      event_nodes:&mut Query<(Entity,&mut EventNode)>,
-                     sender:&mut EventWriter<UIEvent>) {
+                     sender:&mut EventWriter<UIEvent>,btn:MouseButton) {
     if let Ok(system_child) = params.childs.get(system_entity) {
         for child_entity in system_child.iter() {
-           let target_entity = capture_event_node(*child_entity,fire_type,mouse_pos,false,params, event_nodes,sender);
+           let target_entity = capture_event_node(*child_entity,fire_type,mouse_pos,false,params, event_nodes,sender,btn);
            if let Some(target_entity) = target_entity {
                //println!("hit target:{:?}",target_entity);
-               bubble_event_node(target_entity, fire_type, false, mouse_pos, params, event_nodes, sender);
+               bubble_event_node(target_entity, fire_type, false, mouse_pos, params, event_nodes, sender,btn);
            }
         }
     }
@@ -158,7 +165,7 @@ fn capture_event_node(event_entity:Entity,
                       mut stop_capture:bool,
                       params:&EventParams,
                       event_nodes:&mut Query<(Entity,&mut EventNode)>,
-                      sender:&mut EventWriter<UIEvent>) -> Option<Entity> {
+                      sender:&mut EventWriter<UIEvent>,btn:MouseButton) -> Option<Entity> {
     let mut last_hit_entity = None;
     if let Err(err) =  params.infos.get(event_entity) {
         log::error!("capture_event_node error:{:?}",err);
@@ -185,6 +192,7 @@ fn capture_event_node(event_entity:Entity,
                         sender.send(UIEvent {
                             entity:event_entity,
                             event_type:fire_type,
+                            btn,
                             user_key:event_node.user_key.clone(),
                             pos:mouse_pos
                         });
@@ -192,6 +200,7 @@ fn capture_event_node(event_entity:Entity,
                     if is_click {
                         sender.send(UIEvent {
                             entity:event_entity,
+                            btn,
                             event_type:UIEventType::CLICK,
                             user_key:event_node.user_key.clone(),
                             pos:mouse_pos
@@ -207,7 +216,7 @@ fn capture_event_node(event_entity:Entity,
         
         if let Ok(child) = params.childs.get(event_entity) {
             for child_entity in child.iter() {
-                let capture_entity = capture_event_node(*child_entity,fire_type,mouse_pos,stop_capture, params, event_nodes,sender);
+                let capture_entity = capture_event_node(*child_entity,fire_type,mouse_pos,stop_capture, params, event_nodes,sender,btn);
                 if capture_entity.is_some() {
                     last_hit_entity = capture_entity;
                 }
@@ -226,7 +235,7 @@ fn bubble_event_node(event_entity:Entity,
                      mouse_pos:Vec2,
                      params:&EventParams,
                      event_nodes:&mut Query<(Entity,&mut EventNode)>,
-                     sender:&mut EventWriter<UIEvent>) {
+                     sender:&mut EventWriter<UIEvent>,btn:MouseButton) {
     //println!("bubble:{:?}",event_entity);
     if let Ok((_,event_node)) = event_nodes.get_mut(event_entity) {
         if !stop_bubble {
@@ -237,6 +246,7 @@ fn bubble_event_node(event_entity:Entity,
             if event_node.use_capture == false {
                 if is_start_or_end {
                     sender.send(UIEvent {
+                        btn,
                         entity:event_entity,
                         event_type:fire_type,
                         user_key:event_node.user_key.clone(),
@@ -245,6 +255,7 @@ fn bubble_event_node(event_entity:Entity,
                 }
                 if is_click {
                     sender.send(UIEvent {
+                        btn,
                         entity:event_entity,
                         event_type:UIEventType::CLICK,
                         user_key:event_node.user_key.clone(),
@@ -259,6 +270,6 @@ fn bubble_event_node(event_entity:Entity,
     }
 
     if let Ok(parent) = params.parent.get(event_entity) {
-        bubble_event_node(parent.0,fire_type,stop_bubble,mouse_pos,params,event_nodes,sender);
+        bubble_event_node(parent.0,fire_type,stop_bubble,mouse_pos,params,event_nodes,sender,btn);
     }
 }

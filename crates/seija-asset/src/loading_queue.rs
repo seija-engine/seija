@@ -1,4 +1,4 @@
-use std::{sync::Arc};
+use std::sync::Arc;
 use bevy_ecs::system::Resource;
 use bevy_ecs::world::World;
 use downcast_rs::DowncastSync;
@@ -6,7 +6,7 @@ use seija_core::smol::Task;
 use seija_core::smol_str::SmolStr;
 use seija_core::{smol,anyhow::Result};
 use crate::{AssetDynamic, HandleId, AssetLoaderParams, IAssetLoader, AsyncLoadMode};
-use crate::{server::{AssetServer}};
+use crate::server::AssetServer;
 
 pub(crate) struct LoadContext {
     hid:HandleId,

@@ -159,6 +159,15 @@ pub unsafe extern "C" fn entity_add_event_node(world: &mut World,entity_id:u64,n
 }
 
 #[no_mangle]
+pub unsafe extern "C" fn entity_get_event_node(world: &mut World,entity_id:u64) -> *mut EventNode {
+    let entity = Entity::from_bits(entity_id);
+    if let Some(mut v) = world.entity_mut(entity).get_mut::<EventNode>() {
+        return v.as_mut() as *mut EventNode
+    }
+    std::ptr::null_mut()
+}
+
+#[no_mangle]
 pub unsafe extern "C" fn entity_remove_event_node(world: &mut World, entity_id: u64) -> bool {
     let entity = Entity::from_bits(entity_id);
     if let Some(mut entity_mut) = world.get_entity_mut(entity) {
@@ -168,11 +177,12 @@ pub unsafe extern "C" fn entity_remove_event_node(world: &mut World, entity_id: 
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn read_ui_events(world: &mut World,f:extern fn(entity:u64,typ:u32,px:f32,py:f32)) {
+pub unsafe extern "C" fn read_ui_events(world: &mut World,f:extern fn(entity:u64,typ:u32,mouse:u32,px:f32,py:f32)) {
     let events = world.get_resource_mut::<Events<UIEvent>>().unwrap();
     let mut reader:ManualEventReader<UIEvent> = events.get_reader();
     for event in reader.iter(&events) {
-        f(event.entity.to_bits(),event.event_type.bits(),event.pos.x,event.pos.y);  
+        let ibtn:u32 = event.btn.into();
+        f(event.entity.to_bits(),event.event_type.bits(),ibtn,event.pos.x,event.pos.y);  
     }
 }
 

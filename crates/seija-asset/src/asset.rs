@@ -1,9 +1,9 @@
-use async_trait::{async_trait};
+use async_trait::async_trait;
 use bevy_ecs::prelude::World;
 use downcast_rs::{DowncastSync,impl_downcast, Downcast};
 use seija_core::smol_str::SmolStr;
 use seija_core::type_uuid::{TypeUuid, TypeUuidDynamic};
-use seija_core::{anyhow::{Result,anyhow}};
+use seija_core::anyhow::{Result,anyhow};
 use uuid::Uuid;
 
 use crate::errors::AssetError;

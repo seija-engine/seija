@@ -50,6 +50,10 @@ impl Input {
         self.frame_mousedown.iter()
     }
 
+    pub fn mouse_up_iter(&self) -> impl Iterator<Item = &MouseButton> {
+        self.frame_mouseup.iter()
+    }
+
     pub fn get_mouse_up(&self,mouse:MouseButton) -> bool {
         self.frame_mouseup.contains(&mouse)
     }

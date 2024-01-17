@@ -1,11 +1,13 @@
 use bitflags::bitflags;
 use bevy_ecs::prelude::{Component, Entity};
 use seija_core::{smol_str::SmolStr, math::Vec2};
+use seija_input::event::MouseButton;
 
 #[derive(Clone,Debug)]
 pub struct UIEvent {
     pub entity:Entity,
     pub event_type:UIEventType,
+    pub btn:MouseButton,
     pub user_key:Option<SmolStr>,
     pub pos:Vec2
 }
