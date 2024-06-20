@@ -2,6 +2,8 @@ use bevy_ecs::prelude::Component;
 use seija_core::math::Vec2;
 use num_enum::FromPrimitive;
 
+use super::types::{UISize, SizeValue};
+
 #[derive(Clone,Debug,Copy,Hash,PartialEq, Eq,FromPrimitive)]
 #[repr(u8)]
 pub enum Orientation {
@@ -145,4 +147,52 @@ pub enum FlexAlignSelf {
 pub struct FlexBasis {
     pub length:f32,
     pub is_relative:bool
+}
+
+
+pub struct TiledLayout {
+    pub item:TiledItem
+}
+
+impl Default for TiledLayout {
+    fn default() -> Self {
+        Self { item: TiledItem { key: 0, typ: TiledItemType::Empty, slice: LSize::Rate(1f32), child: vec![] } }
+    }
+}
+
+#[repr(C)]
+pub struct TiledPanel {
+    key:i32
+}
+
+pub enum TiledItemType {
+    Row,
+    Col,
+    Empty
+}
+
+pub enum LSize {
+    Pixel(f32),
+    Rate(f32)
+}
+pub struct TiledItem {
+    pub key:i32,
+    pub typ:TiledItemType,
+    pub slice:LSize,
+    pub child:Vec<TiledItem>
+}
+
+impl TiledItem {
+
+    pub fn row(k:i32,slice:LSize,child:Vec<TiledItem>) -> Self {
+        TiledItem { key: k, typ: TiledItemType::Row, slice, child }
+    }
+
+    pub fn col(k:i32,slice:LSize,child:Vec<TiledItem>) -> Self {
+        TiledItem { key: k, typ: TiledItemType::Col, slice, child }
+    }
+
+    pub fn empty(k:i32) -> Self {
+        TiledItem { key: k, typ: TiledItemType::Empty, slice: LSize::Rate(1f32), child: vec![] }
+    }
 }

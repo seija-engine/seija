@@ -1,4 +1,4 @@
-use crate::skeleton::{Skeleton};
+use crate::skeleton::Skeleton;
 use super::raw_skeleton::{RawSkeleton, RawJoint, RawSkeletonDFIter};
 
 

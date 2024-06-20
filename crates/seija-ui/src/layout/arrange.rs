@@ -71,6 +71,7 @@ impl<'p, 'i, 'w, 's, 'aa> ArrangeScope<'p, 'i, 'w, 's, 'aa> {
             TypeElement::Stack(stack) => self.arrange_stack_element(entity,stack,element,parent_origin,parent_size,axy,changed_entitys),
             TypeElement::Flex(flex) => self.arrange_flex_element(entity,flex,element,parent_origin,parent_size,axy,changed_entitys),
             TypeElement::Free(_) => self.arrange_free_element(entity,element,parent_origin,parent_size,axy,changed_entitys),
+            TypeElement::Tiled(_) => todo!()
         };
         if let Ok(mut transform) = unsafe { self.params.trans.get_unchecked(entity) } {
             if element.common.pixel_ferfact {

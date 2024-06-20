@@ -1,0 +1,16 @@
+<TileLayout>
+    <TileLayout.Desc>
+        <Row key="1" slice="30%">
+          <Empty key="10" />
+          <Spliter key="15" size="1%" />
+          <Col key="20" slice="80" spacing="1%">                                                                                                                                
+          </Col>
+        </Row>
+    </TileLayout.Desc>
+    <TilePanel key="1">
+    </TilePanel>
+    <TilePanel key="2">
+    </TilePanel>
+    <TilePanel key="3">
+    </TilePanel>
+</TileLayout>

@@ -2,7 +2,7 @@ use bevy_ecs::{prelude::Entity, system::Query};
 use seija_core::{math::Vec2, info::EStateInfo};
 use crate::layout::{types::LayoutElement, system::LayoutParams};
 use super::{types::{TypeElement, LayoutAlignment, UISize, SizeValue, FreeLayout}, 
-            comps::{StackLayout, FlexLayout, Orientation, FlexWrap, FlexDirection, FlexAlignItems, FlexAlignContent}, VIEW_ID};
+            comps::{FlexAlignContent, FlexAlignItems, FlexDirection, FlexLayout, FlexWrap, Orientation, StackLayout, TiledLayout}, VIEW_ID};
 
 pub(crate) struct MeasureScope<'p,'i,'aa,'w,'s> {
    pub params:&'p LayoutParams<'w,'s>,
@@ -21,6 +21,7 @@ impl<'p,'i,'w,'s,'aa> MeasureScope<'p,'i,'w,'s,'aa> {
          TypeElement::Stack(stack) => self.measure_stack_element(entity, stack, parent_size,None, element),
          TypeElement::Flex(flex) => self.measure_flex_element(entity, flex, parent_size,None, element),
          TypeElement::Free(free) => self.measure_free_element(entity,parent_size,None,element,free),
+         TypeElement::Tiled(t) => self.measure_tiled_element(entity,parent_size,None,element,t),
       };
 
       if let Ok(mut rect2d) = unsafe { self.params.rect2ds.get_unchecked(entity) } {
@@ -49,7 +50,8 @@ impl<'p,'i,'w,'s,'aa> MeasureScope<'p,'i,'w,'s,'aa> {
          TypeElement::View => self.calc_desired_view_size(entity,cur_size,&element),
          TypeElement::Stack(stack) => self.calc_desired_stack_size(entity,&stack,cur_size,&element),
          TypeElement::Flex(flex) => self.calc_desired_flex_size(entity,&flex,cur_size,&element),
-         TypeElement::Free(_) => cur_size.get_number_size(self.params.rect2ds.get(entity).ok())
+         TypeElement::Free(_) => cur_size.get_number_size(self.params.rect2ds.get(entity).ok()),
+         TypeElement::Tiled(_) => todo!()
       }
    }
 
@@ -230,6 +232,12 @@ impl<'p,'i,'w,'s,'aa> MeasureScope<'p,'i,'w,'s,'aa> {
       self_size
    }
 
+   fn measure_tiled_element(&self,entity:Entity,parent_size:Vec2,force_size:Option<Vec2>,element:&LayoutElement,tiled:&TiledLayout) -> Vec2 {
+      let self_size:Vec2 = force_size.unwrap_or_else(|| self.measure_self_size(entity, parent_size, element));
+      
+      Vec2::ZERO
+   }
+
    fn measure_flex_nowrap_element(&self,entity:Entity,flex:&FlexLayout,parent_size:Vec2,force_size:Option<Vec2>
                                ,element:&LayoutElement) -> Vec2 {
       let self_size:Vec2 = force_size.unwrap_or_else(|| self.measure_self_size(entity, parent_size, element));
@@ -344,6 +352,7 @@ impl<'p,'i,'w,'s,'aa> MeasureScope<'p,'i,'w,'s,'aa> {
          TypeElement::Stack(stack) => self.measure_stack_element(entity, stack,cur_size,Some(cur_size), element),
          TypeElement::Flex(flex) => self.measure_flex_element(entity, flex,cur_size, Some(cur_size), element),
          TypeElement::Free(free) => self.measure_free_element(entity, cur_size, Some(cur_size),element,free),
+         TypeElement::Tiled(_) => todo!()
       };
    }
 
@@ -384,6 +393,8 @@ impl<'p,'i,'w,'s,'aa> MeasureScope<'p,'i,'w,'s,'aa> {
    pub fn is_active_global(&self,entity:Entity) -> bool {
       self.infos.get(entity).map(|v| v._is_active_global).unwrap_or(true)
    }
+
+   
 }
 
 fn fill_desired_ui_size(entity:Entity,psize:UISize,elem:&LayoutElement,params:&LayoutParams) -> UISize {

@@ -1,4 +1,4 @@
-use seija_transform::{ TransformMatrix};
+use seija_transform::TransformMatrix;
 
 #[derive(Default,PartialEq,Debug)]
 pub struct RawJoint {

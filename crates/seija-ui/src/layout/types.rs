@@ -1,7 +1,7 @@
 use bevy_ecs::prelude::Component;
 use seija_core::math::Vec2;
 use num_enum::FromPrimitive;
-use super::comps::{Orientation, StackLayout, FlexLayout};
+use super::comps::{FlexLayout, Orientation, StackLayout, TiledItem, TiledLayout};
 use seija_2d::common::{Rect2D,types::Thickness};
 
 #[derive(PartialEq, Eq, Clone, Copy, Debug,FromPrimitive)]
@@ -111,6 +111,7 @@ pub enum TypeElement {
     Stack(StackLayout),
     Flex(FlexLayout),
     Free(FreeLayout),
+    Tiled(TiledLayout),
     View,
 }
 
@@ -161,6 +162,13 @@ impl LayoutElement {
         LayoutElement {
             common: CommonView::default(),
             typ_elem: TypeElement::Free(FreeLayout {  })
+        }
+    }
+
+    pub fn create_tiled(item:TiledItem) -> LayoutElement {
+        LayoutElement { 
+            common: CommonView::default(), 
+            typ_elem: TypeElement::Tiled(TiledLayout{ item })
         }
     }
 

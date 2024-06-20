@@ -1,6 +1,5 @@
-use std::convert::{TryFrom};
+use std::convert::TryFrom;
 use serde_json::Value;
-use smol_str::SmolStr;
 use wgpu::{CompareFunction, Face, FrontFace, PolygonMode};
 use num_enum::{IntoPrimitive,TryFromPrimitive};
 
